@@ -1,6 +1,6 @@
 import ttkbootstrap as tb
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import messagebox, filedialog, ttk
 import requests
 from datetime import datetime, timedelta
 import matplotlib
@@ -9,15 +9,20 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import csv
 import os
+import sys
 from ttkbootstrap.widgets import DateEntry
+from PIL import Image, ImageTk
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from print_utils import print_srf_form
 
 
 class ReportsTab:
-    def __init__(self, parent_frame, api_base_url, root_window):
+    def __init__(self, parent_frame, root):
         self.parent_frame = parent_frame
-        self.api_base_url = api_base_url
-        self.root = root_window
-        self.report_data = []
+        self.root = root
+        self.api_base_url = os.getenv("WINYFI_API", "http://127.0.0.1:5000")
         self._build_reports_page()
 
     def _build_reports_page(self):
@@ -25,6 +30,10 @@ class ReportsTab:
         header = tb.Frame(self.parent_frame)
         header.pack(fill='x', padx=10, pady=(10, 0))
         tb.Label(header, text="📊 Network Reports", font=("Segoe UI", 16, "bold")).pack(side='left')
+        
+        # Add ICT Service Requests button to header
+        tb.Button(header, text="📝 ICT Service Requests", 
+                 bootstyle="primary", command=self._open_tickets_window).pack(side='right')
         
         # Filter controls
         filter_frame = tb.LabelFrame(self.parent_frame, text="Report Filters", padding=15)
@@ -410,3 +419,261 @@ class ReportsTab:
             messagebox.showerror("Connection Error", f"Failed to connect to server: {str(e)}")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while generating PDF with charts: {str(e)}")
+
+    def _open_tickets_window(self):
+        """Open a window for ICT Service Request viewing and creation (client scope)."""
+        window = tb.Toplevel(self.root)
+        window.title("ICT Service Requests")
+        window.geometry("900x500")
+        window.resizable(True, True)
+        self._center_window(window, 900, 500)
+
+        # Header
+        header_frame = tb.Frame(window)
+        header_frame.pack(fill="x", padx=20, pady=10)
+        tb.Label(header_frame, text="📋 ICT Service Requests", font=("Segoe UI", 16, "bold")).pack(side="left")
+
+        tb.Button(
+            header_frame,
+            text="➕ New Service Request Form",
+            bootstyle="primary",
+            command=lambda: self._open_new_ticket_modal(window)
+        ).pack(side="right")
+
+        # Table
+        table_frame = tb.Frame(window)
+        table_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        columns = ("ict_srf_no", "campus", "services", "status", "created_by", "created_at", "updated_at")
+        self.tickets_table = ttk.Treeview(
+            table_frame,
+            columns=columns,
+            show="headings",
+            height=15
+        )
+        for col in columns:
+            self.tickets_table.heading(col, text=col.replace("_", " ").title())
+            self.tickets_table.column(col, anchor="center", width=120)
+        self.tickets_table.pack(fill="both", expand=True, side="left")
+
+        scrollbar = tb.Scrollbar(table_frame, orient="vertical", command=self.tickets_table.yview)
+        scrollbar.pack(side="right", fill="y")
+        self.tickets_table.configure(yscrollcommand=scrollbar.set)
+
+        # Load + bind
+        self._load_tickets()
+        self.tickets_table.bind("<Double-1>", self._on_ticket_row_click)
+
+    def _center_window(self, window, width, height):
+        """Center a window on the screen."""
+        screen_width = window.winfo_screenwidth()
+        screen_height = window.winfo_screenheight()
+        x = (screen_width - width) // 2
+        y = (screen_height - height) // 2
+        window.geometry(f"{width}x{height}+{x}+{y}")
+
+    def _load_tickets(self):
+        """Fetch SRFs from API and display in the table."""
+        if not hasattr(self, 'tickets_table'):
+            return
+        self.tickets_table.delete(*self.tickets_table.get_children())
+        try:
+            resp = requests.get(f"{self.api_base_url}/api/srfs", timeout=8)
+            resp.raise_for_status()
+            srfs = resp.json() or []
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load tickets from API: {e}")
+            return
+
+        for srf in srfs:
+            created_at = srf.get("created_at")
+            updated_at = srf.get("updated_at")
+            def fmt(dt):
+                try:
+                    return dt.strftime("%Y-%m-%d %H:%M:%S") if hasattr(dt, 'strftime') else str(dt)
+                except Exception:
+                    return str(dt)
+
+            self.tickets_table.insert(
+                "",
+                "end",
+                values=(
+                    srf.get("ict_srf_no"),
+                    srf.get("campus", ""),
+                    (srf.get("services_requirements", "") or "")[:40] + ("…" if srf.get("services_requirements") and len(srf.get("services_requirements")) > 40 else ""),
+                    srf.get("status", "open"),
+                    srf.get("created_by_username", "Unknown"),
+                    fmt(created_at),
+                    fmt(updated_at)
+                )
+            )
+
+    def _on_ticket_row_click(self, event):
+        selected_item = self.tickets_table.selection()
+        if not selected_item:
+            return
+        ticket_id = self.tickets_table.item(selected_item[0])["values"][0]
+        self._open_ticket_detail_modal(ticket_id)
+
+    def _open_new_ticket_modal(self, parent_window):
+        """Open modal for creating a new SRF."""
+        modal = tb.Toplevel(parent_window)
+        modal.title("ICT Service Request Form")
+        modal.geometry("725x600")
+        modal.resizable(False, False)
+        modal.grab_set()
+
+        button_host = self._build_ticket_form(modal)
+        tb.Button(
+            button_host,
+            text="Submit Ticket",
+            bootstyle="primary",
+            command=lambda: self._submit_new_ticket(modal)
+        ).pack(pady=20)
+
+    def _build_ticket_form(self, modal, initial_data=None):
+        """Build SRF form UI."""
+        if initial_data is None:
+            initial_data = {}
+
+        container = tb.Frame(modal)
+        container.pack(fill="both", expand=True)
+
+        canvas = tb.Canvas(container)
+        vscroll = tb.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollable_frame = tb.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=vscroll.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        vscroll.pack(side="right", fill="y")
+
+        # Header
+        header_frame = tb.Frame(scrollable_frame)
+        header_frame.pack(fill="x", padx=20, pady=10)
+
+        tb.Label(scrollable_frame, text="ICT SERVICE REQUEST FORM", font=("Segoe UI", 14, "bold")).pack(fill="x", pady=(10, 20), padx=20)
+
+        form_frame = tb.Frame(scrollable_frame)
+        form_frame.pack(fill="both", expand=True, padx=20)
+        for col in range(4):
+            form_frame.columnconfigure(col, weight=1)
+
+        # Form variables
+        self.form_vars = {
+            "campus": tb.StringVar(value=initial_data.get("campus", "")),
+            "office_building": tb.StringVar(value=initial_data.get("office_building", "")),
+            "client_name": tb.StringVar(value=initial_data.get("client_name", "")),
+            "date_time_call": tb.StringVar(value=initial_data.get("date_time_call", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))),
+            "ict_srf_no": tb.StringVar(value=initial_data.get("ict_srf_no", "")),
+            "technician_assigned": tb.StringVar(value=initial_data.get("technician_assigned", "")),
+            "required_response_time": tb.StringVar(value=initial_data.get("required_response_time", "")),
+        }
+
+        self.service_req_text = tb.Text(form_frame, height=4, wrap="word")
+        self.remarks_text = tb.Text(form_frame, height=4, wrap="word")
+
+        # Form fields
+        def add_row(label1, key1, label2=None, key2=None, row_idx=0):
+            tb.Label(form_frame, text=label1, anchor="w").grid(row=row_idx, column=0, sticky="w", padx=5, pady=5)
+            tb.Entry(form_frame, textvariable=self.form_vars[key1]).grid(row=row_idx, column=1, sticky="ew", padx=5, pady=5)
+            if label2 and key2:
+                tb.Label(form_frame, text=label2, anchor="w").grid(row=row_idx, column=2, sticky="w", padx=5, pady=5)
+                tb.Entry(form_frame, textvariable=self.form_vars[key2]).grid(row=row_idx, column=3, sticky="ew", padx=5, pady=5)
+
+        add_row("Campus:", "campus", "ICT SRF NO.:", "ict_srf_no", row_idx=0)
+        add_row("Office/Building:", "office_building", "Technician Assigned:", "technician_assigned", row_idx=1)
+        add_row("Client's Name:", "client_name", row_idx=2)
+        add_row("Date/Time of Call:", "date_time_call", "Required Response Time:", "required_response_time", row_idx=3)
+
+        tb.Label(form_frame, text="Services Requirements:").grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        self.service_req_text.grid(row=5, column=0, columnspan=4, sticky="ew", padx=5, pady=(0, 10))
+
+        tb.Label(form_frame, text="Remarks:").grid(row=6, column=0, sticky="w", padx=5, pady=5)
+        self.remarks_text.grid(row=7, column=0, columnspan=4, sticky="ew", padx=5, pady=(0, 10))
+
+        return scrollable_frame
+
+    def _collect_ticket_form_data(self):
+        """Collect form data."""
+        data = {k: v.get() for k, v in getattr(self, 'form_vars', {}).items()}
+        if hasattr(self, 'service_req_text'):
+            data["services_requirements"] = self.service_req_text.get("1.0", "end").strip()
+        if hasattr(self, 'remarks_text'):
+            data["remarks"] = self.remarks_text.get("1.0", "end").strip()
+        return data
+
+    def _submit_new_ticket(self, modal):
+        """Submit the SRF via API server."""
+        data = self._collect_ticket_form_data()
+        if not data.get("ict_srf_no"):
+            messagebox.showerror("Validation", "ICT SRF No. is required and must be numeric.")
+            return
+        try:
+            payload = {"created_by": 1, "data": data}  # Default created_by for client
+            resp = requests.post(f"{self.api_base_url}/api/srfs", json=payload, timeout=8)
+            if resp.ok:
+                messagebox.showinfo("Success", "Service Request submitted successfully!")
+                modal.destroy()
+                self._load_tickets()
+            else:
+                messagebox.showerror("Error", f"Ticket submission failed: {resp.text}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to submit ticket: {e}")
+
+    def _open_ticket_detail_modal(self, srf_no):
+        """Open a modal showing SRF details."""
+        try:
+            resp = requests.get(f"{self.api_base_url}/api/srfs", timeout=8)
+            resp.raise_for_status()
+            srfs = resp.json() or []
+            srf = next((s for s in srfs if s.get("ict_srf_no") == srf_no), None)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load SRF details from API: {e}")
+            return
+        
+        if not srf:
+            messagebox.showerror("Not found", f"No SRF found with id {srf_no}")
+            return
+
+        modal = tb.Toplevel(self.root)
+        modal.title(f"SRF #{srf_no} Details")
+        modal.geometry("700x600")
+        modal.grab_set()
+
+        # Header
+        header_frame = tb.Frame(modal)
+        header_frame.pack(fill="x", pady=10)
+        tb.Label(header_frame, text="ICT SERVICE REQUEST FORM", font=("Segoe UI", 16, "bold")).pack(side="left", padx=20)
+
+        # SRF number
+        tb.Label(modal, text=f"SRF No: {srf.get('ict_srf_no')}", font=("Segoe UI", 12, "bold")).pack(pady=5)
+
+        # Details
+        form_frame = tb.Frame(modal, padding=10)
+        form_frame.pack(fill="both", expand=True)
+
+        details = [
+            ("Campus", srf.get('campus', '')),
+            ("Office/Building", srf.get('office_building', '')),
+            ("Client", srf.get('client_name', '')),
+            ("Services", srf.get('services_requirements', '')),
+            ("Status", srf.get('status', 'open')),
+            ("Created by", srf.get('created_by_username', 'Unknown')),
+        ]
+
+        for i, (label, value) in enumerate(details):
+            tb.Label(form_frame, text=f"{label}: {value}").grid(row=i, column=0, sticky="w", padx=10, pady=2)
+
+        # Print button
+        tb.Button(
+            modal,
+            text="🖨 Print",
+            bootstyle="secondary",
+            command=lambda: print_srf_form(srf, logo_path="assets/images/bsu_logo.png")
+        ).pack(pady=10)

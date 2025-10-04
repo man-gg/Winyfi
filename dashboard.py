@@ -1020,19 +1020,83 @@ class Dashboard:
                 end_date = datetime.now()
 
             # Get all routers
-            from ticket_utils import get_routers
+            from router_utils import get_routers
             routers = get_routers()
 
             fieldnames = ["router", "uptime_percent", "downtime_hours", "bandwidth_mb"]
+            # Helper functions to detect if there is any data; avoids misleading 0% uptime
+            def _has_status_reference(router_id):
+                conn = get_connection()
+                cur = conn.cursor()
+                try:
+                    # Any logs in range?
+                    cur.execute(
+                        """
+                        SELECT COUNT(*) FROM router_status_log
+                        WHERE router_id = %s AND timestamp BETWEEN %s AND %s
+                        """,
+                        (router_id, start_date, end_date)
+                    )
+                    in_range = cur.fetchone()[0] or 0
+                    if in_range:
+                        return True
+                    # Any log before start to establish prior status?
+                    cur.execute(
+                        """
+                        SELECT COUNT(*) FROM router_status_log
+                        WHERE router_id = %s AND timestamp < %s
+                        LIMIT 1
+                        """,
+                        (router_id, start_date)
+                    )
+                    before = cur.fetchone()[0] or 0
+                    return bool(before)
+                finally:
+                    cur.close()
+                    conn.close()
+
+            def _has_bandwidth_data(router_id):
+                conn = get_connection()
+                cur = conn.cursor()
+                try:
+                    cur.execute(
+                        """
+                        SELECT COUNT(*) FROM bandwidth_logs
+                        WHERE router_id = %s AND timestamp BETWEEN %s AND %s
+                        """,
+                        (router_id, start_date, end_date)
+                    )
+                    cnt = cur.fetchone()[0] or 0
+                    return cnt > 0
+                finally:
+                    cur.close()
+                    conn.close()
+
             for r in routers:
-                uptime = get_uptime_percentage(r["id"], start_date, end_date)
-                downtime_hours = round((100 - uptime) / 100 * (end_date - start_date).total_seconds() / 3600, 2)
-                bandwidth = get_bandwidth_usage(r["id"], start_date, end_date)  # you need this function
+                rid = r["id"]
+                have_status = _has_status_reference(rid)
+                have_bw = _has_bandwidth_data(rid)
+
+                if have_status:
+                    uptime = get_uptime_percentage(rid, start_date, end_date)
+                    downtime_hours = round((100 - uptime) / 100 * (end_date - start_date).total_seconds() / 3600, 2)
+                    uptime_out = round(uptime, 2)
+                    downtime_out = downtime_hours
+                else:
+                    uptime_out = "N/A"
+                    downtime_out = "N/A"
+
+                if have_bw:
+                    bandwidth = get_bandwidth_usage(rid, start_date, end_date)
+                    bandwidth_out = round(bandwidth, 2)
+                else:
+                    bandwidth_out = "N/A"
+
                 data.append({
                     "router": r["name"],
-                    "uptime_percent": round(uptime, 2),
-                    "downtime_hours": downtime_hours,
-                    "bandwidth_mb": round(bandwidth, 2)
+                    "uptime_percent": uptime_out,
+                    "downtime_hours": downtime_out,
+                    "bandwidth_mb": bandwidth_out
                 })
 
         elif export_type == "tickets":
@@ -1065,26 +1129,276 @@ class Dashboard:
             messagebox.showerror("Error", f"Failed to export CSV:\n{e}")
 
     def open_export_menu(self):
-        """Open a popup to choose export type and trigger CSV export."""
-        from tkinter import Toplevel, StringVar, OptionMenu, Button
+        """Open an enhanced export dialog with options and date range for reports."""
+        from tkinter import Toplevel
 
         modal = Toplevel(self.root)
-        modal.title("⬇️ Export to CSV")
-        modal.geometry("300x150")
+        modal.title("⬇️ Export Data")
+        modal.geometry("420x260")
+        modal.resizable(False, False)
         modal.grab_set()
 
-        # Option selector
-        tb.Label(modal, text="Select data type to export:", font=("Segoe UI", 11, "bold")).pack(pady=(20,5))
-        export_var = StringVar(value="routers")
-        options = ["routers", "reports", "tickets"]
-        OptionMenu(modal, export_var, *options).pack(pady=5)
+        outer = tb.Frame(modal, padding=15)
+        outer.pack(fill="both", expand=True)
 
-        # Export button
+        tb.Label(outer, text="Select what to export", font=("Segoe UI", 12, "bold")).pack(anchor="w")
+
+        # Export type
+        type_frame = tb.LabelFrame(outer, text="Data Type", bootstyle="secondary", padding=10)
+        type_frame.pack(fill="x", pady=(8, 10))
+
+        export_var = tb.StringVar(value="routers")
+        tb.Radiobutton(type_frame, text="Routers", variable=export_var, value="routers").pack(side="left", padx=5)
+        tb.Radiobutton(type_frame, text="Reports", variable=export_var, value="reports").pack(side="left", padx=5)
+        tb.Radiobutton(type_frame, text="Tickets", variable=export_var, value="tickets").pack(side="left", padx=5)
+
+        # Reports options (date range)
+        reports_frame = tb.LabelFrame(outer, text="Report Options", bootstyle="info", padding=10)
+        reports_frame.pack(fill="x")
+
+        tb.Label(reports_frame, text="Start Date:").grid(row=0, column=0, sticky="w")
+        start_picker = DateEntry(reports_frame, width=12, dateformat="%m/%d/%y")
+        start_picker.grid(row=0, column=1, padx=(6, 15), pady=5, sticky="w")
+
+        tb.Label(reports_frame, text="End Date:").grid(row=0, column=2, sticky="w")
+        end_picker = DateEntry(reports_frame, width=12, dateformat="%m/%d/%y")
+        end_picker.grid(row=0, column=3, padx=(6, 0), pady=5, sticky="w")
+
+        def _toggle_reports_options(*_):
+            if export_var.get() == "reports":
+                if not reports_frame.winfo_ismapped():
+                    reports_frame.pack(fill="x")
+            else:
+                if reports_frame.winfo_ismapped():
+                    reports_frame.pack_forget()
+
+        export_var.trace_add("write", _toggle_reports_options)
+        _toggle_reports_options()
+
+        # Footer buttons
+        btns = tb.Frame(outer)
+        btns.pack(fill="x", pady=(15, 0))
+
         def do_export():
-            self.export_to_csv(export_var.get())
+            etype = export_var.get()
+            # Parse dates for reports and start async export with progress
+            start_dt = end_dt = None
+            if etype == "reports":
+                from datetime import datetime
+                s = start_picker.entry.get().strip()
+                e = end_picker.entry.get().strip()
+                parsed = False
+                for fmt in ("%m/%d/%Y", "%m/%d/%y"):
+                    try:
+                        start_dt = datetime.strptime(s, fmt)
+                        end_dt = datetime.strptime(e, fmt)
+                        parsed = True
+                        break
+                    except Exception:
+                        continue
+                if not parsed:
+                    from tkinter import messagebox
+                    messagebox.showerror("Date Error", "Please use MM/DD/YYYY format for dates.")
+                    return
             modal.destroy()
+            self.start_export_async(etype, start_dt, end_dt)
 
-        tb.Button(modal, text="Export", bootstyle="primary", command=do_export).pack(pady=20)
+        tb.Button(btns, text="Cancel", bootstyle="secondary", command=modal.destroy).pack(side="right")
+        tb.Button(btns, text="Export", bootstyle="primary", command=do_export).pack(side="right", padx=(0, 8))
+
+
+    def start_export_async(self, export_type, start_dt=None, end_dt=None):
+        """Start export in a background thread and show a progress dialog to keep UI responsive (Admin)."""
+        # Ask for target file first (on main thread)
+        from tkinter import filedialog, messagebox
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv")]
+        )
+        if not file_path:
+            return
+
+        import threading, csv
+        from datetime import datetime, timedelta
+
+        cancel_event = threading.Event()
+        prog = tb.Toplevel(self.root)
+        prog.title("Exporting…")
+        prog.geometry("360x140")
+        prog.resizable(False, False)
+        prog.transient(self.root)
+        prog.grab_set()
+        frame = tb.Frame(prog, padding=15)
+        frame.pack(fill="both", expand=True)
+        lbl = tb.Label(frame, text="Preparing…", font=("Segoe UI", 11))
+        lbl.pack(anchor="w")
+        pbar = tb.Progressbar(frame, mode="indeterminate", bootstyle="info-striped")
+        pbar.pack(fill="x", pady=12)
+        pbar.start(12)
+        btns = tb.Frame(frame)
+        btns.pack(fill="x")
+        def cancel():
+            cancel_event.set()
+            lbl.config(text="Cancelling… (will stop after current step)")
+        tb.Button(btns, text="Cancel", bootstyle="secondary", command=cancel).pack(side="right")
+
+        def on_done(success, msg):
+            try:
+                pbar.stop()
+                prog.destroy()
+            except Exception:
+                pass
+            if success:
+                messagebox.showinfo("Export", msg)
+            else:
+                messagebox.showerror("Export", msg)
+
+        def worker():
+            try:
+                rows = []
+                fieldnames = []
+                if export_type == "routers":
+                    lbl.after(0, lambda: lbl.config(text="Fetching routers…"))
+                    from router_utils import get_routers
+                    routers = get_routers()
+                    fieldnames = ['id', 'name', 'ip_address', 'mac_address', 'brand', 'location', 'last_seen', 'image_path']
+                    rows = routers or []
+
+                elif export_type == "tickets":
+                    lbl.after(0, lambda: lbl.config(text="Fetching tickets…"))
+                    import ticket_utils
+                    tickets = ticket_utils.fetch_tickets() or []
+                    fieldnames = ["id", "router", "issue", "status", "created_by", "created_at", "updated_at"]
+                    def fmt(dt):
+                        try:
+                            return dt.strftime("%Y-%m-%d %H:%M:%S") if hasattr(dt, 'strftime') else str(dt)
+                        except Exception:
+                            return str(dt)
+                    for t in tickets:
+                        if cancel_event.is_set():
+                            break
+                        rows.append({
+                            "id": t.get("id"),
+                            "router": t.get("router_name") or "General",
+                            "issue": t.get("issue"),
+                            "status": t.get("status"),
+                            "created_by": t.get("created_by"),
+                            "created_at": fmt(t.get("created_at")),
+                            "updated_at": fmt(t.get("updated_at")),
+                        })
+
+                else:  # reports
+                    from report_utils import get_uptime_percentage, get_bandwidth_usage
+                    from db import get_connection
+                    from router_utils import get_routers
+                    sdt = start_dt or (datetime.now() - timedelta(days=30))
+                    edt = end_dt or datetime.now()
+                    lbl.after(0, lambda: lbl.config(text="Loading routers…"))
+                    routers = get_routers() or []
+                    fieldnames = ["router", "uptime_percent", "downtime_hours", "bandwidth_mb"]
+
+                    def _has_status_reference(router_id):
+                        conn = get_connection()
+                        cur = conn.cursor()
+                        try:
+                            cur.execute(
+                                """
+                                SELECT COUNT(*) FROM router_status_log
+                                WHERE router_id = %s AND timestamp BETWEEN %s AND %s
+                                """,
+                                (router_id, sdt, edt)
+                            )
+                            in_range = cur.fetchone()[0] or 0
+                            if in_range:
+                                return True
+                            cur.execute(
+                                """
+                                SELECT COUNT(*) FROM router_status_log
+                                WHERE router_id = %s AND timestamp < %s
+                                LIMIT 1
+                                """,
+                                (router_id, sdt)
+                            )
+                            before = cur.fetchone()[0] or 0
+                            return bool(before)
+                        finally:
+                            cur.close()
+                            conn.close()
+
+                    def _has_bandwidth_data(router_id):
+                        conn = get_connection()
+                        cur = conn.cursor()
+                        try:
+                            cur.execute(
+                                """
+                                SELECT COUNT(*) FROM bandwidth_logs
+                                WHERE router_id = %s AND timestamp BETWEEN %s AND %s
+                                """,
+                                (router_id, sdt, edt)
+                            )
+                            cnt = cur.fetchone()[0] or 0
+                            return cnt > 0
+                        finally:
+                            cur.close()
+                            conn.close()
+
+                    total_hours = (edt - sdt).total_seconds() / 3600.0
+                    lbl.after(0, lambda: lbl.config(text="Computing report…"))
+                    for r in routers:
+                        if cancel_event.is_set():
+                            break
+                        rid = r.get("id")
+                        name = r.get("name")
+                        have_status = _has_status_reference(rid)
+                        have_bw = _has_bandwidth_data(rid)
+                        if have_status:
+                            uptime = get_uptime_percentage(rid, sdt, edt)
+                            downtime_hours = round((100 - uptime) / 100.0 * total_hours, 2)
+                            uptime_out = round(uptime, 2)
+                            downtime_out = downtime_hours
+                        else:
+                            uptime_out = "N/A"
+                            downtime_out = "N/A"
+                        if have_bw:
+                            bandwidth = get_bandwidth_usage(rid, sdt, edt)
+                            bandwidth_out = round(bandwidth, 2)
+                        else:
+                            bandwidth_out = "N/A"
+                        rows.append({
+                            "router": name,
+                            "uptime_percent": uptime_out,
+                            "downtime_hours": downtime_out,
+                            "bandwidth_mb": bandwidth_out
+                        })
+
+                if cancel_event.is_set():
+                    self.root.after(0, lambda: on_done(False, "Export cancelled."))
+                    return
+
+                # Write CSV
+                lbl.after(0, lambda: lbl.config(text="Writing CSV file…"))
+                try:
+                    with open(file_path, "w", newline="", encoding="utf-8") as f:
+                        writer = csv.DictWriter(f, fieldnames=fieldnames)
+                        writer.writeheader()
+                        for r in rows:
+                            if cancel_event.is_set():
+                                break
+                            writer.writerow(r)
+                except Exception as e:
+                    self.root.after(0, lambda: on_done(False, f"Failed to write file: {e}"))
+                    return
+
+                if cancel_event.is_set():
+                    self.root.after(0, lambda: on_done(False, "Export cancelled."))
+                else:
+                    self.root.after(0, lambda: on_done(True, f"{export_type.capitalize()} exported successfully!"))
+
+            except Exception as e:
+                self.root.after(0, lambda: on_done(False, f"Export failed: {e}"))
+
+        import threading
+        threading.Thread(target=worker, daemon=True).start()
 
 
     def open_router_popup(self, mode="add", router=None):
@@ -1192,26 +1506,71 @@ class Dashboard:
         menu.post(event.x_root, event.y_root)
 
     def open_router_details(self, router):
-        # Creating the top-level window
+        # Creating the modern top-level window
         d = Toplevel(self.root)
         d.title(f"Router Details - {router['name']}")
-        d.geometry("520x600")
+        d.geometry("700x600")
         d.transient(self.root)
         d.grab_set()
+        d.configure(bg='#f8f9fa')
+        d.resizable(True, True)
 
         # --- Center window on parent ---
-        self.root.update_idletasks()
-        rx, ry = self.root.winfo_x(), self.root.winfo_y()
-        rw, rh = self.root.winfo_width(), self.root.winfo_height()
-        w, h = 520, 600
-        x = rx + (rw // 2) - (w // 2)
-        y = ry + (rh // 2) - (h // 2)
-        d.geometry(f"{w}x{h}+{x}+{y}")
+        self._center_window(d, 700, 600)
 
-        # --- Scrollable frame ---
-        canvas = tk.Canvas(d, highlightthickness=0)
-        scrollbar = tb.Scrollbar(d, orient="vertical", command=canvas.yview)
-        scroll_frame = tb.Frame(canvas)
+        # --- Main container with modern styling ---
+        main_container = tb.Frame(d, bootstyle="light")
+        main_container.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # --- Header Section with Gradient Effect ---
+        header_frame = tb.LabelFrame(main_container, text="", bootstyle="primary", padding=20)
+        header_frame.pack(fill="x", pady=(0, 20))
+
+        # Router icon and title
+        title_frame = tb.Frame(header_frame)
+        title_frame.pack(fill="x")
+
+        # Router status indicator circle
+        status_indicator = tb.Frame(title_frame, width=20, height=20)
+        status_indicator.pack(side="left", padx=(0, 15))
+        
+        self.status_circle = tb.Label(status_indicator, text="●", font=("Segoe UI", 24), 
+                                     bootstyle="secondary")
+        self.status_circle.pack()
+
+        # Title and subtitle
+        title_text_frame = tb.Frame(title_frame)
+        title_text_frame.pack(side="left", fill="x", expand=True)
+
+        router_title = tb.Label(title_text_frame, text=f"📡 {router['name']}", 
+                               font=("Segoe UI", 20, "bold"), bootstyle="primary")
+        router_title.pack(anchor="w")
+
+        router_subtitle = tb.Label(title_text_frame, text=f"IP: {router['ip_address']}", 
+                                  font=("Segoe UI", 12), bootstyle="secondary")
+        router_subtitle.pack(anchor="w")
+
+        # Quick actions in header
+        quick_actions = tb.Frame(header_frame)
+        quick_actions.pack(fill="x", pady=(15, 0))
+
+        tb.Button(quick_actions, text="✏️ Edit Router", bootstyle="success",
+                  command=lambda: [d.destroy(), self.open_router_popup(mode='edit', router=router)],
+                  width=15).pack(side="left", padx=(0, 10))
+
+        tb.Button(quick_actions, text="🗑️ Delete Router", bootstyle="danger",
+                  command=lambda: [d.destroy(), self.delete_selected_router(router)],
+                  width=15).pack(side="left", padx=(0, 10))
+
+        if router.get('image_path'):
+            tb.Button(quick_actions, text="📷 View Image", bootstyle="info",
+                      command=lambda: self.show_router_image(router['image_path']),
+                      width=15).pack(side="left")
+
+        # --- Scrollable Content Area ---
+        canvas = tk.Canvas(main_container, highlightthickness=0, bg='#f8f9fa')
+        scrollbar = tb.Scrollbar(main_container, orient="vertical", command=canvas.yview, bootstyle="secondary")
+        scroll_frame = tb.Frame(canvas, bootstyle="light")
 
         scroll_frame.bind(
             "<Configure>",
@@ -1229,91 +1588,140 @@ class Dashboard:
         self.detail_download_lbl = None
         self.detail_upload_lbl = None
         self.detail_last_seen_lbl = None
-        self.loading_lbl = None  # Loading label
+        self.detail_latency_lbl = None
 
-        # --- Section Title ---
-        header = tb.Label(
-            scroll_frame, 
-            text=f"📡 {router['name']}", 
-            font=("Segoe UI", 14, "bold"),
-            bootstyle="primary"
-        )
-        header.grid(row=0, column=0, columnspan=2, pady=(15, 10), sticky="w")
+        # --- Router Information Cards ---
+        # Basic Information Card
+        basic_info_card = tb.LabelFrame(scroll_frame, text="🔧 Basic Information", 
+                                       bootstyle="info", padding=20)
+        basic_info_card.pack(fill="x", pady=(0, 15))
 
-        # --- Router Info Grid ---
-        info_frame = tb.Frame(scroll_frame)
-        info_frame.grid(row=1, column=0, sticky="nsew", padx=12, pady=5)
+        basic_grid = tb.Frame(basic_info_card)
+        basic_grid.pack(fill="x")
+        basic_grid.grid_columnconfigure(1, weight=1)
+        basic_grid.grid_columnconfigure(3, weight=1)
 
-        # Set the columns to expand evenly
-        info_frame.grid_columnconfigure(0, weight=1)
-        info_frame.grid_columnconfigure(1, weight=3)
-
-        # --- Fields ---
-        fields = [
-            ("Name", router['name']),
-            ("IP Address", router['ip_address']),
-            ("MAC Address", router['mac_address']),
-            ("Brand", router['brand']),
-            ("Location", (router['location'], router.get('image_path'))),
-            ("Status", None),
-            ("Bandwidth", None),
-            ("Last Seen", None),
+        # Basic info fields in 2x2 grid
+        basic_fields = [
+            ("🏷️ Name:", router['name']),
+            ("📍 Location:", router['location']),
+            ("🏭 Brand:", router['brand']),
+            ("📱 MAC Address:", router['mac_address']),
         ]
 
-        row_num = 0
-        for label, val in fields:
-            label_frame = tb.LabelFrame(info_frame, text=label, padding=10, bootstyle="secondary")
-            label_frame.grid(row=row_num, column=0, sticky="ew", padx=5, pady=5)
+        for i, (label, value) in enumerate(basic_fields):
+            row, col = i // 2, (i % 2) * 2
+            tb.Label(basic_grid, text=label, font=("Segoe UI", 11, "bold"), 
+                    bootstyle="secondary").grid(row=row, column=col, sticky="w", padx=(0, 10), pady=8)
+            tb.Label(basic_grid, text=value, font=("Segoe UI", 11), 
+                    bootstyle="dark").grid(row=row, column=col+1, sticky="w", padx=(0, 30), pady=8)
 
-            if label == "Location":
-                loc_text, img_p = val
-                inner = tb.Frame(label_frame)
-                inner.grid(row=0, column=0, sticky="w", padx=5)
-                tb.Label(inner, text=loc_text, font=("Segoe UI", 10)).pack(side="left")
-                if img_p:
-                    tb.Button(
-                        inner, text="📷 View", bootstyle="info",
-                        command=lambda p=img_p: self.show_router_image(p)
-                    ).pack(side="left", padx=8)
+        # Connection Status Card
+        status_card = tb.LabelFrame(scroll_frame, text="🌐 Connection Status", 
+                                   bootstyle="success", padding=20)
+        status_card.pack(fill="x", pady=(0, 15))
 
-            elif label == "Status":
-                self.detail_status_lbl = tb.Label(
-                    label_frame, text="🕒 Checking...", bootstyle="secondary", font=("Segoe UI", 11, "italic")
-                )
-                self.detail_status_lbl.grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        status_grid = tb.Frame(status_card)
+        status_grid.pack(fill="x")
 
-            elif label == "Bandwidth":
-                self.loading_lbl = tb.Label(label_frame, text="⏳ Bandwidth: Fetching...", font=("Segoe UI", 10), bootstyle="info")
-                self.loading_lbl.grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        # Status row
+        status_row = tb.Frame(status_grid)
+        status_row.pack(fill="x", pady=(0, 15))
 
-                self.detail_download_lbl = tb.Label(label_frame, text="⬇ Download: Fetching...", font=("Segoe UI", 10))
-                self.detail_download_lbl.grid(row=1, column=0, sticky="w", padx=5, pady=2)
+        tb.Label(status_row, text="📶 Current Status:", font=("Segoe UI", 12, "bold"), 
+                bootstyle="secondary").pack(side="left")
+        
+        self.detail_status_lbl = tb.Label(status_row, text="🕒 Checking...", 
+                                         font=("Segoe UI", 12, "bold"), bootstyle="warning")
+        self.detail_status_lbl.pack(side="left", padx=(10, 0))
 
-                self.detail_upload_lbl = tb.Label(label_frame, text="⬆ Upload: Fetching...", font=("Segoe UI", 10))
-                self.detail_upload_lbl.grid(row=2, column=0, sticky="w", padx=5, pady=2)
+        # Last seen row
+        last_seen_row = tb.Frame(status_grid)
+        last_seen_row.pack(fill="x")
 
-            elif label == "Last Seen":
-                self.detail_last_seen_lbl = tb.Label(label_frame, text="🕒 Checking...", font=("Segoe UI", 10))
-                self.detail_last_seen_lbl.grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        tb.Label(last_seen_row, text="🕐 Last Seen:", font=("Segoe UI", 11, "bold"), 
+                bootstyle="secondary").pack(side="left")
+        
+        self.detail_last_seen_lbl = tb.Label(last_seen_row, text="🕒 Checking...", 
+                                            font=("Segoe UI", 11), bootstyle="dark")
+        self.detail_last_seen_lbl.pack(side="left", padx=(10, 0))
 
-            else:
-                tb.Label(label_frame, text=val, font=("Segoe UI", 10)).grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        # Performance Metrics Card
+        performance_card = tb.LabelFrame(scroll_frame, text="📊 Performance Metrics", 
+                                        bootstyle="warning", padding=20)
+        performance_card.pack(fill="x", pady=(0, 15))
 
-            row_num += 1
+        # Latency section
+        latency_frame = tb.Frame(performance_card)
+        latency_frame.pack(fill="x", pady=(0, 15))
 
-        # --- Action Buttons (Edit, Delete) ---
-        btnf = tb.Frame(scroll_frame)
-        btnf.grid(row=row_num + 1, column=0, pady=15, padx=10)
+        tb.Label(latency_frame, text="⚡ Latency:", font=("Segoe UI", 12, "bold"), 
+                bootstyle="secondary").pack(side="left")
+        
+        self.detail_latency_lbl = tb.Label(latency_frame, text="📡 Measuring...", 
+                                          font=("Segoe UI", 12), bootstyle="info")
+        self.detail_latency_lbl.pack(side="left", padx=(10, 0))
 
-        tb.Button(
-            btnf, text="✏ Edit", bootstyle="primary-outline",
-            command=lambda: [d.destroy(), self.open_router_popup(mode='edit', router=router)]
-        ).pack(side="left", padx=10)
+        # Bandwidth section with modern progress-style layout
+        bandwidth_frame = tb.LabelFrame(performance_card, text="🚀 Bandwidth Usage", 
+                                       bootstyle="info", padding=15)
+        bandwidth_frame.pack(fill="x")
 
-        tb.Button(
-            btnf, text="🗑 Delete", bootstyle="danger-outline",
-            command=lambda: [d.destroy(), self.delete_selected_router(router)]
-        ).pack(side="left", padx=10)
+        # Download speed
+        download_frame = tb.Frame(bandwidth_frame)
+        download_frame.pack(fill="x", pady=(0, 10))
+
+        download_icon_label = tb.Label(download_frame, text="⬇️", font=("Segoe UI", 16))
+        download_icon_label.pack(side="left", padx=(0, 10))
+
+        download_text_frame = tb.Frame(download_frame)
+        download_text_frame.pack(side="left", fill="x", expand=True)
+
+        tb.Label(download_text_frame, text="Download Speed", font=("Segoe UI", 10, "bold"), 
+                bootstyle="secondary").pack(anchor="w")
+        
+        self.detail_download_lbl = tb.Label(download_text_frame, text="📶 Fetching...", 
+                                           font=("Segoe UI", 14, "bold"), bootstyle="success")
+        self.detail_download_lbl.pack(anchor="w")
+
+        # Upload speed
+        upload_frame = tb.Frame(bandwidth_frame)
+        upload_frame.pack(fill="x")
+
+        upload_icon_label = tb.Label(upload_frame, text="⬆️", font=("Segoe UI", 16))
+        upload_icon_label.pack(side="left", padx=(0, 10))
+
+        upload_text_frame = tb.Frame(upload_frame)
+        upload_text_frame.pack(side="left", fill="x", expand=True)
+
+        tb.Label(upload_text_frame, text="Upload Speed", font=("Segoe UI", 10, "bold"), 
+                bootstyle="secondary").pack(anchor="w")
+        
+        self.detail_upload_lbl = tb.Label(upload_text_frame, text="📶 Fetching...", 
+                                         font=("Segoe UI", 14, "bold"), bootstyle="primary")
+        self.detail_upload_lbl.pack(anchor="w")
+
+        # Additional Actions Card
+        actions_card = tb.LabelFrame(scroll_frame, text="⚙️ Additional Actions", 
+                                    bootstyle="dark", padding=20)
+        actions_card.pack(fill="x", pady=(0, 15))
+
+        actions_grid = tb.Frame(actions_card)
+        actions_grid.pack(fill="x")
+
+        # Action buttons in grid (removed Advanced Settings and Export to PDF)
+        action_buttons = [
+            ("🔄 Refresh Data", "info", lambda: refresh_details()),
+            ("📈 View History", "secondary", lambda: self.open_router_history(router)),
+        ]
+
+        for i, (text, style, cmd) in enumerate(action_buttons):
+            row, col = i // 2, i % 2
+            tb.Button(actions_grid, text=text, bootstyle=style, command=cmd,
+                     width=25).grid(row=row, column=col, padx=10, pady=5, sticky="ew")
+        
+        actions_grid.grid_columnconfigure(0, weight=1)
+        actions_grid.grid_columnconfigure(1, weight=1)
 
         # --- Auto Update Function ---
         def refresh_details():
@@ -1324,28 +1732,39 @@ class Dashboard:
             hist = self.status_history.get(rid, {})
             bw = self.bandwidth_data.get(rid, {})
 
-            # --- Status ---
+            # --- Update Status Circle and Label ---
             status = hist.get("current")
             if status is True:
                 self.detail_status_lbl.config(text="🟢 Online", bootstyle="success")
+                self.status_circle.config(text="●", bootstyle="success")
+                
                 # Update bandwidth if router is online
                 if bw and bw.get("download") is not None and bw.get("upload") is not None:
-                    self.detail_download_lbl.config(text=f"⬇ Download: {bw['download']:.2f} Mbps")
-                    self.detail_upload_lbl.config(text=f"⬆ Upload: {bw['upload']:.2f} Mbps")
-                    self.loading_lbl.grid_forget()  # Hide loading once fetched
+                    self.detail_download_lbl.config(text=f"{bw['download']:.2f} Mbps")
+                    self.detail_upload_lbl.config(text=f"{bw['upload']:.2f} Mbps")
+                    
+                    # Update latency if available
+                    if bw.get("latency") is not None:
+                        self.detail_latency_lbl.config(text=f"{bw['latency']:.0f} ms", bootstyle="success")
                 else:
                     # If bandwidth not fetched yet, trigger fetching it
                     self.fetch_and_update_bandwidth(rid, router['ip_address'])
-                    self.loading_lbl.config(text="⏳ Bandwidth: Fetching...")
+                    self.detail_download_lbl.config(text="📶 Fetching...")
+                    self.detail_upload_lbl.config(text="📶 Fetching...")
+                    self.detail_latency_lbl.config(text="📡 Measuring...")
+                    
             elif status is False:
                 self.detail_status_lbl.config(text="🔴 Offline", bootstyle="danger")
-                self.detail_download_lbl.config(text="⬇ Download: N/A")
-                self.detail_upload_lbl.config(text="⬆ Upload: N/A")
-                self.loading_lbl.grid_forget()  # Hide loading for offline status
+                self.status_circle.config(text="●", bootstyle="danger")
+                self.detail_download_lbl.config(text="N/A - Offline")
+                self.detail_upload_lbl.config(text="N/A - Offline")
+                self.detail_latency_lbl.config(text="N/A - Offline", bootstyle="danger")
             else:
-                self.detail_status_lbl.config(text="🕒 Checking...", bootstyle="secondary")
-                self.detail_download_lbl.config(text="⬇ Download: N/A")
-                self.detail_upload_lbl.config(text="⬆ Upload: N/A")
+                self.detail_status_lbl.config(text="🔄 Checking...", bootstyle="warning")
+                self.status_circle.config(text="●", bootstyle="warning")
+                self.detail_download_lbl.config(text="📶 Checking...")
+                self.detail_upload_lbl.config(text="📶 Checking...")
+                self.detail_latency_lbl.config(text="📡 Checking...")
 
             # --- Last Seen ---
             last_seen = hist.get("last_checked")
@@ -1355,7 +1774,7 @@ class Dashboard:
                 else:
                     self.detail_last_seen_lbl.config(text="Never")
 
-            d.after(2000, refresh_details)  # refresh every 2s
+            d.after(3000, refresh_details)  # refresh every 3s
 
         refresh_details()
 
@@ -1377,6 +1796,118 @@ class Dashboard:
             lbl.pack(padx=10, pady=10)
         except Exception as e:
             messagebox.showerror("Error","Could not display image.")
+
+    def open_router_history(self, router):
+        from tkinter import Toplevel
+        from datetime import datetime, timedelta
+        try:
+            from report_utils import get_uptime_percentage, get_status_logs, get_bandwidth_usage
+        except Exception:
+            messagebox.showerror("Import Error", "report_utils helpers not found.")
+            return
+
+        # Modal window
+        win = Toplevel(self.root)
+        win.title(f"📈 History - {router.get('name', 'Router')}" )
+        win.geometry("800x600")
+        win.transient(self.root)
+        win.grab_set()
+        self._center_window(win, 800, 600)
+
+        outer = tb.Frame(win, padding=15)
+        outer.pack(fill="both", expand=True)
+
+        # Date range controls (last 7 days by default)
+        controls = tb.Frame(outer)
+        controls.pack(fill="x", pady=(0, 10))
+        tb.Label(controls, text="Start:").pack(side="left")
+        start_var = tb.StringVar()
+        end_var = tb.StringVar()
+        default_end = datetime.now()
+        default_start = default_end - timedelta(days=7)
+        start_var.set(default_start.strftime("%m/%d/%Y"))
+        end_var.set(default_end.strftime("%m/%d/%Y"))
+        start_entry = tb.Entry(controls, textvariable=start_var, width=12)
+        start_entry.pack(side="left", padx=5)
+        tb.Label(controls, text="End:").pack(side="left")
+        end_entry = tb.Entry(controls, textvariable=end_var, width=12)
+        end_entry.pack(side="left", padx=5)
+
+        tb.Button(controls, text="🔄 Refresh", bootstyle="info",
+                  command=lambda: load_data()).pack(side="left", padx=10)
+
+        # Summary cards
+        cards = tb.Frame(outer)
+        cards.pack(fill="x")
+        cards.grid_columnconfigure(0, weight=1)
+        cards.grid_columnconfigure(1, weight=1)
+        cards.grid_columnconfigure(2, weight=1)
+
+        uptime_card = tb.LabelFrame(cards, text="Uptime %", bootstyle="success", padding=10)
+        uptime_card.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        uptime_lbl = tb.Label(uptime_card, text="-", font=("Segoe UI", 16, "bold"))
+        uptime_lbl.pack()
+
+        downtime_card = tb.LabelFrame(cards, text="Downtime (hrs)", bootstyle="danger", padding=10)
+        downtime_card.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        downtime_lbl = tb.Label(downtime_card, text="-", font=("Segoe UI", 16, "bold"))
+        downtime_lbl.pack()
+
+        bw_card = tb.LabelFrame(cards, text="Bandwidth (MB)", bootstyle="warning", padding=10)
+        bw_card.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+        bw_lbl = tb.Label(bw_card, text="-", font=("Segoe UI", 16, "bold"))
+        bw_lbl.pack()
+
+        # Logs table
+        logs_frame = tb.LabelFrame(outer, text="Status Logs", bootstyle="secondary", padding=10)
+        logs_frame.pack(fill="both", expand=True, pady=(10, 0))
+        cols = ("timestamp", "status")
+        tree = ttk.Treeview(logs_frame, columns=cols, show="headings")
+        tree.heading("timestamp", text="Timestamp")
+        tree.heading("status", text="Status")
+        tree.column("timestamp", width=200, anchor="w")
+        tree.column("status", width=120, anchor="center")
+        vsb = ttk.Scrollbar(logs_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        tree.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+
+        def load_data():
+            # parse dates
+            try:
+                s = datetime.strptime(start_var.get(), "%m/%d/%Y")
+                e = datetime.strptime(end_var.get(), "%m/%d/%Y")
+                # include entire end day
+                e = datetime.combine(e.date(), datetime.max.time())
+            except Exception:
+                messagebox.showerror("Date Error", "Please use MM/DD/YYYY format.")
+                return
+
+            rid = router.get('id')
+            if not rid:
+                messagebox.showerror("Error", "Router ID missing.")
+                return
+
+            # compute stats
+            uptime = get_uptime_percentage(rid, s, e)
+            total_secs = (e - s).total_seconds()
+            downtime_hours = round(((100 - uptime) / 100.0) * total_secs / 3600.0, 2)
+            bw = get_bandwidth_usage(rid, s, e)
+
+            uptime_lbl.config(text=f"{uptime:.2f}%")
+            downtime_lbl.config(text=f"{downtime_hours:.2f}")
+            bw_lbl.config(text=f"{bw:.2f}")
+
+            # populate logs
+            for iid in tree.get_children():
+                tree.delete(iid)
+            logs = get_status_logs(rid, s, e)
+            for ts, status in logs:
+                # ts may already be datetime; format safely
+                ts_str = ts.strftime("%Y-%m-%d %H:%M:%S") if hasattr(ts, 'strftime') else str(ts)
+                tree.insert('', 'end', values=(ts_str, status.title()))
+
+        load_data()
 
     # ------------------------
     # Reload routers list and create/update router cards
@@ -1514,11 +2045,15 @@ class Dashboard:
             bw["latency"] = ping_latency(ip)  # Optional: Add latency info if needed
 
             # Update the shared bandwidth data dictionary
+            if not isinstance(self.bandwidth_data, dict):
+                self.bandwidth_data = {}
             self.bandwidth_data[rid] = bw
 
             # Trigger UI update in the main thread
             self.root.after(0, self._update_bandwidth_label, rid, bw)
         except Exception as e:
+            if not isinstance(self.bandwidth_data, dict):
+                self.bandwidth_data = {}
             self.bandwidth_data[rid] = None  # Handle errors and mark as None if failed
             print(f"Error fetching bandwidth for {rid}: {e}")
 
@@ -4456,7 +4991,9 @@ Type: {values[11]}
 
         # --- Handle no data ---
         if not rows:
-            self.bandwidth_data = []
+            # Ensure this remains a dict elsewhere; avoid list assignment errors
+            if not isinstance(self.bandwidth_data, dict):
+                self.bandwidth_data = {}
             self.bandwidth_table.delete(*self.bandwidth_table.get_children())
             self.ax1.clear()
             self.ax2.clear()
@@ -8249,18 +8786,42 @@ Type: {values[11]}
             print(f"Error updating notification count: {e}")
     
     def on_close(self):
+        """Confirm and exit the entire application cleanly from the Admin window."""
         answer = messagebox.askyesno("Exit Confirmation", "Are you sure you want to exit WinyFi?")
-        if answer:
-            self.app_running = False
+        if not answer:
+            return
+
+        # Stop background activities
+        self.app_running = False
+        try:
             self.stop_loop_detection()
-            try:
-                if self.update_task:
-                    self.root.after_cancel(self.update_task)
-            except:
-                pass
-            self.root.update_idletasks()
+        except Exception:
+            pass
+        try:
+            if getattr(self, 'update_task', None):
+                self.root.after_cancel(self.update_task)
+        except Exception:
+            pass
+
+        # Destroy the admin window
+        try:
             self.root.destroy()
-            os._exit(0)  # Force quit all threads & background processes
+        except Exception:
+            pass
+
+        # Also destroy the hidden login root (master) to terminate mainloop
+        try:
+            master = self.root.master
+            if master and master.winfo_exists():
+                master.destroy()
+        except Exception:
+            pass
+
+        # Hard-exit fallback to ensure full termination
+        try:
+            os._exit(0)
+        except Exception:
+            pass
     
     def show_user_profile(self):
         """Show user profile information with modern UI design"""
@@ -8522,12 +9083,54 @@ Type: {values[11]}
         messagebox.showinfo("Edit Profile", "Profile editing functionality will be implemented soon.")
 
     def logout(self):
-        if messagebox.askyesno("Log Out", "Are you sure you want to log out?"):
-            # destroy current UI and show login screen
-            for w in self.root.winfo_children():
-                w.destroy()
-            from login import show_login
-            show_login(self.root)
+        """Log out to the login screen without exiting the application."""
+        if not messagebox.askyesno("Log Out", "Are you sure you want to log out?"):
+            return
+
+        # Stop background tasks
+        self.app_running = False
+        try:
+            self.stop_loop_detection()
+        except Exception:
+            pass
+        try:
+            if getattr(self, 'update_task', None):
+                self.root.after_cancel(self.update_task)
+        except Exception:
+            pass
+
+        # Keep a handle to the hidden login root
+        master = getattr(self.root, 'master', None)
+
+        # Close the admin window
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
+
+        # Re-open login on the master root window
+        try:
+            if master and not master.winfo_exists():
+                return  # Master already destroyed; nothing else to do
+        except Exception:
+            master = None
+
+        try:
+            if master:
+                try:
+                    master.deiconify()
+                except Exception:
+                    pass
+                from login import show_login
+                # Clear any previous children in the root and rebuild the login UI
+                for child in master.winfo_children():
+                    try:
+                        child.destroy()
+                    except Exception:
+                        pass
+                show_login(master)
+        except Exception:
+            pass
 
 
 def show_dashboard(root, current_user, api_base_url="http://localhost:5000"):

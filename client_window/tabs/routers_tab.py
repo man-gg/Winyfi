@@ -286,75 +286,203 @@ class RoutersTab:
             section("🟢 Online Routers", online_list + offline_list)
 
     def open_router_details(self, router):
+        # Modernized client-side router details aligned with admin UI
         d = tk.Toplevel(self.root)
         d.title(f"Router Details - {router.get('name','')}")
-        d.geometry("520x600")
+        d.geometry("700x600")
         d.transient(self.root)
         d.grab_set()
+        d.configure(bg='#f8f9fa')
+        d.resizable(True, True)
 
-        # Center
+        # Center window
         self.root.update_idletasks()
         rx, ry = self.root.winfo_x(), self.root.winfo_y()
         rw, rh = self.root.winfo_width(), self.root.winfo_height()
-        w, h = 520, 600
+        w, h = 700, 600
         x = rx + (rw // 2) - (w // 2)
         y = ry + (rh // 2) - (h // 2)
         d.geometry(f"{w}x{h}+{x}+{y}")
 
-        # Scrollable
-        canvas = tk.Canvas(d, highlightthickness=0)
-        scrollbar = tb.Scrollbar(d, orient="vertical", command=canvas.yview)
-        scroll_frame = tb.Frame(canvas)
+        # Main container
+        main_container = tb.Frame(d, bootstyle="light")
+        main_container.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Header
+        header_frame = tb.LabelFrame(main_container, text="", bootstyle="primary", padding=20)
+        header_frame.pack(fill="x", pady=(0, 20))
+
+        title_frame = tb.Frame(header_frame)
+        title_frame.pack(fill="x")
+
+        status_indicator = tb.Frame(title_frame, width=20, height=20)
+        status_indicator.pack(side="left", padx=(0, 15))
+        status_circle = tb.Label(status_indicator, text="●", font=("Segoe UI", 24), bootstyle="secondary")
+        status_circle.pack()
+
+        title_text_frame = tb.Frame(title_frame)
+        title_text_frame.pack(side="left", fill="x", expand=True)
+        tb.Label(title_text_frame, text=f"📡 {router.get('name','')}", font=("Segoe UI", 20, "bold"), bootstyle="primary").pack(anchor="w")
+        ip_text = router.get('ip_address') or router.get('ip') or '—'
+        tb.Label(title_text_frame, text=f"IP: {ip_text}", font=("Segoe UI", 12), bootstyle="secondary").pack(anchor="w")
+
+        quick_actions = tb.Frame(header_frame)
+        quick_actions.pack(fill="x", pady=(15, 0))
+
+        img_path = router.get('image_path')
+        if img_path:
+            tb.Button(quick_actions, text="📷 View Image", bootstyle="info",
+                      command=lambda: self.show_router_image(img_path), width=15).pack(side="left")
+
+        # Scrollable content area
+        canvas = tk.Canvas(main_container, highlightthickness=0, bg='#f8f9fa')
+        scrollbar = tb.Scrollbar(main_container, orient="vertical", command=canvas.yview, bootstyle="secondary")
+        scroll_frame = tb.Frame(canvas, bootstyle="light")
         scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Header
-        tb.Label(scroll_frame, text=f"📡 {router.get('name','')}", font=("Segoe UI", 14, "bold"), bootstyle="primary").grid(row=0, column=0, columnspan=2, pady=(15,10), sticky="w")
+        # Store labels for updates
+        detail_status_lbl = None
+        detail_download_lbl = None
+        detail_upload_lbl = None
+        detail_last_seen_lbl = None
+        detail_latency_lbl = None
 
-        info_frame = tb.Frame(scroll_frame)
-        info_frame.grid(row=1, column=0, sticky="nsew", padx=12, pady=5)
-        info_frame.grid_columnconfigure(0, weight=1)
-        info_frame.grid_columnconfigure(1, weight=3)
+        # Basic Information Card
+        basic_info_card = tb.LabelFrame(scroll_frame, text="🔧 Basic Information", bootstyle="info", padding=20)
+        basic_info_card.pack(fill="x", pady=(0, 15))
+        basic_grid = tb.Frame(basic_info_card)
+        basic_grid.pack(fill="x")
+        basic_grid.grid_columnconfigure(1, weight=1)
+        basic_grid.grid_columnconfigure(3, weight=1)
 
-        # Fields
         name = router.get('name','—')
-        ip = router.get('ip_address') or router.get('ip') or '—'
         mac = router.get('mac_address','—')
         brand = router.get('brand','—')
         location = router.get('location','—')
-        image_path = router.get('image_path')
-        online = self._is_router_online(router)
-        last_seen = router.get('last_seen') or 'Never'
-
-        fields = [
-            ("Name", name),
-            ("IP Address", ip),
-            ("MAC Address", mac),
-            ("Brand", brand),
-            ("Location", (location, image_path)),
-            ("Status", "🟢 Online" if online else "🔴 Offline"),
-            ("Last Seen", last_seen if isinstance(last_seen, str) else str(last_seen)),
+        basic_fields = [
+            ("🏷️ Name:", name),
+            ("📍 Location:", location),
+            ("🏭 Brand:", brand),
+            ("📱 MAC Address:", mac),
         ]
+        for i, (label, value) in enumerate(basic_fields):
+            row, col = i // 2, (i % 2) * 2
+            tb.Label(basic_grid, text=label, font=("Segoe UI", 11, "bold"), bootstyle="secondary").grid(row=row, column=col, sticky="w", padx=(0, 10), pady=8)
+            tb.Label(basic_grid, text=value, font=("Segoe UI", 11), bootstyle="dark").grid(row=row, column=col+1, sticky="w", padx=(0, 30), pady=8)
 
-        row_num = 0
-        for label, val in fields:
-            label_frame = tb.LabelFrame(info_frame, text=label, padding=10, bootstyle="secondary")
-            label_frame.grid(row=row_num, column=0, sticky="ew", padx=5, pady=5)
+        # Connection Status Card
+        status_card = tb.LabelFrame(scroll_frame, text="🌐 Connection Status", bootstyle="success", padding=20)
+        status_card.pack(fill="x", pady=(0, 15))
+        status_row = tb.Frame(status_card)
+        status_row.pack(fill="x", pady=(0, 15))
+        tb.Label(status_row, text="📶 Current Status:", font=("Segoe UI", 12, "bold"), bootstyle="secondary").pack(side="left")
+        detail_status_lbl = tb.Label(status_row, text="🕒 Checking...", font=("Segoe UI", 12, "bold"), bootstyle="warning")
+        detail_status_lbl.pack(side="left", padx=(10, 0))
 
-            if label == "Location":
-                loc_text, img_p = val
-                inner = tb.Frame(label_frame)
-                inner.grid(row=0, column=0, sticky="w", padx=5)
-                tb.Label(inner, text=loc_text, font=("Segoe UI", 10)).pack(side="left")
-                if img_p:
-                    tb.Button(inner, text="📷 View", bootstyle="info", command=lambda p=img_p: self.show_router_image(p)).pack(side="left", padx=8)
-            else:
-                tb.Label(label_frame, text=val, font=("Segoe UI", 10)).grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        last_seen_row = tb.Frame(status_card)
+        last_seen_row.pack(fill="x")
+        tb.Label(last_seen_row, text="🕐 Last Seen:", font=("Segoe UI", 11, "bold"), bootstyle="secondary").pack(side="left")
+        last_seen = router.get('last_seen')
+        ls_text = last_seen if isinstance(last_seen, str) else (last_seen.strftime('%Y-%m-%d %H:%M:%S') if last_seen else 'Never')
+        detail_last_seen_lbl = tb.Label(last_seen_row, text=ls_text or 'Never', font=("Segoe UI", 11), bootstyle="dark")
+        detail_last_seen_lbl.pack(side="left", padx=(10, 0))
 
-            row_num += 1
+        # Performance Metrics Card
+        performance_card = tb.LabelFrame(scroll_frame, text="📊 Performance Metrics", bootstyle="warning", padding=20)
+        performance_card.pack(fill="x", pady=(0, 15))
+
+        latency_frame = tb.Frame(performance_card)
+        latency_frame.pack(fill="x", pady=(0, 15))
+        tb.Label(latency_frame, text="⚡ Latency:", font=("Segoe UI", 12, "bold"), bootstyle="secondary").pack(side="left")
+        detail_latency_lbl = tb.Label(latency_frame, text="📡 Measuring...", font=("Segoe UI", 12), bootstyle="info")
+        detail_latency_lbl.pack(side="left", padx=(10, 0))
+
+        bandwidth_frame = tb.LabelFrame(performance_card, text="🚀 Bandwidth Usage", bootstyle="info", padding=15)
+        bandwidth_frame.pack(fill="x")
+        download_frame = tb.Frame(bandwidth_frame)
+        download_frame.pack(fill="x", pady=(0, 10))
+        tb.Label(download_frame, text="⬇️", font=("Segoe UI", 16)).pack(side="left", padx=(0, 10))
+        download_text_frame = tb.Frame(download_frame)
+        download_text_frame.pack(side="left", fill="x", expand=True)
+        tb.Label(download_text_frame, text="Download Speed", font=("Segoe UI", 10, "bold"), bootstyle="secondary").pack(anchor="w")
+        detail_download_lbl = tb.Label(download_text_frame, text="📶 Fetching...", font=("Segoe UI", 14, "bold"), bootstyle="success")
+        detail_download_lbl.pack(anchor="w")
+
+        upload_frame = tb.Frame(bandwidth_frame)
+        upload_frame.pack(fill="x")
+        tb.Label(upload_frame, text="⬆️", font=("Segoe UI", 16)).pack(side="left", padx=(0, 10))
+        upload_text_frame = tb.Frame(upload_frame)
+        upload_text_frame.pack(side="left", fill="x", expand=True)
+        tb.Label(upload_text_frame, text="Upload Speed", font=("Segoe UI", 10, "bold"), bootstyle="secondary").pack(anchor="w")
+        detail_upload_lbl = tb.Label(upload_text_frame, text="📶 Fetching...", font=("Segoe UI", 14, "bold"), bootstyle="primary")
+        detail_upload_lbl.pack(anchor="w")
+
+        # Additional Actions Card
+        actions_card = tb.LabelFrame(scroll_frame, text="⚙️ Additional Actions", bootstyle="dark", padding=20)
+        actions_card.pack(fill="x", pady=(0, 15))
+        actions_grid = tb.Frame(actions_card)
+        actions_grid.pack(fill="x")
+        tb.Button(actions_grid, text="🔄 Refresh Data", bootstyle="info", command=lambda: refresh_details(), width=20).grid(row=0, column=0, padx=10, pady=5, sticky="ew")
+        tb.Button(actions_grid, text="📈 View History", bootstyle="secondary", command=lambda: self.open_router_history(router), width=20).grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+        actions_grid.grid_columnconfigure(0, weight=1)
+        actions_grid.grid_columnconfigure(1, weight=1)
+
+        def refresh_details():
+            if not d.winfo_exists():
+                return
+            rid = router.get('id')
+            # Status via API
+            try:
+                rs = requests.get(f"{self.api_base_url}/api/routers/{rid}/status", timeout=5)
+                if rs.ok:
+                    info = rs.json() or {}
+                    is_online = info.get('is_online', False)
+                    if is_online:
+                        detail_status_lbl.config(text="🟢 Online", bootstyle="success")
+                        status_circle.config(text="●", bootstyle="success")
+                    else:
+                        detail_status_lbl.config(text="🔴 Offline", bootstyle="danger")
+                        status_circle.config(text="●", bootstyle="danger")
+                else:
+                    detail_status_lbl.config(text="🔄 Checking...", bootstyle="warning")
+                    status_circle.config(text="●", bootstyle="warning")
+            except Exception:
+                detail_status_lbl.config(text="🔄 Checking...", bootstyle="warning")
+                status_circle.config(text="●", bootstyle="warning")
+
+            # Latest bandwidth log
+            try:
+                br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params={"router_id": rid, "limit": 1}, timeout=5)
+                if br.ok:
+                    arr = br.json() or []
+                    if arr:
+                        row = arr[0]
+                        dl = row.get('download_mbps') or 0
+                        ul = row.get('upload_mbps') or 0
+                        lat = row.get('latency_ms') or 0
+                        detail_download_lbl.config(text=f"{dl:.2f} Mbps")
+                        detail_upload_lbl.config(text=f"{ul:.2f} Mbps")
+                        detail_latency_lbl.config(text=f"{lat:.0f} ms", bootstyle="success")
+                    else:
+                        detail_download_lbl.config(text="No data")
+                        detail_upload_lbl.config(text="No data")
+                        detail_latency_lbl.config(text="—")
+                else:
+                    detail_download_lbl.config(text="📶 Fetching...")
+                    detail_upload_lbl.config(text="📶 Fetching...")
+                    detail_latency_lbl.config(text="📡 Measuring...")
+            except Exception:
+                detail_download_lbl.config(text="📶 Fetching...")
+                detail_upload_lbl.config(text="📶 Fetching...")
+                detail_latency_lbl.config(text="📡 Measuring...")
+
+            d.after(3000, refresh_details)
+
+        refresh_details()
 
     def show_router_image(self, image_path):
         if not image_path or not os.path.exists(image_path):
@@ -373,6 +501,143 @@ class RoutersTab:
             lbl.pack(padx=10, pady=10)
         except Exception:
             messagebox.showerror("Error", "Could not display image.")
+
+    def open_router_history(self, router):
+        # History modal for client side using API; falls back to report_utils if available
+        win = tk.Toplevel(self.root)
+        win.title(f"📈 History - {router.get('name','Router')}")
+        win.geometry("800x600")
+        win.transient(self.root)
+        win.grab_set()
+
+        # Center
+        self.root.update_idletasks()
+        rx, ry = self.root.winfo_x(), self.root.winfo_y()
+        rw, rh = self.root.winfo_width(), self.root.winfo_height()
+        w, h = 800, 600
+        x = rx + (rw // 2) - (w // 2)
+        y = ry + (rh // 2) - (h // 2)
+        win.geometry(f"{w}x{h}+{x}+{y}")
+
+        outer = tb.Frame(win, padding=15)
+        outer.pack(fill="both", expand=True)
+
+        # Date range controls
+        controls = tb.Frame(outer)
+        controls.pack(fill="x", pady=(0, 10))
+        tb.Label(controls, text="Start:").pack(side="left")
+        start_var = tb.StringVar()
+        end_var = tb.StringVar()
+        now = datetime.now()
+        start_default = now - timedelta(days=7)
+        start_var.set(start_default.strftime("%Y-%m-%d"))
+        end_var.set(now.strftime("%Y-%m-%d"))
+        tb.Entry(controls, textvariable=start_var, width=12).pack(side="left", padx=5)
+        tb.Label(controls, text="End:").pack(side="left")
+        tb.Entry(controls, textvariable=end_var, width=12).pack(side="left", padx=5)
+        tb.Button(controls, text="🔄 Refresh", bootstyle="info", command=lambda: load_data()).pack(side="left", padx=10)
+
+        # Summary cards
+        cards = tb.Frame(outer)
+        cards.pack(fill="x")
+        for i in range(3):
+            cards.grid_columnconfigure(i, weight=1)
+        uptime_card = tb.LabelFrame(cards, text="Uptime %", bootstyle="success", padding=10)
+        uptime_card.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        uptime_lbl = tb.Label(uptime_card, text="-", font=("Segoe UI", 16, "bold"))
+        uptime_lbl.pack()
+        downtime_card = tb.LabelFrame(cards, text="Downtime (hrs)", bootstyle="danger", padding=10)
+        downtime_card.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        downtime_lbl = tb.Label(downtime_card, text="-", font=("Segoe UI", 16, "bold"))
+        downtime_lbl.pack()
+        bw_card = tb.LabelFrame(cards, text="Bandwidth (MB)", bootstyle="warning", padding=10)
+        bw_card.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+        bw_lbl = tb.Label(bw_card, text="-", font=("Segoe UI", 16, "bold"))
+        bw_lbl.pack()
+
+        # Logs table
+        logs_frame = tb.LabelFrame(outer, text="Status Logs", bootstyle="secondary", padding=10)
+        logs_frame.pack(fill="both", expand=True, pady=(10, 0))
+        cols = ("timestamp", "status")
+        tree = tk.ttk.Treeview(logs_frame, columns=cols, show="headings") if hasattr(tk, 'ttk') else ttk.Treeview(logs_frame, columns=cols, show="headings")
+        # Fallback to ttk import
+        try:
+            from tkinter import ttk as _ttk
+            tree = _ttk.Treeview(logs_frame, columns=cols, show="headings")
+            vsb = _ttk.Scrollbar(logs_frame, orient="vertical", command=tree.yview)
+        except Exception:
+            from tkinter import ttk
+            tree = ttk.Treeview(logs_frame, columns=cols, show="headings")
+            vsb = ttk.Scrollbar(logs_frame, orient="vertical", command=tree.yview)
+        tree.heading("timestamp", text="Timestamp")
+        tree.heading("status", text="Status")
+        tree.column("timestamp", width=200, anchor="w")
+        tree.column("status", width=120, anchor="center")
+        tree.configure(yscrollcommand=vsb.set)
+        tree.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+
+        def load_data():
+            try:
+                s = datetime.strptime(start_var.get(), "%Y-%m-%d")
+                e = datetime.strptime(end_var.get(), "%Y-%m-%d")
+                e = datetime.combine(e.date(), datetime.max.time())
+            except Exception:
+                messagebox.showerror("Date Error", "Use YYYY-MM-DD format.")
+                return
+            rid = router.get('id')
+            # Uptime + Bandwidth via server-side report_utils through direct import if available
+            uptime = None
+            bw_total = None
+            try:
+                from report_utils import get_uptime_percentage, get_bandwidth_usage, get_status_logs
+                uptime = get_uptime_percentage(rid, s, e)
+                bw_total = get_bandwidth_usage(rid, s, e)
+                logs = get_status_logs(rid, s, e)
+            except Exception:
+                # Fallback: approximate uptime from status endpoint and leave logs empty
+                logs = []
+                try:
+                    # We could add an API endpoint for logs; not available yet
+                    pass
+                except Exception:
+                    pass
+
+            if uptime is None:
+                # If uptime not computable locally, leave as '-'
+                uptime_lbl.config(text="-")
+                downtime_lbl.config(text="-")
+            else:
+                uptime_lbl.config(text=f"{uptime:.2f}%")
+                total_secs = (e - s).total_seconds()
+                downtime_hours = round(((100 - uptime) / 100.0) * total_secs / 3600.0, 2)
+                downtime_lbl.config(text=f"{downtime_hours:.2f}")
+
+            if bw_total is None:
+                # Try API bandwidth stats as fallback
+                try:
+                    params = {"router_id": rid, "start_date": s.strftime("%Y-%m-%d"), "end_date": e.strftime("%Y-%m-%d")}
+                    br = requests.get(f"{self.api_base_url}/api/bandwidth/stats", params=params, timeout=6)
+                    if br.ok:
+                        data = br.json() or {}
+                        # approximate MB from averages * count; not perfect
+                        bw_total = round((data.get('avg_download', 0) + data.get('avg_upload', 0)) * max(data.get('total_measurements', 0), 1), 2)
+                except Exception:
+                    bw_total = None
+            bw_lbl.config(text=f"{bw_total:.2f}" if bw_total is not None else "-")
+
+            # Populate logs if available
+            try:
+                for iid in tree.get_children():
+                    tree.delete(iid)
+                for ts, status in logs:
+                    ts_str = ts.strftime("%Y-%m-%d %H:%M:%S") if hasattr(ts, 'strftime') else str(ts)
+                    tree.insert('', 'end', values=(ts_str, str(status).title()))
+            except Exception:
+                # Ignore if logs not available
+                pass
+
+        load_data()
 
     def start_auto_update(self):
         """Start the automatic update timer"""

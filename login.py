@@ -176,10 +176,23 @@ def show_login(root):
             show_dashboard(dashboard_window, user, api_base_url)
 
             def on_dashboard_close():
+                """Confirm and exit the entire application when the admin window is closed."""
                 if messagebox.askyesno("Exit", "Are you sure you want to exit?"):
-                    dashboard_window.destroy()
-                    root.quit()
-                root.quit()
+                    try:
+                        dashboard_window.destroy()
+                    except Exception:
+                        pass
+                    # Destroy the hidden root to terminate the app cleanly
+                    try:
+                        root.destroy()
+                    except Exception:
+                        pass
+                    # Hard-exit fallback to ensure full termination
+                    try:
+                        import os
+                        os._exit(0)
+                    except Exception:
+                        pass
 
             dashboard_window.protocol("WM_DELETE_WINDOW", on_dashboard_close)
         else:
@@ -192,10 +205,23 @@ def show_login(root):
             show_client_window(client_top, user)
 
             def on_client_close():
+                """Confirm and exit the entire application when the client window is closed."""
                 if messagebox.askyesno("Exit", "Are you sure you want to exit?"):
-                    client_top.destroy()
-                    root.quit()
-                root.quit()
+                    try:
+                        client_top.destroy()
+                    except Exception:
+                        pass
+                    # Destroy the hidden root to terminate the app cleanly
+                    try:
+                        root.destroy()
+                    except Exception:
+                        pass
+                    # Hard-exit fallback to ensure full termination
+                    try:
+                        import os
+                        os._exit(0)
+                    except Exception:
+                        pass
 
             client_top.protocol("WM_DELETE_WINDOW", on_client_close)
 
