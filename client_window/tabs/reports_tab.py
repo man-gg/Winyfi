@@ -70,17 +70,36 @@ class ReportsTab:
         # Action buttons
         button_frame = tb.Frame(filter_frame)
         button_frame.pack(fill='x', pady=(10, 0))
-        
-        tb.Button(button_frame, text="📊 Generate Report", 
-                 bootstyle="primary", command=self.generate_report).pack(side='left', padx=(0, 10))
-        tb.Button(button_frame, text="📁 Export CSV", 
-                 bootstyle="success", command=self.export_csv).pack(side='left', padx=(0, 10))
-        tb.Button(button_frame, text="🖨️ Print PDF", 
-                 bootstyle="warning", command=self.print_pdf).pack(side='left', padx=(0, 10))
-        tb.Button(button_frame, text="📈 PDF with Charts", 
-                 bootstyle="danger", command=self.print_pdf_with_charts).pack(side='left', padx=(0, 10))
-        tb.Button(button_frame, text="🔄 Refresh", 
-                 bootstyle="info", command=self.refresh_report).pack(side='left')
+        # Store button references for selective disabling
+        self.generate_btn = tb.Button(button_frame, text="📊 Generate Report", 
+            bootstyle="primary", command=self.generate_report)
+        self.generate_btn.pack(side='left', padx=(0, 10))
+        self.export_csv_btn = tb.Button(button_frame, text="📁 Export CSV", 
+            bootstyle="success", command=self.export_csv)
+        self.export_csv_btn.pack(side='left', padx=(0, 10))
+        self.print_pdf_btn = tb.Button(button_frame, text="🖨️ Print PDF", 
+            bootstyle="warning", command=self.print_pdf)
+        self.print_pdf_btn.pack(side='left', padx=(0, 10))
+        self.print_pdf_charts_btn = tb.Button(button_frame, text="📈 PDF with Charts", 
+            bootstyle="danger", command=self.print_pdf_with_charts)
+        self.print_pdf_charts_btn.pack(side='left', padx=(0, 10))
+        self.refresh_btn = tb.Button(button_frame, text="🔄 Refresh", 
+            bootstyle="info", command=self.refresh_report)
+        self.refresh_btn.pack(side='left')
+
+        # Inline loader container (initially hidden)
+        self._report_loader_container = tb.Frame(button_frame)
+        self._report_loader_container.pack(side='left', padx=(10,0))
+        self._report_loader_container.pack_forget()
+        self._report_pbar = tb.Progressbar(self._report_loader_container, mode='indeterminate', length=110, bootstyle='info-striped')
+        self._report_phase_label = tb.Label(self._report_loader_container, text='', font=("Segoe UI", 9, 'italic'), bootstyle='secondary')
+        self._report_cancel_btn = tb.Button(self._report_loader_container, text='Cancel', bootstyle='danger-outline', width=7, command=self._cancel_report_generation)
+        # Layout inside container
+        self._report_pbar.pack(side='left')
+        self._report_phase_label.pack(side='left', padx=(6,4))
+        self._report_cancel_btn.pack(side='left')
+        self._report_generating = False
+        self._report_cancel_event = None
         
         # Summary cards
         self.summary_frame = tb.Frame(self.parent_frame)
@@ -164,66 +183,40 @@ class ReportsTab:
         self.generate_report()
 
     def generate_report(self):
-        """Generate report data from API with progress bar and cancel option"""
+        """Generate report using inline loader with phases and cancel."""
         import threading
-        start_date = self.start_date.entry.get()
-        end_date = self.end_date.entry.get()
+        if self._report_generating:
+            return
+        start_date_raw = self.start_date.entry.get()
+        end_date_raw = self.end_date.entry.get()
         mode = self.view_mode_var.get()
-
-        # Convert MM/DD/YYYY to YYYY-MM-DD for API
+        # Validate dates
         try:
-            start_dt = datetime.strptime(start_date, "%m/%d/%Y")
-            end_dt = datetime.strptime(end_date, "%m/%d/%Y")
+            start_dt = datetime.strptime(start_date_raw, "%m/%d/%Y")
+            end_dt = datetime.strptime(end_date_raw, "%m/%d/%Y")
             if start_dt > end_dt:
                 messagebox.showerror("Invalid Date Range", "Start date cannot be after end date.")
                 return
-            # Convert to API format
-            start_date = start_dt.strftime("%Y-%m-%d")
-            end_date = end_dt.strftime("%Y-%m-%d")
         except ValueError:
-            messagebox.showerror("Invalid Date Format", "Please use MM/DD/YYYY format for dates.")
+            messagebox.showerror("Invalid Date Format", "Use MM/DD/YYYY.")
             return
-
         params = {
-            "start_date": start_date,
-            "end_date": end_date,
-            "mode": mode
+            'start_date': start_dt.strftime('%Y-%m-%d'),
+            'end_date': end_dt.strftime('%Y-%m-%d'),
+            'mode': mode
         }
+        # Show loader
+        self._show_report_loader(initial_phase="Contacting server...")
+        self._report_cancel_event = threading.Event()
 
-        # Progress modal
-        cancel_event = threading.Event()
-        prog = tb.Toplevel(self.root)
-        prog.title("Generating Report…")
-        prog.geometry("340x120")
-        prog.resizable(False, False)
-        prog.transient(self.root)
-        prog.grab_set()
-        frame = tb.Frame(prog, padding=15)
-        frame.pack(fill="both", expand=True)
-        lbl = tb.Label(frame, text="Contacting server…", font=("Segoe UI", 11))
-        lbl.pack(anchor="w")
-        pbar = tb.Progressbar(frame, mode="indeterminate", bootstyle="info-striped")
-        pbar.pack(fill="x", pady=12)
-        pbar.start(12)
-        btns = tb.Frame(frame)
-        btns.pack(fill="x")
-        def cancel():
-            cancel_event.set()
-            lbl.config(text="Cancelling… (will stop after current step)")
-        tb.Button(btns, text="Cancel", bootstyle="secondary", command=cancel).pack(side="right")
-
-        def on_done(success, msg, data=None, chart_data=None, summary=None):
-            try:
-                pbar.stop()
-                prog.destroy()
-            except Exception:
-                pass
+        def finish(success, msg, payload=None):
+            self._hide_report_loader()
             if success:
-                self.report_data = data or []
-                chart_data = chart_data or {}
-                summary = summary or {}
-                # Update summary cards
-                self.total_routers_label.config(text=str(summary.get("total_routers", 0)))
+                data = (payload or {}).get('report_data', [])
+                chart_data = (payload or {}).get('chart_data', {})
+                summary = (payload or {}).get('summary', {})
+                self.report_data = data
+                self.total_routers_label.config(text=str(summary.get('total_routers', 0)))
                 self.avg_uptime_label.config(text=f"{summary.get('avg_uptime', 0):.1f}%")
                 self.total_bandwidth_label.config(text=f"{summary.get('total_bandwidth', 0):.1f} MB")
                 self.update_table()
@@ -233,41 +226,77 @@ class ReportsTab:
 
         def worker():
             try:
-                if cancel_event.is_set():
-                    return
+                # Phase: Request
                 try:
                     resp = requests.get(f"{self.api_base_url}/api/reports/uptime", params=params, timeout=60)
                 except requests.exceptions.Timeout:
-                    self.root.after(0, lambda: on_done(False, "The server took too long to generate the report (timeout at 60s).\n\nTip: Try a shorter date range or a coarser aggregation (weekly/monthly) and try again."))
+                    self.root.after(0, lambda: finish(False, "Server timeout (60s). Try narrower date range."))
                     return
                 except Exception as e:
-                    self.root.after(0, lambda: on_done(False, f"Failed to connect to server: {str(e)}"))
+                    self.root.after(0, lambda: finish(False, f"Connection error: {e}"))
                     return
-                if cancel_event.is_set():
-                    self.root.after(0, lambda: on_done(False, "Report cancelled."))
+                if self._report_cancel_event.is_set():
+                    self.root.after(0, lambda: finish(False, "Report cancelled."))
                     return
-                if resp.ok:
+                if not resp.ok:
                     try:
-                        data = resp.json()
+                        err = resp.json().get('error', resp.text)
                     except Exception:
-                        self.root.after(0, lambda: on_done(False, "Failed to parse server response."))
-                        return
-                    self.root.after(0, lambda: on_done(
-                        True, "Report loaded.",
-                        data.get("report_data", []),
-                        data.get("chart_data", {}),
-                        data.get("summary", {})
-                    ))
-                else:
-                    try:
-                        error_msg = resp.json().get("error", "Unknown error")
-                    except Exception:
-                        error_msg = resp.text or "Unknown error"
-                    self.root.after(0, lambda: on_done(False, f"Failed to generate report: {error_msg}"))
+                        err = resp.text or 'Unknown error'
+                    self.root.after(0, lambda: finish(False, f"Failed: {err}"))
+                    return
+                # Phase: parsing
+                self.root.after(0, lambda: self._update_report_phase("Parsing data..."))
+                try:
+                    payload = resp.json()
+                except Exception:
+                    self.root.after(0, lambda: finish(False, "Invalid JSON response."))
+                    return
+                if self._report_cancel_event.is_set():
+                    self.root.after(0, lambda: finish(False, "Report cancelled."))
+                    return
+                # Simulate small processing steps for user feedback (optional quick phases)
+                self.root.after(0, lambda: self._update_report_phase("Updating UI..."))
+                self.root.after(0, lambda: finish(True, "Done", payload))
             except Exception as e:
-                self.root.after(0, lambda: on_done(False, f"An error occurred: {str(e)}"))
+                self.root.after(0, lambda: finish(False, f"Unexpected: {e}"))
 
         threading.Thread(target=worker, daemon=True).start()
+
+    # ---------------- Inline Loader Helpers -----------------
+    def _show_report_loader(self, initial_phase="Loading..."):
+        self._report_generating = True
+        # Disable buttons except maybe refresh
+        for btn in (self.generate_btn, self.export_csv_btn, self.print_pdf_btn, self.print_pdf_charts_btn):
+            try: btn.config(state='disabled')
+            except Exception: pass
+        self._report_loader_container.pack(side='left')
+        self._report_phase_label.config(text=initial_phase)
+        try: self._report_pbar.start(12)
+        except Exception: pass
+
+    def _update_report_phase(self, text):
+        if self._report_generating and self._report_phase_label.winfo_exists():
+            self._report_phase_label.config(text=text)
+
+    def _hide_report_loader(self):
+        if not self._report_generating:
+            return
+        try: self._report_pbar.stop()
+        except Exception: pass
+        try: self._report_loader_container.pack_forget()
+        except Exception: pass
+        for btn in (self.generate_btn, self.export_csv_btn, self.print_pdf_btn, self.print_pdf_charts_btn):
+            try: btn.config(state='normal')
+            except Exception: pass
+        self._report_phase_label.config(text='')
+        self._report_generating = False
+        self._report_cancel_event = None
+
+    def _cancel_report_generation(self):
+        if self._report_cancel_event and not self._report_cancel_event.is_set():
+            self._report_cancel_event.set()
+            self._update_report_phase("Cancelling...")
 
     def update_table(self):
         """Update the data table with report data"""

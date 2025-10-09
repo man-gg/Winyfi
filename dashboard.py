@@ -7,6 +7,7 @@ import csv
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from tkinter import messagebox, Toplevel, Menu, filedialog, ttk, simpledialog
+import time as _perf_time  # for loader timing (perf counter)
 import tkinter as tk
 from ttkbootstrap.dialogs import DatePickerDialog
 from PIL import Image, ImageTk
@@ -110,6 +111,245 @@ class Dashboard:
             self.start_loop_detection()
 
         start_bandwidth_logging(self._fetch_router_list)
+
+        # State flags for inline loaders
+        self._bandwidth_loading = False
+        self._reports_loading = False
+        self._bandwidth_loading_started = None
+        self._reports_loading_started = None
+        self._loader_min_ms = 350  # minimum visible time for spinners
+        self._bandwidth_hide_after_job = None
+        self._reports_hide_after_job = None
+
+    # =============================
+    # Inline Loading Animation Helpers
+    # =============================
+    def _show_bandwidth_loading(self):
+        if getattr(self, '_bandwidth_loading', False):
+            return
+        if hasattr(self, 'bandwidth_loading_spinner'):
+            try:
+                self._bandwidth_loading_started = _perf_time.perf_counter()
+                # Disable action buttons in bandwidth button frame while loading
+                try:
+                    if not hasattr(self, '_bandwidth_disabled_widgets'):
+                        self._bandwidth_disabled_widgets = []
+                    # Find parent frame of spinner (button_frame was used when created)
+                    btn_parent = self.bandwidth_loading_spinner.master
+                    for child in btn_parent.winfo_children():
+                        # Don't disable the spinner itself
+                        if child is self.bandwidth_loading_spinner:
+                            continue
+                        # Disable only buttons
+                        if child.winfo_class() in ("TButton", "Button") and child['state'] != 'disabled':
+                            self._bandwidth_disabled_widgets.append(child)
+                            child.config(state='disabled')
+                except Exception:
+                    pass
+
+                # Add / reuse a small label
+                if not hasattr(self, 'bandwidth_loading_label'):
+                    try:
+                        self.bandwidth_loading_label = tb.Label(
+                            self.bandwidth_loading_spinner.master,
+                            text="Loading...",
+                            font=("Segoe UI", 9, "italic"),
+                            bootstyle="secondary"
+                        )
+                        self.bandwidth_loading_label.pack(side="left", padx=(8,0))
+                    except Exception:
+                        pass
+                else:
+                    if not self.bandwidth_loading_label.winfo_ismapped():
+                        self.bandwidth_loading_label.pack(side="left", padx=(8,0))
+
+                self.bandwidth_loading_spinner.pack(side="left", padx=(15,0))
+                self.bandwidth_loading_spinner.start(12)
+                self._bandwidth_loading = True
+            except Exception:
+                pass
+
+    def _hide_bandwidth_loading(self):
+        if not getattr(self, '_bandwidth_loading', False):
+            return
+        # Enforce minimum display duration
+        elapsed_ms = 0
+        if self._bandwidth_loading_started is not None:
+            elapsed_ms = ( _perf_time.perf_counter() - self._bandwidth_loading_started ) * 1000
+        remaining = self._loader_min_ms - elapsed_ms
+        if remaining > 0:
+            # schedule hide later if too soon
+            if self._bandwidth_hide_after_job:
+                try: self.root.after_cancel(self._bandwidth_hide_after_job)
+                except Exception: pass
+            self._bandwidth_hide_after_job = self.root.after(int(remaining), self._hide_bandwidth_loading)
+            return
+        if hasattr(self, 'bandwidth_loading_spinner'):
+            try:
+                self.bandwidth_loading_spinner.stop()
+                self.bandwidth_loading_spinner.pack_forget()
+                if hasattr(self, 'bandwidth_loading_label') and self.bandwidth_loading_label.winfo_exists():
+                    self.bandwidth_loading_label.pack_forget()
+            except Exception:
+                pass
+        if hasattr(self, '_bandwidth_disabled_widgets'):
+            for w in self._bandwidth_disabled_widgets:
+                try: w.config(state='normal')
+                except Exception: pass
+            self._bandwidth_disabled_widgets.clear()
+        self._bandwidth_loading = False
+
+    def _show_reports_loading(self):
+        if getattr(self, '_reports_loading', False):
+            return
+        if hasattr(self, 'reports_loading_spinner'):
+            try:
+                self._reports_loading_started = _perf_time.perf_counter()
+                # Reset cancellation flag
+                self._report_cancel_requested = False
+                # If a previous thread is still alive, don't start another (user must cancel first)
+                if getattr(self, '_report_generation_thread', None) and self._report_generation_thread.is_alive():
+                    return
+                # Create a small container right after the Generate Report button (only once)
+                if hasattr(self, 'generate_report_btn') and not hasattr(self, 'reports_spinner_container'):
+                    parent = self.generate_report_btn.master
+                    self.reports_spinner_container = tb.Frame(parent)
+                    # Insert before the next sibling (open tickets) if it exists
+                    try:
+                        if hasattr(self, 'open_tickets_btn'):
+                            self.reports_spinner_container.pack(side="left", padx=(6,4), before=self.open_tickets_btn)
+                        else:
+                            self.reports_spinner_container.pack(side="left", padx=(6,4))
+                    except Exception:
+                        self.reports_spinner_container.pack(side="left", padx=(6,4))
+
+                # Disable report action buttons except Open Tickets and spinner container
+                try:
+                    if not hasattr(self, '_reports_disabled_widgets'):
+                        self._reports_disabled_widgets = []
+                    btn_parent = self.reports_loading_spinner.master
+                    for child in btn_parent.winfo_children():
+                        # Skip container, spinner, label, and open tickets button
+                        if child in (
+                            getattr(self, 'reports_spinner_container', None),
+                            self.reports_loading_spinner,
+                            getattr(self, 'reports_loading_label', None),
+                            getattr(self, 'open_tickets_btn', None)
+                        ):
+                            continue
+                        if child.winfo_class() in ("TButton", "Button") and child['state'] != 'disabled':
+                            self._reports_disabled_widgets.append(child)
+                            child.config(state='disabled')
+                except Exception:
+                    pass
+
+                # Re-parent spinner & label into container if we have it
+                container = getattr(self, 'reports_spinner_container', None)
+                target_parent = container if container else self.reports_loading_spinner.master
+
+                # Loading label
+                if not hasattr(self, 'reports_loading_label'):
+                    try:
+                        self.reports_loading_label = tb.Label(
+                            target_parent,
+                            text="Preparing...",
+                            font=("Segoe UI", 9, "italic"),
+                            bootstyle="secondary"
+                        )
+                        # Pack order: spinner then label for compact look
+                    except Exception:
+                        pass
+
+                # Ensure spinner is packed
+                try:
+                    self.reports_loading_spinner.pack_forget()
+                except Exception:
+                    pass
+                try:
+                    self.reports_loading_spinner.configure(length=110)
+                except Exception:
+                    pass
+                try:
+                    self.reports_loading_spinner.pack(in_=target_parent, side="left")
+                except Exception:
+                    pass
+
+                # Pack label (after spinner) if not visible
+                if hasattr(self, 'reports_loading_label'):
+                    if not self.reports_loading_label.winfo_ismapped():
+                        try:
+                            self.reports_loading_label.pack(in_=target_parent, side="left", padx=(6,4))
+                        except Exception:
+                            pass
+
+                # Cancel button (show only during generation)
+                if not hasattr(self, 'cancel_report_btn'):
+                    try:
+                        self.cancel_report_btn = tb.Button(target_parent, text="Cancel", bootstyle="danger-outline", command=self._cancel_report_generation)
+                    except Exception:
+                        self.cancel_report_btn = None
+                if self.cancel_report_btn and not self.cancel_report_btn.winfo_ismapped():
+                    try:
+                        self.cancel_report_btn.pack(in_=target_parent, side="left", padx=(6,0))
+                    except Exception:
+                        pass
+
+                self.reports_loading_spinner.start(12)
+                self._reports_loading = True
+            except Exception:
+                pass
+
+    def _hide_reports_loading(self):
+        if not getattr(self, '_reports_loading', False):
+            return
+        elapsed_ms = 0
+        if self._reports_loading_started is not None:
+            elapsed_ms = ( _perf_time.perf_counter() - self._reports_loading_started ) * 1000
+        remaining = self._loader_min_ms - elapsed_ms
+        if remaining > 0:
+            if self._reports_hide_after_job:
+                try: self.root.after_cancel(self._reports_hide_after_job)
+                except Exception: pass
+            self._reports_hide_after_job = self.root.after(int(remaining), self._hide_reports_loading)
+            return
+        if hasattr(self, 'reports_loading_spinner'):
+            try:
+                self.reports_loading_spinner.stop()
+                self.reports_loading_spinner.pack_forget()
+                if hasattr(self, 'reports_loading_label') and self.reports_loading_label.winfo_exists():
+                    self.reports_loading_label.pack_forget()
+            except Exception:
+                pass
+        if hasattr(self, '_reports_disabled_widgets'):
+            for w in self._reports_disabled_widgets:
+                try: w.config(state='normal')
+                except Exception: pass
+            self._reports_disabled_widgets.clear()
+        # Hide cancel button
+        if hasattr(self, 'cancel_report_btn') and self.cancel_report_btn:
+            try: self.cancel_report_btn.pack_forget()
+            except Exception: pass
+        # Reset label if exists
+        if hasattr(self, 'reports_loading_label') and self.reports_loading_label and self.reports_loading_label.winfo_exists():
+            try: self.reports_loading_label.config(text="")
+            except Exception: pass
+        self._reports_loading = False
+        self._report_generation_thread = None
+        self._report_cancel_requested = False
+
+    def _update_reports_phase(self, text):
+        """Update the phase/status text for report generation safely from any thread."""
+        try:
+            if hasattr(self, 'reports_loading_label') and self.reports_loading_label.winfo_exists():
+                self.reports_loading_label.config(text=text)
+                self.reports_loading_label.update_idletasks()
+        except Exception:
+            pass
+
+    def _cancel_report_generation(self):
+        if getattr(self, '_reports_loading', False):
+            self._report_cancel_requested = True
+            self._update_reports_phase("Cancelling...")
 
     def _fetch_router_list(self):
         """Return router list from DB."""
@@ -2080,10 +2320,18 @@ class Dashboard:
             download = bandwidth.get("download")
             upload = bandwidth.get("upload")
             latency = bandwidth.get("latency")
-            bw_label.config(
-                text=f"⏱ {latency:.0f} ms | ⬇ {download:.2f} Mbps | ⬆ {upload:.2f} Mbps",
-                bootstyle="info"
-            )
+            # Safeguard None values
+            if download is None or upload is None:
+                bw_label.config(text="⏳ Bandwidth: Fetching...", bootstyle="secondary")
+                return
+            latency_disp = f"{latency:.0f} ms" if isinstance(latency, (int, float)) else "— ms"
+            try:
+                bw_label.config(
+                    text=f"⏱ {latency_disp} | ⬇ {float(download):.2f} Mbps | ⬆ {float(upload):.2f} Mbps",
+                    bootstyle="info"
+                )
+            except Exception:
+                bw_label.config(text="⚠ Bandwidth: Format error", bootstyle="warning")
 
 
 
@@ -4088,6 +4336,15 @@ Type: {values[11]}
         tb.Button(button_frame, text="📅 Last 7 Days", bootstyle="secondary",
                  command=self.load_last_7_days_bandwidth).pack(side="left")
 
+        # Inline bandwidth loading spinner (hidden by default)
+        self.bandwidth_loading_spinner = tb.Progressbar(
+            button_frame,
+            mode="indeterminate",
+            bootstyle="info-striped",
+            length=120
+        )
+        # We'll pack/place it only when needed
+
         # Statistics cards
         self.bandwidth_stats_frame = tb.Frame(self.bandwidth_frame)
         self.bandwidth_stats_frame.pack(fill="x", padx=20, pady=10)
@@ -4228,8 +4485,15 @@ Type: {values[11]}
             self.start_report_auto_update()
 
     def refresh_reports(self):
-        """Refresh reports data"""
-        self.generate_report_table(filter_mode=self.report_mode.get().lower())
+        """Refresh reports data with inline loader."""
+        self._show_reports_loading()
+        self.root.after(50, lambda: self._refresh_reports_inner())
+
+    def _refresh_reports_inner(self):
+        try:
+            self.generate_report_table(filter_mode=self.report_mode.get().lower())
+        finally:
+            self._hide_reports_loading()
 
     # Auto-update methods for bandwidth tab
     def start_bandwidth_auto_update(self):
@@ -4416,6 +4680,7 @@ Type: {values[11]}
         Load bandwidth logs for a given router, optionally filtered by start and end dates.
         Updates both the chart and the table, and schedules auto-refresh.
         """
+        self._show_bandwidth_loading()
         try:
             # Cancel previous scheduled refresh
             if hasattr(self, "_bandwidth_after_job") and self._bandwidth_after_job:
@@ -4544,6 +4809,7 @@ Type: {values[11]}
             5000,
             lambda: self.load_bandwidth_data(router_id, start_date, end_date)
         )
+        self._hide_bandwidth_loading()
 
     def refresh_total_bandwidth_chart_with_dates(self):
         router_name = self.router_var.get()
@@ -4708,10 +4974,8 @@ Type: {values[11]}
         self.load_total_bandwidth_chart()
 
     def load_total_bandwidth_chart(self):
-        """
-        Draws/refreshes the Total Bandwidth chart and table.
-        Respects router selection and optional date filter.
-        """
+        """Draws/refreshes the Total Bandwidth chart & table (with loader)."""
+        self._show_bandwidth_loading()
         # Cancel previous refresh
         if hasattr(self, "_bandwidth_after_job") and self._bandwidth_after_job:
             self.bandwidth_frame.after_cancel(self._bandwidth_after_job)
@@ -4795,6 +5059,11 @@ Type: {values[11]}
         rows = cur.fetchall()
         conn.close()
         if not rows:
+            # Hide loader before returning when no data
+            try:
+                self._hide_bandwidth_loading()
+            except Exception:
+                pass
             return
 
         # Prepare data
@@ -4839,6 +5108,7 @@ Type: {values[11]}
 
         # Auto-refresh every 5s
         self._bandwidth_after_job = self.bandwidth_frame.after(5000, self.load_total_bandwidth_chart)
+        self._hide_bandwidth_loading()
 
 
     def load_bandwidth_chart(self):
@@ -4916,6 +5186,7 @@ Type: {values[11]}
         Fetch data based on router selection and optional date filter.
         Updates both the table and chart.
         """
+        self._show_bandwidth_loading()
         # Cancel any scheduled refresh
         if hasattr(self, "_bandwidth_after_job") and self._bandwidth_after_job:
             self.bandwidth_frame.after_cancel(self._bandwidth_after_job)
@@ -5030,6 +5301,7 @@ Type: {values[11]}
 
         # --- Schedule auto-refresh every 5s ---
         self._bandwidth_after_job = self.bandwidth_frame.after(5000, self.refresh_total_bandwidth_chart)
+        self._hide_bandwidth_loading()
 
 
 
@@ -5107,16 +5379,33 @@ Type: {values[11]}
         button_frame = tb.Frame(controls_frame)
         button_frame.pack(fill="x")
         
-        tb.Button(button_frame, text="📊 Generate Report", bootstyle="primary",
+        # Store references to control which buttons are disabled during loading
+        self.generate_report_btn = tb.Button(button_frame, text="📊 Generate Report", bootstyle="primary",
             command=lambda: self.generate_report_table(
                 filter_mode=self.report_mode.get().lower()
-                 )).pack(side="left", padx=(0, 10))
-        tb.Button(button_frame, text="🎫 Open Tickets Management", bootstyle="warning",
-                 command=self.open_ticket_window).pack(side="left", padx=(0, 10))
-        tb.Button(button_frame, text="🖨️ Print Report", bootstyle="info",
-                 command=self.print_report).pack(side="left", padx=(0, 10))
-        tb.Button(button_frame, text="🔄 Refresh", bootstyle="secondary",
-                 command=self.refresh_reports).pack(side="left")
+                 ))
+        self.generate_report_btn.pack(side="left", padx=(0, 10))
+
+        self.open_tickets_btn = tb.Button(button_frame, text="🎫 Open Tickets Management", bootstyle="warning",
+                 command=self.open_ticket_window)
+        self.open_tickets_btn.pack(side="left", padx=(0, 10))
+
+        self.print_report_btn = tb.Button(button_frame, text="🖨️ Print Report", bootstyle="info",
+                 command=self.print_report)
+        self.print_report_btn.pack(side="left", padx=(0, 10))
+
+        self.refresh_reports_btn = tb.Button(button_frame, text="🔄 Refresh", bootstyle="secondary",
+                 command=self.refresh_reports)
+        self.refresh_reports_btn.pack(side="left")
+
+        # Inline reports loading spinner (hidden by default)
+        self.reports_loading_spinner = tb.Progressbar(
+            button_frame,
+            mode="indeterminate",
+            bootstyle="info-striped",
+            length=120
+        )
+        # Will be packed dynamically right after the Generate Report button
 
         # Summary cards
         self.summary_frame = tb.Frame(self.reports_frame)
@@ -5219,181 +5508,188 @@ Type: {values[11]}
 
 
     def generate_report_table(self, filter_mode="weekly"):
+        """Generate the reports table and charts. Refactored to defer heavy work so the spinner shows."""
+        import threading
+        # Prevent multiple overlapping generations
+        if getattr(self, '_report_generation_thread', None) and self._report_generation_thread.is_alive():
+            return
+        self._show_reports_loading()
         try:
-            from datetime import datetime, time, timedelta
-            import matplotlib.pyplot as plt
-            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-            import mplcursors
-            import ttkbootstrap as tb
+            self.root.update_idletasks()
+        except Exception:
+            pass
 
-            # -----------------------------
-            # Read selected dates
-            # -----------------------------
-            start_str = self.report_start_date.entry.get()
-            end_str = self.report_end_date.entry.get()
-            
-            # Handle both old and new date formats
+        def worker():
             try:
-                start_date = datetime.combine(datetime.strptime(start_str, "%m/%d/%Y"), time.min)
-                end_date = datetime.combine(datetime.strptime(end_str, "%m/%d/%Y"), time.max)
-            except ValueError:
-                # Fallback to old format
-                start_date = datetime.combine(datetime.strptime(start_str, "%m/%d/%Y"), time.min)
-                end_date = datetime.combine(datetime.strptime(end_str, "%m/%d/%Y"), time.max)
+                from datetime import datetime, time, timedelta
+                import matplotlib.pyplot as plt
+                from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+                import mplcursors
+                # Phase 1: parse dates
+                self.root.after(0, self._update_reports_phase, "Parsing dates...")
+                start_str = self.report_start_date.entry.get()
+                end_str = self.report_end_date.entry.get()
+                try:
+                    start_date = datetime.combine(datetime.strptime(start_str, "%m/%d/%Y"), time.min)
+                    end_date = datetime.combine(datetime.strptime(end_str, "%m/%d/%Y"), time.max)
+                except ValueError:
+                    start_date = datetime.combine(datetime.strptime(start_str, "%m/%d/%Y"), time.min)
+                    end_date = datetime.combine(datetime.strptime(end_str, "%m/%d/%Y"), time.max)
+                if start_date > end_date:
+                    from tkinter import messagebox
+                    self.root.after(0, lambda: messagebox.showerror("Invalid Date Range", "Start date cannot be after end date."))
+                    self.root.after(0, self._hide_reports_loading)
+                    return
+                if getattr(self, '_report_cancel_requested', False):
+                    self.root.after(0, self._hide_reports_loading)
+                    return
 
-            if start_date > end_date:
-                from tkinter import messagebox
-                messagebox.showerror("Invalid Date Range", "Start date cannot be after end date.")
-                return
+                # Phase 2: fetch routers
+                self.root.after(0, self._update_reports_phase, "Loading routers...")
+                routers = get_routers()
+                if getattr(self, '_report_cancel_requested', False):
+                    self.root.after(0, self._hide_reports_loading)
+                    return
 
-            # -----------------------------
-            # Utility: format downtime
-            # -----------------------------
-            def format_downtime(seconds):
-                days, remainder = divmod(seconds, 86400)
-                hours, remainder = divmod(remainder, 3600)
-                minutes, sec = divmod(remainder, 60)
-                if days > 0: return f"{days}d {hours}h {minutes}m"
-                elif hours > 0: return f"{hours}h {minutes}m"
-                elif minutes > 0: return f"{minutes}m {sec}s"
-                else: return f"{sec}s"
-
-            # -----------------------------
-            # Clear previous table
-            # -----------------------------
-            if hasattr(self, 'uptime_tree'):
-                self.uptime_tree.delete(*self.uptime_tree.get_children())
-            routers = get_routers()
-
-            # -----------------------------
-            # Fill table
-            # -----------------------------
-            total_uptime = 0
-            total_bandwidth = 0
-            router_count = len(routers)
-            
-            for r in routers:
-                router_id = r["id"]
-                uptime = get_uptime_percentage(router_id, start_date, end_date)
-                downtime_seconds = (1 - uptime / 100) * (end_date - start_date).total_seconds()
-                downtime_str = format_downtime(int(downtime_seconds))
-                bandwidth = get_bandwidth_usage(router_id, start_date, end_date)
-                bandwidth_str = f"{bandwidth / 1024:.2f} GB" if bandwidth >= 1024 else f"{bandwidth:.2f} MB"
-
+                # Clear previous table
                 if hasattr(self, 'uptime_tree'):
-                    self.uptime_tree.insert(
-                    "",
-                    "end",
-                    values=(
-                        r["name"],
-                        f"{uptime:.2f}%",
-                        downtime_str,
-                        bandwidth_str
-                    )
-                )
-                
-                total_uptime += uptime
-                total_bandwidth += bandwidth
+                    self.root.after(0, lambda: self.uptime_tree.delete(*self.uptime_tree.get_children()))
 
-            # Update summary cards
-            self.update_reports_summary_cards(router_count, total_uptime, total_bandwidth, router_count)
+                total_uptime = 0
+                total_bandwidth = 0
+                router_count = len(routers)
 
-            # -----------------------------
-            # Compute daily averages
-            # -----------------------------
-            def get_daily_avg_uptime(start_date, end_date):
-                days = (end_date - start_date).days + 1
-                results = []
-                for i in range(days):
-                    day_start = start_date + timedelta(days=i)
-                    day_end = day_start.replace(hour=23, minute=59, second=59)
-                    uptimes = [get_uptime_percentage(r["id"], day_start, day_end) for r in routers]
-                    avg_uptime = sum(uptimes) / len(uptimes) if uptimes else 0
-                    results.append((day_start, avg_uptime))
-                return results
+                # Phase 3: per-router stats
+                for idx, r in enumerate(routers, start=1):
+                    if getattr(self, '_report_cancel_requested', False):
+                        break
+                    self.root.after(0, self._update_reports_phase, f"Processing router {idx}/{router_count}...")
+                    router_id = r['id']
+                    uptime = get_uptime_percentage(router_id, start_date, end_date)
+                    downtime_seconds = (1 - uptime / 100) * (end_date - start_date).total_seconds()
+                    bandwidth = get_bandwidth_usage(router_id, start_date, end_date)
+                    total_uptime += uptime
+                    total_bandwidth += bandwidth
+                    # Insert row
+                    def insert_row(r=r, uptime=uptime, downtime_seconds=downtime_seconds, bandwidth=bandwidth):
+                        if not hasattr(self, 'uptime_tree'): return
+                        def format_downtime(seconds):
+                            days, remainder = divmod(seconds, 86400)
+                            hours, remainder = divmod(remainder, 3600)
+                            minutes, sec = divmod(remainder, 60)
+                            if days > 0: return f"{days}d {hours}h {minutes}m"
+                            elif hours > 0: return f"{hours}h {minutes}m"
+                            elif minutes > 0: return f"{minutes}m {sec}s"
+                            else: return f"{sec}s"
+                        bandwidth_str = f"{bandwidth / 1024:.2f} GB" if bandwidth >= 1024 else f"{bandwidth:.2f} MB"
+                        self.uptime_tree.insert("", "end", values=(
+                            r['name'],
+                            f"{uptime:.2f}%",
+                            format_downtime(int(downtime_seconds)),
+                            bandwidth_str
+                        ))
+                    self.root.after(0, insert_row)
 
-            daily_data = get_daily_avg_uptime(start_date, end_date)
+                if getattr(self, '_report_cancel_requested', False):
+                    self.root.after(0, self._update_reports_phase, "Cancelled")
+                    self.root.after(0, self._hide_reports_loading)
+                    return
 
-            # -----------------------------
-            # Aggregate based on filter_mode
-            # -----------------------------
-            aggregated = {}
-            for date, uptime in daily_data:
-                if filter_mode == "weekly":
-                    key = date.strftime("Week %U (%Y)")
-                elif filter_mode == "monthly":
-                    key = date.strftime("%B %Y")
-                else:
-                    key = date.strftime("%m-%d")
-                aggregated.setdefault(key, []).append(uptime)
+                # Summary cards
+                self.root.after(0, self._update_reports_phase, "Updating summary...")
+                self.root.after(0, lambda: self.update_reports_summary_cards(router_count, total_uptime, total_bandwidth, router_count))
 
-            agg_dates = list(aggregated.keys())
-            agg_uptimes = [sum(vals) / len(vals) for vals in aggregated.values()]
+                # Phase 4: daily averages
+                self.root.after(0, self._update_reports_phase, "Aggregating daily data...")
+                def get_daily_avg_uptime(start_date, end_date):
+                    days = (end_date - start_date).days + 1
+                    results = []
+                    for i in range(days):
+                        day_start = start_date + timedelta(days=i)
+                        day_end = day_start.replace(hour=23, minute=59, second=59)
+                        uptimes = [get_uptime_percentage(r['id'], day_start, day_end) for r in routers]
+                        avg_uptime = sum(uptimes) / len(uptimes) if uptimes else 0
+                        results.append((day_start, avg_uptime))
+                    return results
+                daily_data = get_daily_avg_uptime(start_date, end_date)
+                if getattr(self, '_report_cancel_requested', False):
+                    self.root.after(0, self._hide_reports_loading)
+                    return
 
-            # -----------------------------
-            # Store for printing
-            # -----------------------------
-            self.agg_dates = agg_dates
-            self.agg_uptimes = agg_uptimes
+                # Phase 5: aggregate by filter
+                self.root.after(0, self._update_reports_phase, "Grouping data...")
+                aggregated = {}
+                for date, uptime in daily_data:
+                    if filter_mode == "weekly":
+                        key = date.strftime("Week %U (%Y)")
+                    elif filter_mode == "monthly":
+                        key = date.strftime("%B %Y")
+                    else:
+                        key = date.strftime("%m-%d")
+                    aggregated.setdefault(key, []).append(uptime)
+                agg_dates = list(aggregated.keys())
+                agg_uptimes = [sum(vals) / len(vals) for vals in aggregated.values()]
+                self.agg_dates = agg_dates
+                self.agg_uptimes = agg_uptimes
 
-            # -----------------------------
-            # Draw chart in GUI
-            # -----------------------------
-            def draw_chart():
-                for widget in self.reports_charts_frame.winfo_children():
-                    widget.destroy()
-                fig, ax = plt.subplots(figsize=(8, 4))
-                line, = ax.plot(range(len(agg_dates)), agg_uptimes, marker="o", linestyle="-", color="blue", label="Avg Uptime %")
-                ax.set_ylim(0, 100)
-                ax.set_ylabel("Uptime %")
+                # Phase 6: rendering chart
+                self.root.after(0, self._update_reports_phase, "Rendering chart...")
+                def draw_chart():
+                    for widget in self.reports_charts_frame.winfo_children():
+                        widget.destroy()
+                    fig, ax = plt.subplots(figsize=(8, 4))
+                    line, = ax.plot(range(len(agg_dates)), agg_uptimes, marker="o", linestyle="-", color="blue", label="Avg Uptime %")
+                    ax.set_ylim(0, 100)
+                    ax.set_ylabel("Uptime %")
+                    if filter_mode == "weekly":
+                        ax.set_title("Average Router Uptime (Weekly)")
+                        ax.set_xlabel("Week #")
+                        x_labels = [f"W{i+1}" for i in range(len(agg_dates))]
+                    elif filter_mode == "monthly":
+                        ax.set_title("Average Router Uptime (Monthly)")
+                        ax.set_xlabel("Month")
+                        x_labels = agg_dates
+                    else:
+                        ax.set_title("Average Router Uptime (Daily)")
+                        ax.set_xlabel("Date")
+                        x_labels = agg_dates
+                    ax.set_xticks(range(len(agg_dates)))
+                    ax.set_xticklabels(x_labels, rotation=45, ha="right")
+                    ax.grid(True)
+                    fig.tight_layout()
+                    cursor = mplcursors.cursor(line, hover=True)
+                    @cursor.connect("add")
+                    def on_hover(sel):
+                        idx = int(round(sel.index))
+                        if 0 <= idx < len(agg_dates):
+                            sel.annotation.set_text(f"{agg_dates[idx]}\nUptime: {agg_uptimes[idx]:.2f}%")
+                            sel.annotation.get_bbox_patch().set(fc="white", alpha=0.8)
+                    canvas = FigureCanvasTkAgg(fig, master=self.reports_charts_frame)
+                    canvas.draw()
+                    canvas.get_tk_widget().pack(fill="both", expand=True)
+                    self.current_fig = fig
+                def finish():
+                    if not hasattr(self, 'chart_visible'):
+                        self.chart_visible = True
+                    if not hasattr(self, 'toggle_btn'):
+                        import ttkbootstrap as tb
+                        self.toggle_btn = tb.Button(self.reports_charts_frame, text="Hide Chart", command=lambda: self.toggle_chart(), bootstyle="secondary")
+                        self.toggle_btn.pack(anchor="ne", padx=5, pady=2)
+                    if self.chart_visible and not getattr(self, '_report_cancel_requested', False):
+                        draw_chart()
+                    if getattr(self, '_report_cancel_requested', False):
+                        self._update_reports_phase("Cancelled")
+                    else:
+                        self._update_reports_phase("Done")
+                    self._hide_reports_loading()
+                self.root.after(0, finish)
+            except Exception as e:
+                from tkinter import messagebox
+                self.root.after(0, lambda: messagebox.showerror("Error", str(e)))
+                self.root.after(0, self._hide_reports_loading)
 
-                if filter_mode == "weekly":
-                    ax.set_title("Average Router Uptime (Weekly)")
-                    ax.set_xlabel("Week #")
-                    x_labels = [f"W{i+1}" for i in range(len(agg_dates))]
-                elif filter_mode == "monthly":
-                    ax.set_title("Average Router Uptime (Monthly)")
-                    ax.set_xlabel("Month")
-                    x_labels = agg_dates
-                else:
-                    ax.set_title("Average Router Uptime (Daily)")
-                    ax.set_xlabel("Date")
-                    x_labels = agg_dates
-
-                ax.set_xticks(range(len(agg_dates)))
-                ax.set_xticklabels(x_labels, rotation=45, ha="right")
-                ax.grid(True)
-                fig.tight_layout()
-
-                # Tooltips
-                cursor = mplcursors.cursor(line, hover=True)
-                @cursor.connect("add")
-                def on_hover(sel):
-                    idx = int(round(sel.index))
-                    if 0 <= idx < len(agg_dates):
-                        sel.annotation.set_text(f"{agg_dates[idx]}\nUptime: {agg_uptimes[idx]:.2f}%")
-                        sel.annotation.get_bbox_patch().set(fc="white", alpha=0.8)
-
-                canvas = FigureCanvasTkAgg(fig, master=self.reports_charts_frame)
-                canvas.draw()
-                canvas.get_tk_widget().pack(fill="both", expand=True)
-
-                # Store figure for printing
-                self.current_fig = fig
-
-            if not hasattr(self, "chart_visible"):
-                self.chart_visible = True
-
-            if not hasattr(self, "toggle_btn"):
-                self.toggle_btn = tb.Button(self.reports_charts_frame, text="Hide Chart", command=lambda: self.toggle_chart(), bootstyle="secondary")
-                self.toggle_btn.pack(anchor="ne", padx=5, pady=2)
-
-            if self.chart_visible:
-                draw_chart()
-
-        except Exception as e:
-            from tkinter import messagebox
-            messagebox.showerror("Error", str(e))
+        self._report_generation_thread = threading.Thread(target=worker, daemon=True)
+        self._report_generation_thread.start()
             
     def print_report(self):
         """Show print preview window with report and charts"""

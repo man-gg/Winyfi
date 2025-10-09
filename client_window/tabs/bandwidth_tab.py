@@ -100,15 +100,31 @@ class BandwidthTab:
         # Action buttons
         button_frame = tb.Frame(controls_frame)
         button_frame.pack(fill="x")
-        
-        tb.Button(button_frame, text="🔍 Apply Filter", bootstyle="primary",
-                 command=self.load_bandwidth_data).pack(side="left", padx=(0, 10))
-        tb.Button(button_frame, text="🔄 Refresh", bootstyle="info",
-                 command=self.refresh_bandwidth_data).pack(side="left", padx=(0, 10))
-        tb.Button(button_frame, text="📊 Last 7 Days", bootstyle="secondary",
-                 command=self.load_last_7_days).pack(side="left", padx=(0, 10))
-        tb.Button(button_frame, text="🔄 Force Chart Refresh", bootstyle="warning",
-                 command=self.force_chart_refresh).pack(side="left")
+        # Store buttons for enabling/disabling
+        self.apply_btn = tb.Button(button_frame, text="🔍 Apply Filter", bootstyle="primary",
+                                   command=self.load_bandwidth_data)
+        self.apply_btn.pack(side="left", padx=(0, 10))
+        self.refresh_btn = tb.Button(button_frame, text="🔄 Refresh", bootstyle="info",
+                                     command=self.refresh_bandwidth_data)
+        self.refresh_btn.pack(side="left", padx=(0, 10))
+        self.last7_btn = tb.Button(button_frame, text="📊 Last 7 Days", bootstyle="secondary",
+                                   command=self.load_last_7_days)
+        self.last7_btn.pack(side="left", padx=(0, 10))
+        self.force_refresh_btn = tb.Button(button_frame, text="🔄 Force Chart Refresh", bootstyle="warning",
+                                           command=self.force_chart_refresh)
+        self.force_refresh_btn.pack(side="left")
+
+        # Inline loader (hidden initially)
+        self._bw_loader_container = tb.Frame(button_frame)
+        self._bw_loader_container.pack(side='left', padx=(12,0))
+        self._bw_loader_container.pack_forget()
+        self._bw_pbar = tb.Progressbar(self._bw_loader_container, mode='indeterminate', length=110, bootstyle='info-striped')
+        self._bw_phase_label = tb.Label(self._bw_loader_container, text='', font=("Segoe UI",9,'italic'), bootstyle='secondary')
+        self._bw_cancel_btn = tb.Button(self._bw_loader_container, text='Cancel', bootstyle='danger-outline', width=7, command=self._cancel_bandwidth_load)
+        self._bw_pbar.pack(side='left')
+        self._bw_phase_label.pack(side='left', padx=(6,4))
+        self._bw_cancel_btn.pack(side='left')
+        self._bw_cancel_event = None
 
         # Statistics cards
         stats_frame = tb.Frame(self.parent_frame)
@@ -219,41 +235,16 @@ class BandwidthTab:
         self.load_bandwidth_data()
 
     def load_bandwidth_data(self):
-        """Load bandwidth data based on current filters with consistent chart generation and show a modal progress bar."""
+        """Load bandwidth data with inline loader, phases, and cancellation."""
         import threading
         if self.is_updating:
             return
         self.is_updating = True
-        self._prepare_chart_for_update()
+        self._show_bw_loader("Contacting server...")
+        self._bw_cancel_event = threading.Event()
 
-        # Progress modal
-        self._cancel_event = threading.Event()
-        prog = tb.Toplevel(self.root)
-        prog.title("Loading Bandwidth Data…")
-        prog.geometry("340x120")
-        prog.resizable(False, False)
-        prog.transient(self.root)
-        prog.grab_set()
-        frame = tb.Frame(prog, padding=15)
-        frame.pack(fill="both", expand=True)
-        lbl = tb.Label(frame, text="Fetching bandwidth data…", font=("Segoe UI", 11))
-        lbl.pack(anchor="w")
-        pbar = tb.Progressbar(frame, mode="indeterminate", bootstyle="info-striped")
-        pbar.pack(fill="x", pady=12)
-        pbar.start(12)
-        btns = tb.Frame(frame)
-        btns.pack(fill="x")
-        def cancel():
-            self._cancel_event.set()
-            lbl.config(text="Cancelling… (will stop after current step)")
-        tb.Button(btns, text="Cancel", bootstyle="secondary", command=cancel).pack(side="right")
-
-        def on_done(success, msg):
-            try:
-                pbar.stop()
-                prog.destroy()
-            except Exception:
-                pass
+        def finish(success, msg):
+            self._hide_bw_loader()
             self.is_updating = False
             self.last_update_time = datetime.now()
             self.update_last_update_display()
@@ -262,7 +253,7 @@ class BandwidthTab:
 
         def worker():
             try:
-                # Get selected router
+                # Build params
                 selected_router = self.router_var.get()
                 router_id = None
                 if selected_router and selected_router != "All Routers":
@@ -283,35 +274,85 @@ class BandwidthTab:
                     except ValueError:
                         params["start_date"] = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
                         params["end_date"] = datetime.now().strftime("%Y-%m-%d")
-                if self._cancel_event.is_set():
-                    self.root.after(0, lambda: on_done(False, "Operation cancelled."))
+                if self._bw_cancel_event.is_set():
+                    self.root.after(0, lambda: finish(False, "Cancelled."))
                     return
                 try:
-                    response = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params=params, timeout=15)
+                    resp = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params=params, timeout=15)
                 except requests.exceptions.Timeout:
-                    self.root.after(0, lambda: on_done(False, "The server took too long to respond (timeout at 15s)."))
+                    self.root.after(0, lambda: finish(False, "Timeout (15s)."))
                     return
                 except Exception as e:
-                    self.root.after(0, lambda: on_done(False, f"Failed to connect to server: {str(e)}"))
+                    self.root.after(0, lambda: finish(False, f"Connection error: {e}"))
                     return
-                if self._cancel_event.is_set():
-                    self.root.after(0, lambda: on_done(False, "Operation cancelled."))
+                if self._bw_cancel_event.is_set():
+                    self.root.after(0, lambda: finish(False, "Cancelled."))
                     return
-                if response.ok:
-                    self.bandwidth_data = response.json()
-                    print(f"Debug - API Response: {len(self.bandwidth_data)} records")
-                    self.root.after(0, lambda: self._update_all_components())
-                    self.root.after(0, lambda: on_done(True, "Data loaded."))
-                else:
+                if not resp.ok:
                     self.bandwidth_data = []
                     self.root.after(0, lambda: self._update_all_components())
-                    self.root.after(0, lambda: on_done(False, f"API Error: {response.status_code}"))
+                    self.root.after(0, lambda: finish(False, f"API Error: {resp.status_code}"))
+                    return
+                self.root.after(0, lambda: self._update_bw_phase("Parsing data..."))
+                try:
+                    self.bandwidth_data = resp.json()
+                except Exception:
+                    self.bandwidth_data = []
+                    self.root.after(0, lambda: self._update_all_components())
+                    self.root.after(0, lambda: finish(False, "Invalid JSON."))
+                    return
+                if self._bw_cancel_event.is_set():
+                    self.root.after(0, lambda: finish(False, "Cancelled."))
+                    return
+                self.root.after(0, lambda: self._update_bw_phase("Updating UI..."))
+                self.root.after(0, self._update_all_components)
+                self.root.after(0, lambda: finish(True, "Loaded"))
             except Exception as e:
                 self.bandwidth_data = []
-                self.root.after(0, lambda: self._update_all_components())
-                self.root.after(0, lambda: on_done(False, f"Exception: {str(e)}"))
+                self.root.after(0, self._update_all_components)
+                self.root.after(0, lambda: finish(False, f"Unexpected: {e}"))
 
         threading.Thread(target=worker, daemon=True).start()
+
+    # Inline loader helpers
+    def _show_bw_loader(self, phase="Loading..."):
+        try:
+            for btn in (self.apply_btn, self.refresh_btn, self.last7_btn, self.force_refresh_btn):
+                btn.config(state='disabled')
+        except Exception:
+            pass
+        self._bw_loader_container.pack(side='left')
+        self._bw_phase_label.config(text=phase)
+        try:
+            self._bw_pbar.start(12)
+        except Exception:
+            pass
+
+    def _update_bw_phase(self, text):
+        if self._bw_loader_container.winfo_ismapped():
+            self._bw_phase_label.config(text=text)
+
+    def _hide_bw_loader(self):
+        try:
+            self._bw_pbar.stop()
+        except Exception:
+            pass
+        try:
+            self._bw_loader_container.pack_forget()
+        except Exception:
+            pass
+        try:
+            for btn in (self.apply_btn, self.refresh_btn, self.last7_btn, self.force_refresh_btn):
+                btn.config(state='normal')
+        except Exception:
+            pass
+        self._bw_phase_label.config(text='')
+        self._bw_cancel_event = None
+
+    def _cancel_bandwidth_load(self):
+        if self._bw_cancel_event and not self._bw_cancel_event.is_set():
+            self._bw_cancel_event.set()
+            self._update_bw_phase("Cancelling...")
     
     def _prepare_chart_for_update(self):
         """No-op: No forced size locking needed for robust resizing."""
