@@ -61,3 +61,31 @@ def update_srf(ict_srf_no, update_data: dict):
     conn.commit()
     cursor.close()
     conn.close()
+
+
+def update_ticket_status(ict_srf_no, status):
+    """Update the status of a specific ticket."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    sql = "UPDATE ict_service_requests SET status=%s, updated_at=NOW() WHERE ict_srf_no=%s"
+    cursor.execute(sql, (status, ict_srf_no))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def get_srf_by_id(ict_srf_no):
+    """Get a specific SRF by its number."""
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    sql = """
+    SELECT s.*, u.username AS created_by_username
+    FROM ict_service_requests s
+    JOIN users u ON s.created_by = u.id
+    WHERE s.ict_srf_no = %s
+    """
+    cursor.execute(sql, (ict_srf_no,))
+    data = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return data

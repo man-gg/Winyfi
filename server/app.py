@@ -136,6 +136,209 @@ def create_app():
         except Exception as exc:
             return jsonify({"error": str(exc)}), 500
 
+    @app.get("/api/users")
+    def get_users():
+        """Get all users for client portal user selection."""
+        try:
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT id, username, role FROM users ORDER BY id")
+            users = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return jsonify(users)
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.post("/api/create-client-session")
+    def create_client_session():
+        """Create or get a client user session for ticket submission."""
+        try:
+            data = request.get_json(force=True, silent=True) or {}
+            client_name = data.get("client_name", "Client Portal User")
+            
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # First, try to find an existing client user
+            cursor.execute("SELECT id, username FROM users WHERE username = 'client' OR role = 'client' LIMIT 1")
+            existing_client = cursor.fetchone()
+            
+            if existing_client:
+                cursor.close()
+                conn.close()
+                return jsonify({
+                    "user_id": existing_client["id"],
+                    "username": existing_client["username"],
+                    "message": "Using existing client user"
+                })
+            
+            # If no client user exists, create one
+            import hashlib
+            default_password = "client123"
+            password_hash = hashlib.sha256(default_password.encode()).hexdigest()
+            
+            cursor.execute("""
+                INSERT INTO users (username, password_hash, role, created_at) 
+                VALUES (%s, %s, %s, NOW())
+            """, ("client", password_hash, "client"))
+            
+            user_id = cursor.lastrowid
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return jsonify({
+                "user_id": user_id,
+                "username": "client",
+                "message": "Created new client user"
+            })
+            
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.get("/api/technicians")
+    def get_technicians():
+        """Get all active technicians for assignment dropdown."""
+        try:
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT t.id, t.user_id, t.name, t.specialization, t.department, 
+                       t.contact_number, t.email, t.status, u.username
+                FROM technicians t
+                JOIN users u ON t.user_id = u.id
+                WHERE t.status = 'active'
+                ORDER BY t.name
+            """)
+            technicians = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return jsonify(technicians)
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.post("/api/tickets/<int:ticket_id>/assign")
+    def assign_ticket_to_technician(ticket_id):
+        """Assign a ticket to a technician."""
+        try:
+            data = request.get_json(force=True, silent=True) or {}
+            technician_id = data.get("technician_id")
+            assigned_by = data.get("assigned_by")  # Admin/manager user ID
+            
+            if not technician_id:
+                return jsonify({"error": "Technician ID is required"}), 400
+            
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            # Update ticket assignment
+            cursor.execute("""
+                UPDATE ict_service_requests 
+                SET technician_assigned_id = %s, assigned_by = %s, assigned_at = NOW(),
+                    status = 'assigned'
+                WHERE ict_srf_no = %s
+            """, (technician_id, assigned_by, ticket_id))
+            
+            if cursor.rowcount == 0:
+                cursor.close()
+                conn.close()
+                return jsonify({"error": "Ticket not found"}), 404
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return jsonify({"message": "Ticket assigned successfully"})
+            
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.post("/api/tickets/<int:ticket_id>/accomplish")
+    def add_accomplishment(ticket_id):
+        """Add accomplishment details to a ticket."""
+        try:
+            data = request.get_json(force=True, silent=True) or {}
+            accomplishment = data.get("accomplishment")
+            accomplished_by = data.get("accomplished_by")  # Technician user ID
+            service_time = data.get("service_time", "")
+            response_time = data.get("response_time", "")
+            
+            if not accomplishment or not accomplishment.strip():
+                return jsonify({"error": "Accomplishment description is required"}), 400
+            
+            if not accomplished_by:
+                return jsonify({"error": "Accomplished by user ID is required"}), 400
+            
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            # Update ticket with accomplishment and additional details
+            update_fields = [
+                "accomplishment = %s",
+                "accomplished_by = %s", 
+                "accomplished_at = NOW()",
+                "status = 'completed'",
+                "updated_at = NOW()"
+            ]
+            update_values = [accomplishment, accomplished_by]
+            
+            # Add optional fields if provided
+            if service_time:
+                update_fields.append("service_time = %s")
+                update_values.append(service_time)
+            
+            if response_time:
+                update_fields.append("response_time = %s")
+                update_values.append(response_time)
+            
+            update_values.append(ticket_id)  # For WHERE clause
+            
+            sql = f"""
+                UPDATE ict_service_requests 
+                SET {', '.join(update_fields)}
+                WHERE ict_srf_no = %s
+            """
+            
+            cursor.execute(sql, update_values)
+            
+            if cursor.rowcount == 0:
+                cursor.close()
+                conn.close()
+                return jsonify({"error": "Ticket not found"}), 404
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return jsonify({"message": "Accomplishment added successfully"})
+            
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.get("/api/technician/<int:technician_user_id>/tickets")
+    def get_technician_assigned_tickets(technician_user_id):
+        """Get tickets assigned to a specific technician."""
+        try:
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT sr.*, t.name as technician_name, u.username as created_by_username
+                FROM ict_service_requests sr
+                LEFT JOIN technicians t ON sr.technician_assigned_id = t.id
+                LEFT JOIN users u ON sr.created_by = u.id
+                WHERE sr.technician_assigned_id = (
+                    SELECT id FROM technicians WHERE user_id = %s LIMIT 1
+                )
+                ORDER BY sr.created_at DESC
+            """, (technician_user_id,))
+            tickets = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return jsonify(tickets)
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
     @app.get("/api/dashboard/online_history")
     def online_history():
         # Simple approximation: for each of last N days, count routers with last_seen on that day

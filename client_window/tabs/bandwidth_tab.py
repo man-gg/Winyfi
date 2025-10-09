@@ -145,33 +145,10 @@ class BandwidthTab:
                                    bootstyle="info", padding=10)
         chart_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(10, 8), dpi=100)
-        
-        # Configure figure for consistent sizing
+        self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(10, 8), dpi=100, constrained_layout=True)
         self.fig.patch.set_facecolor('white')
-        
-        # Disable matplotlib's auto-resize behavior
-        self.fig.set_constrained_layout(False)
-        self.fig.set_tight_layout(False)
-        
-        # Set fixed layout parameters to prevent resizing
-        self.fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, hspace=0.3)
-        
-        # Initialize canvas
         self.canvas = FigureCanvasTkAgg(self.fig, master=chart_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
-        
-        # Store initial size to prevent changes
-        self.initial_figsize = self.fig.get_size_inches()
-        
-        # Store initial canvas size
-        self.initial_canvas_size = self.canvas.get_tk_widget().winfo_reqwidth(), self.canvas.get_tk_widget().winfo_reqheight()
-        
-        # Force initial size lock
-        self._lock_figure_size()
-        
-        # Disable matplotlib resize events
-        self._disable_resize_events()
 
         # Data table tab
         self.table_frame = tb.Frame(self.notebook)
@@ -242,125 +219,115 @@ class BandwidthTab:
         self.load_bandwidth_data()
 
     def load_bandwidth_data(self):
-        """Load bandwidth data based on current filters with consistent chart generation"""
+        """Load bandwidth data based on current filters with consistent chart generation and show a modal progress bar."""
+        import threading
         if self.is_updating:
             return
-        
         self.is_updating = True
-        
-        # Ensure chart is in consistent state before loading data
         self._prepare_chart_for_update()
-        
-        try:
-            # Get selected router
-            selected_router = self.router_var.get()
-            router_id = None
-            
-            if selected_router and selected_router != "All Routers":
-                router = next((r for r in self.routers if r["name"] == selected_router), None)
-                if router:
-                    router_id = router["id"]
-            
-            # Prepare API parameters
-            params = {"limit": 1000}
-            if router_id:
-                params["router_id"] = router_id
-            
-            start_date = self.start_date.entry.get()
-            end_date = self.end_date.entry.get()
-            if start_date and end_date:
-                # Convert MM/DD/YYYY to YYYY-MM-DD for API
-                try:
-                    start_dt = datetime.strptime(start_date, "%m/%d/%Y")
-                    end_dt = datetime.strptime(end_date, "%m/%d/%Y")
-                    params["start_date"] = start_dt.strftime("%Y-%m-%d")
-                    params["end_date"] = end_dt.strftime("%Y-%m-%d")
-                except ValueError:
-                    print(f"Error parsing dates: {start_date}, {end_date}")
-                    # Use current dates as fallback
-                    params["start_date"] = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-                    params["end_date"] = datetime.now().strftime("%Y-%m-%d")
-            
-            # Fetch bandwidth data
-            response = requests.get(f"{self.api_base_url}/api/bandwidth/logs", 
-                                  params=params, timeout=10)
-            
-            if response.ok:
-                self.bandwidth_data = response.json()
-                print(f"Debug - API Response: {len(self.bandwidth_data)} records")
-                
-                # Update all components consistently
-                self._update_all_components()
-            else:
-                print(f"Debug - API Error: {response.status_code}")
-                self.bandwidth_data = []
-                self._update_all_components()
-                
-        except Exception as e:
-            print(f"Debug - Exception: {str(e)}")
-            self.bandwidth_data = []
-            self._update_all_components()
-        finally:
+
+        # Progress modal
+        self._cancel_event = threading.Event()
+        prog = tb.Toplevel(self.root)
+        prog.title("Loading Bandwidth Data…")
+        prog.geometry("340x120")
+        prog.resizable(False, False)
+        prog.transient(self.root)
+        prog.grab_set()
+        frame = tb.Frame(prog, padding=15)
+        frame.pack(fill="both", expand=True)
+        lbl = tb.Label(frame, text="Fetching bandwidth data…", font=("Segoe UI", 11))
+        lbl.pack(anchor="w")
+        pbar = tb.Progressbar(frame, mode="indeterminate", bootstyle="info-striped")
+        pbar.pack(fill="x", pady=12)
+        pbar.start(12)
+        btns = tb.Frame(frame)
+        btns.pack(fill="x")
+        def cancel():
+            self._cancel_event.set()
+            lbl.config(text="Cancelling… (will stop after current step)")
+        tb.Button(btns, text="Cancel", bootstyle="secondary", command=cancel).pack(side="right")
+
+        def on_done(success, msg):
+            try:
+                pbar.stop()
+                prog.destroy()
+            except Exception:
+                pass
             self.is_updating = False
             self.last_update_time = datetime.now()
             self.update_last_update_display()
+            if not success:
+                messagebox.showerror("Bandwidth Data Error", msg)
+
+        def worker():
+            try:
+                # Get selected router
+                selected_router = self.router_var.get()
+                router_id = None
+                if selected_router and selected_router != "All Routers":
+                    router = next((r for r in self.routers if r["name"] == selected_router), None)
+                    if router:
+                        router_id = router["id"]
+                params = {"limit": 1000}
+                if router_id:
+                    params["router_id"] = router_id
+                start_date = self.start_date.entry.get()
+                end_date = self.end_date.entry.get()
+                if start_date and end_date:
+                    try:
+                        start_dt = datetime.strptime(start_date, "%m/%d/%Y")
+                        end_dt = datetime.strptime(end_date, "%m/%d/%Y")
+                        params["start_date"] = start_dt.strftime("%Y-%m-%d")
+                        params["end_date"] = end_dt.strftime("%Y-%m-%d")
+                    except ValueError:
+                        params["start_date"] = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+                        params["end_date"] = datetime.now().strftime("%Y-%m-%d")
+                if self._cancel_event.is_set():
+                    self.root.after(0, lambda: on_done(False, "Operation cancelled."))
+                    return
+                try:
+                    response = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params=params, timeout=15)
+                except requests.exceptions.Timeout:
+                    self.root.after(0, lambda: on_done(False, "The server took too long to respond (timeout at 15s)."))
+                    return
+                except Exception as e:
+                    self.root.after(0, lambda: on_done(False, f"Failed to connect to server: {str(e)}"))
+                    return
+                if self._cancel_event.is_set():
+                    self.root.after(0, lambda: on_done(False, "Operation cancelled."))
+                    return
+                if response.ok:
+                    self.bandwidth_data = response.json()
+                    print(f"Debug - API Response: {len(self.bandwidth_data)} records")
+                    self.root.after(0, lambda: self._update_all_components())
+                    self.root.after(0, lambda: on_done(True, "Data loaded."))
+                else:
+                    self.bandwidth_data = []
+                    self.root.after(0, lambda: self._update_all_components())
+                    self.root.after(0, lambda: on_done(False, f"API Error: {response.status_code}"))
+            except Exception as e:
+                self.bandwidth_data = []
+                self.root.after(0, lambda: self._update_all_components())
+                self.root.after(0, lambda: on_done(False, f"Exception: {str(e)}"))
+
+        threading.Thread(target=worker, daemon=True).start()
     
     def _prepare_chart_for_update(self):
-        """Prepare chart for consistent update"""
-        if hasattr(self, 'fig') and hasattr(self, 'initial_figsize'):
-            # Lock the figure size before any operations
-            self.fig.set_size_inches(self.initial_figsize)
-            self.fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, hspace=0.3)
-            
-            # Force the canvas to respect the size
-            self.canvas.draw_idle()
+        """No-op: No forced size locking needed for robust resizing."""
+        pass
     
     def _lock_figure_size(self):
-        """Aggressively lock figure size to prevent any resizing"""
-        if hasattr(self, 'fig') and hasattr(self, 'initial_figsize'):
-            try:
-                # Force figure size
-                self.fig.set_size_inches(self.initial_figsize)
-                
-                # Disable all auto-sizing
-                self.fig.set_constrained_layout(False)
-                self.fig.set_tight_layout(False)
-                
-                # Force subplot layout
-                self.fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, hspace=0.3)
-                
-                # Force canvas to respect the size
-                if hasattr(self, 'canvas'):
-                    self.canvas.draw_idle()
-            except Exception as e:
-                print(f"Debug - Figure size lock error: {e}")
+        """No-op: No forced size locking needed for robust resizing."""
+        pass
     
     def _disable_resize_events(self):
-        """Disable matplotlib resize events to prevent auto-resizing"""
-        try:
-            # Disable figure resize callbacks
-            if hasattr(self, 'fig'):
-                self.fig.canvas.mpl_disconnect(self.fig.canvas.callbacks.callbacks.get('resize_event', []))
-            
-            # Disable canvas resize events
-            if hasattr(self, 'canvas'):
-                canvas_widget = self.canvas.get_tk_widget()
-                # Unbind resize events
-                canvas_widget.unbind('<Configure>')
-        except Exception as e:
-            print(f"Debug - Disable resize events error: {e}")
+        """No-op: No forced resize disabling needed for robust resizing."""
+        pass
     
     def _enforce_canvas_size(self):
-        """Enforce canvas size consistency"""
-        if hasattr(self, 'initial_canvas_size') and hasattr(self, 'canvas'):
-            try:
-                canvas_widget = self.canvas.get_tk_widget()
-                current_size = (canvas_widget.winfo_reqwidth(), canvas_widget.winfo_reqheight())
-                if current_size != self.initial_canvas_size:
-                    # Force canvas to maintain its size
-                    canvas_widget.configure(width=self.initial_canvas_size[0], height=self.initial_canvas_size[1])
-            except Exception as e:
-                print(f"Debug - Canvas size enforcement error: {e}")
+        """No-op: No forced canvas size enforcement needed for robust resizing."""
+        pass
     
     def _update_all_components(self):
         """Update all chart components consistently"""
@@ -398,165 +365,94 @@ class BandwidthTab:
             print(f"Error in force_chart_refresh: {e}")
 
     def update_charts(self):
-        """Update the bandwidth charts with consistent generation"""
+        """Update the bandwidth charts with robust, responsive resizing"""
         try:
-            # Aggressively lock figure size at the start
-            self._lock_figure_size()
-            
-            # Clear all existing plots and text
             self.ax1.clear()
             self.ax2.clear()
-            
-            # Reset figure background and properties
             self.fig.patch.set_facecolor('white')
             self.ax1.set_facecolor('white')
             self.ax2.set_facecolor('white')
-            
-            # Reset axis properties
             self.ax1.grid(False)
             self.ax2.grid(False)
-            
+
             if not self.bandwidth_data:
                 self.ax1.text(0.5, 0.5, 'No data available', ha='center', va='center', 
                             transform=self.ax1.transAxes, fontsize=12)
                 self.ax2.text(0.5, 0.5, 'No data available', ha='center', va='center', 
                             transform=self.ax2.transAxes, fontsize=12)
-                self.canvas.draw()
+                self.canvas.get_tk_widget().pack_forget()
+                self.canvas.get_tk_widget().pack(fill="both", expand=True)
+                self.canvas.draw_idle()
                 return
-            
-            # Sort data by timestamp
+
             sorted_data = sorted(self.bandwidth_data, key=lambda x: x['timestamp'])
-            
-            # Limit data points to prevent chart flooding (max 200 points)
             max_points = 200
             if len(sorted_data) > max_points:
-                # Sample data evenly across the time range, but ensure we get recent data
                 step = len(sorted_data) // max_points
-                # Take the most recent data first, then sample the rest
-                recent_data = sorted_data[-50:]  # Keep last 50 points
+                recent_data = sorted_data[-50:]
                 remaining_data = sorted_data[:-50]
                 sampled_remaining = remaining_data[::max(1, step)]
                 sorted_data = recent_data + sampled_remaining
-                # Limit to max_points
                 if len(sorted_data) > max_points:
                     sorted_data = sorted_data[-max_points:]
-            
-            # Extract data for charts
+
             timestamps = []
             for d in sorted_data:
                 try:
-                    # Handle different timestamp formats
                     timestamp_str = d['timestamp']
                     if 'GMT' in timestamp_str:
-                        # Parse GMT format: 'Fri, 19 Sep 2025 00:12:00 GMT'
                         timestamp = datetime.strptime(timestamp_str, '%a, %d %b %Y %H:%M:%S GMT')
                     elif 'Z' in timestamp_str:
-                        # Parse ISO format with Z
                         timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
                     else:
-                        # Try standard ISO format
                         timestamp = datetime.fromisoformat(timestamp_str)
                     timestamps.append(timestamp)
                 except Exception as e:
                     print(f"Error parsing timestamp {d['timestamp']}: {e}")
-                    # Use current time as fallback
                     timestamps.append(datetime.now())
-            
-            # Handle None values in numeric fields
+
             downloads = []
             uploads = []
             latencies = []
-            
             for d in sorted_data:
-                # Handle download_mbps
                 download_val = d.get('download_mbps')
                 if download_val is None or download_val == '':
                     downloads.append(0.0)
                 else:
                     try:
-                        # Handle both string and numeric values
-                        if isinstance(download_val, str):
-                            downloads.append(float(download_val))
-                        else:
-                            downloads.append(float(download_val))
+                        downloads.append(float(download_val))
                     except (ValueError, TypeError):
-                        print(f"Debug - Error converting download value: {download_val}")
                         downloads.append(0.0)
-                
-                # Handle upload_mbps
                 upload_val = d.get('upload_mbps')
                 if upload_val is None or upload_val == '':
                     uploads.append(0.0)
                 else:
                     try:
-                        # Handle both string and numeric values
-                        if isinstance(upload_val, str):
-                            uploads.append(float(upload_val))
-                        else:
-                            uploads.append(float(upload_val))
+                        uploads.append(float(upload_val))
                     except (ValueError, TypeError):
-                        print(f"Debug - Error converting upload value: {upload_val}")
                         uploads.append(0.0)
-                
-                # Handle latency_ms
                 latency_val = d.get('latency_ms')
                 if latency_val is None or latency_val == '':
                     latencies.append(0.0)
                 else:
                     try:
-                        # Handle both string and numeric values
-                        if isinstance(latency_val, str):
-                            latencies.append(float(latency_val))
-                        else:
-                            latencies.append(float(latency_val))
+                        latencies.append(float(latency_val))
                     except (ValueError, TypeError):
-                        print(f"Debug - Error converting latency value: {latency_val}")
                         latencies.append(0.0)
-            
-            # Format timestamps for display - use numeric indices for better spacing
+
             time_indices = list(range(len(timestamps)))
-            
-            # Create time labels for x-axis (show every 10th label to avoid crowding)
             time_labels = []
             for i, t in enumerate(timestamps):
-                if i % max(1, len(timestamps) // 10) == 0:  # Show ~10 labels max
+                if i % max(1, len(timestamps) // 10) == 0:
                     time_labels.append(t.strftime('%H:%M'))
                 else:
                     time_labels.append('')
-            
-            # Debug: Print data information
-            print(f"Debug - Data points: {len(sorted_data)}")
-            print(f"Debug - Downloads: {downloads[:5]}... (first 5 values)")
-            print(f"Debug - Uploads: {uploads[:5]}... (first 5 values)")
-            print(f"Debug - Latencies: {latencies[:5]}... (first 5 values)")
-            print(f"Debug - Time indices: {time_indices[:5]}... (first 5 values)")
-            
-            # Debug: Check for non-zero values in processed data
-            non_zero_dl = [d for d in downloads if d > 0]
-            non_zero_ul = [u for u in uploads if u > 0]
-            print(f"Debug - Non-zero downloads in chart: {len(non_zero_dl)}")
-            print(f"Debug - Non-zero uploads in chart: {len(non_zero_ul)}")
-            if non_zero_dl:
-                print(f"Debug - Sample non-zero download value: {non_zero_dl[0]}")
-            
-            # Check if all bandwidth values are zero
+
             all_downloads_zero = all(d == 0.0 for d in downloads)
             all_uploads_zero = all(u == 0.0 for u in uploads)
-            
-            # Debug: Print summary of data
-            print(f"Debug - Total data points processed: {len(downloads)}")
-            print(f"Debug - All downloads zero: {all_downloads_zero}")
-            print(f"Debug - All uploads zero: {all_uploads_zero}")
-            if downloads:
-                print(f"Debug - Download range: {min(downloads):.2f} to {max(downloads):.2f}")
-            if uploads:
-                print(f"Debug - Upload range: {min(uploads):.2f} to {max(uploads):.2f}")
-            
-            # Plot bandwidth trends
+
             self.ax1.plot(time_indices, downloads, 'b-', label='Download', linewidth=2, alpha=0.8)
             self.ax1.plot(time_indices, uploads, 'g-', label='Upload', linewidth=2, alpha=0.8)
-            
-            # Add note if all values are zero
             if all_downloads_zero and all_uploads_zero:
                 self.ax1.text(0.5, 0.5, 'All bandwidth values are 0 Mbps\nTry refreshing or checking date range', 
                             ha='center', va='center', transform=self.ax1.transAxes, 
@@ -566,43 +462,35 @@ class BandwidthTab:
             self.ax1.set_xlabel('Time')
             self.ax1.legend()
             self.ax1.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
-            
-            # Set x-axis labels and improve scaling
             if len(timestamps) > 0:
-                step = max(1, len(timestamps) // 10)
-                self.ax1.set_xticks(range(0, len(timestamps), step))
-                self.ax1.set_xticklabels([t.strftime('%H:%M') for t in timestamps[::step]], rotation=45)
-            
-            # Set reasonable y-axis limits for bandwidth
+                max_labels = 10
+                step = max(1, len(timestamps) // max_labels)
+                shown_ticks = list(range(0, len(timestamps), step))
+                self.ax1.set_xticks(shown_ticks)
+                self.ax1.set_xticklabels([timestamps[i].strftime('%H:%M') for i in shown_ticks], rotation=45)
             if downloads or uploads:
                 max_bandwidth = max(max(downloads) if downloads else 0, max(uploads) if uploads else 0)
                 min_bandwidth = min(min(downloads) if downloads else 0, min(uploads) if uploads else 0)
-                
-                # If all values are 0, set a small range to make the line visible
                 if max_bandwidth == 0 and min_bandwidth == 0:
                     self.ax1.set_ylim(-0.1, 0.1)
                 else:
                     self.ax1.set_ylim(min_bandwidth * 0.9, max_bandwidth * 1.1)
             else:
                 self.ax1.set_ylim(-0.1, 0.1)
-            
-            # Plot latency
+
             self.ax2.plot(time_indices, latencies, 'r-', label='Latency', linewidth=2, alpha=0.8)
             self.ax2.set_title('Latency Trends (ms)', fontsize=12, fontweight='bold')
             self.ax2.set_ylabel('Latency (ms)')
             self.ax2.set_xlabel('Time')
             self.ax2.legend()
             self.ax2.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
-            
-            # Set x-axis labels for latency chart
             if len(timestamps) > 0:
-                step = max(1, len(timestamps) // 10)
-                self.ax2.set_xticks(range(0, len(timestamps), step))
-                self.ax2.set_xticklabels([t.strftime('%H:%M') for t in timestamps[::step]], rotation=45)
-            
-            # Set reasonable y-axis limits for latency
+                max_labels = 10
+                step = max(1, len(timestamps) // max_labels)
+                shown_ticks = list(range(0, len(timestamps), step))
+                self.ax2.set_xticks(shown_ticks)
+                self.ax2.set_xticklabels([timestamps[i].strftime('%H:%M') for i in shown_ticks], rotation=45)
             if latencies:
-                # Filter out None values for proper min/max calculation
                 valid_latencies = [l for l in latencies if l is not None and l > 0]
                 if valid_latencies:
                     max_latency = max(valid_latencies)
@@ -612,31 +500,19 @@ class BandwidthTab:
                     self.ax2.set_ylim(0, 1000)
             else:
                 self.ax2.set_ylim(0, 1000)
-            
-            # Update data points counter
+
             total_points = len(self.bandwidth_data)
             displayed_points = len(sorted_data)
             if total_points > displayed_points:
                 self.data_points_label.config(text=f"Data Points: {displayed_points}/{total_points} (sampled)")
             else:
                 self.data_points_label.config(text=f"Data Points: {displayed_points}")
-            
-            # Aggressively lock figure size before final operations
-            self._lock_figure_size()
-            
-            # Force complete canvas refresh
-            self.canvas.draw()
-            self.canvas.flush_events()
-            
-            # Enforce canvas size consistency
-            self._enforce_canvas_size()
-            
-            # Final size lock after drawing
-            self._lock_figure_size()
-            
-            # Update the display
-            self.canvas.get_tk_widget().update()
-            
+
+            # Responsive layout and redraw
+            self.canvas.get_tk_widget().pack_forget()
+            self.canvas.get_tk_widget().pack(fill="both", expand=True)
+            self.canvas.draw_idle()
+
         except Exception as e:
             print(f"Error updating charts: {e}")
 

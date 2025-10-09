@@ -19,8 +19,49 @@ clients = {}
 # Setup logging for debugging
 # logging.basicConfig(level=logging.DEBUG)
 
-def ping_latency(ip, timeout=1000):
-    """Return ping latency in ms."""
+
+# --- Dynamic Ping Manager ---
+
+class DynamicPingManager:
+    def __init__(self, min_interval=5, max_interval=60, normal_interval=10, high_bw_threshold=20, high_ping_threshold=150, window=5):
+        self.min_interval = min_interval  # seconds
+        self.max_interval = max_interval  # seconds
+        self.normal_interval = normal_interval  # seconds
+        self.high_bw_threshold = high_bw_threshold  # Mbps
+        self.high_ping_threshold = high_ping_threshold  # ms
+        self.window = window
+        self.latency_history = deque(maxlen=window)
+        self.last_ping_time = 0
+        self.current_interval = normal_interval
+
+    def update(self, latency, bandwidth=None):
+        if latency is not None:
+            self.latency_history.append(latency)
+        avg_latency = None
+        if len(self.latency_history) > 0:
+            avg_latency = sum(self.latency_history) / len(self.latency_history)
+        # If bandwidth is high OR ping is high, increase interval
+        if (bandwidth is not None and bandwidth >= self.high_bw_threshold) or \
+           (avg_latency is not None and avg_latency >= self.high_ping_threshold):
+            self.current_interval = self.max_interval
+        else:
+            self.current_interval = self.normal_interval
+        return self.current_interval
+
+    def should_ping(self):
+        now = time.time()
+        if now - self.last_ping_time >= self.current_interval:
+            self.last_ping_time = now
+            return True
+        return False
+
+# Create a global ping manager instance
+ping_manager = DynamicPingManager()
+
+def ping_latency(ip, timeout=1000, bandwidth=None):
+    """Return ping latency in ms, using dynamic interval. Pass bandwidth in Mbps."""
+    if not ping_manager.should_ping():
+        return None  # Skip ping to avoid congestion
     param = "-n" if platform.system().lower() == "windows" else "-c"
     cmd = ["ping", param, "1", "-w", str(timeout), ip]
     try:
@@ -29,10 +70,12 @@ def ping_latency(ip, timeout=1000):
         end = time.time()
         if result.returncode == 0:
             latency = round((end - start) * 1000, 2)  # ms
-            logging.debug(f"Ping to {ip}: {latency} ms")
+            ping_manager.update(latency, bandwidth)
+            logging.debug(f"Ping to {ip}: {latency} ms (interval: {ping_manager.current_interval}s, bandwidth: {bandwidth})")
             return latency
     except Exception as e:
         logging.error(f"Ping failed: {e}")
+    ping_manager.update(None, bandwidth)
     return None
 
 def _rate_latency(latency):

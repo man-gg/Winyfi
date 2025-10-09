@@ -5127,6 +5127,13 @@ Type: {values[11]}
         self.total_routers_card.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         self.total_routers_label = tb.Label(self.total_routers_card, text="—", font=("Segoe UI", 14, "bold"))
         self.total_routers_label.pack()
+        # Initialize with actual router count so it doesn't remain as '—'
+        try:
+            total_routers_now = len(get_routers())
+            self.total_routers_label.config(text=str(total_routers_now))
+        except Exception:
+            # If fetching routers fails at build time, it will be updated later by report generation
+            pass
         
         self.avg_uptime_card = tb.LabelFrame(self.summary_frame, text="Avg Uptime", bootstyle="success", padding=10)
         self.avg_uptime_card.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
@@ -6625,69 +6632,520 @@ Type: {values[11]}
     def open_ticket_window(self):
         """Open a separate window for ICT Service Request management."""
         window = tb.Toplevel(self.root)
-        window.title("ICT Service Requests")
-        window.geometry("900x500")
+        window.title("ICT Service Request Management")
+        window.geometry("1200x700")
+        window.minsize(900, 500)
+        
+        # Center the window
+        window.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (1200 // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (700 // 2)
+        window.geometry(f"+{x}+{y}")
+        
+        window.transient(self.root)
+        window.grab_set()
 
-        # Header
-        header_frame = tb.Frame(window)
-        header_frame.pack(fill="x", padx=20, pady=10)
-        tb.Label(header_frame, text="📋 ICT Service Requests", font=("Segoe UI", 16, "bold")).pack(side="left")
+        # Main container with modern styling
+        main_container = tb.Frame(window)
+        main_container.pack(fill="both", expand=True, padx=15, pady=15)
+
+        # Enhanced Header with gradient-like styling
+        header_frame = tb.LabelFrame(main_container, text="", bootstyle="primary", padding=15)
+        header_frame.pack(fill="x", pady=(0, 15))
+
+        # Header content
+        header_content = tb.Frame(header_frame)
+        header_content.pack(fill="x")
+
+        # Title with icon and subtitle
+        title_frame = tb.Frame(header_content)
+        title_frame.pack(side="left", fill="x", expand=True)
+        
+        tb.Label(title_frame, text="🎫 ICT Service Request Management", 
+                font=("Segoe UI", 18, "bold"), bootstyle="inverse-primary").pack(anchor="w")
+        tb.Label(title_frame, text="Manage and track all ICT service requests efficiently", 
+                font=("Segoe UI", 10), bootstyle="inverse-secondary").pack(anchor="w", pady=(2, 0))
+
+        # Action buttons container
+        action_frame = tb.Frame(header_content)
+        action_frame.pack(side="right")
 
         tb.Button(
-            header_frame,
-            text="➕ New Service Request Form",
-            bootstyle="primary",
-            command=self.open_new_ticket_modal
-        ).pack(side="right")
+            action_frame,
+            text="➕ New Request",
+            bootstyle="success",
+            command=self.open_new_ticket_modal,
+            width=12
+        ).pack(side="right", padx=(5, 0))
 
-        # Ticket Table
-        table_frame = tb.Frame(window)
-        table_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        tb.Button(
+            action_frame,
+            text="🔄 Refresh",
+            bootstyle="info",
+            command=self.load_tickets,
+            width=10
+        ).pack(side="right", padx=(5, 0))
 
-        columns = ("ict_srf_no", "campus", "services", "status", "created_by", "created_at", "updated_at")
+        # Statistics and filter section
+        stats_filter_frame = tb.Frame(main_container)
+        stats_filter_frame.pack(fill="x", pady=(0, 15))
+
+        # Statistics cards
+        stats_frame = tb.LabelFrame(stats_filter_frame, text="📊 Quick Statistics", 
+                                   bootstyle="info", padding=10)
+        stats_frame.pack(side="left", fill="y")
+
+        # Create statistics display
+        self._create_ticket_stats(stats_frame)
+
+        # Filter and search section
+        filter_frame = tb.LabelFrame(stats_filter_frame, text="🔍 Filter & Search", 
+                                   bootstyle="secondary", padding=10)
+        filter_frame.pack(side="right", fill="both", expand=True, padx=(15, 0))
+
+        # Filter controls
+        filter_row1 = tb.Frame(filter_frame)
+        filter_row1.pack(fill="x", pady=(0, 10))
+
+        tb.Label(filter_row1, text="Status:", font=("Segoe UI", 10, "bold")).pack(side="left")
+        self.status_filter = tb.Combobox(filter_row1, values=["All", "Open", "Resolved"], 
+                                        state="readonly", width=12)
+        self.status_filter.set("All")
+        self.status_filter.pack(side="left", padx=(5, 15))
+        self.status_filter.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
+
+        tb.Label(filter_row1, text="Campus:", font=("Segoe UI", 10, "bold")).pack(side="left")
+        self.campus_filter = tb.Combobox(filter_row1, values=["All", "Main", "Alangilan", "Lipa", "Nasugbu"], 
+                                        state="readonly", width=12)
+        self.campus_filter.set("All")
+        self.campus_filter.pack(side="left", padx=(5, 0))
+        self.campus_filter.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
+
+        # Search row
+        filter_row2 = tb.Frame(filter_frame)
+        filter_row2.pack(fill="x")
+
+        tb.Label(filter_row2, text="Search:", font=("Segoe UI", 10, "bold")).pack(side="left")
+        self.search_var = tb.StringVar()
+        search_entry = tb.Entry(filter_row2, textvariable=self.search_var, width=25)
+        search_entry.pack(side="left", padx=(5, 10))
+        search_entry.bind("<KeyRelease>", lambda e: self.apply_filters())
+
+        tb.Button(filter_row2, text="Clear", bootstyle="secondary-outline",
+                 command=self.clear_filters, width=8).pack(side="left")
+
+        # Enhanced Table Section
+        table_container = tb.LabelFrame(main_container, text="📋 Service Requests", 
+                                       bootstyle="success", padding=10)
+        table_container.pack(fill="both", expand=True)
+
+        # Table frame with improved styling
+        table_frame = tb.Frame(table_container)
+        table_frame.pack(fill="both", expand=True)
+
+        # Column configuration with better widths and headers
+        columns = ("ict_srf_no", "campus", "services", "status", "priority", "created_by", "created_at", "updated_at")
+        column_config = {
+            "ict_srf_no": {"text": "SRF No.", "width": 80, "anchor": "center"},
+            "campus": {"text": "Campus", "width": 100, "anchor": "center"},
+            "services": {"text": "Service Description", "width": 250, "anchor": "w"},
+            "status": {"text": "Status", "width": 100, "anchor": "center"},
+            "priority": {"text": "Priority", "width": 80, "anchor": "center"},
+            "created_by": {"text": "Requested By", "width": 120, "anchor": "center"},
+            "created_at": {"text": "Created", "width": 130, "anchor": "center"},
+            "updated_at": {"text": "Last Updated", "width": 130, "anchor": "center"}
+        }
+
         self.tickets_table = ttk.Treeview(
             table_frame,
             columns=columns,
             show="headings",
-            height=15
+            height=16
         )
 
+        # Configure columns with improved settings
         for col in columns:
-            self.tickets_table.heading(col, text=col.replace("_", " ").title())
-            self.tickets_table.column(col, anchor="center", width=120)
+            config = column_config.get(col, {"text": col.replace("_", " ").title(), "width": 120, "anchor": "center"})
+            self.tickets_table.heading(col, text=config["text"])
+            self.tickets_table.column(col, anchor=config["anchor"], width=config["width"], minwidth=50)
+
+        # Add sorting functionality
+        for col in columns:
+            self.tickets_table.heading(col, command=lambda c=col: self.sort_tickets_by_column(c))
 
         self.tickets_table.pack(fill="both", expand=True, side="left")
 
-        # Scrollbar
-        scrollbar = tb.Scrollbar(table_frame, orient="vertical", command=self.tickets_table.yview)
-        scrollbar.pack(side="right", fill="y")
-        self.tickets_table.configure(yscrollcommand=scrollbar.set)
+        # Enhanced scrollbars
+        v_scrollbar = tb.Scrollbar(table_frame, orient="vertical", command=self.tickets_table.yview)
+        h_scrollbar = tb.Scrollbar(table_frame, orient="horizontal", command=self.tickets_table.xview)
+        
+        self.tickets_table.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+        
+        v_scrollbar.pack(side="right", fill="y")
+        h_scrollbar.pack(side="bottom", fill="x")
 
-        # Load tickets into the table
+        # Enhanced row styling with alternating colors
+        self.tickets_table.tag_configure("even", background="#f8f9fa")
+        self.tickets_table.tag_configure("odd", background="white")
+        self.tickets_table.tag_configure("urgent", background="#fff3cd", foreground="#856404")
+        self.tickets_table.tag_configure("resolved", background="#d4edda", foreground="#155724")
+
+        # Footer with actions and info
+        footer_frame = tb.Frame(main_container)
+        footer_frame.pack(fill="x", pady=(15, 0))
+
+        # Context menu actions
+        context_frame = tb.Frame(footer_frame)
+        context_frame.pack(side="left")
+
+        tb.Label(context_frame, text="💡 Tip: Double-click a row to view details, right-click for more options", 
+                font=("Segoe UI", 9), bootstyle="secondary").pack()
+
+        # Auto-refresh controls
+        refresh_frame = tb.Frame(footer_frame)
+        refresh_frame.pack(side="right")
+
+        self.auto_refresh_var = tb.BooleanVar(value=True)
+        tb.Checkbutton(refresh_frame, text="Auto-refresh", variable=self.auto_refresh_var,
+                      command=self.toggle_auto_refresh).pack(side="right", padx=(0, 10))
+
+        self.last_refresh_label = tb.Label(refresh_frame, text="", font=("Segoe UI", 8), bootstyle="secondary")
+        self.last_refresh_label.pack(side="right", padx=(0, 10))
+
+        # Load tickets and start auto-refresh
         self.load_tickets()
+        self.update_last_refresh_time()
 
-        # Bind double-click
+        # Enhanced event bindings
         self.tickets_table.bind("<Double-1>", self._on_ticket_row_click)
+        self.tickets_table.bind("<Button-3>", self._show_ticket_context_menu)  # Right-click menu
+        
+        # Initialize auto-refresh
+        if self.auto_refresh_var.get():
+            self.start_ticket_auto_refresh()
 
 
     def load_tickets(self, status=None):
-        """Fetch SRFs from DB and display in the table."""
-        self.tickets_table.delete(*self.tickets_table.get_children())
-        srfs = ticket_utils.fetch_srfs()
-        for srf in srfs:
-            self.tickets_table.insert(
-                "",
-                "end",
-                values=(
-                    srf["ict_srf_no"],
-                    srf.get("campus", ""),
-                    srf.get("services_requirements", ""),
-                    srf.get("status", "open"),
-                    srf.get("created_by_username", "Unknown"),
-                    srf["created_at"].strftime("%Y-%m-%d %H:%M:%S"),
-                    srf["updated_at"].strftime("%Y-%m-%d %H:%M:%S")
+        """Fetch SRFs from DB and display in the table with enhanced formatting."""
+        try:
+            self.tickets_table.delete(*self.tickets_table.get_children())
+            srfs = ticket_utils.fetch_srfs()
+            
+            row_count = 0
+            for srf in srfs:
+                # Determine row styling
+                tag = "even" if row_count % 2 == 0 else "odd"
+                
+                # Special styling for status - handle missing status column gracefully
+                status = srf.get("status", "open")
+                if status is None:
+                    status = "open"
+                status = status.lower()
+                
+                if status == "resolved":
+                    tag = "resolved"
+                elif srf.get("priority", "").lower() == "urgent":
+                    tag = "urgent"
+                
+                # Format dates nicely
+                created_at = srf["created_at"].strftime("%m/%d/%Y %H:%M") if srf.get("created_at") else "N/A"
+                updated_at = srf["updated_at"].strftime("%m/%d/%Y %H:%M") if srf.get("updated_at") else "N/A"
+                
+                # Truncate long service descriptions
+                services = srf.get("services_requirements", "")
+                if len(services) > 35:
+                    services = services[:32] + "..."
+                
+                self.tickets_table.insert(
+                    "",
+                    "end",
+                    values=(
+                        srf["ict_srf_no"],
+                        srf.get("campus", ""),
+                        services,
+                        status.title(),
+                        srf.get("priority", "Normal"),
+                        srf.get("created_by_username", "Unknown"),
+                        created_at,
+                        updated_at
+                    ),
+                    tags=(tag,)
                 )
-            )
+                row_count += 1
+            
+            # Update statistics
+            self._update_ticket_statistics()
+            self.update_last_refresh_time()
+            
+        except Exception as e:
+            print(f"Error loading tickets: {e}")
+            # Show a user-friendly message
+            from tkinter import messagebox
+            messagebox.showerror("Database Error", 
+                               "Error loading tickets. Please run the database migration script (migrate_ticket_schema.py) if this is your first time using the enhanced ticket system.")
+
+    def _create_ticket_stats(self, parent):
+        """Create statistics cards for tickets."""
+        stats_container = tb.Frame(parent)
+        stats_container.pack(fill="both", expand=True)
+        
+        # Total tickets
+        total_frame = tb.Frame(stats_container)
+        total_frame.pack(fill="x", pady=(0, 5))
+        tb.Label(total_frame, text="Total:", font=("Segoe UI", 10, "bold")).pack(side="left")
+        self.total_tickets_label = tb.Label(total_frame, text="0", font=("Segoe UI", 12, "bold"), bootstyle="info")
+        self.total_tickets_label.pack(side="right")
+        
+        # Open tickets
+        open_frame = tb.Frame(stats_container)
+        open_frame.pack(fill="x", pady=(0, 5))
+        tb.Label(open_frame, text="Open:", font=("Segoe UI", 10, "bold")).pack(side="left")
+        self.open_tickets_label = tb.Label(open_frame, text="0", font=("Segoe UI", 12, "bold"), bootstyle="warning")
+        self.open_tickets_label.pack(side="right")
+        
+        # Resolved tickets
+        resolved_frame = tb.Frame(stats_container)
+        resolved_frame.pack(fill="x")
+        tb.Label(resolved_frame, text="Resolved:", font=("Segoe UI", 10, "bold")).pack(side="left")
+        self.resolved_tickets_label = tb.Label(resolved_frame, text="0", font=("Segoe UI", 12, "bold"), bootstyle="success")
+        self.resolved_tickets_label.pack(side="right")
+
+    def _update_ticket_statistics(self):
+        """Update the statistics display."""
+        try:
+            # Get current table items for statistics
+            all_items = self.tickets_table.get_children()
+            total_count = len(all_items)
+            
+            open_count = 0
+            resolved_count = 0
+            
+            for item in all_items:
+                status = self.tickets_table.item(item)['values'][3].lower()
+                if status in ['open', 'in progress']:
+                    open_count += 1
+                elif status == 'resolved':
+                    resolved_count += 1
+            
+            # Update labels
+            self.total_tickets_label.config(text=str(total_count))
+            self.open_tickets_label.config(text=str(open_count))
+            self.resolved_tickets_label.config(text=str(resolved_count))
+            
+        except Exception as e:
+            print(f"Error updating ticket statistics: {e}")
+
+    def apply_filters(self):
+        """Apply filters to the ticket table."""
+        try:
+            # Get filter values
+            status_filter = self.status_filter.get()
+            campus_filter = self.campus_filter.get()
+            search_text = self.search_var.get().lower()
+            
+            # Clear current display
+            for item in self.tickets_table.get_children():
+                self.tickets_table.delete(item)
+            
+            # Reload and filter data
+            srfs = ticket_utils.fetch_srfs()
+            row_count = 0
+            
+            for srf in srfs:
+                # Apply status filter
+                if status_filter != "All" and srf.get("status", "open").title() != status_filter:
+                    continue
+                
+                # Apply campus filter
+                if campus_filter != "All" and srf.get("campus", "") != campus_filter:
+                    continue
+                
+                # Apply search filter
+                if search_text:
+                    searchable_text = f"{srf.get('ict_srf_no', '')} {srf.get('campus', '')} {srf.get('services_requirements', '')} {srf.get('created_by_username', '')}".lower()
+                    if search_text not in searchable_text:
+                        continue
+                
+                # Add filtered item
+                tag = "even" if row_count % 2 == 0 else "odd"
+                status = srf.get("status", "open").lower()
+                if status == "resolved":
+                    tag = "resolved"
+                elif srf.get("priority", "").lower() == "urgent":
+                    tag = "urgent"
+                
+                created_at = srf["created_at"].strftime("%m/%d/%Y %H:%M") if srf.get("created_at") else "N/A"
+                updated_at = srf["updated_at"].strftime("%m/%d/%Y %H:%M") if srf.get("updated_at") else "N/A"
+                
+                services = srf.get("services_requirements", "")
+                if len(services) > 35:
+                    services = services[:32] + "..."
+                
+                self.tickets_table.insert(
+                    "",
+                    "end",
+                    values=(
+                        srf["ict_srf_no"],
+                        srf.get("campus", ""),
+                        services,
+                        srf.get("status", "open").title(),
+                        srf.get("priority", "Normal"),
+                        srf.get("created_by_username", "Unknown"),
+                        created_at,
+                        updated_at
+                    ),
+                    tags=(tag,)
+                )
+                row_count += 1
+            
+            self._update_ticket_statistics()
+            
+        except Exception as e:
+            print(f"Error applying filters: {e}")
+
+    def clear_filters(self):
+        """Clear all filters and reload data."""
+        self.status_filter.set("All")
+        self.campus_filter.set("All")
+        self.search_var.set("")
+        self.load_tickets()
+
+    def sort_tickets_by_column(self, col):
+        """Sort tickets by the selected column."""
+        try:
+            # Get current data
+            data = []
+            for item in self.tickets_table.get_children():
+                values = self.tickets_table.item(item)['values']
+                data.append(values)
+            
+            # Sort data
+            if hasattr(self, f'_sort_{col}_reverse'):
+                reverse = getattr(self, f'_sort_{col}_reverse')
+                setattr(self, f'_sort_{col}_reverse', not reverse)
+            else:
+                reverse = False
+                setattr(self, f'_sort_{col}_reverse', True)
+            
+            col_index = list(self.tickets_table['columns']).index(col)
+            
+            # Custom sorting for different column types
+            if col in ['created_at', 'updated_at']:
+                data.sort(key=lambda x: x[col_index], reverse=reverse)
+            elif col == 'ict_srf_no':
+                data.sort(key=lambda x: int(x[col_index]) if x[col_index].isdigit() else 0, reverse=reverse)
+            else:
+                data.sort(key=lambda x: str(x[col_index]).lower(), reverse=reverse)
+            
+            # Clear and repopulate table
+            for item in self.tickets_table.get_children():
+                self.tickets_table.delete(item)
+            
+            for i, values in enumerate(data):
+                tag = "even" if i % 2 == 0 else "odd"
+                if values[3].lower() == "resolved":
+                    tag = "resolved"
+                elif len(values) > 4 and values[4].lower() == "urgent":
+                    tag = "urgent"
+                    
+                self.tickets_table.insert("", "end", values=values, tags=(tag,))
+                
+        except Exception as e:
+            print(f"Error sorting tickets: {e}")
+
+    def update_last_refresh_time(self):
+        """Update the last refresh time display."""
+        from datetime import datetime
+        current_time = datetime.now().strftime("%H:%M:%S")
+        self.last_refresh_label.config(text=f"Last updated: {current_time}")
+
+    def toggle_auto_refresh(self):
+        """Toggle auto-refresh functionality."""
+        if self.auto_refresh_var.get():
+            self.start_ticket_auto_refresh()
+        else:
+            self.stop_ticket_auto_refresh()
+
+    def start_ticket_auto_refresh(self):
+        """Start auto-refresh for tickets."""
+        if hasattr(self, '_ticket_refresh_job'):
+            self.root.after_cancel(self._ticket_refresh_job)
+        self._ticket_refresh_job = self.root.after(30000, self._auto_refresh_tickets)  # 30 seconds
+
+    def stop_ticket_auto_refresh(self):
+        """Stop auto-refresh for tickets."""
+        if hasattr(self, '_ticket_refresh_job'):
+            self.root.after_cancel(self._ticket_refresh_job)
+            delattr(self, '_ticket_refresh_job')
+
+    def _auto_refresh_tickets(self):
+        """Internal method for auto-refreshing tickets."""
+        if self.auto_refresh_var.get():
+            self.apply_filters()  # Reapply current filters
+            self.start_ticket_auto_refresh()  # Schedule next refresh
+
+    def _show_ticket_context_menu(self, event):
+        """Show context menu on right-click."""
+        try:
+            selected_item = self.tickets_table.selection()
+            if not selected_item:
+                return
+            
+            # Create context menu
+            context_menu = tk.Menu(self.root, tearoff=0)
+            context_menu.add_command(label="📄 View Details", command=lambda: self._on_ticket_row_click(event))
+            context_menu.add_command(label="✏️ Edit Request", command=lambda: self._edit_selected_ticket())
+            context_menu.add_separator()
+            context_menu.add_command(label="✅ Mark as Resolved", command=lambda: self._mark_ticket_resolved())
+            context_menu.add_command(label="🔄 Refresh", command=self.load_tickets)
+            
+            # Show menu
+            context_menu.post(event.x_root, event.y_root)
+            
+        except Exception as e:
+            print(f"Error showing context menu: {e}")
+
+    def _edit_selected_ticket(self):
+        """Edit the selected ticket."""
+        try:
+            selected_item = self.tickets_table.selection()
+            if not selected_item:
+                return
+            
+            ticket_id = self.tickets_table.item(selected_item[0])["values"][0]
+            # Find the SRF data
+            srfs = ticket_utils.fetch_srfs()
+            srf = next((s for s in srfs if s["ict_srf_no"] == ticket_id), None)
+            if srf:
+                self.open_edit_ticket_modal(srf)
+                
+        except Exception as e:
+            print(f"Error editing ticket: {e}")
+
+    def _mark_ticket_resolved(self):
+        """Mark selected ticket as resolved."""
+        try:
+            selected_item = self.tickets_table.selection()
+            if not selected_item:
+                return
+            
+            ticket_id = self.tickets_table.item(selected_item[0])["values"][0]
+            
+            # Confirm action
+            from tkinter import messagebox
+            if messagebox.askyesno("Confirm Resolution", 
+                                 f"Mark Service Request #{ticket_id} as resolved?\n\nThis action will update the ticket status."):
+                # Update in database using utility function
+                ticket_utils.update_ticket_status(ticket_id, "resolved")
+                
+                # Refresh display
+                self.load_tickets()
+                messagebox.showinfo("Success", f"Service Request #{ticket_id} has been marked as resolved!")
+                
+        except Exception as e:
+            from tkinter import messagebox
+            messagebox.showerror("Error", f"Error marking ticket as resolved: {e}")
+            print(f"Error marking ticket as resolved: {e}")
     def collect_ticket_form_data(self):
         """Collect all values from SRF form fields."""
         data = {k: v.get() for k, v in self.form_vars.items()}
@@ -6696,9 +7154,14 @@ Type: {values[11]}
         return data
 
 
-    def auto_refresh_tickets(self, interval=5000):
-        self.load_tickets()
-        self.root.after(interval, self.auto_refresh_tickets)
+    def auto_refresh_tickets(self, interval=30000):
+        """Legacy method for backward compatibility - redirects to new auto-refresh system."""
+        if not hasattr(self, 'auto_refresh_var'):
+            self.auto_refresh_var = tb.BooleanVar(value=True)
+        
+        if self.auto_refresh_var.get():
+            self.load_tickets()
+            self.root.after(interval, self.auto_refresh_tickets)
 
     def _on_ticket_row_click(self, event):
         """Open ticket detail modal when a row is double-clicked."""
@@ -6912,74 +7375,248 @@ Type: {values[11]}
 
 
     def open_ticket_detail_modal(self, srf_no):
-        """Open a modal showing SRF details in a printable form layout."""
+        """Open an enhanced modal showing SRF details with modern styling."""
         srf = next((s for s in ticket_utils.fetch_srfs() if s["ict_srf_no"] == srf_no), None)
         if not srf:
             messagebox.showerror("Error", "Service Request not found!")
             return
 
         modal = tb.Toplevel(self.root)
-        modal.title(f"SRF #{srf_no} Details")
-        modal.geometry("700x600")
+        modal.title(f"Service Request #{srf_no} - Details")
+        modal.geometry("800x650")
+        modal.minsize(700, 500)
+        
+        # Center the modal
+        modal.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (800 // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (650 // 2)
+        modal.geometry(f"+{x}+{y}")
+        
+        modal.transient(self.root)
         modal.grab_set()
 
-        # ---- Header with logo ----
-        header_frame = tb.Frame(modal)
-        header_frame.pack(fill="x", pady=10)
+        # Main container with modern styling
+        main_container = tb.Frame(modal)
+        main_container.pack(fill="both", expand=True, padx=15, pady=15)
+
+        # Enhanced Header Section
+        header_frame = tb.LabelFrame(main_container, text="", bootstyle="primary", padding=15)
+        header_frame.pack(fill="x", pady=(0, 15))
+
+        header_content = tb.Frame(header_frame)
+        header_content.pack(fill="x")
+
+        # Logo and title section
+        logo_title_frame = tb.Frame(header_content)
+        logo_title_frame.pack(fill="x")
 
         try:
-            logo_img = Image.open("assets/images/bsu_logo.png").resize((60, 60))
+            logo_img = Image.open("assets/images/bsu_logo.png").resize((70, 70))
             self.logo_photo = ImageTk.PhotoImage(logo_img)
-            tb.Label(header_frame, image=self.logo_photo).pack(side="left", padx=10)
+            logo_label = tb.Label(logo_title_frame, image=self.logo_photo)
+            logo_label.pack(side="left", padx=(0, 15))
         except:
-            tb.Label(header_frame, text="LOGO", width=10, relief="solid").pack(side="left", padx=10)
+            logo_placeholder = tb.Label(logo_title_frame, text="🏛️", font=("Segoe UI", 40))
+            logo_placeholder.pack(side="left", padx=(0, 15))
 
-        tb.Label(header_frame, text="ICT SERVICE REQUEST FORM", font=("Segoe UI", 16, "bold")).pack(side="left", padx=20)
+        # Title and SRF info
+        title_info_frame = tb.Frame(logo_title_frame)
+        title_info_frame.pack(side="left", fill="x", expand=True)
 
-        # ---- SRF Number ----
-        tb.Label(modal, text=f"SRF No: {srf['ict_srf_no']}", font=("Segoe UI", 12, "bold")).pack(pady=5)
+        tb.Label(title_info_frame, text="ICT Service Request Form", 
+                font=("Segoe UI", 18, "bold"), bootstyle="inverse-primary").pack(anchor="w")
+        
+        # SRF number with status badge
+        srf_status_frame = tb.Frame(title_info_frame)
+        srf_status_frame.pack(anchor="w", pady=(5, 0))
+        
+        tb.Label(srf_status_frame, text=f"SRF #{srf['ict_srf_no']}", 
+                font=("Segoe UI", 14, "bold")).pack(side="left")
+        
+        # Status badge
+        status = srf.get('status', 'open').lower()
+        status_style = "success" if status == "resolved" else "warning" if status == "in progress" else "info"
+        tb.Label(srf_status_frame, text=status.title(), 
+                font=("Segoe UI", 10, "bold"), bootstyle=f"inverse-{status_style}").pack(side="left", padx=(10, 0))
 
-        # ---- Sections ----
-        form_frame = tb.Frame(modal, padding=10)
-        form_frame.pack(fill="both", expand=True)
+        # Quick info bar
+        info_bar = tb.Frame(header_content)
+        info_bar.pack(fill="x", pady=(10, 0))
+        
+        quick_info = f"📅 Created: {srf['created_at'].strftime('%m/%d/%Y %H:%M')} | 👤 By: {srf.get('created_by_username', 'Unknown')} | 🏢 Campus: {srf.get('campus', 'N/A')}"
+        tb.Label(info_bar, text=quick_info, font=("Segoe UI", 9), bootstyle="inverse-secondary").pack()
 
-        # Request Info
-        tb.Label(form_frame, text="Request Information", font=("Segoe UI", 12, "bold")).grid(row=0, column=0, sticky="w", pady=5, columnspan=2)
-        tb.Label(form_frame, text=f"Campus: {srf['campus']}").grid(row=1, column=0, sticky="w", padx=10)
-        tb.Label(form_frame, text=f"Office/Building: {srf['office_building']}").grid(row=2, column=0, sticky="w", padx=10)
-        tb.Label(form_frame, text=f"Client: {srf['client_name']}").grid(row=3, column=0, sticky="w", padx=10)
-        tb.Label(form_frame, text=f"Date/Time of Call: {srf['date_time_call']}").grid(row=4, column=0, sticky="w", padx=10)
+        # Content with notebook tabs for better organization
+        content_notebook = tb.Notebook(main_container)
+        content_notebook.pack(fill="both", expand=True, pady=(0, 15))
 
-        # Technician & Services
-        tb.Label(form_frame, text="Technician & Services", font=("Segoe UI", 12, "bold")).grid(row=5, column=0, sticky="w", pady=5, columnspan=2)
-        tb.Label(form_frame, text=f"Technician: {srf['technician_assigned']}").grid(row=6, column=0, sticky="w", padx=10)
-        tb.Label(form_frame, text=f"Services: {srf['services_requirements']}").grid(row=7, column=0, sticky="w", padx=10)
+        # Tab 1: Request Details
+        details_tab = tb.Frame(content_notebook)
+        content_notebook.add(details_tab, text="📋 Request Details")
 
-        # Status
-        tb.Label(form_frame, text="Status & Remarks", font=("Segoe UI", 12, "bold")).grid(row=8, column=0, sticky="w", pady=5, columnspan=2)
-        tb.Label(form_frame, text=f"Status: {srf.get('status','open')}").grid(row=9, column=0, sticky="w", padx=10)
-        tb.Label(form_frame, text=f"Remarks: {srf.get('remarks','')}").grid(row=10, column=0, sticky="w", padx=10)
+        # Scrollable content for details
+        details_canvas = tb.Canvas(details_tab)
+        details_scrollbar = tb.Scrollbar(details_tab, orient="vertical", command=details_canvas.yview)
+        details_scrollable = tb.Frame(details_canvas)
 
-        # Metadata
-        tb.Label(form_frame, text="System Info", font=("Segoe UI", 12, "bold")).grid(row=11, column=0, sticky="w", pady=5, columnspan=2)
-        tb.Label(form_frame, text=f"Created by: {srf.get('created_by_username','Unknown')}").grid(row=12, column=0, sticky="w", padx=10)
-        tb.Label(form_frame, text=f"Created at: {srf['created_at']}").grid(row=13, column=0, sticky="w", padx=10)
-        tb.Label(form_frame, text=f"Updated at: {srf.get('updated_at','-')}").grid(row=14, column=0, sticky="w", padx=10)
+        details_scrollable.bind("<Configure>", lambda e: details_canvas.configure(scrollregion=details_canvas.bbox("all")))
+        details_canvas.create_window((0, 0), window=details_scrollable, anchor="nw")
+        details_canvas.configure(yscrollcommand=details_scrollbar.set)
 
-        # ---- Buttons ----
-        btn_frame = tb.Frame(modal)
-        btn_frame.pack(pady=15)
+        details_canvas.pack(side="left", fill="both", expand=True)
+        details_scrollbar.pack(side="right", fill="y")
 
-        tb.Button(btn_frame, text="✏️ Edit", bootstyle="warning",
-          command=lambda srf=srf: self.open_edit_ticket_modal(srf)).pack(side="left", padx=10)
+        # Request Information Section
+        self._create_detail_section(details_scrollable, "🏢 Request Information", [
+            ("Campus", srf.get('campus', 'N/A')),
+            ("Office/Building", srf.get('office_building', 'N/A')),
+            ("Client Name", srf.get('client_name', 'N/A')),
+            ("Date/Time of Call", srf.get('date_time_call', 'N/A')),
+            ("Required Response Time", srf.get('required_response_time', 'N/A'))
+        ])
 
-        tb.Button(
-            modal,
-            text="🖨 Print",
-            bootstyle="secondary",
-            command=lambda: print_srf_form(srf, logo_path="assets/images/bsu_logo.png")
-        ).pack(pady=10)
-        tb.Button(btn_frame, text="❌ Close", bootstyle="danger", command=modal.destroy).pack(side="left", padx=10)
+        # Service Description Section
+        services_frame = tb.LabelFrame(details_scrollable, text="🔧 Service Requirements", 
+                                     bootstyle="info", padding=15)
+        services_frame.pack(fill="x", padx=10, pady=10)
+
+        services_text = tb.Text(services_frame, height=4, wrap="word", state="disabled",
+                               font=("Segoe UI", 10))
+        services_text.pack(fill="x")
+        services_text.config(state="normal")
+        services_text.insert("1.0", srf.get('services_requirements', 'No description provided'))
+        services_text.config(state="disabled")
+
+        # Technician Information Section
+        self._create_detail_section(details_scrollable, "👨‍💻 Technician Information", [
+            ("Assigned Technician", srf.get('technician_assigned', 'Not assigned')),
+            ("Response Time", srf.get('response_time', 'N/A')),
+            ("Service Time", srf.get('service_time', 'N/A'))
+        ])
+
+        # Tab 2: Status & Timeline
+        status_tab = tb.Frame(content_notebook)
+        content_notebook.add(status_tab, text="📊 Status & Timeline")
+
+        # Status overview
+        status_overview = tb.LabelFrame(status_tab, text="📈 Current Status", 
+                                       bootstyle="success", padding=15)
+        status_overview.pack(fill="x", padx=10, pady=10)
+
+        status_grid = tb.Frame(status_overview)
+        status_grid.pack(fill="x")
+
+        # Status cards
+        current_status = srf.get('status', 'open').title()
+        priority = srf.get('priority', 'Normal')
+        
+        self._create_status_card(status_grid, "Status", current_status, 0, 0, status_style)
+        self._create_status_card(status_grid, "Priority", priority, 0, 1, "warning" if priority == "High" else "info")
+
+        # Timeline section
+        timeline_frame = tb.LabelFrame(status_tab, text="⏰ Timeline", 
+                                     bootstyle="secondary", padding=15)
+        timeline_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        timeline_items = [
+            ("📝 Created", srf['created_at'].strftime('%m/%d/%Y %H:%M:%S'), "Created by " + srf.get('created_by_username', 'Unknown')),
+            ("🔄 Last Updated", srf.get('updated_at', srf['created_at']).strftime('%m/%d/%Y %H:%M:%S') if srf.get('updated_at') else "N/A", "Last modification")
+        ]
+
+        for i, (icon_title, timestamp, description) in enumerate(timeline_items):
+            timeline_item = tb.Frame(timeline_frame)
+            timeline_item.pack(fill="x", pady=5)
+            
+            tb.Label(timeline_item, text=icon_title, font=("Segoe UI", 11, "bold")).pack(side="left")
+            tb.Label(timeline_item, text=timestamp, font=("Segoe UI", 10)).pack(side="left", padx=(10, 0))
+            tb.Label(timeline_item, text=f"({description})", font=("Segoe UI", 9), 
+                    bootstyle="secondary").pack(side="left", padx=(5, 0))
+
+        # Tab 3: Remarks & Notes
+        remarks_tab = tb.Frame(content_notebook)
+        content_notebook.add(remarks_tab, text="📝 Remarks")
+
+        remarks_frame = tb.LabelFrame(remarks_tab, text="💬 Remarks & Notes", 
+                                    bootstyle="warning", padding=15)
+        remarks_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        remarks_text = tb.Text(remarks_frame, wrap="word", state="disabled",
+                             font=("Segoe UI", 10), height=10)
+        remarks_text.pack(fill="both", expand=True)
+        remarks_text.config(state="normal")
+        remarks_content = srf.get('remarks', 'No remarks available')
+        remarks_text.insert("1.0", remarks_content)
+        remarks_text.config(state="disabled")
+
+        # Enhanced Action Buttons
+        action_frame = tb.Frame(main_container)
+        action_frame.pack(fill="x")
+
+        # Left side buttons
+        left_buttons = tb.Frame(action_frame)
+        left_buttons.pack(side="left")
+
+        tb.Button(left_buttons, text="✏️ Edit Request", bootstyle="warning",
+                 command=lambda: self.open_edit_ticket_modal(srf), width=15).pack(side="left", padx=(0, 10))
+
+        if status != "resolved":
+            tb.Button(left_buttons, text="✅ Mark Resolved", bootstyle="success",
+                     command=lambda: self._mark_single_ticket_resolved(srf['ict_srf_no'], modal), 
+                     width=15).pack(side="left", padx=(0, 10))
+
+        # Right side buttons
+        right_buttons = tb.Frame(action_frame)
+        right_buttons.pack(side="right")
+
+        tb.Button(right_buttons, text="🖨️ Print", bootstyle="info",
+                 command=lambda: print_srf_form(srf, logo_path="assets/images/bsu_logo.png"), 
+                 width=12).pack(side="right", padx=(10, 0))
+
+        tb.Button(right_buttons, text="❌ Close", bootstyle="secondary",
+                 command=modal.destroy, width=10).pack(side="right")
+
+    def _create_detail_section(self, parent, title, fields):
+        """Create a detail section with fields."""
+        section = tb.LabelFrame(parent, text=title, bootstyle="primary", padding=15)
+        section.pack(fill="x", padx=10, pady=10)
+
+        for i, (label, value) in enumerate(fields):
+            field_frame = tb.Frame(section)
+            field_frame.pack(fill="x", pady=2)
+            field_frame.columnconfigure(1, weight=1)
+
+            tb.Label(field_frame, text=f"{label}:", font=("Segoe UI", 10, "bold")).grid(row=0, column=0, sticky="w", padx=(0, 10))
+            tb.Label(field_frame, text=str(value), font=("Segoe UI", 10)).grid(row=0, column=1, sticky="w")
+
+    def _create_status_card(self, parent, title, value, row, col, style="info"):
+        """Create a status card widget."""
+        card = tb.LabelFrame(parent, text=title, bootstyle=style, padding=10)
+        card.grid(row=row, column=col, padx=5, pady=5, sticky="ew")
+        parent.columnconfigure(col, weight=1)
+
+        tb.Label(card, text=str(value), font=("Segoe UI", 14, "bold"), 
+                bootstyle=f"inverse-{style}").pack()
+
+    def _mark_single_ticket_resolved(self, ticket_id, modal):
+        """Mark a single ticket as resolved from the detail modal."""
+        try:
+            from tkinter import messagebox
+            if messagebox.askyesno("Confirm Resolution", 
+                                 f"Mark Service Request #{ticket_id} as resolved?\n\nThis action cannot be undone."):
+                # Update in database using utility function
+                ticket_utils.update_ticket_status(ticket_id, "resolved")
+                
+                messagebox.showinfo("Success", f"Service Request #{ticket_id} has been marked as resolved!")
+                modal.destroy()
+                
+                # Refresh the main tickets table if it exists
+                if hasattr(self, 'tickets_table'):
+                    self.load_tickets()
+                    
+        except Exception as e:
+            from tkinter import messagebox
+            messagebox.showerror("Error", f"Failed to update ticket status: {e}")
+            print(f"Error updating ticket status: {e}")
 
     def enable_edit_srf(self, srf, modal):
         """Turn detail labels into editable fields and allow saving."""
@@ -7029,19 +7666,23 @@ Type: {values[11]}
 
     def _mark_ticket_done_modal(self, ticket_id, modal):
         """Helper to mark ticket resolved from modal."""
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE tickets SET status='resolved', updated_at=NOW() WHERE id=%s",
-            (ticket_id,)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
+        try:
+            from tkinter import messagebox
+            
+            # Update in database using utility function
+            ticket_utils.update_ticket_status(ticket_id, "resolved")
 
-        messagebox.showinfo("Success", "Ticket marked as resolved!")
-        modal.destroy()
-        self.load_tickets()  # <- correct method to refresh the ticket table
+            messagebox.showinfo("Success", "Service Request has been marked as resolved!")
+            modal.destroy()
+            
+            # Refresh the ticket table if it exists
+            if hasattr(self, 'tickets_table'):
+                self.load_tickets()
+                
+        except Exception as e:
+            from tkinter import messagebox
+            messagebox.showerror("Error", f"Failed to mark ticket as resolved: {e}")
+            print(f"Error in _mark_ticket_done_modal: {e}")
 #---------------------------------------------------------------
 
     def open_loop_test_modal(self):
