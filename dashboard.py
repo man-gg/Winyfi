@@ -32,6 +32,7 @@ from user_utils import insert_user, get_all_users, delete_user, update_user
 from network_utils import ping_latency,get_bandwidth, detect_loops, discover_clients, get_default_iface,scan_subnet, get_default_iface
 from bandwidth_logger import start_bandwidth_logging
 from db import get_connection 
+from db import database_health_check, get_database_info, DatabaseConnectionError
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import ticket_utils
@@ -79,6 +80,10 @@ class Dashboard:
         self.router_widgets = {}
         self.bandwidth_data = {}
         self.update_task = None  # Store .after() task ID
+        self.db_health_status = {"status": "unknown", "message": "Not checked"}
+        
+        # Perform database health check before proceeding
+        self._check_database_health()
         
         # Loop detection settings
         self.loop_detection_running = False
@@ -87,11 +92,8 @@ class Dashboard:
         self.loop_detection_thread = None
         self.loop_detection_history = []
         
-        # Initialize database and load stats
-        from db import create_loop_detections_table, get_loop_detection_stats, get_loop_detections_history
-        create_loop_detections_table()
-        self.loop_detection_stats = get_loop_detection_stats()
-        self.loop_detection_history = get_loop_detections_history(100)
+        # Initialize database and load stats (with error handling)
+        self._initialize_database()
         
         # Initialize notification system
         self.notification_system = NotificationSystem(self.root)
@@ -106,8 +108,8 @@ class Dashboard:
         self.schedule_update()  # For auto-refresh
         threading.Thread(target=self._background_status_updater, daemon=True).start()
         
-        # Start automatic loop detection
-        if self.loop_detection_enabled:
+        # Start automatic loop detection (only if database is healthy)
+        if self.loop_detection_enabled and self.db_health_status["status"] == "healthy":
             self.start_loop_detection()
 
         start_bandwidth_logging(self._fetch_router_list)
@@ -120,6 +122,306 @@ class Dashboard:
         self._loader_min_ms = 350  # minimum visible time for spinners
         self._bandwidth_hide_after_job = None
         self._reports_hide_after_job = None
+
+    def _check_database_health(self):
+        """Check database health and display warnings if needed"""
+        try:
+            self.db_health_status = database_health_check()
+            
+            if self.db_health_status["status"] == "error":
+                self._show_database_error_dialog()
+            elif self.db_health_status["status"] == "warning":
+                self._show_database_warning_dialog()
+                
+        except Exception as e:
+            self.db_health_status = {
+                "status": "error",
+                "message": f"Failed to check database health: {str(e)}"
+            }
+            self._show_database_error_dialog()
+    
+    def _show_database_error_dialog(self):
+        """Show database error dialog with detailed information and options"""
+        from tkinter import messagebox
+        
+        error_msg = (
+            "❌ Database Connection Error\n\n"
+            f"Cannot connect to MySQL database:\n{self.db_health_status['message']}\n\n"
+            "Possible solutions:\n"
+            "• Start MySQL service (XAMPP, WAMP, etc.)\n"
+            "• Check if MySQL is running on port 3306\n"
+            "• Verify database credentials\n"
+            "• Ensure 'winyfi' database exists\n\n"
+            "The application will continue with limited functionality."
+        )
+        
+        messagebox.showerror("Database Error", error_msg)
+    
+    def _show_database_warning_dialog(self):
+        """Show database warning dialog"""
+        from tkinter import messagebox
+        
+        warning_msg = (
+            "⚠️ Database Connection Warning\n\n"
+            f"{self.db_health_status['message']}\n\n"
+            "Some features may not work properly."
+        )
+        
+        messagebox.showwarning("Database Warning", warning_msg)
+    
+    def _initialize_database(self):
+        """Initialize database tables and load initial data with error handling"""
+        try:
+            # Only proceed if database is accessible
+            if self.db_health_status["status"] in ["healthy", "warning"]:
+                from db import create_loop_detections_table, get_loop_detection_stats, get_loop_detections_history
+                
+                # Create tables
+                create_loop_detections_table()
+                
+                # Load statistics
+                self.loop_detection_stats = get_loop_detection_stats()
+                self.loop_detection_history = get_loop_detections_history(100)
+            else:
+                # Set safe defaults when database is unavailable
+                self.loop_detection_stats = {
+                    "total_detections": 0,
+                    "loops_detected": 0,
+                    "suspicious_activity": 0,
+                    "clean_detections": 0
+                }
+                self.loop_detection_history = []
+                
+        except Exception as e:
+            # Set safe defaults on any error
+            self.loop_detection_stats = {
+                "total_detections": 0,
+                "loops_detected": 0,
+                "suspicious_activity": 0,
+                "clean_detections": 0
+            }
+            self.loop_detection_history = []
+            print(f"Warning: Could not initialize database: {e}")
+
+    def _check_database_health(self):
+        """Check database health and display warnings if needed"""
+        try:
+            self.db_health_status = database_health_check()
+            
+            if self.db_health_status["status"] == "error":
+                self._show_database_error_dialog()
+            elif self.db_health_status["status"] == "warning":
+                self._show_database_warning_dialog()
+                
+        except Exception as e:
+            self.db_health_status = {
+                "status": "error",
+                "message": f"Failed to check database health: {str(e)}"
+            }
+            self._show_database_error_dialog()
+    
+    def _show_database_error_dialog(self):
+        """Show database error dialog with simplified message"""
+        from tkinter import messagebox
+        
+        error_msg = (
+            "Unable to connect to the database.\n\n"
+            "Please start MySQL (XAMPP/WAMP) and try again.\n\n"
+            "The application will continue with limited functionality."
+        )
+        
+        messagebox.showerror("Database Connection Error", error_msg)
+    
+    def _show_database_warning_dialog(self):
+        """Show database warning dialog"""
+        from tkinter import messagebox
+        
+        warning_msg = (
+            "Database connection is unstable.\n\n"
+            "Some features may not work properly."
+        )
+        
+        messagebox.showwarning("Database Warning", warning_msg)
+    
+    def _initialize_database(self):
+        """Initialize database with error handling"""
+        try:
+            if self.db_health_status["status"] in ["healthy", "warning"]:
+                from db import create_loop_detections_table, get_loop_detection_stats, get_loop_detections_history
+                
+                # Try to create tables
+                create_result = create_loop_detections_table()
+                if create_result:
+                    self.loop_detection_stats = get_loop_detection_stats()
+                    self.loop_detection_history = get_loop_detections_history(100)
+                else:
+                    # Use default values if table creation failed
+                    self.loop_detection_stats = {
+                        "total_detections": 0,
+                        "loops_detected": 0,
+                        "suspicious_activity": 0,
+                        "clean_detections": 0
+                    }
+                    self.loop_detection_history = []
+            else:
+                # Database is not accessible, use default values
+                self.loop_detection_stats = {
+                    "total_detections": 0,
+                    "loops_detected": 0,
+                    "suspicious_activity": 0,
+                    "clean_detections": 0
+                }
+                self.loop_detection_history = []
+                
+        except Exception as e:
+            print(f"Error initializing database: {e}")
+            # Use default values
+            self.loop_detection_stats = {
+                "total_detections": 0,
+                "loops_detected": 0,
+                "suspicious_activity": 0,
+                "clean_detections": 0
+            }
+            self.loop_detection_history = []
+    
+    def get_database_status(self):
+        """Get current database status for display in UI"""
+        return self.db_health_status
+    
+    def refresh_database_health(self):
+        """Refresh database health check"""
+        self._check_database_health()
+        return self.db_health_status
+    
+    def _update_database_status_indicator(self):
+        """Update the database status indicator in the sidebar"""
+        if not hasattr(self, 'db_status_indicator'):
+            return
+            
+        status = self.db_health_status["status"]
+        if status == "healthy":
+            self.db_status_indicator.config(foreground="green")
+        elif status == "warning":
+            self.db_status_indicator.config(foreground="orange")
+        elif status == "error":
+            self.db_status_indicator.config(foreground="red")
+        else:
+            self.db_status_indicator.config(foreground="gray")
+    
+    def show_database_status(self):
+        """Show detailed database status dialog"""
+        modal = Toplevel(self.root)
+        modal.title("🔗 Database Status")
+        modal.geometry("500x400")
+        modal.transient(self.root)
+        modal.grab_set()
+        
+        # Center the modal
+        self._center_window(modal, 500, 400)
+        
+        # Main container
+        main_frame = tb.Frame(modal, padding=20)
+        main_frame.pack(fill="both", expand=True)
+        
+        # Title
+        title_label = tb.Label(main_frame, text="Database Connection Status", 
+                              font=("Segoe UI", 16, "bold"), bootstyle="primary")
+        title_label.pack(pady=(0, 20))
+        
+        # Status card
+        status_frame = tb.LabelFrame(main_frame, text="Current Status", 
+                                   bootstyle="info", padding=15)
+        status_frame.pack(fill="x", pady=(0, 15))
+        
+        # Status indicator
+        status_indicator_frame = tb.Frame(status_frame)
+        status_indicator_frame.pack(fill="x")
+        
+        status = self.db_health_status["status"]
+        if status == "healthy":
+            status_color = "🟢"
+            status_text = "Healthy"
+            status_style = "success"
+        elif status == "warning":
+            status_color = "🟡"
+            status_text = "Warning"
+            status_style = "warning"
+        elif status == "error":
+            status_color = "🔴"
+            status_text = "Error"
+            status_style = "danger"
+        else:
+            status_color = "⚫"
+            status_text = "Unknown"
+            status_style = "secondary"
+        
+        tb.Label(status_indicator_frame, text=f"{status_color} {status_text}", 
+                font=("Segoe UI", 14, "bold"), bootstyle=status_style).pack(side="left")
+        
+        # Message
+        tb.Label(status_frame, text=self.db_health_status["message"], 
+                font=("Segoe UI", 10), bootstyle="secondary").pack(pady=(10, 0), anchor="w")
+        
+        # Details section
+        if "details" in self.db_health_status:
+            details_frame = tb.LabelFrame(main_frame, text="Connection Details", 
+                                        bootstyle="secondary", padding=15)
+            details_frame.pack(fill="x", pady=(0, 15))
+            
+            details = self.db_health_status["details"]
+            
+            detail_items = [
+                ("Server Accessible", "✅" if details.get("server_accessible") else "❌"),
+                ("Database Exists", "✅" if details.get("database_exists") else "❌"),
+                ("Tables Accessible", "✅" if details.get("tables_accessible") else "❌"),
+                ("Connection Time", f"{details.get('connection_time', 'N/A')}s" if details.get('connection_time') else "N/A")
+            ]
+            
+            for label, value in detail_items:
+                detail_row = tb.Frame(details_frame)
+                detail_row.pack(fill="x", pady=2)
+                tb.Label(detail_row, text=f"{label}:", font=("Segoe UI", 10, "bold")).pack(side="left")
+                tb.Label(detail_row, text=value, font=("Segoe UI", 10)).pack(side="right")
+        
+        # Database info section
+        db_info_frame = tb.LabelFrame(main_frame, text="Database Information", 
+                                    bootstyle="info", padding=15)
+        db_info_frame.pack(fill="x", pady=(0, 15))
+        
+        # Get database info
+        try:
+            db_info = get_database_info()
+            info_items = [
+                ("MySQL Version", db_info.get("mysql_version", "Unknown")),
+                ("Database Name", db_info.get("database_name", "Unknown")),
+                ("Connection ID", str(db_info.get("connection_id", "Unknown"))),
+                ("Table Count", str(db_info.get("table_count", "Unknown")))
+            ]
+            
+            for label, value in info_items:
+                info_row = tb.Frame(db_info_frame)
+                info_row.pack(fill="x", pady=2)
+                tb.Label(info_row, text=f"{label}:", font=("Segoe UI", 10, "bold")).pack(side="left")
+                tb.Label(info_row, text=value, font=("Segoe UI", 10)).pack(side="right")
+                
+        except Exception as e:
+            tb.Label(db_info_frame, text=f"Could not retrieve database info: {str(e)}", 
+                    font=("Segoe UI", 10), bootstyle="danger").pack()
+        
+        # Buttons
+        button_frame = tb.Frame(main_frame)
+        button_frame.pack(fill="x", pady=(15, 0))
+        
+        def refresh_status():
+            self.refresh_database_health()
+            self._update_database_status_indicator()
+            modal.destroy()
+            self.show_database_status()  # Reopen with updated info
+        
+        tb.Button(button_frame, text="🔄 Refresh Status", bootstyle="info",
+                 command=refresh_status).pack(side="left")
+        tb.Button(button_frame, text="Close", bootstyle="secondary",
+                 command=modal.destroy).pack(side="right")
 
     # =============================
     # Inline Loading Animation Helpers
@@ -490,6 +792,31 @@ class Dashboard:
             width=2
         )
         self.notification_badge.place(in_=self.notification_btn, x=180, y=5)
+
+        # Database status indicator
+        self.db_status_frame = tb.Frame(self.sidebar, style='Sidebar.TFrame')
+        self.db_status_frame.pack(pady=5, padx=5, fill="x")
+        
+        self.db_status_btn = tb.Button(
+            self.db_status_frame,
+            text="🔗 Database",
+            style='Sidebar.TButton',
+            width=22,
+            command=self.show_database_status
+        )
+        self.db_status_btn.pack()
+        
+        # Database status indicator
+        self.db_status_indicator = tb.Label(
+            self.db_status_frame,
+            text="●",
+            font=("Segoe UI", 8, "bold"),
+            foreground="gray"
+        )
+        self.db_status_indicator.place(in_=self.db_status_btn, x=185, y=8)
+        
+        # Update database status indicator
+        self._update_database_status_indicator()
 
         # Default tab
         show_page("Dashboard")

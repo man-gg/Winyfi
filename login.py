@@ -8,8 +8,25 @@ from collections import defaultdict
 from dashboard import show_dashboard
 from device_utils import get_device_info
 from db import log_user_login, create_login_sessions_table
+import requests
+import os
 
 login_attempts = defaultdict(list)
+
+def check_server_connectivity():
+    """Check if the API server is reachable for client login"""
+    try:
+        api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000")
+        response = requests.get(f"{api_base_url}/api/health", timeout=3)
+        return response.status_code == 200
+    except:
+        try:
+            # Fallback: try to reach any API endpoint
+            api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000")
+            response = requests.get(f"{api_base_url}/api/routers", timeout=3)
+            return response.status_code in [200, 404, 500]  # Any response means server is up
+        except:
+            return False
 
 def is_rate_limited(username, window=60, max_attempts=5):
     now = time.time()
@@ -85,6 +102,39 @@ def show_login(root):
         bootstyle="primary"
     ).pack(pady=(0, 20))
 
+    # Server status indicator for client logins
+    server_status_frame = tb.Frame(card)
+    server_status_frame.pack(pady=(0, 10))
+    
+    server_status_label = tb.Label(
+        server_status_frame,
+        text="🔄 Checking server...",
+        font=("Segoe UI", 10),
+        foreground="orange"
+    )
+    server_status_label.pack()
+    
+    def update_server_status():
+        """Update server status indicator"""
+        if check_server_connectivity():
+            server_status_label.config(
+                text="🟢 Server: Online",
+                foreground="green"
+            )
+        else:
+            server_status_label.config(
+                text="🔴 Server: Offline (Client login unavailable)",
+                foreground="red"
+            )
+    
+    # Check server status after UI is ready
+    root.after(1000, update_server_status)
+    # Update every 10 seconds
+    def periodic_server_check():
+        update_server_status()
+        root.after(10000, periodic_server_check)
+    root.after(10000, periodic_server_check)
+
     username_var = tb.StringVar()
     password_var = tb.StringVar()
 
@@ -143,6 +193,22 @@ def show_login(root):
             messagebox.showerror("Login Failed", "Invalid username or password.")
             login_button.config(text="Login", state="normal")
             return
+
+        # Check server connectivity for client users
+        if user.get('role') != 'admin':
+            if not check_server_connectivity():
+                messagebox.showerror(
+                    "Server Connection Required", 
+                    "Client login requires server connection.\n\n"
+                    "The application server is not responding.\n\n"
+                    "Please ensure:\n"
+                    "• Server is running (start server/app.py)\n"
+                    "• Network connection is stable\n"
+                    "• Server is accessible\n\n"
+                    "Admin users can login without server connection."
+                )
+                login_button.config(text="Login", state="normal")
+                return
 
         # Get device information for logging
         device_info = get_device_info()
@@ -224,6 +290,19 @@ def show_login(root):
                         pass
 
             client_top.protocol("WM_DELETE_WINDOW", on_client_close)
+
+    # Info note about login requirements
+    info_frame = tb.Frame(card)
+    info_frame.pack(pady=(10, 0))
+    
+    info_label = tb.Label(
+        info_frame,
+        text="ℹ️ Note: Client login requires server connection.\nAdmin users can login offline.",
+        font=("Segoe UI", 9),
+        foreground="gray",
+        justify="center"
+    )
+    info_label.pack()
 
     # Login button
     login_button = tb.Button(

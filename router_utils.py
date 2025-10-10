@@ -1,30 +1,40 @@
 import subprocess
 import platform
-from db import get_connection
+from db import get_connection, execute_with_error_handling, DatabaseConnectionError
 from datetime import datetime
 
 # Insert new router
 def insert_router(name, ip, mac, brand, location, image_path):
-    conn = get_connection()
-    cursor = conn.cursor()
-    sql = """
-    INSERT INTO routers (name, ip_address, mac_address, brand, location, image_path)
-    VALUES (%s, %s, %s, %s, %s, %s)
-    """
-    cursor.execute(sql, (name, ip, mac, brand, location, image_path))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    def _insert():
+        conn = get_connection()
+        cursor = conn.cursor()
+        sql = """
+        INSERT INTO routers (name, ip_address, mac_address, brand, location, image_path)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (name, ip, mac, brand, location, image_path))
+        conn.commit()
+        router_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+        return router_id
+    
+    result = execute_with_error_handling("insert_router", _insert)
+    return result
 
 # Get all routers
 def get_routers():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM routers")
-    data = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return data
+    def _get_routers():
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM routers")
+        data = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return data
+    
+    result = execute_with_error_handling("get_routers", _get_routers)
+    return result if result is not None else []
 
 # Update existing router
 def update_router(id, name, ip, mac, brand, location, image_path):

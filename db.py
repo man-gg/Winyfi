@@ -1,18 +1,278 @@
 import mysql.connector
+from mysql.connector import Error
 import json
+import time
+import logging
 from datetime import datetime
+import tkinter as tk
+from tkinter import messagebox
 
-def get_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="winyfi"
+# Configure logging for database operations
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Database connection configuration
+DB_CONFIG = {
+    "host": "localhost",
+    "user": "root",
+    "password": "",
+    "database": "winyfi",
+    "connection_timeout": 10,
+    "autocommit": True,
+    "raise_on_warnings": True
+}
+
+class DatabaseConnectionError(Exception):
+    """Custom exception for database connection issues"""
+    pass
+
+class DatabaseOperationError(Exception):
+    """Custom exception for database operation issues"""
+    pass
+
+def show_database_error_dialog(title, message, error_details=None):
+    """
+    Show a user-friendly database error dialog window
+    
+    Args:
+        title (str): Dialog title
+        message (str): Main error message
+        error_details (str): Additional technical details (optional)
+    """
+    try:
+        # Create a hidden root window if none exists
+        root = tk._default_root
+        if root is None:
+            root = tk.Tk()
+            root.withdraw()  # Hide the root window
+        
+        # Simple, user-friendly message
+        simple_message = (
+            "Unable to connect to the database.\n\n"
+            "Please start MySQL (XAMPP/WAMP) and restart the application."
+        )
+        
+        # Show error dialog
+        messagebox.showerror("Database Connection Error", simple_message)
+        
+    except Exception as e:
+        # Fallback to console if GUI is not available
+        logger.error(f"Could not show error dialog: {e}")
+        logger.error(f"Database connection failed")
+
+def show_database_warning_dialog(title, message):
+    """
+    Show a database warning dialog window
+    
+    Args:
+        title (str): Dialog title
+        message (str): Warning message
+    """
+    try:
+        # Create a hidden root window if none exists
+        root = tk._default_root
+        if root is None:
+            root = tk.Tk()
+            root.withdraw()  # Hide the root window
+        
+        # Show warning dialog
+        messagebox.showwarning(title, message)
+        
+    except Exception as e:
+        # Fallback to console if GUI is not available
+        logger.warning(f"Could not show warning dialog: {e}")
+        logger.warning(f"Original warning - {title}: {message}")
+
+def check_mysql_server_status():
+    """Check if MySQL server is running and accessible"""
+    try:
+        # Try to connect without specifying a database first
+        test_config = DB_CONFIG.copy()
+        test_config.pop('database', None)  # Remove database from config for initial test
+        
+        conn = mysql.connector.connect(**test_config)
+        conn.close()
+        return True, "MySQL server is running and accessible"
+    except mysql.connector.Error as err:
+        if err.errno == mysql.connector.errorcode.ER_ACCESS_DENIED_ERROR:
+            return False, "Access denied: Check username and password"
+        elif err.errno == mysql.connector.errorcode.ER_BAD_DB_ERROR:
+            return False, "Database 'winyfi' does not exist"
+        elif err.errno == 2003:  # Can't connect to MySQL server
+            return False, "Can't connect to MySQL server. Please check if MySQL is running"
+        elif err.errno == 1045:  # Access denied
+            return False, "Access denied for user. Check MySQL credentials"
+        else:
+            return False, f"MySQL Error {err.errno}: {err.msg}"
+    except Exception as e:
+        return False, f"Unexpected error connecting to MySQL: {str(e)}"
+
+def get_connection(max_retries=3, retry_delay=2, show_dialog=True):
+    """
+    Get database connection with error handling and retry mechanism
+    
+    Args:
+        max_retries (int): Maximum number of connection attempts
+        retry_delay (int): Delay between retry attempts in seconds
+        show_dialog (bool): Whether to show error dialogs to user
+    
+    Returns:
+        mysql.connector.connection: Database connection object
+    
+    Raises:
+        DatabaseConnectionError: When connection cannot be established
+    """
+    last_error = None
+    
+    for attempt in range(max_retries):
+        try:
+            # Attempt to connect
+            conn = mysql.connector.connect(**DB_CONFIG)
+            
+            # Test the connection
+            if conn.is_connected():
+                # Silently return successful connection
+                return conn
+            else:
+                raise mysql.connector.Error("Connection established but not active")
+                
+        except mysql.connector.Error as err:
+            last_error = err
+            error_msg = f"MySQL Error on attempt {attempt + 1}/{max_retries}: "
+            
+            if err.errno == mysql.connector.errorcode.ER_ACCESS_DENIED_ERROR:
+                error_msg += "Access denied - Check username and password"
+                logger.error(error_msg)
+                if show_dialog and attempt == max_retries - 1:
+                    show_database_error_dialog(
+                        "Database Access Denied",
+                        "Cannot access MySQL database due to authentication failure.",
+                        f"Error {err.errno}: {err.msg}"
+                    )
+                # Don't retry for authentication errors
+                break
+            elif err.errno == mysql.connector.errorcode.ER_BAD_DB_ERROR:
+                error_msg += f"Database '{DB_CONFIG['database']}' does not exist"
+                logger.error(error_msg)
+                if show_dialog and attempt == max_retries - 1:
+                    show_database_error_dialog(
+                        "Database Not Found",
+                        f"The database '{DB_CONFIG['database']}' does not exist.",
+                        f"Error {err.errno}: {err.msg}"
+                    )
+                # Don't retry for missing database
+                break
+            elif err.errno == 2003:  # Can't connect to MySQL server
+                error_msg += "Cannot connect to MySQL server - Check if MySQL is running"
+                if show_dialog:
+                    logger.warning(error_msg)
+                if show_dialog and attempt == max_retries - 1:
+                    show_database_error_dialog(
+                        "MySQL Server Not Running",
+                        "Cannot connect to MySQL server. Please ensure MySQL is running.",
+                        f"Error {err.errno}: {err.msg}"
+                    )
+            elif err.errno == 1045:  # Access denied
+                error_msg += "Access denied for user - Check MySQL credentials"
+                logger.error(error_msg)
+                if show_dialog and attempt == max_retries - 1:
+                    show_database_error_dialog(
+                        "Database Access Denied",
+                        "Access denied for MySQL user. Please check your credentials.",
+                        f"Error {err.errno}: {err.msg}"
+                    )
+                break
+            elif err.errno == 2006:  # MySQL server has gone away
+                error_msg += "MySQL server has gone away - Attempting reconnection"
+                logger.warning(error_msg)
+                if show_dialog and attempt == max_retries - 1:
+                    show_database_warning_dialog(
+                        "MySQL Connection Lost",
+                        "MySQL server connection was lost. Please check your network connection."
+                    )
+            else:
+                error_msg += f"Error {err.errno}: {err.msg}"
+                logger.error(error_msg)
+                if show_dialog and attempt == max_retries - 1:
+                    show_database_error_dialog(
+                        "Database Connection Error",
+                        "An unexpected database error occurred.",
+                        f"Error {err.errno}: {err.msg}"
+                    )
+            
+            # Wait before retrying (except on last attempt)
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                
+        except Exception as e:
+            last_error = e
+            logger.error(f"Unexpected error on attempt {attempt + 1}/{max_retries}: {str(e)}")
+            
+            if show_dialog and attempt == max_retries - 1:
+                show_database_error_dialog(
+                    "Unexpected Database Error",
+                    "An unexpected error occurred while connecting to the database.",
+                    str(e)
+                )
+            
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)
+    
+    # If we get here, all attempts failed
+    error_details = str(last_error) if last_error else "Unknown error"
+    raise DatabaseConnectionError(
+        f"Failed to connect to MySQL after {max_retries} attempts. "
+        f"Last error: {error_details}. "
+        f"Please ensure MySQL server is running and accessible."
     )
+
+def execute_with_error_handling(operation_name, operation_func, show_dialog=True, *args, **kwargs):
+    """
+    Execute database operations with comprehensive error handling
+    
+    Args:
+        operation_name (str): Name of the operation for logging
+        operation_func (callable): Function to execute
+        show_dialog (bool): Whether to show error dialogs to user
+        *args, **kwargs: Arguments to pass to the operation function
+    
+    Returns:
+        Any: Result of the operation function, or None if failed
+    """
+    try:
+        return operation_func(*args, **kwargs)
+    except DatabaseConnectionError as e:
+        logger.error(f"Database connection error during {operation_name}: {e}")
+        if show_dialog:
+            show_database_error_dialog(
+                f"Database Error - {operation_name}",
+                f"Failed to perform {operation_name} due to database connection issues.",
+                str(e)
+            )
+        return None
+    except mysql.connector.Error as e:
+        logger.error(f"MySQL error during {operation_name}: {e}")
+        if show_dialog:
+            show_database_error_dialog(
+                f"Database Error - {operation_name}",
+                f"A database error occurred during {operation_name}.",
+                f"MySQL Error {e.errno}: {e.msg}" if hasattr(e, 'errno') else str(e)
+            )
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error during {operation_name}: {e}")
+        if show_dialog:
+            show_database_error_dialog(
+                f"Unexpected Error - {operation_name}",
+                f"An unexpected error occurred during {operation_name}.",
+                str(e)
+            )
+        return None
 
 def create_loop_detections_table():
     """Create the loop_detections table if it doesn't exist."""
-    try:
+    def _create_table():
         conn = get_connection()
         cursor = conn.cursor()
         
@@ -30,18 +290,27 @@ def create_loop_detections_table():
         )
         """
         
-        cursor.execute(create_table_sql)
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print("Loop detections table created/verified")
-        
-    except Exception as e:
-        print(f"Error creating loop_detections table: {e}")
+        try:
+            cursor.execute(create_table_sql)
+            conn.commit()
+        except mysql.connector.Error as e:
+            # Silently handle table already exists error (code 1050)
+            if e.errno != 1050:  # 1050 = table already exists
+                raise e
+        finally:
+            cursor.close()
+            conn.close()
+        return True
+    
+    result = execute_with_error_handling("create_loop_detections_table", _create_table, show_dialog=False)
+    if result is None:
+        # Don't log errors for table creation since it's expected to fail sometimes
+        return False
+    return True
 
 def save_loop_detection(total_packets, offenders, stats, status, severity_score, interface="Wi-Fi", duration=3):
     """Save a loop detection result to the database."""
-    try:
+    def _save_detection():
         conn = get_connection()
         cursor = conn.cursor()
         
@@ -74,16 +343,17 @@ def save_loop_detection(total_packets, offenders, stats, status, severity_score,
         cursor.close()
         conn.close()
         
-        print(f" Loop detection saved to database (ID: {detection_id})")
+        logger.info(f"Loop detection saved to database (ID: {detection_id})")
         return detection_id
-        
-    except Exception as e:
-        print(f" Error saving loop detection: {e}")
-        return None
+    
+    result = execute_with_error_handling("save_loop_detection", _save_detection)
+    if result is None:
+        logger.error("Failed to save loop detection to database")
+    return result
 
 def get_loop_detections_history(limit=100):
     """Get loop detection history from database."""
-    try:
+    def _get_history():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         
@@ -100,14 +370,13 @@ def get_loop_detections_history(limit=100):
         conn.close()
         
         return results
-        
-    except Exception as e:
-        print(f" Error loading loop detection history: {e}")
-        return []
+    
+    result = execute_with_error_handling("get_loop_detections_history", _get_history)
+    return result if result is not None else []
 
 def get_loop_detection_stats():
     """Get loop detection statistics from database."""
-    try:
+    def _get_stats():
         conn = get_connection()
         cursor = conn.cursor()
         
@@ -136,15 +405,138 @@ def get_loop_detection_stats():
             "suspicious_activity": suspicious_activity,
             "clean_detections": clean_detections
         }
-        
-    except Exception as e:
-        print(f" Error loading loop detection stats: {e}")
-        return {
-            "total_detections": 0,
-            "loops_detected": 0,
-            "suspicious_activity": 0,
-            "clean_detections": 0
+    
+    result = execute_with_error_handling("get_loop_detection_stats", _get_stats)
+    return result if result is not None else {
+        "total_detections": 0,
+        "loops_detected": 0,
+        "suspicious_activity": 0,
+        "clean_detections": 0
+    }
+
+def database_health_check():
+    """
+    Comprehensive database health check
+    
+    Returns:
+        dict: Health check results with status, message, and details
+    """
+    health_status = {
+        "status": "unknown",
+        "message": "",
+        "details": {
+            "server_accessible": False,
+            "database_exists": False,
+            "tables_accessible": False,
+            "connection_time": None
         }
+    }
+    
+    start_time = time.time()
+    
+    try:
+        # Check if MySQL server is accessible
+        server_status, server_message = check_mysql_server_status()
+        health_status["details"]["server_accessible"] = server_status
+        
+        if not server_status:
+            health_status["status"] = "error"
+            health_status["message"] = server_message
+            return health_status
+        
+        # Try to connect to the specific database
+        conn = get_connection(max_retries=1)
+        connection_time = time.time() - start_time
+        health_status["details"]["connection_time"] = round(connection_time, 3)
+        
+        # Test database access
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        health_status["details"]["database_exists"] = True
+        
+        # Test table access (try to query a known table)
+        try:
+            cursor.execute("SHOW TABLES")
+            tables = cursor.fetchall()
+            health_status["details"]["tables_accessible"] = len(tables) > 0
+            
+            # Check if essential tables exist
+            table_names = [table[0] for table in tables]
+            essential_tables = ["routers", "users"]  # Add your essential table names
+            missing_tables = [table for table in essential_tables if table not in table_names]
+            
+            if missing_tables:
+                health_status["status"] = "warning"
+                health_status["message"] = f"Database connected but missing tables: {', '.join(missing_tables)}"
+            else:
+                health_status["status"] = "healthy"
+                health_status["message"] = f"Database is healthy (connected in {connection_time:.3f}s)"
+                
+        except mysql.connector.Error as e:
+            health_status["status"] = "warning"
+            health_status["message"] = f"Database connected but cannot access tables: {e}"
+        
+        cursor.close()
+        conn.close()
+        
+    except DatabaseConnectionError as e:
+        health_status["status"] = "error"
+        health_status["message"] = str(e)
+    except mysql.connector.Error as e:
+        health_status["status"] = "error"
+        health_status["message"] = f"MySQL Error: {e}"
+    except Exception as e:
+        health_status["status"] = "error"
+        health_status["message"] = f"Unexpected error: {e}"
+    
+    return health_status
+
+def get_database_info():
+    """
+    Get detailed database information for diagnostics
+    
+    Returns:
+        dict: Database information including version, settings, etc.
+    """
+    def _get_info():
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        info = {}
+        
+        # Get MySQL version
+        cursor.execute("SELECT VERSION() as version")
+        version_result = cursor.fetchone()
+        info["mysql_version"] = version_result["version"] if version_result else "Unknown"
+        
+        # Get database name
+        cursor.execute("SELECT DATABASE() as database_name")
+        db_result = cursor.fetchone()
+        info["database_name"] = db_result["database_name"] if db_result else "Unknown"
+        
+        # Get connection info
+        cursor.execute("SELECT CONNECTION_ID() as connection_id")
+        conn_result = cursor.fetchone()
+        info["connection_id"] = conn_result["connection_id"] if conn_result else "Unknown"
+        
+        # Get table count
+        cursor.execute("SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = DATABASE()")
+        table_result = cursor.fetchone()
+        info["table_count"] = table_result["table_count"] if table_result else 0
+        
+        cursor.close()
+        conn.close()
+        
+        return info
+    
+    result = execute_with_error_handling("get_database_info", _get_info)
+    return result if result is not None else {
+        "mysql_version": "Unknown",
+        "database_name": "Unknown", 
+        "connection_id": "Unknown",
+        "table_count": 0
+    }
 
 def create_network_clients_table():
     """Create the network_clients table if it doesn't exist."""
@@ -542,15 +934,23 @@ def create_login_sessions_table():
         )
         """
         
-        cursor.execute(create_table_sql)
-        conn.commit()
-        print("Login sessions table created/verified")
-        
-        cursor.close()
-        conn.close()
+        try:
+            cursor.execute(create_table_sql)
+            conn.commit()
+            # Silently handle table creation/verification
+        except mysql.connector.Error as e:
+            # Silently handle table already exists error (code 1050)
+            if e.errno != 1050:  # 1050 = table already exists
+                raise e
+        finally:
+            cursor.close()
+            conn.close()
+            
+        return True
         
     except Exception as e:
-        print(f"Error creating login_sessions table: {e}")
+        # Don't show error messages for table creation
+        return False
 
 def log_user_login(user_id, username, device_ip=None, device_mac=None, 
                   device_hostname=None, device_platform=None, user_agent=None, 
