@@ -4,8 +4,7 @@ import json
 import time
 import logging
 from datetime import datetime
-import tkinter as tk
-from tkinter import messagebox
+import os
 
 # Configure logging for database operations
 logging.basicConfig(level=logging.INFO)
@@ -31,57 +30,19 @@ class DatabaseOperationError(Exception):
     pass
 
 def show_database_error_dialog(title, message, error_details=None):
+    """Non-intrusive handler for DB errors (logs only; UI decides on dialogs).
+
+    This avoids any Tkinter usage at the DB layer so clients don't need local
+    MySQL/XAMPP and the library remains safe for server/headless contexts.
     """
-    Show a user-friendly database error dialog window
-    
-    Args:
-        title (str): Dialog title
-        message (str): Main error message
-        error_details (str): Additional technical details (optional)
-    """
-    try:
-        # Create a hidden root window if none exists
-        root = tk._default_root
-        if root is None:
-            root = tk.Tk()
-            root.withdraw()  # Hide the root window
-        
-        # Simple, user-friendly message
-        simple_message = (
-            "Unable to connect to the database.\n\n"
-            "Please start MySQL (XAMPP/WAMP) and restart the application."
-        )
-        
-        # Show error dialog
-        messagebox.showerror("Database Connection Error", simple_message)
-        
-    except Exception as e:
-        # Fallback to console if GUI is not available
-        logger.error(f"Could not show error dialog: {e}")
-        logger.error(f"Database connection failed")
+    if error_details:
+        logger.error("%s - %s | Details: %s", title, message, error_details)
+    else:
+        logger.error("%s - %s", title, message)
 
 def show_database_warning_dialog(title, message):
-    """
-    Show a database warning dialog window
-    
-    Args:
-        title (str): Dialog title
-        message (str): Warning message
-    """
-    try:
-        # Create a hidden root window if none exists
-        root = tk._default_root
-        if root is None:
-            root = tk.Tk()
-            root.withdraw()  # Hide the root window
-        
-        # Show warning dialog
-        messagebox.showwarning(title, message)
-        
-    except Exception as e:
-        # Fallback to console if GUI is not available
-        logger.warning(f"Could not show warning dialog: {e}")
-        logger.warning(f"Original warning - {title}: {message}")
+    """Log DB warnings without any GUI dependency."""
+    logger.warning("%s - %s", title, message)
 
 def check_mysql_server_status():
     """Check if MySQL server is running and accessible"""
@@ -107,7 +68,7 @@ def check_mysql_server_status():
     except Exception as e:
         return False, f"Unexpected error connecting to MySQL: {str(e)}"
 
-def get_connection(max_retries=3, retry_delay=2, show_dialog=True):
+def get_connection(max_retries=2, retry_delay=1, show_dialog=False):
     """
     Get database connection with error handling and retry mechanism
     
@@ -122,6 +83,22 @@ def get_connection(max_retries=3, retry_delay=2, show_dialog=True):
     Raises:
         DatabaseConnectionError: When connection cannot be established
     """
+    # Allow environment overrides for retries to tune UX without code changes
+    try:
+        max_retries = int(os.environ.get("WINYFI_DB_RETRIES", max_retries))
+    except Exception:
+        pass
+    try:
+        retry_delay = float(os.environ.get("WINYFI_DB_RETRY_DELAY", retry_delay))
+    except Exception:
+        pass
+    try:
+        env_sd = os.environ.get("WINYFI_DB_SHOW_DIALOG")
+        if env_sd is not None:
+            show_dialog = str(env_sd).lower() in ("1", "true", "yes")
+    except Exception:
+        pass
+
     last_error = None
     
     for attempt in range(max_retries):
@@ -163,13 +140,13 @@ def get_connection(max_retries=3, retry_delay=2, show_dialog=True):
                 # Don't retry for missing database
                 break
             elif err.errno == 2003:  # Can't connect to MySQL server
-                error_msg += "Cannot connect to MySQL server - Check if MySQL is running"
+                error_msg += "Cannot connect to MySQL server"
                 if show_dialog:
                     logger.warning(error_msg)
                 if show_dialog and attempt == max_retries - 1:
                     show_database_error_dialog(
-                        "MySQL Server Not Running",
-                        "Cannot connect to MySQL server. Please ensure MySQL is running.",
+                        "MySQL Server Unreachable",
+                        "Cannot connect to MySQL server. Some features may be limited.",
                         f"Error {err.errno}: {err.msg}"
                     )
             elif err.errno == 1045:  # Access denied

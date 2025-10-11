@@ -3,60 +3,105 @@ import ttkbootstrap as tb
 from login import show_login
 import sys
 import os
+import logging
+import traceback
 
-def check_database_before_start():
-    """Check database connection before starting the application"""
+
+def _show_error_dialog(title: str, message: str, parent=None) -> None:
+    """Best-effort GUI error dialog without crashing if Tk isn't ready."""
     try:
-        from db import check_mysql_server_status
         import tkinter as tk
         from tkinter import messagebox
-        
-        # Quick check if MySQL server is accessible
-        server_accessible, message = check_mysql_server_status()
-        
-        if not server_accessible:
-            # Create a temporary root window for the error dialog
-            temp_root = tk.Tk()
-            temp_root.withdraw()  # Hide the window
-            
-            # Show error dialog
-            messagebox.showerror(
-                "Database Connection Failed",
-                "Cannot connect to MySQL database.\n\n"
-                "Please start MySQL (XAMPP/WAMP) and try again."
-            )
-            
-            # Clean up and exit
-            temp_root.destroy()
-            sys.exit(1)
-            
-    except Exception as e:
-        # Fallback to create a simple error dialog
-        import tkinter as tk
-        from tkinter import messagebox
-        
-        try:
-            temp_root = tk.Tk()
-            temp_root.withdraw()  # Hide the window
-            
-            messagebox.showerror(
-                "Database Error",
-                "Unable to verify database connection.\n\n"
-                "Please ensure MySQL is running and try again."
-            )
-            
-            temp_root.destroy()
-        except:
-            # Ultimate fallback to terminal if GUI fails
-            print("\n❌ Database Error")
-            print("Unable to verify database connection.")
-            print("Please ensure MySQL is running and try again.")
-        
-        sys.exit(1)
+
+        # If no Tk root exists and no parent was provided, create a tiny hidden one
+        created_temp_root = False
+        if parent is None:
+            try:
+                parent = tk._default_root
+            except Exception:
+                parent = None
+
+        if parent is None:
+            parent = tk.Tk()
+            parent.withdraw()
+            created_temp_root = True
+
+        messagebox.showerror(title, message, parent=parent)
+
+        if created_temp_root:
+            parent.destroy()
+    except Exception:
+        # Last resort: print to stderr
+        print(f"\n[ERROR] {title}: {message}", file=sys.stderr)
+
+
+def _format_exception(exc_type, exc, tb_obj) -> str:
+    return "".join(traceback.format_exception(exc_type, exc, tb_obj))
+
+
+def init_logging() -> str:
+    """Configure logging to file and stderr. Returns the log file path."""
+    log_file = os.path.join(os.path.dirname(__file__), "winyfi_error.log")
+    try:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+            handlers=[
+                logging.FileHandler(log_file, encoding="utf-8"),
+                logging.StreamHandler(sys.stderr),
+            ],
+            force=True,  # ensure we override previous configs
+        )
+    except Exception:
+        # If file handler fails (e.g., permissions), fall back to stderr only
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+            handlers=[logging.StreamHandler(sys.stderr)],
+            force=True,
+        )
+        _show_error_dialog(
+            "Logging Disabled",
+            "Could not create winyfi_error.log; logging to console only.",
+        )
+    return log_file
+
+
+def setup_global_exception_handlers(root_window) -> None:
+    """Set global exception hooks so unexpected errors are logged and shown politely."""
+    logger = logging.getLogger("winyfi")
+
+    def _handle_any_exception(exc_type, exc, tb_obj):
+        details = _format_exception(exc_type, exc, tb_obj)
+        logger.error("Uncaught exception:\n%s", details)
+        _show_error_dialog(
+            "Unexpected Error",
+            "Something went wrong. Details have been logged to winyfi_error.log.",
+            parent=root_window,
+        )
+
+    def _tk_callback_exception(exc_type, exc, tb_obj):
+        details = _format_exception(exc_type, exc, tb_obj)
+        logger.error("Tkinter callback exception:\n%s", details)
+        _show_error_dialog(
+            "Operation Failed",
+            "An action couldn't be completed. Details were saved to winyfi_error.log.",
+            parent=root_window,
+        )
+
+    # Catch non-GUI uncaught exceptions
+    sys.excepthook = _handle_any_exception
+
+    # Catch exceptions raised inside Tk event callbacks
+    try:
+        root_window.report_callback_exception = _tk_callback_exception
+    except Exception:
+        # Some widget frameworks may not expose it; ignore silently
+        pass
 
 if __name__ == "__main__":
-    # Check database connection before starting GUI
-    check_database_before_start()
+    # Initialize logging first so early errors are captured
+    init_logging()
     
     # 1) Create your window with the flatly theme
     root = tb.Window(themename="flatly")
@@ -100,6 +145,9 @@ if __name__ == "__main__":
         'RouterCard.TLabelframe',
         bordercolor=[('active', '#c9302c')]
     )
+
+    # Hook global handlers now that Tk exists
+    setup_global_exception_handlers(root)
 
     # 4) Fire off your login (and then dashboard) as usual
     show_login(root)

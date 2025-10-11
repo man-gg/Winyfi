@@ -71,7 +71,15 @@ class ClientDashboard:
     def __init__(self, root, current_user):
         self.root = root
         self.current_user = current_user
-        self.api_base_url = os.environ.get("WINYFI_API", "http://127.0.0.1:5000")
+        # Normalize API base URL (strip trailing slash)
+        self.api_base_url = os.environ.get("WINYFI_API", "http://127.0.0.1:5000").rstrip("/")
+        # Reuse HTTP connections for speed and reliability
+        self.http = requests.Session()
+        # Server connection state
+        self.server_online = None  # unknown at start
+        self._server_poll_backoff = 3  # seconds
+        self._server_poll_max = 60
+        self._health_stop_event = threading.Event()
         # Ensure closing this window exits the whole app
         try:
             self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -187,6 +195,26 @@ class ClientDashboard:
             width=3
         )
 
+        # Server status indicator (sidebar footer) with Retry (anchored at bottom)
+        status_row = tb.Frame(self.sidebar, style='Sidebar.TFrame', padding=(0,0))
+        status_row.pack(side='bottom', fill='x', pady=(10, 10))
+        self.server_status_label = tb.Label(
+            status_row,
+            text="● Server: Checking…",
+            font=("Segoe UI", 10),
+            foreground="#6c757d",
+            background="white"
+        )
+        self.server_status_label.pack(side='left')
+        self.retry_btn = tb.Button(
+            status_row,
+            text="Retry",
+            bootstyle="link",
+            command=self.check_server_now,
+            width=6
+        )
+        self.retry_btn.pack(side='right', padx=(8,0))
+
         # Settings dropdown (UI only; disabled actions)
         settings_btn = tb.Button(self.sidebar,
                                  text="⚙️ Settings ▼",
@@ -232,6 +260,14 @@ class ClientDashboard:
 
         # Default tab
         self.show_page("Dashboard")
+
+        # Start lightweight server health monitoring
+        self.start_server_health_monitor()
+        # Run initial check after UI is fully ready (avoid race condition)
+        try:
+            self.root.after(200, self._initial_server_check)
+        except Exception:
+            pass
 
     def _add_tickets_button_to_reports(self):
         """Add a tickets button to the Reports tab"""
@@ -613,6 +649,157 @@ class ClientDashboard:
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
         window.geometry(f"{width}x{height}+{x}+{y}")
+
+    # -------------------------------
+    # Server health and API helpers
+    # -------------------------------
+    def _on_server_check_result(self, online: bool):
+        """Update UI and state when server connectivity changes."""
+        if self.server_online is online:
+            return
+        self.server_online = online
+        try:
+            if online:
+                self.server_status_label.config(text="● Server: Online", foreground="#28a745")
+                try:
+                    self.export_btn.configure(state="normal")
+                except Exception:
+                    pass
+                try:
+                    notify_system_alert("Server connection restored.", priority=NotificationPriority.LOW)
+                except Exception:
+                    pass
+                # Reset backoff on success
+                self._server_poll_backoff = 3
+            else:
+                self.server_status_label.config(text="● Server: Offline", foreground="#dc3545")
+                try:
+                    self.export_btn.configure(state="disabled")
+                except Exception:
+                    pass
+                try:
+                    notify_system_alert("Server connection lost. Some features are unavailable.", priority=NotificationPriority.MEDIUM)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    def start_server_health_monitor(self):
+        """Background thread: poll /api/health with exponential backoff while offline."""
+        def worker():
+            backoff = self._server_poll_backoff
+            while not self._health_stop_event.is_set():
+                ok = False
+                try:
+                    resp = self.http.get(f"{self.api_base_url}/api/health", timeout=(0.8, 1.5))
+                    ok = resp.status_code == 200
+                except Exception:
+                    ok = False
+                finally:
+                    try:
+                        self.root.after(0, lambda v=ok: self._on_server_check_result(v))
+                    except Exception:
+                        pass
+
+                if ok:
+                    # wait with stop awareness
+                    self._health_stop_event.wait(10)
+                    backoff = 3
+                else:
+                    self._health_stop_event.wait(backoff)
+                    backoff = min(self._server_poll_max, max(3, int(backoff * 2)))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _initial_server_check(self):
+        """Initial server check with extra reliability for startup detection."""
+        try:
+            self.server_status_label.config(text="● Server: Checking…", foreground="#6c757d")
+        except Exception:
+            pass
+        
+        def startup_check():
+            ok = False
+            try:
+                # Try a slightly longer timeout for the initial check
+                resp = self.http.get(f"{self.api_base_url}/api/health", timeout=(1.0, 2.0))
+                ok = resp.status_code == 200
+            except Exception:
+                ok = False
+            finally:
+                try:
+                    self.root.after(0, lambda v=ok: self._on_server_check_result(v))
+                except Exception:
+                    pass
+            if ok:
+                # Reset backoff on success
+                self._server_poll_backoff = 3
+        
+        threading.Thread(target=startup_check, daemon=True).start()
+
+    def check_server_now(self):
+        """Manual retry that triggers an immediate one-shot health check without waiting for the loop."""
+        try:
+            self.server_status_label.config(text="● Server: Checking…", foreground="#6c757d")
+            self.retry_btn.configure(state="disabled")
+        except Exception:
+            pass
+        def one_shot():
+            ok = False
+            try:
+                resp = self.http.get(f"{self.api_base_url}/api/health", timeout=(0.8, 1.5))
+                ok = resp.status_code == 200
+            except Exception:
+                ok = False
+            finally:
+                try:
+                    def finish(v=ok):
+                        self._on_server_check_result(v)
+                        try:
+                            self.retry_btn.configure(state="normal")
+                        except Exception:
+                            pass
+                    self.root.after(0, finish)
+                except Exception:
+                    pass
+            if ok:
+                # also reset the monitor backoff to be snappy after success
+                self._server_poll_backoff = 3
+        threading.Thread(target=one_shot, daemon=True).start()
+
+    def api_get(self, path, *, timeout=(3, 10), raise_for_status=True, show_errors=True):
+        """Centralized GET with connectivity tracking. Returns Response or None."""
+        try:
+            resp = self.http.get(f"{self.api_base_url}{path}", timeout=timeout)
+            self._on_server_check_result(True)
+            if raise_for_status:
+                resp.raise_for_status()
+            return resp
+        except requests.exceptions.RequestException as e:
+            self._on_server_check_result(False)
+            if show_errors:
+                try:
+                    messagebox.showerror("Connection Error", f"Unable to reach server. Please check your connection.\n\nDetails: {e}")
+                except Exception:
+                    pass
+            return None
+
+    def api_post(self, path, *, json=None, timeout=(3, 10), raise_for_status=False, show_errors=True):
+        """Centralized POST with connectivity tracking. Returns Response or None."""
+        try:
+            resp = self.http.post(f"{self.api_base_url}{path}", json=json, timeout=timeout)
+            self._on_server_check_result(True)
+            if raise_for_status:
+                resp.raise_for_status()
+            return resp
+        except requests.exceptions.RequestException as e:
+            self._on_server_check_result(False)
+            if show_errors:
+                try:
+                    messagebox.showerror("Connection Error", f"Unable to reach server. Please check your connection.\n\nDetails: {e}")
+                except Exception:
+                    pass
+            return None
     
     def start_router_status_monitoring(self):
         """Start monitoring router status changes."""
@@ -620,8 +807,8 @@ class ClientDashboard:
             while self.status_monitoring_running:
                 try:
                     # Get routers from API
-                    response = requests.get(f"{self.api_base_url}/api/routers", timeout=5)
-                    if response.ok:
+                    response = self.api_get("/api/routers", timeout=(2, 5), show_errors=False)
+                    if response is not None and response.ok:
                         routers = response.json() or []
                         
                         for router in routers:
@@ -676,6 +863,10 @@ class ClientDashboard:
     def stop_router_status_monitoring(self):
         """Stop monitoring router status changes."""
         self.status_monitoring_running = False
+        try:
+            self._health_stop_event.set()
+        except Exception:
+            pass
 
     def on_close(self):
         """Confirm and exit the entire application when the Client window is closed."""
@@ -1189,12 +1380,14 @@ class ClientDashboard:
         if not hasattr(self, 'tickets_table'):
             return
         self.tickets_table.delete(*self.tickets_table.get_children())
+        resp = self.api_get("/api/srfs", timeout=(3, 8), show_errors=False)
+        if resp is None:
+            messagebox.showerror("Server Offline", "Cannot load tickets because the server is unreachable.")
+            return
         try:
-            resp = requests.get(f"{self.api_base_url}/api/srfs", timeout=8)
-            resp.raise_for_status()
             srfs = resp.json() or []
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to load tickets from API: {e}")
+            messagebox.showerror("Error", f"Invalid response from server: {e}")
             return
 
         # Optional filter: client view could show all or only self-created
@@ -1372,21 +1565,26 @@ class ClientDashboard:
         try:
             created_by = (self.current_user or {}).get('id')
             payload = {"created_by": int(created_by) if created_by else 1, "data": data}
-            resp = requests.post(f"{self.api_base_url}/api/srfs", json=payload, timeout=8)
-            if resp.ok:
+            resp = self.api_post("/api/srfs", json=payload, timeout=(3, 10), show_errors=False)
+            if resp and resp.ok:
                 messagebox.showinfo("Success", "Service Request submitted successfully!")
                 modal.destroy()
                 self.load_tickets()
             else:
-                messagebox.showerror("Error", f"Ticket submission failed: {resp.text}")
+                if resp is None:
+                    messagebox.showerror("Server Offline", "Cannot submit ticket because the server is unreachable.")
+                else:
+                    messagebox.showerror("Error", f"Ticket submission failed: {resp.text}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to submit ticket: {e}")
 
     def open_ticket_detail_modal(self, srf_no):
         """Open a modal showing SRF details in printable form layout (read-only for client)."""
         try:
-            resp = requests.get(f"{self.api_base_url}/api/srfs", timeout=8)
-            resp.raise_for_status()
+            resp = self.api_get("/api/srfs", timeout=(3, 8), show_errors=False)
+            if resp is None:
+                messagebox.showerror("Server Offline", "Cannot load SRF details because the server is unreachable.")
+                return
             srfs = resp.json() or []
             srf = next((s for s in srfs if s.get("ict_srf_no") == srf_no), None)
         except Exception as e:

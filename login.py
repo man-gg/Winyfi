@@ -2,6 +2,7 @@ import time
 from tkinter import messagebox
 import ttkbootstrap as tb
 from PIL import Image, ImageTk
+import threading
 from user_utils import verify_user
 from client_window import show_client_window
 from collections import defaultdict
@@ -13,20 +14,36 @@ import os
 
 login_attempts = defaultdict(list)
 
-def check_server_connectivity():
-    """Check if the API server is reachable for client login"""
+def check_server_connectivity(timeout=1.2):
+    """Fast, best-effort server reachability check (blocking, short timeout)."""
     try:
-        api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000")
-        response = requests.get(f"{api_base_url}/api/health", timeout=3)
+        api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000").rstrip("/")
+        response = requests.get(
+            f"{api_base_url}/api/health",
+            timeout=(min(0.8, timeout), timeout)
+        )
         return response.status_code == 200
-    except:
+    except Exception:
         try:
-            # Fallback: try to reach any API endpoint
-            api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000")
-            response = requests.get(f"{api_base_url}/api/routers", timeout=3)
-            return response.status_code in [200, 404, 500]  # Any response means server is up
-        except:
+            # Fallback: any endpoint response implies server is up
+            api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000").rstrip("/")
+            response = requests.get(
+                f"{api_base_url}/api/routers",
+                timeout=(min(0.8, timeout), timeout)
+            )
+            return response.status_code in (200, 404, 500)
+        except Exception:
             return False
+
+def check_server_connectivity_async(root, callback, timeout=1.2):
+    """Run the server check in a background thread and return result via callback(bool)."""
+    def worker():
+        ok = check_server_connectivity(timeout=timeout)
+        try:
+            root.after(0, lambda: callback(ok))
+        except Exception:
+            pass
+    threading.Thread(target=worker, daemon=True).start()
 
 def is_rate_limited(username, window=60, max_attempts=5):
     now = time.time()
@@ -62,34 +79,48 @@ def show_login(root):
     center_window(root, 900, 600)  # ✅ Centered login window
     root.resizable(True, True)
     
-    # Initialize database tables
-    create_login_sessions_table()
+    # Initialize database tables only for admin (client portal relies on API)
+    # We'll lazily create this for admin users after verifying credentials.
 
     # Initialize banner label (initially with a placeholder)
     banner_label = tb.Label(root)
     banner_label.pack(fill="x")
 
-    # Update banner image dynamically based on window size
-    def update_banner(event=None):
-        window_width = root.winfo_width()
-        if window_width > 0:
-            try:
-                banner_img = Image.open("assets/images/Banner.png")
-                new_height = int(window_width * 250 / 900)
-                if new_height > 0:
-                    banner_img = banner_img.resize(
-                        (window_width, new_height),
-                        Image.Resampling.LANCZOS
-                    )
-                    banner_photo = ImageTk.PhotoImage(banner_img)
-                    if banner_label.winfo_exists():
-                        banner_label.config(image=banner_photo)
-                        banner_label.image = banner_photo
-            except Exception as e:
-                print(f"Error loading or resizing image: {e}")
+    # Optimized banner rendering: load once, debounce resizes, reuse cached image
+    _banner_src_img = {"img": None}
+    _banner_after_id = {"id": None}
+    _last_width = {"w": 0}
 
-    root.after(100, update_banner)
-    root.bind("<Configure>", update_banner)
+    def _do_resize():
+        try:
+            window_width = max(1, root.winfo_width())
+            if window_width == _last_width["w"]:
+                return
+            if _banner_src_img["img"] is None:
+                _banner_src_img["img"] = Image.open("assets/images/Banner.png")
+            new_height = max(1, int(window_width * 250 / 900))
+            resized = _banner_src_img["img"].resize(
+                (window_width, new_height),
+                Image.Resampling.BILINEAR
+            )
+            banner_photo = ImageTk.PhotoImage(resized)
+            if banner_label.winfo_exists():
+                banner_label.config(image=banner_photo)
+                banner_label.image = banner_photo
+                _last_width["w"] = window_width
+        except Exception as e:
+            print(f"Error loading or resizing image: {e}")
+
+    def update_banner_debounced(event=None):
+        if _banner_after_id["id"] is not None:
+            try:
+                root.after_cancel(_banner_after_id["id"])
+            except Exception:
+                pass
+        _banner_after_id["id"] = root.after(120, _do_resize)
+
+    root.after(100, _do_resize)
+    root.bind("<Configure>", update_banner_debounced)
 
     # Login card
     card = tb.Frame(root, bootstyle="light", padding=30)
@@ -114,18 +145,24 @@ def show_login(root):
     )
     server_status_label.pack()
     
+    _server_check_inflight = {"busy": False}
+
     def update_server_status():
-        """Update server status indicator"""
-        if check_server_connectivity():
-            server_status_label.config(
-                text="🟢 Server: Online",
-                foreground="green"
-            )
-        else:
-            server_status_label.config(
-                text="🔴 Server: Offline (Client login unavailable)",
-                foreground="red"
-            )
+        """Update server status indicator without blocking UI"""
+        if _server_check_inflight["busy"]:
+            return
+        _server_check_inflight["busy"] = True
+
+        def _on_result(ok):
+            try:
+                if ok:
+                    server_status_label.config(text="🟢 Server: Online", foreground="green")
+                else:
+                    server_status_label.config(text="🔴 Server: Offline (Client login unavailable)", foreground="red")
+            finally:
+                _server_check_inflight["busy"] = False
+
+        check_server_connectivity_async(root, _on_result, timeout=1.2)
     
     # Check server status after UI is ready
     root.after(1000, update_server_status)
@@ -177,7 +214,7 @@ def show_login(root):
         username = username_var.get()
         password = password_var.get()
 
-        time.sleep(1.5)  # Simulated loading delay
+    # Avoid artificial delays that freeze the UI
 
         if is_rate_limited(username):
             messagebox.showerror(
@@ -194,18 +231,15 @@ def show_login(root):
             login_button.config(text="Login", state="normal")
             return
 
-        # Check server connectivity for client users
+        # Check server connectivity for client users; if unavailable, block client login
         if user.get('role') != 'admin':
             if not check_server_connectivity():
                 messagebox.showerror(
                     "Server Connection Required", 
-                    "Client login requires server connection.\n\n"
-                    "The application server is not responding.\n\n"
-                    "Please ensure:\n"
-                    "• Server is running (start server/app.py)\n"
-                    "• Network connection is stable\n"
-                    "• Server is accessible\n\n"
-                    "Admin users can login without server connection."
+                    "Client login relies on the API server. Please ensure it is running.\n\n"
+                    "• Start server/app.py\n"
+                    "• Verify network connectivity\n"
+                    "• Confirm server address in WINYFI_API"
                 )
                 login_button.config(text="Login", state="normal")
                 return
@@ -213,18 +247,24 @@ def show_login(root):
         # Get device information for logging
         device_info = get_device_info()
         
-        # Log the login session
+        # Log the login session (admin local DB only; clients logged via API server)
         login_type = 'admin' if user.get('role') == 'admin' else 'client'
-        log_user_login(
-            user_id=user['id'],
-            username=user['username'],
-            device_ip=device_info.get('ip_address'),
-            device_mac=device_info.get('mac_address'),
-            device_hostname=device_info.get('hostname'),
-            device_platform=device_info.get('platform'),
-            user_agent=device_info.get('user_agent'),
-            login_type=login_type
-        )
+        if login_type == 'admin':
+            try:
+                create_login_sessions_table()
+                log_user_login(
+                    user_id=user['id'],
+                    username=user['username'],
+                    device_ip=device_info.get('ip_address'),
+                    device_mac=device_info.get('mac_address'),
+                    device_hostname=device_info.get('hostname'),
+                    device_platform=device_info.get('platform'),
+                    user_agent=device_info.get('user_agent'),
+                    login_type=login_type
+                )
+            except Exception:
+                # Non-blocking: if DB is unavailable, continue without logging
+                pass
 
         # ✅ Success → hide login window
         root.withdraw()

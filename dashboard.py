@@ -293,136 +293,6 @@ class Dashboard:
         self._check_database_health()
         return self.db_health_status
     
-    def _update_database_status_indicator(self):
-        """Update the database status indicator in the sidebar"""
-        if not hasattr(self, 'db_status_indicator'):
-            return
-            
-        status = self.db_health_status["status"]
-        if status == "healthy":
-            self.db_status_indicator.config(foreground="green")
-        elif status == "warning":
-            self.db_status_indicator.config(foreground="orange")
-        elif status == "error":
-            self.db_status_indicator.config(foreground="red")
-        else:
-            self.db_status_indicator.config(foreground="gray")
-    
-    def show_database_status(self):
-        """Show detailed database status dialog"""
-        modal = Toplevel(self.root)
-        modal.title("🔗 Database Status")
-        modal.geometry("500x400")
-        modal.transient(self.root)
-        modal.grab_set()
-        
-        # Center the modal
-        self._center_window(modal, 500, 400)
-        
-        # Main container
-        main_frame = tb.Frame(modal, padding=20)
-        main_frame.pack(fill="both", expand=True)
-        
-        # Title
-        title_label = tb.Label(main_frame, text="Database Connection Status", 
-                              font=("Segoe UI", 16, "bold"), bootstyle="primary")
-        title_label.pack(pady=(0, 20))
-        
-        # Status card
-        status_frame = tb.LabelFrame(main_frame, text="Current Status", 
-                                   bootstyle="info", padding=15)
-        status_frame.pack(fill="x", pady=(0, 15))
-        
-        # Status indicator
-        status_indicator_frame = tb.Frame(status_frame)
-        status_indicator_frame.pack(fill="x")
-        
-        status = self.db_health_status["status"]
-        if status == "healthy":
-            status_color = "🟢"
-            status_text = "Healthy"
-            status_style = "success"
-        elif status == "warning":
-            status_color = "🟡"
-            status_text = "Warning"
-            status_style = "warning"
-        elif status == "error":
-            status_color = "🔴"
-            status_text = "Error"
-            status_style = "danger"
-        else:
-            status_color = "⚫"
-            status_text = "Unknown"
-            status_style = "secondary"
-        
-        tb.Label(status_indicator_frame, text=f"{status_color} {status_text}", 
-                font=("Segoe UI", 14, "bold"), bootstyle=status_style).pack(side="left")
-        
-        # Message
-        tb.Label(status_frame, text=self.db_health_status["message"], 
-                font=("Segoe UI", 10), bootstyle="secondary").pack(pady=(10, 0), anchor="w")
-        
-        # Details section
-        if "details" in self.db_health_status:
-            details_frame = tb.LabelFrame(main_frame, text="Connection Details", 
-                                        bootstyle="secondary", padding=15)
-            details_frame.pack(fill="x", pady=(0, 15))
-            
-            details = self.db_health_status["details"]
-            
-            detail_items = [
-                ("Server Accessible", "✅" if details.get("server_accessible") else "❌"),
-                ("Database Exists", "✅" if details.get("database_exists") else "❌"),
-                ("Tables Accessible", "✅" if details.get("tables_accessible") else "❌"),
-                ("Connection Time", f"{details.get('connection_time', 'N/A')}s" if details.get('connection_time') else "N/A")
-            ]
-            
-            for label, value in detail_items:
-                detail_row = tb.Frame(details_frame)
-                detail_row.pack(fill="x", pady=2)
-                tb.Label(detail_row, text=f"{label}:", font=("Segoe UI", 10, "bold")).pack(side="left")
-                tb.Label(detail_row, text=value, font=("Segoe UI", 10)).pack(side="right")
-        
-        # Database info section
-        db_info_frame = tb.LabelFrame(main_frame, text="Database Information", 
-                                    bootstyle="info", padding=15)
-        db_info_frame.pack(fill="x", pady=(0, 15))
-        
-        # Get database info
-        try:
-            db_info = get_database_info()
-            info_items = [
-                ("MySQL Version", db_info.get("mysql_version", "Unknown")),
-                ("Database Name", db_info.get("database_name", "Unknown")),
-                ("Connection ID", str(db_info.get("connection_id", "Unknown"))),
-                ("Table Count", str(db_info.get("table_count", "Unknown")))
-            ]
-            
-            for label, value in info_items:
-                info_row = tb.Frame(db_info_frame)
-                info_row.pack(fill="x", pady=2)
-                tb.Label(info_row, text=f"{label}:", font=("Segoe UI", 10, "bold")).pack(side="left")
-                tb.Label(info_row, text=value, font=("Segoe UI", 10)).pack(side="right")
-                
-        except Exception as e:
-            tb.Label(db_info_frame, text=f"Could not retrieve database info: {str(e)}", 
-                    font=("Segoe UI", 10), bootstyle="danger").pack()
-        
-        # Buttons
-        button_frame = tb.Frame(main_frame)
-        button_frame.pack(fill="x", pady=(15, 0))
-        
-        def refresh_status():
-            self.refresh_database_health()
-            self._update_database_status_indicator()
-            modal.destroy()
-            self.show_database_status()  # Reopen with updated info
-        
-        tb.Button(button_frame, text="🔄 Refresh Status", bootstyle="info",
-                 command=refresh_status).pack(side="left")
-        tb.Button(button_frame, text="Close", bootstyle="secondary",
-                 command=modal.destroy).pack(side="right")
-
     # =============================
     # Inline Loading Animation Helpers
     # =============================
@@ -792,31 +662,6 @@ class Dashboard:
             width=2
         )
         self.notification_badge.place(in_=self.notification_btn, x=180, y=5)
-
-        # Database status indicator
-        self.db_status_frame = tb.Frame(self.sidebar, style='Sidebar.TFrame')
-        self.db_status_frame.pack(pady=5, padx=5, fill="x")
-        
-        self.db_status_btn = tb.Button(
-            self.db_status_frame,
-            text="🔗 Database",
-            style='Sidebar.TButton',
-            width=22,
-            command=self.show_database_status
-        )
-        self.db_status_btn.pack()
-        
-        # Database status indicator
-        self.db_status_indicator = tb.Label(
-            self.db_status_frame,
-            text="●",
-            font=("Segoe UI", 8, "bold"),
-            foreground="gray"
-        )
-        self.db_status_indicator.place(in_=self.db_status_btn, x=185, y=8)
-        
-        # Update database status indicator
-        self._update_database_status_indicator()
 
         # Default tab
         show_page("Dashboard")
@@ -2310,9 +2155,20 @@ class Dashboard:
                     self.detail_download_lbl.config(text=f"{bw['download']:.2f} Mbps")
                     self.detail_upload_lbl.config(text=f"{bw['upload']:.2f} Mbps")
                     
-                    # Update latency if available
-                    if bw.get("latency") is not None:
-                        self.detail_latency_lbl.config(text=f"{bw['latency']:.0f} ms", bootstyle="success")
+                    # Update latency using effective latency (cached when dynamic ping skips)
+                    if not hasattr(self, "_last_latency_by_router"):
+                        self._last_latency_by_router = {}
+                    new_latency = bw.get("latency")
+                    if isinstance(new_latency, (int, float)):
+                        effective_latency = new_latency
+                        self._last_latency_by_router[rid] = new_latency
+                    else:
+                        effective_latency = self._last_latency_by_router.get(rid)
+                    
+                    if isinstance(effective_latency, (int, float)):
+                        self.detail_latency_lbl.config(text=f"{effective_latency:.0f} ms", bootstyle="success")
+                    else:
+                        self.detail_latency_lbl.config(text="📡 Measuring...", bootstyle="info")
                 else:
                     # If bandwidth not fetched yet, trigger fetching it
                     self.fetch_and_update_bandwidth(rid, router['ip_address'])
@@ -2607,9 +2463,9 @@ class Dashboard:
     # Fetch bandwidth for a router in a separate thread
     def fetch_and_update_bandwidth(self, rid, ip):
         try:
-            # Fetch bandwidth data (download/upload)
+            # Fetch bandwidth data (download/upload + latency)
+            # Note: get_bandwidth already performs a dynamic ping and returns 'latency'.
             bw = get_bandwidth(ip)
-            bw["latency"] = ping_latency(ip)  # Optional: Add latency info if needed
 
             # Update the shared bandwidth data dictionary
             if not isinstance(self.bandwidth_data, dict):
@@ -2646,12 +2502,22 @@ class Dashboard:
         else:
             download = bandwidth.get("download")
             upload = bandwidth.get("upload")
-            latency = bandwidth.get("latency")
-            # Safeguard None values
+            # Determine effective latency using last known value when dynamic ping skips
+            if not hasattr(self, "_last_latency_by_router"):
+                self._last_latency_by_router = {}
+            new_latency = bandwidth.get("latency") if isinstance(bandwidth, dict) else None
+            if isinstance(new_latency, (int, float)):
+                effective_latency = new_latency
+                self._last_latency_by_router[rid] = new_latency
+            else:
+                effective_latency = self._last_latency_by_router.get(rid)
+
+            # Safeguard None values for bandwidth
             if download is None or upload is None:
                 bw_label.config(text="⏳ Bandwidth: Fetching...", bootstyle="secondary")
                 return
-            latency_disp = f"{latency:.0f} ms" if isinstance(latency, (int, float)) else "— ms"
+
+            latency_disp = f"{effective_latency:.0f} ms" if isinstance(effective_latency, (int, float)) else "— ms"
             try:
                 bw_label.config(
                     text=f"⏱ {latency_disp} | ⬇ {float(download):.2f} Mbps | ⬆ {float(upload):.2f} Mbps",
