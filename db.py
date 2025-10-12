@@ -962,7 +962,7 @@ def log_user_login(user_id, username, device_ip=None, device_mac=None,
         cursor.close()
         conn.close()
         
-        print(f"Login session logged (ID: {session_id})")
+    # Removed login notification print statement
         return session_id
         
     except Exception as e:
@@ -990,7 +990,7 @@ def log_user_logout(user_id):
         cursor.close()
         conn.close()
         
-        print(f"Logout session logged for user {user_id}")
+    # Removed logout notification print statement
         return True
         
     except Exception as e:
@@ -1149,3 +1149,169 @@ def get_client_statistics():
             "offline_clients": 0,
             "recent_connections": 0
         }
+
+def change_user_password(user_id, old_password, new_password):
+    """Change the password for a user with proper verification and hashing."""
+    try:
+        from werkzeug.security import generate_password_hash, check_password_hash
+        
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # First, get the current password hash to verify the old password
+        select_sql = "SELECT password_hash FROM users WHERE id = %s"
+        cursor.execute(select_sql, (user_id,))
+        result = cursor.fetchone()
+        
+        if not result:
+            cursor.close()
+            conn.close()
+            return False, "User not found"
+        
+        current_password_hash = result[0]
+        
+        # Verify the old password
+        if not check_password_hash(current_password_hash, old_password):
+            cursor.close()
+            conn.close()
+            return False, "Current password is incorrect"
+        
+        # Validate new password strength
+        if len(new_password) < 6:
+            cursor.close()
+            conn.close()
+            return False, "New password must be at least 6 characters long"
+        
+        # Hash the new password
+        new_password_hash = generate_password_hash(new_password)
+
+        # Update the password
+        update_sql = "UPDATE users SET password_hash = %s WHERE id = %s"
+        cursor.execute(update_sql, (new_password_hash, user_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return True, "Password changed successfully"
+        
+    except Exception as e:
+        print(f"Error changing user password: {e}")
+        return False, f"Database error: {str(e)}"
+
+# =============================
+# User profile helpers
+# =============================
+def get_user_by_id(user_id):
+    """Fetch a single user by id. Returns dict or None."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        # Select only columns we show/edit to avoid leaking sensitive data
+        cursor.execute(
+            "SELECT id, username, first_name, last_name, role FROM users WHERE id = %s",
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return row
+    except Exception as e:
+        print(f"Error fetching user by id: {e}")
+        return None
+
+
+def update_user_profile(user_id, new_profile_data):
+    """
+    Update user's profile safely.
+
+    Args:
+        user_id (int): target user id
+        new_profile_data (dict): keys in {first_name, last_name, username}
+
+    Returns:
+        (True, updated_user_dict) on success
+        (False, error_message) on failure
+    """
+    try:
+        # Normalize inputs
+        allowed_fields = {"first_name", "last_name", "username"}
+        data = {k: (v.strip() if isinstance(v, str) else v)
+                for k, v in (new_profile_data or {}).items()
+                if k in allowed_fields}
+
+        if not data:
+            return False, "No valid fields provided"
+
+        # Load existing user
+        existing = get_user_by_id(user_id)
+        if not existing:
+            return False, "User not found"
+
+        # Validation rules
+        first_name = data.get("first_name", existing.get("first_name")) or ""
+        last_name = data.get("last_name", existing.get("last_name")) or ""
+        username = data.get("username", existing.get("username")) or ""
+
+        if not first_name and not last_name:
+            return False, "Please provide at least a first or last name"
+
+        if username:
+            if len(username) < 3:
+                return False, "Username must be at least 3 characters"
+            # username safe charset (letters, digits, underscore, dot, dash)
+            import re
+            if not re.fullmatch(r"[A-Za-z0-9_.-]+", username):
+                return False, "Username may contain letters, numbers, '.', '_' or '-' only"
+
+        # Dirty-check: build update set only for changed values
+        updates = {}
+        for field in allowed_fields:
+            if field in data and (data[field] or "") != (existing.get(field) or ""):
+                updates[field] = data[field]
+
+        if not updates:
+            return False, "No changes detected"
+
+        # Ensure username uniqueness if being changed
+        if "username" in updates:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id FROM users WHERE username = %s AND id <> %s",
+                (updates["username"], user_id),
+            )
+            taken = cursor.fetchone()
+            if taken:
+                cursor.close()
+                conn.close()
+                return False, "Username is already taken"
+            cursor.close()
+            conn.close()
+
+        # Build dynamic update statement
+        set_clauses = []
+        params = []
+        for k, v in updates.items():
+            set_clauses.append(f"{k} = %s")
+            params.append(v)
+
+        if not set_clauses:
+            return False, "No valid changes"
+
+        params.append(user_id)
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        sql = f"UPDATE users SET {', '.join(set_clauses)} WHERE id = %s"
+        cursor.execute(sql, tuple(params))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # Return fresh copy
+        updated = get_user_by_id(user_id)
+        return True, updated
+
+    except Exception as e:
+        print(f"Error updating user profile: {e}")
+        return False, f"Database error: {str(e)}"

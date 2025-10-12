@@ -5,7 +5,7 @@ Provides toast notifications, notification panel, and settings interface.
 """
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from PIL import Image, ImageTk
@@ -40,7 +40,6 @@ class ToastNotification:
     
     def _create_toast(self):
         """Create the toast notification window."""
-        print(f"🔔 Creating toast window for: {self.title}")
         self.window = tk.Toplevel(self.parent)
         self.window.title("")
         self.window.overrideredirect(True)  # Remove window decorations
@@ -185,51 +184,45 @@ class ToastNotification:
                         time.sleep(self.duration / 1000 / 100)  # Convert to seconds
                     else:
                         break
-                except RuntimeError:
-                    # Main thread is not in main loop - stop the animation
-                    break
-            else:
-                # Auto-dismiss after duration
-                try:
-                    self.dismiss()
-                except RuntimeError:
+                except Exception as e:
                     pass
+
+            def dismiss(self):
+                """Dismiss the toast notification."""
+                try:
+                    if self.window and self.window.winfo_exists():
+                        # Fade out animation
+                        def animate_out():
+                            try:
+                                # Fade out by reducing alpha
+                                for i in range(20):
+                                    if self.window and self.window.winfo_exists():
+                                        alpha = 0.95 - (0.95 * (i + 1) / 20)  # Fade from 0.95 to 0
+                                        self.window.attributes("-alpha", alpha)
+                                        self.window.update()
+                                        time.sleep(0.02)
+                                    else:
+                                        break
+                                if self.window and self.window.winfo_exists():
+                                    self.window.destroy()
+                            except RuntimeError:
+                                # Main thread is not in main loop - just destroy
+                                try:
+                                    if self.window and self.window.winfo_exists():
+                                        self.window.destroy()
+                                except:
+                                    pass
+                            except Exception:
+                                pass
+                        threading.Thread(target=animate_out, daemon=True).start()
+                        if self.on_dismiss:
+                            self.on_dismiss()
+                except Exception as e:
+                    pass
+            # End of for loop in update_progress()
         
-        # Run in separate thread to avoid blocking UI
         threading.Thread(target=update_progress, daemon=True).start()
-    
-    def _show_toast(self):
-        """Show the toast with animation."""
-        try:
-            # Get screen dimensions
-            screen_width = self.window.winfo_screenwidth()
-            
-            # Position in top-right corner (not all the way to left)
-            target_x = screen_width - 350 - 20  # 350px width + 20px margin
-            start_x = screen_width  # Start off-screen to the right
-            
-            # Set initial position off-screen to the right
-            self.window.geometry(f"350x120+{start_x}+20")
-            
-            def animate_in():
-                for i in range(20):
-                    try:
-                        if self.window and self.window.winfo_exists():
-                            # Slide from right to target position
-                            current_x = start_x - (start_x - target_x) * (i + 1) / 20
-                            self.window.geometry(f"350x120+{int(current_x)}+20")
-                            self.window.update()
-                            time.sleep(0.02)
-                        else:
-                            break
-                    except RuntimeError:
-                        # Main thread is not in main loop - stop the animation
-                        break
-            
-            threading.Thread(target=animate_in, daemon=True).start()
-        except Exception as e:
-            print(f"Error in toast animation: {e}")
-    
+
     def dismiss(self):
         """Dismiss the toast notification."""
         try:
@@ -255,13 +248,16 @@ class ToastNotification:
                                 self.window.destroy()
                         except:
                             pass
+                    except Exception:
+                        pass
                 
                 threading.Thread(target=animate_out, daemon=True).start()
                 
                 if self.on_dismiss:
                     self.on_dismiss()
         except Exception as e:
-            print(f"Error dismissing toast: {e}")
+            pass
+
 
 class NotificationPanel:
     """A panel that shows all notifications with management options."""
@@ -620,7 +616,6 @@ class NotificationSystem:
     
     def _on_notification_created(self, notification_id, notif_type, title, message, priority, data):
         """Handle new notification creation."""
-        print(f"🔔 Notification callback triggered: {title} - {message}")
         
         # Log callback trigger
         from notification_utils import notification_manager
@@ -636,7 +631,6 @@ class NotificationSystem:
     
     def show_toast(self, notification_id: int, title: str, message: str, priority: NotificationPriority):
         """Show a toast notification."""
-        print(f"🔔 Creating toast notification: {title} - {message}")
         
         from notification_utils import notification_manager
         
@@ -650,7 +644,6 @@ class NotificationSystem:
                 on_dismiss=lambda: self._remove_toast(toast)
             )
             self.toast_notifications.append(toast)
-            print(f"🔔 Toast notification created successfully")
             
             # Log successful toast creation
             notification_manager.log_notification_event(
@@ -664,7 +657,6 @@ class NotificationSystem:
             notification_manager.update_notification_status(notification_id, "displayed")
             
         except Exception as e:
-            print(f"❌ Error creating toast notification: {e}")
             
             # Log toast creation error
             notification_manager.log_notification_event(

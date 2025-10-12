@@ -14,6 +14,12 @@ import threading
 import time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
+
+# Suppress matplotlib warnings
+import logging
+matplotlib_logger = logging.getLogger('matplotlib')
+matplotlib_logger.setLevel(logging.ERROR)
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 

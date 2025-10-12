@@ -1,3 +1,4 @@
+ 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -10,7 +11,7 @@ if BASE_DIR not in sys.path:
 from user_utils import verify_user
 from ticket_utils import fetch_srfs, create_srf
 from router_utils import get_routers, is_router_online_by_status
-from db import get_connection, log_user_login, create_login_sessions_table, get_user_last_login_info, get_user_login_history
+from db import get_connection, log_user_login, create_login_sessions_table, get_user_last_login_info, get_user_login_history, update_user_profile, change_user_password
 from report_utils import get_uptime_percentage, get_bandwidth_usage
 
 def create_app():
@@ -62,6 +63,34 @@ def create_app():
             "first_name": user.get("first_name"),
             "last_name": user.get("last_name"),
         })
+
+    # User profile routes
+    @app.route("/api/user/<int:user_id>/edit-profile", methods=["PUT"])
+    def edit_user_profile(user_id):
+        try:
+            payload = request.get_json(force=True, silent=True) or {}
+            ok, result = update_user_profile(user_id, payload)
+            if not ok:
+                return jsonify({"error": result}), 400
+            return jsonify({"success": True, "user": result})
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.post("/api/user/<int:user_id>/change-password")
+    def change_user_password_api(user_id):
+        try:
+            data = request.get_json(force=True, silent=True) or {}
+            old_password = (data.get("old_password") or "").strip()
+            new_password = (data.get("new_password") or "").strip()
+            if not old_password or not new_password:
+                return jsonify({"error": "Missing password fields"}), 400
+            success, message = change_user_password(user_id, old_password, new_password)
+            if not success:
+                status = 403 if "incorrect" in message.lower() else 400
+                return jsonify({"error": message}), status
+            return jsonify({"success": True, "message": message})
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
 
     @app.get("/api/srfs")
     def list_srfs():
@@ -818,6 +847,12 @@ def create_app():
             import matplotlib
             matplotlib.use('Agg')  # Use non-interactive backend
             import matplotlib.pyplot as plt
+            
+            # Suppress matplotlib warnings
+            import logging
+            matplotlib_logger = logging.getLogger('matplotlib')
+            matplotlib_logger.setLevel(logging.ERROR)
+            
             from datetime import datetime
             import io
             import base64

@@ -8,7 +8,13 @@ from client_window import show_client_window
 from collections import defaultdict
 from dashboard import show_dashboard
 from device_utils import get_device_info
-from db import log_user_login, create_login_sessions_table
+from db import (
+    log_user_login,
+    create_login_sessions_table,
+    get_connection,
+    DatabaseConnectionError,
+    check_mysql_server_status,
+)
 import requests
 import os
 
@@ -146,6 +152,7 @@ def show_login(root):
     server_status_label.pack()
     
     _server_check_inflight = {"busy": False}
+    _login_inflight = {"busy": False}
 
     def update_server_status():
         """Update server status indicator without blocking UI"""
@@ -208,6 +215,18 @@ def show_login(root):
     add_placeholder(password_entry, "Password")
 
     def handle_login(event=None):
+        # Prevent double-trigger (Enter key + button click)
+        if _login_inflight["busy"]:
+            return
+        _login_inflight["busy"] = True
+
+        def reset_login():
+            try:
+                login_button.config(text="Login", state="normal")
+            except Exception:
+                pass
+            _login_inflight["busy"] = False
+
         login_button.config(text="Loading...", state="disabled")
         root.update()
 
@@ -221,14 +240,71 @@ def show_login(root):
                 "Rate Limited",
                 "Too many failed login attempts.\nPlease wait a minute and try again."
             )
-            login_button.config(text="Login", state="normal")
+            reset_login()
             return
 
-        user = verify_user(username, password)
-        if not user:
+        # Fast pre-check: is the MySQL server reachable at all?
+        try:
+            server_ok, _ = check_mysql_server_status()
+        except Exception:
+            server_ok = False
+        if not server_ok:
+            messagebox.showerror(
+                "Can't Reach Database",
+                "Cannot connect to MySQL database.\n\n"
+                "Please start MySQL (XAMPP/WAMP) and try again."
+            )
+            reset_login()
+            return
+
+        # Quick DB connection probe (validates DB and credentials setup)
+        try:
+            conn = get_connection(max_retries=1, retry_delay=0, show_dialog=False)
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT 1")
+                cur.fetchone()
+            finally:
+                try:
+                    cur.close()
+                except Exception:
+                    pass
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+        except (DatabaseConnectionError, Exception):
+            messagebox.showerror(
+                "Can't Reach Database",
+                "Cannot connect to MySQL database.\n\n"
+                "Please start MySQL (XAMPP/WAMP) and try again."
+            )
+            reset_login()
+            return
+
+        # Try to verify user, but catch DB connection errors and None result
+        user = None
+        db_error = None
+        try:
+            user = verify_user(username, password)
+        except DatabaseConnectionError as db_exc:
+            db_error = db_exc
+        except Exception as exc:
+            db_error = exc
+        if db_error is not None:
+            messagebox.showerror(
+                "Can't Reach Database",
+                "Cannot connect to MySQL database.\n\n"
+                "Please start MySQL (XAMPP/WAMP) and try again."
+            )
+            reset_login()
+            return
+        if user is None:
+            # If DB is up but user not found, show invalid login
+            # If DB is down, previous block already handled
             login_attempts[username].append(time.time())
             messagebox.showerror("Login Failed", "Invalid username or password.")
-            login_button.config(text="Login", state="normal")
+            reset_login()
             return
 
         # Check server connectivity for client users; if unavailable, block client login
@@ -241,13 +317,13 @@ def show_login(root):
                     "• Verify network connectivity\n"
                     "• Confirm server address in WINYFI_API"
                 )
-                login_button.config(text="Login", state="normal")
+                reset_login()
                 return
 
         # Get device information for logging
         device_info = get_device_info()
-        
-        # Log the login session (admin local DB only; clients logged via API server)
+
+        # Decide login path: Admins log locally; Clients log via API (server logs session)
         login_type = 'admin' if user.get('role') == 'admin' else 'client'
         if login_type == 'admin':
             try:
@@ -265,6 +341,39 @@ def show_login(root):
             except Exception:
                 # Non-blocking: if DB is unavailable, continue without logging
                 pass
+        else:
+            # Client users authenticate via API so the server can record login_sessions
+            try:
+                api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000").rstrip("/")
+                payload = {
+                    "username": username,
+                    "password": password,
+                    "device_mac": device_info.get('mac_address'),
+                    "device_hostname": device_info.get('hostname'),
+                    "device_platform": device_info.get('platform')
+                }
+                resp = requests.post(f"{api_base_url}/api/login", json=payload, timeout=(2, 5))
+                if resp.status_code == 200:
+                    try:
+                        server_user = resp.json() or {}
+                        # Prefer server's canonical user payload
+                        if server_user.get('id'):
+                            user = server_user
+                    except Exception:
+                        # If parsing fails, continue with local user object
+                        pass
+                elif resp.status_code == 401:
+                    messagebox.showerror("Login Failed", "Invalid username or password (server).")
+                    reset_login()
+                    return
+                else:
+                    messagebox.showerror("Server Error", f"Login API error: HTTP {resp.status_code}")
+                    reset_login()
+                    return
+            except requests.exceptions.RequestException as e:
+                messagebox.showerror("Server Error", f"Unable to contact login API. Please try again.\n\nDetails: {e}")
+                reset_login()
+                return
 
         # ✅ Success → hide login window
         root.withdraw()
@@ -277,7 +386,6 @@ def show_login(root):
             dashboard_window.resizable(True, True)
 
             # Get API base URL from environment or use default
-            import os
             api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000")
             show_dashboard(dashboard_window, user, api_base_url)
 
@@ -295,12 +403,12 @@ def show_login(root):
                         pass
                     # Hard-exit fallback to ensure full termination
                     try:
-                        import os
                         os._exit(0)
                     except Exception:
                         pass
 
             dashboard_window.protocol("WM_DELETE_WINDOW", on_dashboard_close)
+            _login_inflight["busy"] = False
         else:
             # Non-admin → open client portal
             client_top = tb.Toplevel(root)
@@ -324,12 +432,12 @@ def show_login(root):
                         pass
                     # Hard-exit fallback to ensure full termination
                     try:
-                        import os
                         os._exit(0)
                     except Exception:
                         pass
 
             client_top.protocol("WM_DELETE_WINDOW", on_client_close)
+            _login_inflight["busy"] = False
 
     # Info note about login requirements
     info_frame = tb.Frame(card)

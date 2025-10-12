@@ -133,9 +133,6 @@ class NotificationManager:
         conn.close()
         
         # Also print to console for debugging
-        print(f"📝 LOG [{event_type}] Notification {notification_id}: {message}")
-        if details:
-            print(f"    Details: {details}")
     
     def update_notification_status(self, notification_id: int, status: str, details: Dict = None):
         """Update notification status and log the event."""
@@ -243,12 +240,9 @@ class NotificationManager:
         )
         
         # Notify callbacks
-        print(f"🔔 Notifying {len(self.notification_callbacks)} callbacks for notification {notification_id}")
         for i, callback in enumerate(self.notification_callbacks):
             try:
-                print(f"🔔 Calling callback {i+1}")
                 callback(notification_id, notif_type, title, message, priority, data)
-                print(f"🔔 Callback {i+1} completed successfully")
                 
                 # Log callback success
                 self.log_notification_event(
@@ -258,7 +252,6 @@ class NotificationManager:
                     {"callback_index": i+1}
                 )
             except Exception as e:
-                print(f"❌ Error in notification callback {i+1}: {e}")
                 
                 # Log callback error
                 self.log_notification_event(

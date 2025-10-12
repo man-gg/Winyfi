@@ -13,6 +13,12 @@ from datetime import datetime, timedelta
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+
+# Suppress matplotlib warnings
+import logging
+matplotlib_logger = logging.getLogger('matplotlib')
+matplotlib_logger.setLevel(logging.ERROR)
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 import time
@@ -77,6 +83,9 @@ class ClientDashboard:
         self.http = requests.Session()
         # Server connection state
         self.server_online = None  # unknown at start
+        self._server_status_first_update = False
+        # Use a re-entrant lock to avoid deadlocks when status updates nest
+        self._server_status_lock = threading.RLock()
         self._server_poll_backoff = 3  # seconds
         self._server_poll_max = 60
         self._health_stop_event = threading.Event()
@@ -85,20 +94,16 @@ class ClientDashboard:
             self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         except Exception:
             pass
-        
         # Initialize notification system
         self.notification_system = NotificationSystem(self.root)
         self.notification_count = 0
-        
-        # Router status monitoring
+        # Router status monitoring (start after UI is fully constructed)
         self.router_status_history = {}
         self.status_monitoring_running = True
-        self.start_router_status_monitoring()
 
         style = tb.Style()
         style.colors.set('primary', '#d9534f')
         style.colors.set('danger', '#b71c1c')
-
         style.configure('Sidebar.TFrame', background='white', borderwidth=0)
         style.configure('Sidebar.TButton',
                         background='white',
@@ -114,28 +119,23 @@ class ClientDashboard:
                         relief='flat')
         style.map('ActiveSidebar.TButton', background=[('active', '#b71c1c')])
         style.configure('Dashboard.TFrame', background='white')
-
         r = self.root
         r.title("WINYFI Client Portal")
         W, H = 1000, 600
         sw, sh = r.winfo_screenwidth(), r.winfo_screenheight()
         x, y = (sw - W) // 2, 50
         r.geometry(f"{W}x{H}+{x}+{y}")
-
         # Sidebar and content
         self.sidebar = tb.Frame(r, style='Sidebar.TFrame', width=220)
         self.sidebar.pack(side="left", fill="y")
-
         self.content_frame = tb.Frame(r)
         self.content_frame.pack(side="left", fill="both", expand=True)
-
         # Pages
         self.dashboard_frame = tb.Frame(self.content_frame)
         self.routers_frame = tb.Frame(self.content_frame)
         self.reports_frame = tb.Frame(self.content_frame)
         self.bandwidth_frame = tb.Frame(self.content_frame)
         self.settings_frame = tb.Frame(self.content_frame)
-
         self.pages = {
             "Dashboard": self.dashboard_frame,
             "Routers": self.routers_frame,
@@ -143,9 +143,7 @@ class ClientDashboard:
             "Bandwidth": self.bandwidth_frame,
             "Settings": self.settings_frame,
         }
-
         self.sidebar_buttons = {}
-
         def add_sidebar_button(text, icon):
             btn = tb.Button(self.sidebar,
                             text=f"{icon} {text}",
@@ -154,7 +152,6 @@ class ClientDashboard:
                             command=lambda: self.show_page(text))
             btn.pack(pady=5)
             self.sidebar_buttons[text] = btn
-
         # Logo
         logo_path = os.path.join("assets", "images", "logo1.png")
         if os.path.exists(logo_path):
@@ -168,13 +165,11 @@ class ClientDashboard:
                      font=("Segoe UI", 16, "bold"),
                      foreground='#d32f2f',
                      background='white').pack(pady=15)
-
         # Navigation
         add_sidebar_button("Dashboard", "📊")
         add_sidebar_button("Routers", "📡")
         add_sidebar_button("Reports", "📑")
         add_sidebar_button("Bandwidth", "📶")
-
         # Notification bell button
         self.notification_btn = tb.Button(
             self.sidebar,
@@ -184,7 +179,6 @@ class ClientDashboard:
             command=self.show_notifications_panel
         )
         self.notification_btn.pack(pady=5)
-        
         # Notification count badge
         self.notification_badge = tb.Label(
             self.sidebar,
@@ -194,15 +188,14 @@ class ClientDashboard:
             background="#dc3545",
             width=3
         )
-
         # Server status indicator (sidebar footer) with Retry (anchored at bottom)
         status_row = tb.Frame(self.sidebar, style='Sidebar.TFrame', padding=(0,0))
         status_row.pack(side='bottom', fill='x', pady=(10, 10))
         self.server_status_label = tb.Label(
             status_row,
-            text="● Server: Checking…",
+            text="● Server: Offline",
             font=("Segoe UI", 10),
-            foreground="#6c757d",
+            foreground="#dc3545",
             background="white"
         )
         self.server_status_label.pack(side='left')
@@ -214,7 +207,6 @@ class ClientDashboard:
             width=6
         )
         self.retry_btn.pack(side='right', padx=(8,0))
-
         # Settings dropdown (UI only; disabled actions)
         settings_btn = tb.Button(self.sidebar,
                                  text="⚙️ Settings ▼",
@@ -223,7 +215,6 @@ class ClientDashboard:
                                  command=self.toggle_settings_dropdown)
         settings_btn.pack(pady=5)
         self.sidebar_buttons["Settings"] = settings_btn
-
         self.settings_dropdown = tb.Frame(self.sidebar, style='Sidebar.TFrame')
         self.dropdown_target_height = 90
         um_btn = tb.Button(self.settings_dropdown, text="👤 User Profile",
@@ -236,8 +227,6 @@ class ClientDashboard:
         lo_btn.pack(fill='x', pady=(2, 5))
         self.settings_dropdown.pack_propagate(False)
         self.settings_dropdown.config(height=0)
-
-
         # Export button
         self.export_btn = tb.Button(
             self.sidebar,
@@ -247,27 +236,24 @@ class ClientDashboard:
             command=self.open_export_menu
         )
         self.export_btn.pack(pady=(0, 0))
-
         # Build page UIs using separate tab classes
         self.dashboard_tab = DashboardTab(self.dashboard_frame, self.api_base_url, self.root)
         self.routers_tab = RoutersTab(self.routers_frame, self.api_base_url, self.root)
         self.reports_tab = ReportsTab(self.reports_frame, self.root)
         self.bandwidth_tab = BandwidthTab(self.bandwidth_frame, self.api_base_url, self.root)
         self.settings_tab = SettingsTab(self.settings_frame, self.api_base_url, self.root)
-        
         # Add tickets button to the Reports tab
         self._add_tickets_button_to_reports()
-
         # Default tab
         self.show_page("Dashboard")
 
         # Start lightweight server health monitoring
         self.start_server_health_monitor()
         # Run initial check after UI is fully ready (avoid race condition)
-        try:
-            self.root.after(200, self._initial_server_check)
-        except Exception:
-            pass
+        self.root.after(200, self._initial_server_check)
+
+        # Now that UI exists, start router status monitoring
+        self.start_router_status_monitoring()
 
     def _add_tickets_button_to_reports(self):
         """Add a tickets button to the Reports tab"""
@@ -330,16 +316,345 @@ class ClientDashboard:
         """Open user profile window"""
         self.show_user_profile()
 
+    def refresh_current_user_info(self):
+        """Refresh current user info from backend API."""
+        try:
+            user_id = self.current_user.get('id')
+            if user_id:
+                resp = self.http.get(f"{self.api_base_url}/api/users", timeout=8)
+                if resp.status_code == 200:
+                    users = resp.json()
+                    for u in users:
+                        if u['id'] == user_id:
+                            self.current_user.update(u)
+                            break
+        except Exception:
+            pass
+
     def show_user_profile(self):
+        # Always refresh user info before showing profile
+        self.refresh_current_user_info()
         """Show user profile information with modern UI design"""
         # Safety check for current_user
         if not self.current_user:
             messagebox.showerror("Error", "User information not available.")
             return
-        
+
+        # Use configured API base URL and shared HTTP session
+        base_url = self.api_base_url
+
+        def backend_change_password(user_id, old_password, new_password):
+            """Backend logic to change user password via API."""
+            try:
+                resp = self.http.post(f"{base_url}/api/user/{user_id}/change-password", json={
+                    "old_password": old_password,
+                    "new_password": new_password
+                }, timeout=10)
+                if resp.status_code == 200:
+                    try:
+                        data = resp.json()
+                    except Exception as e:
+                        return False
+                    if data.get("success"):
+                        return True
+                    else:
+                        return False
+                else:
+                    return False
+            except requests.exceptions.Timeout:
+                messagebox.showerror("Error", "Request timed out. Please try again.")
+                return False
+            except requests.exceptions.ConnectionError:
+                messagebox.showerror("Error", "Cannot connect to server. Please check your connection.")
+                return False
+            except Exception as e:
+                messagebox.showerror("Error", f"Unexpected error: {str(e)}")
+                return False
+
+        def backend_edit_profile(user_id, new_profile_data):
+            """Backend logic to edit user profile via API."""
+            try:
+                resp = self.http.put(f"{base_url}/api/user/{user_id}/edit-profile", 
+                                  json=new_profile_data, timeout=10)
+                if resp.status_code == 200:
+                    try:
+                        data = resp.json()
+                    except Exception as e:
+                        return False
+                    if data.get("success"):
+                        user_data = data.get("user", {})
+                        if user_data:
+                            self.current_user.update(user_data)
+                        return True
+                    else:
+                        return False
+                else:
+                    return False
+            except requests.exceptions.Timeout:
+                messagebox.showerror("Error", "Request timed out. Please try again.")
+                return False
+            except requests.exceptions.ConnectionError:
+                messagebox.showerror("Error", "Cannot connect to server. Please check your connection.")
+                return False
+            except Exception as e:
+                messagebox.showerror("Error", f"Unexpected error: {str(e)}")
+                return False
+
+        def open_change_password_modal():
+            modal = tb.Toplevel(self.root)
+            modal.title("Change Password")
+            modal.geometry("400x450")
+            modal.resizable(False, False)
+            modal.transient(self.root)
+            modal.grab_set()
+            modal.lift()
+            modal.focus_force()
+
+            # Center modal on screen
+            modal.update_idletasks()
+            x = (modal.winfo_screenwidth() - 400) // 2
+            y = (modal.winfo_screenheight() - 450) // 2
+            modal.geometry(f"400x450+{x}+{y}")
+
+            frame = tb.Frame(modal, padding=20)
+            frame.pack(fill="both", expand=True)
+
+            tb.Label(frame, text="Change Password", font=("Segoe UI", 16, "bold"), bootstyle="primary").pack(pady=(0, 20))
+
+            old_pass_var = tk.StringVar()
+            new_pass_var = tk.StringVar()
+            confirm_pass_var = tk.StringVar()
+
+            tb.Label(frame, text="Current Password:", font=("Segoe UI", 11)).pack(anchor="w")
+            old_pass_entry = tb.Entry(frame, textvariable=old_pass_var, show="*")
+            old_pass_entry.pack(fill="x", pady=(0, 10))
+
+            tb.Label(frame, text="New Password:", font=("Segoe UI", 11)).pack(anchor="w")
+            new_pass_entry = tb.Entry(frame, textvariable=new_pass_var, show="*")
+            new_pass_entry.pack(fill="x", pady=(0, 5))
             
+            # Password strength indicator
+            strength_label = tb.Label(frame, text="", font=("Segoe UI", 9))
+            strength_label.pack(anchor="w", pady=(0, 10))
+            
+            def check_password_strength(*args):
+                try:
+                    password = new_pass_var.get()
+                    if len(password) == 0:
+                        strength_label.configure(text="", foreground="")
+                    elif len(password) < 6:
+                        strength_label.configure(text="⚠️ Too short (min 6 characters)", foreground="red")
+                    elif password.isdigit():
+                        strength_label.configure(text="⚠️ Weak (numbers only)", foreground="orange")
+                    elif password.isalpha():
+                        strength_label.configure(text="⚠️ Weak (letters only)", foreground="orange")
+                    elif len(password) < 8:
+                        strength_label.configure(text="🟡 Fair", foreground="orange")
+                    else:
+                        has_upper = any(c.isupper() for c in password)
+                        has_lower = any(c.islower() for c in password)
+                        has_digit = any(c.isdigit() for c in password)
+                        has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
+                        
+                        score = sum([has_upper, has_lower, has_digit, has_special])
+                        if score >= 3:
+                            strength_label.configure(text="✅ Strong", foreground="green")
+                        else:
+                            strength_label.configure(text="🟡 Good", foreground="darkorange")
+                except Exception:
+                    pass
+            
+            new_pass_var.trace_add("write", check_password_strength)
+
+            tb.Label(frame, text="Confirm New Password:", font=("Segoe UI", 11)).pack(anchor="w")
+            confirm_pass_entry = tb.Entry(frame, textvariable=confirm_pass_var, show="*")
+            confirm_pass_entry.pack(fill="x", pady=(0, 5))
+            
+            # Password match indicator
+            match_label = tb.Label(frame, text="", font=("Segoe UI", 9))
+            match_label.pack(anchor="w", pady=(0, 15))
+            
+            def check_password_match(*args):
+                try:
+                    new_pass = new_pass_var.get()
+                    confirm_pass = confirm_pass_var.get()
+                    if len(confirm_pass) == 0:
+                        match_label.configure(text="", foreground="")
+                    elif new_pass != confirm_pass:
+                        match_label.configure(text="❌ Passwords do not match", foreground="red")
+                    else:
+                        match_label.configure(text="✅ Passwords match", foreground="green")
+                except Exception:
+                    pass
+            
+            confirm_pass_var.trace_add("write", check_password_match)
+            new_pass_var.trace_add("write", check_password_match)
+
+            status_label = tb.Label(frame, text="", font=("Segoe UI", 10))
+            status_label.pack(pady=(0, 10))
+
+            def submit_change():
+                try:
+                    old_password = old_pass_var.get().strip()
+                    new_password = new_pass_var.get().strip()
+                    confirm_password = confirm_pass_var.get().strip()
+                    
+                    # Clear previous status
+                    status_label.configure(text="", foreground="")
+                    
+                    # Validation
+                    if not old_password:
+                        status_label.configure(text="❌ Please enter current password", foreground="red")
+                        return
+                        
+                    if not new_password:
+                        status_label.configure(text="❌ Please enter new password", foreground="red")
+                        return
+                        
+                    if len(new_password) < 6:
+                        status_label.configure(text="❌ New password must be at least 6 characters", foreground="red")
+                        return
+                        
+                    if new_password != confirm_password:
+                        status_label.configure(text="❌ Passwords do not match", foreground="red")
+                        return
+                    
+                    if old_password == new_password:
+                        status_label.configure(text="❌ New password must be different from current password", foreground="red")
+                        return
+                    
+                    # Show processing
+                    status_label.configure(text="⏳ Changing password...", foreground="blue")
+                    modal.update()
+                    
+                    # Call backend
+                    user_id = self.current_user.get('id')
+                    success = backend_change_password(user_id, old_password, new_password)
+                    if success:
+                        status_label.configure(text="✅ Password changed successfully!", foreground="green")
+                        self.root.after(1500, modal.destroy)
+                    else:
+                        status_label.configure(text="❌ Current password is incorrect", foreground="red")
+                        
+                except Exception as e:
+                    status_label.configure(text=f"❌ Error: {str(e)}", foreground="red")
+
+            # Buttons
+            button_frame = tb.Frame(frame)
+            button_frame.pack(fill="x", pady=(10, 0))
+            
+            tb.Button(button_frame, text="Cancel", command=modal.destroy, bootstyle="secondary").pack(side="right", padx=(10, 0))
+            tb.Button(button_frame, text="Change Password", command=submit_change, bootstyle="primary").pack(side="right")
+
+            # Focus on first entry
+            old_pass_entry.focus_set()
+            
+            # Enter key binding
+            def on_enter(event):
+                submit_change()
+            
+            modal.bind('<Return>', on_enter)
+
+        def open_edit_profile_modal():
+            modal = tb.Toplevel(self.root)
+            modal.title("Edit Profile")
+            modal.geometry("400x450")
+            modal.resizable(False, False)
+            modal.transient(self.root)
+            modal.grab_set()
+            modal.lift()
+            modal.focus_force()
+
+            # Center modal on screen
+            modal.update_idletasks()
+            x = (modal.winfo_screenwidth() - 400) // 2
+            y = (modal.winfo_screenheight() - 450) // 2
+            modal.geometry(f"400x450+{x}+{y}")
+
+            frame = tb.Frame(modal, padding=20)
+            frame.pack(fill="both", expand=True)
+
+            tb.Label(frame, text="Edit Profile", font=("Segoe UI", 16, "bold"), bootstyle="success").pack(pady=(0, 20))
+
+            first_name_var = tk.StringVar(value=self.current_user.get('first_name', ''))
+            last_name_var = tk.StringVar(value=self.current_user.get('last_name', ''))
+            username_var = tk.StringVar(value=self.current_user.get('username', ''))
+
+            tb.Label(frame, text="First Name:", font=("Segoe UI", 11)).pack(anchor="w")
+            first_name_entry = tb.Entry(frame, textvariable=first_name_var)
+            first_name_entry.pack(fill="x", pady=(0, 10))
+
+            tb.Label(frame, text="Last Name:", font=("Segoe UI", 11)).pack(anchor="w")
+            last_name_entry = tb.Entry(frame, textvariable=last_name_var)
+            last_name_entry.pack(fill="x", pady=(0, 10))
+
+            tb.Label(frame, text="Username:", font=("Segoe UI", 11)).pack(anchor="w")
+            username_entry = tb.Entry(frame, textvariable=username_var)
+            username_entry.pack(fill="x", pady=(0, 15))
+
+            # Status label for feedback
+            status_label = tb.Label(frame, text="", font=("Segoe UI", 10))
+            status_label.pack(pady=(0, 15))
+
+            def submit_edit():
+                try:
+                    # Clear previous status
+                    status_label.configure(text="", foreground="")
+                    
+                    # Get and validate input
+                    first_name = first_name_var.get().strip()
+                    last_name = last_name_var.get().strip()
+                    username = username_var.get().strip()
+                    
+                    # Basic validation
+                    if not first_name and not last_name:
+                        status_label.configure(text="❌ Please provide at least first or last name", foreground="red")
+                        return
+                    
+                    if username and len(username) < 3:
+                        status_label.configure(text="❌ Username must be at least 3 characters", foreground="red")
+                        return
+                    
+                    # Show processing
+                    status_label.configure(text="⏳ Updating profile...", foreground="blue")
+                    modal.update()
+                    
+                    new_profile = {
+                        'first_name': first_name,
+                        'last_name': last_name,
+                        'username': username
+                    }
+                    user_id = self.current_user.get('id')
+                    success = backend_edit_profile(user_id, new_profile)
+                    
+                    if success:
+                        status_label.configure(text="✅ Profile updated successfully!", foreground="green")
+                        self.root.after(1500, modal.destroy)
+                    else:
+                        status_label.configure(text="❌ Failed to update profile", foreground="red")
+                        
+                except Exception as e:
+                    status_label.configure(text=f"❌ Error: {str(e)}", foreground="red")
+
+            # Buttons
+            button_frame = tb.Frame(frame)
+            button_frame.pack(fill="x", pady=(10, 0))
+            
+            tb.Button(button_frame, text="Cancel", command=modal.destroy, bootstyle="secondary").pack(side="right", padx=(10, 0))
+            tb.Button(button_frame, text="Save Changes", command=submit_edit, bootstyle="success").pack(side="right")
+
+            # Focus on first entry
+            first_name_entry.focus_set()
+            
+            # Enter key binding
+            def on_enter(event):
+                submit_edit()
+            
+            modal.bind('<Return>', on_enter)
+
+        # Create main profile window with admin-style design
         profile_modal = tb.Toplevel(self.root)
-        profile_modal.title("User Profile")
+        profile_modal.title("User Profile - Client")
         profile_modal.geometry("950x655")
         profile_modal.resizable(True, True)
         profile_modal.configure(bg='#f8fafc')
@@ -448,60 +763,44 @@ class ClientDashboard:
                                  bootstyle="info", padding=15)
         info_card.pack(fill="both", expand=True)
         
-        # User information in modern grid layout
+        # User information in modern grid layout (copied from Admin: include Last Login details)
         user_id = self.current_user.get('id', 'N/A')
-        
-        # Get last login information
-        from db import get_user_last_login_info
-        last_login_info = None
-        try:
-            if user_id != 'N/A':
-                last_login_info = get_user_last_login_info(user_id)
-        except Exception as e:
-            print(f"Error getting last login info: {e}")
-            last_login_info = None
-        # Format last login information
-        if last_login_info:
-            login_time = last_login_info.get('login_timestamp')
-            device_ip = last_login_info.get('device_ip', 'Unknown')
-            device_mac = last_login_info.get('device_mac', 'Unknown')
-            
-            # Format the timestamp
-            if login_time:
-                if isinstance(login_time, str):
-                    formatted_time = login_time
-                else:
-                    formatted_time = login_time.strftime('%Y-%m-%d %H:%M:%S')
-                last_login_display = f"{formatted_time} | {device_ip} | {device_mac}"
-            else:
-                last_login_display = f"Unknown | {device_ip} | {device_mac}"
-        else:
-            last_login_display = "No login data available"
-        
+
+        # Fetch last login info from server, retry if not found
+        import time
+        last_login_display = 'No login data yet'
+        device_hostname = 'No login data yet'
+        device_platform = 'No login data yet'
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                if user_id != 'N/A':
+                    resp = self.http.get(f"{base_url}/api/user/{user_id}/login-info", timeout=8)
+                    if resp.status_code == 200:
+                        info = resp.json()
+                        ts = info.get('login_timestamp')
+                        host = info.get('device_hostname')
+                        plat = info.get('device_platform')
+                        if ts:
+                            last_login_display = ts
+                        if host:
+                            device_hostname = host
+                        if plat:
+                            device_platform = plat
+                        if ts:
+                            break  # Got valid login info, stop retrying
+                if last_login_display == 'No login data yet':
+                    time.sleep(0.5)  # Wait before retry
+            except Exception:
+                time.sleep(0.5)
+
         user_info_data = [
             ("🆔", "User ID", str(user_id) if user_id != 'N/A' else 'Unknown'),
             ("✅", "Account Status", "Active"),
             ("🕒", "Last Login", last_login_display),
-            ("📅", "Member Since", "Recently"),
+            ("🖧", "Device Hostname", device_hostname),
+            ("🖥️", "Device Platform", device_platform),
         ]
-        
-        # Add additional device information if available
-        if last_login_info:
-            device_hostname = last_login_info.get('device_hostname', 'Unknown')
-            device_platform = last_login_info.get('device_platform', 'Unknown')
-            
-            user_info_data.extend([
-                ("💻", "Device Hostname", device_hostname),
-                ("🖥️", "Device Platform", device_platform),
-            ])
-        else:
-            # Show fallback device info if no login data available
-            user_info_data.extend([
-                ("💻", "Device Hostname", "Not Available"),
-                ("🖥️", "Device Platform", "Not Available"),
-            ])
-        
-        # Create modern info grid
         for i, (icon, label, value) in enumerate(user_info_data):
             info_row = tb.Frame(info_card)
             info_row.pack(fill="x", pady=8)
@@ -537,10 +836,8 @@ class ClientDashboard:
         
         # Action buttons in modern vertical layout
         actions = [
-            ("🔒", "Change Password", "primary", lambda: self.handle_profile_option("Change Password")),
-            ("✏️", "Edit Profile", "success", self.edit_user_profile),
-            ("🔔", "Notifications", "warning", lambda: self.handle_profile_option("Notifications")),
-            ("⚙️", "Settings", "secondary", lambda: self.handle_profile_option("Settings")),
+            ("🔒", "Change Password", "primary", open_change_password_modal),
+            ("✏️", "Edit Profile", "success", open_edit_profile_modal),
         ]
         
         # Create action buttons vertically
@@ -563,22 +860,13 @@ class ClientDashboard:
                               width=22)
         logout_btn.pack(fill="x", pady=(0, 6))
         
-        export_btn = tb.Button(account_card, text="📊 Export Data", 
-                              bootstyle="info", 
-                              command=self.open_export_menu,
-                              width=22)
-        export_btn.pack(fill="x")
-        
         # Footer with modern styling
         footer_frame = tb.Frame(main_container)
         footer_frame.pack(fill="x", pady=(10, 0))
-        
-        footer_text = tb.Label(footer_frame, 
-                              text="💡 Manage your account settings and preferences from this modern dashboard", 
-                              font=("Segoe UI", 11), 
-                              foreground="#9ca3af")
-        footer_text.pack()
-        
+        footer_label = tb.Label(footer_frame, text="WinyFi © 2024. All rights reserved.",
+                              font=("Segoe UI", 10), foreground="#9ca3af")
+        footer_label.pack(anchor="w")
+
         # Store reference to modal
         self.profile_modal = profile_modal
 
@@ -653,36 +941,44 @@ class ClientDashboard:
     # -------------------------------
     # Server health and API helpers
     # -------------------------------
-    def _on_server_check_result(self, online: bool):
+    def _on_server_check_result(self, online: bool, error_msg=None):
         """Update UI and state when server connectivity changes."""
-        if self.server_online is online:
-            return
-        self.server_online = online
-        try:
-            if online:
-                self.server_status_label.config(text="● Server: Online", foreground="#28a745")
+        # Always update on first check, or if status changes
+        with self._server_status_lock:
+            # If UI widgets aren't ready yet, just record the state and exit
+            if not hasattr(self, 'server_status_label'):
+                self.server_online = online
+                return
+            if not self._server_status_first_update or self.server_online != online:
+                self._server_status_first_update = True
+                self.server_online = online
                 try:
-                    self.export_btn.configure(state="normal")
-                except Exception:
-                    pass
-                try:
-                    notify_system_alert("Server connection restored.", priority=NotificationPriority.LOW)
-                except Exception:
-                    pass
-                # Reset backoff on success
-                self._server_poll_backoff = 3
-            else:
-                self.server_status_label.config(text="● Server: Offline", foreground="#dc3545")
-                try:
-                    self.export_btn.configure(state="disabled")
-                except Exception:
-                    pass
-                try:
-                    notify_system_alert("Server connection lost. Some features are unavailable.", priority=NotificationPriority.MEDIUM)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+                    if online:
+                        self.server_status_label.config(text="● Server: Online", foreground="#28a745")
+                        try:
+                            self.export_btn.configure(state="normal")
+                        except Exception:
+                            pass
+                        try:
+                            notify_system_alert("Server connection restored.", priority=NotificationPriority.LOW)
+                        except Exception:
+                            pass
+                        self._server_poll_backoff = 3
+                    else:
+                        msg = "● Server: Offline"
+                        if error_msg:
+                            msg += f" ({error_msg})"
+                        self.server_status_label.config(text=msg, foreground="#dc3545")
+                        try:
+                            self.export_btn.configure(state="disabled")
+                        except Exception:
+                            pass
+                        try:
+                            notify_system_alert("Server connection lost. Some features are unavailable.", priority=NotificationPriority.MEDIUM)
+                        except Exception:
+                            pass
+                except Exception as ex:
+                    print(f"[ERROR] Exception in _on_server_check_result: {ex}")
 
     def start_server_health_monitor(self):
         """Background thread: poll /api/health with exponential backoff while offline."""
@@ -713,57 +1009,84 @@ class ClientDashboard:
 
     def _initial_server_check(self):
         """Initial server check with extra reliability for startup detection."""
-        try:
-            self.server_status_label.config(text="● Server: Checking…", foreground="#6c757d")
-        except Exception:
-            pass
-        
         def startup_check():
-            ok = False
-            try:
-                # Try a slightly longer timeout for the initial check
-                resp = self.http.get(f"{self.api_base_url}/api/health", timeout=(1.0, 2.0))
-                ok = resp.status_code == 200
-            except Exception:
+            while True:
+                # Always set to Offline before each check to avoid stuck status
+                def set_offline():
+                    # UI update on main thread; _on_server_check_result handles locking
+                    try:
+                        self.server_status_label.config(text="● Server: Offline", foreground="#dc3545")
+                    except Exception:
+                        pass
+                self.root.after(0, set_offline)
                 ok = False
-            finally:
+                error_msg = None
                 try:
-                    self.root.after(0, lambda v=ok: self._on_server_check_result(v))
-                except Exception:
-                    pass
-            if ok:
-                # Reset backoff on success
-                self._server_poll_backoff = 3
-        
+                    resp = self.http.get(f"{self.api_base_url}/api/health", timeout=(1.0, 2.0))
+                    ok = resp.status_code == 200
+                except Exception as e:
+                    ok = False
+                    error_msg = str(e)
+                def update_status():
+                    # Let _on_server_check_result manage locking; keep UI responsive
+                    try:
+                        self._on_server_check_result(ok, error_msg=error_msg)
+                        self.retry_btn.configure(state="normal")
+                    except Exception as ex:
+                        print(f"[ERROR] Exception in update_status: {ex}")
+                        try:
+                            self.server_status_label.config(text="● Server: Offline (UI error)", foreground="#dc3545")
+                            self.retry_btn.configure(state="normal")
+                        except Exception:
+                            pass
+                self.root.after(0, update_status)
+                if ok:
+                    self._server_poll_backoff = 3
+                    break
+                time.sleep(5)
         threading.Thread(target=startup_check, daemon=True).start()
 
     def check_server_now(self):
         """Manual retry that triggers an immediate one-shot health check without waiting for the loop."""
         try:
+            # Always set to Offline before each check to avoid stuck status
+            self.server_status_label.config(text="● Server: Offline", foreground="#dc3545")
             self.server_status_label.config(text="● Server: Checking…", foreground="#6c757d")
             self.retry_btn.configure(state="disabled")
         except Exception:
             pass
         def one_shot():
             ok = False
+            error_msg = None
             try:
                 resp = self.http.get(f"{self.api_base_url}/api/health", timeout=(0.8, 1.5))
                 ok = resp.status_code == 200
-            except Exception:
+            except Exception as e:
                 ok = False
+                error_msg = str(e)
             finally:
-                try:
-                    def finish(v=ok):
-                        self._on_server_check_result(v)
+                def finish():
+                    try:
+                        if ok:
+                            self._on_server_check_result(True)
+                        else:
+                            msg = "● Server: Offline"
+                            if error_msg:
+                                msg += f" ({error_msg})"
+                            try:
+                                self.server_status_label.config(text=msg, foreground="#dc3545")
+                            except Exception:
+                                pass
+                            self._on_server_check_result(False, error_msg=error_msg)
+                        self.retry_btn.configure(state="normal")
+                    except Exception as ex:
                         try:
+                            self.server_status_label.config(text="● Server: Offline (UI error)", foreground="#dc3545")
                             self.retry_btn.configure(state="normal")
                         except Exception:
                             pass
-                    self.root.after(0, finish)
-                except Exception:
-                    pass
+                self.root.after(0, finish)
             if ok:
-                # also reset the monitor backoff to be snappy after success
                 self._server_poll_backoff = 3
         threading.Thread(target=one_shot, daemon=True).start()
 
@@ -776,7 +1099,7 @@ class ClientDashboard:
                 resp.raise_for_status()
             return resp
         except requests.exceptions.RequestException as e:
-            self._on_server_check_result(False)
+            self._on_server_check_result(False, error_msg=str(e))
             if show_errors:
                 try:
                     messagebox.showerror("Connection Error", f"Unable to reach server. Please check your connection.\n\nDetails: {e}")
@@ -793,7 +1116,7 @@ class ClientDashboard:
                 resp.raise_for_status()
             return resp
         except requests.exceptions.RequestException as e:
-            self._on_server_check_result(False)
+            self._on_server_check_result(False, error_msg=str(e))
             if show_errors:
                 try:
                     messagebox.showerror("Connection Error", f"Unable to reach server. Please check your connection.\n\nDetails: {e}")

@@ -21,6 +21,12 @@ import time
 from tkinter.ttk import Notebook
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+
+# Suppress matplotlib warnings
+import logging
+matplotlib_logger = logging.getLogger('matplotlib')
+matplotlib_logger.setLevel(logging.ERROR)
+
 import tkinter as tk
 from datetime import datetime, date, timedelta
 # tkcalendar Calendar not needed; using ttkbootstrap DateEntry
@@ -143,19 +149,6 @@ class Dashboard:
     def _show_database_error_dialog(self):
         """Show database error dialog with detailed information and options"""
         from tkinter import messagebox
-        
-        error_msg = (
-            "❌ Database Connection Error\n\n"
-            f"Cannot connect to MySQL database:\n{self.db_health_status['message']}\n\n"
-            "Possible solutions:\n"
-            "• Start MySQL service (XAMPP, WAMP, etc.)\n"
-            "• Check if MySQL is running on port 3306\n"
-            "• Verify database credentials\n"
-            "• Ensure 'winyfi' database exists\n\n"
-            "The application will continue with limited functionality."
-        )
-        
-        messagebox.showerror("Database Error", error_msg)
     
     def _show_database_warning_dialog(self):
         """Show database warning dialog"""
@@ -2664,7 +2657,7 @@ class Dashboard:
                     # Debug output
                     router_data = self.router_widgets.get(rid, {}).get('data', {})
                     router_name = router_data.get('name', f'Router {rid}')
-                    print(f"🔍 Router {router_name}: {prev} -> {new} (online: {online})")
+                    # Removed router status print statement
 
                     # Only update if state changes OR router is online (to refresh bandwidth)
                     if new is not prev or new is True:
@@ -2907,73 +2900,95 @@ class Dashboard:
     def _open_add_user(self, parent, table):
         popup = Toplevel(parent)
         popup.title("➕ Add New User")
-        popup.geometry("450x550")
+        popup.geometry("640x600")
         popup.transient(parent)
         popup.grab_set()
         popup.configure(bg='#f0f2f5')
-        self._center_window(popup, 450, 550)
+        self._center_window(popup, 640, 600)
+        popup.minsize(600, 560)
 
-        # Header with modern styling
-        header_frame = tb.LabelFrame(popup, text="", bootstyle="success", padding=20)
-        header_frame.pack(fill="x", padx=15, pady=15)
-        
-        title_label = tb.Label(header_frame, text="➕ Add New User", 
-                              font=("Segoe UI", 20, "bold"), bootstyle="success")
-        title_label.pack()
-        
-        subtitle_label = tb.Label(header_frame, text="Create a new user account", 
-                                 font=("Segoe UI", 11), bootstyle="secondary")
-        subtitle_label.pack(pady=(5, 0))
-        
-        # Main form frame with enhanced styling
-        form_frame = tb.LabelFrame(popup, text="📝 User Information", bootstyle="info", padding=25)
-        form_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
+        # Ensure clean teardown
+        def _close():
+            try:
+                popup.grab_release()
+            except Exception:
+                pass
+            popup.destroy()
 
-        # Form fields
+        popup.protocol("WM_DELETE_WINDOW", _close)
+
+        # Root layout: header (pack, fixed), scrollable content (pack, expands), footer (pack, fixed)
+        header_frame = tb.LabelFrame(popup, text="", bootstyle="success", padding=16)
+        header_frame.pack(fill="x", padx=12, pady=(12, 8))
+
+        tb.Label(header_frame, text="➕ Add New User",
+                 font=("Segoe UI", 20, "bold"), bootstyle="success").pack()
+        tb.Label(header_frame, text="Create a new user account",
+                 font=("Segoe UI", 11), bootstyle="secondary").pack(pady=(4, 0))
+
+        # Scrollable content area
+        body_container = tb.Frame(popup)
+        body_container.pack(fill="both", expand=True, padx=12, pady=(0, 8))
+
+        canvas = tk.Canvas(body_container, highlightthickness=0, bg='#f0f2f5')
+        vscroll = tb.Scrollbar(body_container, orient="vertical", command=canvas.yview, bootstyle="secondary")
+        canvas.configure(yscrollcommand=vscroll.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        vscroll.pack(side="right", fill="y")
+
+        scroll_frame = tb.Frame(canvas)
+        scroll_window = canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+
+        def _on_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            # Keep inner width equal to canvas width to avoid clipping
+            canvas.itemconfigure(scroll_window, width=canvas.winfo_width())
+
+        scroll_frame.bind("<Configure>", _on_configure)
+        canvas.bind("<Configure>", _on_configure)
+
+        # Form area (grid-based, no pack inside)
+        form_frame = tb.LabelFrame(scroll_frame, text="📝 User Information", bootstyle="info", padding=16)
+        form_frame.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+
+        form_frame.grid_columnconfigure(0, weight=0)
+        form_frame.grid_columnconfigure(1, weight=1)
+
         fields = [
             ("First Name:", "first_name", False),
             ("Last Name:", "last_name", False),
             ("Username:", "username", False),
             ("Password:", "password", True),
             ("Confirm Password:", "confirm_password", True),
-            ("Role:", "role", False)
+            ("Role:", "role", False),
         ]
-        
+
         vars_ = {}
         entries = {}
-        
-        for i, (label, field_name, is_password) in enumerate(fields):
-            row_frame = tb.Frame(form_frame)
-            row_frame.pack(fill="x", pady=12)
-            
-            # Label with icon
-            label_text = f"🔹 {label}" if not is_password else f"🔒 {label}"
-            tb.Label(row_frame, text=label_text, font=("Segoe UI", 11, "bold"), 
-                    width=18, anchor="w").pack(side="left")
-            
-            if field_name == "role":
-                # Role selection with enhanced styling
-                vars_[field_name] = tb.StringVar(value="user")
-                role_combo = tb.Combobox(row_frame, textvariable=vars_[field_name], 
-                                       values=["user", "admin"], width=28, state="readonly",
-                                       font=("Segoe UI", 11), bootstyle="primary")
-                role_combo.pack(side="left", padx=(15, 0))
-                entries[field_name] = role_combo
-            else:
-                # Text entry with enhanced styling
-                vars_[field_name] = tb.StringVar()
-                entry = tb.Entry(row_frame, textvariable=vars_[field_name], 
-                               width=32, show="*" if is_password else None,
-                               font=("Segoe UI", 11), bootstyle="primary")
-                entry.pack(side="left", padx=(15, 0))
-                entries[field_name] = entry
 
-        # Enhanced password strength indicator
-        strength_frame = tb.Frame(form_frame)
-        strength_frame.pack(fill="x", pady=(0, 15))
-        
-        strength_label = tb.Label(strength_frame, text="", font=("Segoe UI", 10, "bold"))
-        strength_label.pack(anchor="w")
+        for i, (label, field_name, is_password) in enumerate(fields):
+            label_text = f"🔹 {label}" if not is_password else f"🔒 {label}"
+            tb.Label(form_frame, text=label_text, font=("Segoe UI", 11, "bold"),
+                     anchor="w").grid(row=i, column=0, sticky="w", padx=(2, 12), pady=8)
+
+            if field_name == "role":
+                # Fixed role: user. Disable dropdown so it can't be changed
+                vars_[field_name] = tb.StringVar(value="user")
+                widget = tb.Combobox(form_frame, textvariable=vars_[field_name],
+                                     values=["user"], state="disabled",
+                                     width=24, font=("Segoe UI", 11), bootstyle="primary")
+            else:
+                vars_[field_name] = tb.StringVar()
+                widget = tb.Entry(form_frame, textvariable=vars_[field_name],
+                                  show="*" if is_password else None,
+                                  width=24, font=("Segoe UI", 11), bootstyle="primary")
+
+            widget.grid(row=i, column=1, sticky="ew", pady=8)
+            entries[field_name] = widget
+
+        # Password strength indicator (one row under password fields)
+        strength_label = tb.Label(form_frame, text="", font=("Segoe UI", 10, "bold"))
+        strength_label.grid(row=len(fields), column=0, columnspan=2, sticky="w", pady=(0, 6))
 
         def check_password_strength():
             password = vars_["password"].get()
@@ -2986,7 +3001,14 @@ class Dashboard:
             else:
                 strength_label.config(text="⚠️ Medium strength - mix upper/lower/numbers", bootstyle="warning")
 
-        vars_["password"].trace('w', lambda *args: check_password_strength())
+        # Trace password updates
+        def _trace_cb(*_):
+            check_password_strength()
+        try:
+            vars_["password"].trace_add('write', lambda *_: _trace_cb())
+        except Exception:
+            # Fallback for older Tk versions
+            vars_["password"].trace('w', lambda *_: _trace_cb())
 
         # Validation function
         def validate_form():
@@ -3024,7 +3046,7 @@ class Dashboard:
         def submit():
             if not validate_form():
                 return
-                
+
             first = vars_["first_name"].get().strip()
             last = vars_["last_name"].get().strip()
             username = vars_["username"].get().strip()
@@ -3034,23 +3056,39 @@ class Dashboard:
             try:
                 insert_user(username, password, first, last, role=role)
                 messagebox.showinfo("Success", f"User '{username}' created successfully with {role} role.")
-                popup.destroy()
+                _close()
                 self._refresh_user_table()
             except Exception as e:
                 messagebox.showerror("Error", f"Could not create user:\n{e}")
 
-        # Enhanced buttons section
-        button_frame = tb.LabelFrame(popup, text="", bootstyle="light", padding=20)
-        button_frame.pack(fill="x", padx=15, pady=(0, 15))
-        
-        # Button container
-        btn_container = tb.Frame(button_frame)
-        btn_container.pack()
-        
-        tb.Button(btn_container, text="➕ Create User", bootstyle="success", 
-                 command=submit, width=18).pack(side="right", padx=(10, 0))
-        tb.Button(btn_container, text="❌ Cancel", bootstyle="secondary", 
-                 command=popup.destroy, width=12).pack(side="right")
+        # Footer (fixed)
+        footer = tb.Frame(popup)
+        footer.pack(fill="x", padx=12, pady=(0, 12))
+        tb.Separator(footer, bootstyle="secondary").pack(fill="x", pady=(0, 8))
+
+        btns = tb.Frame(footer)
+        btns.pack(fill="x")
+        tb.Button(btns, text="❌ Cancel", bootstyle="secondary",
+                  command=_close, width=14).pack(side="right")
+        tb.Button(btns, text="➕ Create User", bootstyle="success",
+                  command=submit, width=16).pack(side="right", padx=(0, 8))
+
+        # Keyboard shortcuts and focus
+        def _on_return(event):
+            submit()
+            return "break"
+
+        def _on_escape(event):
+            _close()
+            return "break"
+
+        popup.bind("<Return>", _on_return)
+        popup.bind("<Escape>", _on_escape)
+
+        # Focus first entry
+        first_widget = entries.get("first_name")
+        if first_widget and first_widget.winfo_exists():
+            first_widget.focus_set()
 
     def _open_edit_user(self, parent, table):
         sel = table.selection()
@@ -7777,43 +7815,69 @@ Type: {values[11]}
 
 
 
-    def open_new_ticket_modal(self):
-        """Open modal for creating a new SRF."""
+    def _open_edit_profile_modal(self):
         modal = tb.Toplevel(self.root)
-        modal.title("ICT Service Request Form")
-        modal.geometry("725x600")
+        modal.title("Edit Profile")
+        modal.geometry("400x400")
         modal.resizable(False, False)
+        modal.transient(self.root)
         modal.grab_set()
 
-        # Build the SRF form
-        button_host = self.build_ticket_form(modal)
+        # Center modal on screen
+        modal.update_idletasks()
+        x = (modal.winfo_screenwidth() - 400) // 2
+        y = (modal.winfo_screenheight() - 400) // 2
+        modal.geometry(f"400x400+{x}+{y}")
 
-        # Submit button
-        tb.Button(
-            button_host,
-            text="Submit Ticket",
-            bootstyle="primary",
-            command=lambda: self.submit_new_ticket(modal)
-        ).pack(pady=20)
+        frame = tb.Frame(modal, padding=20)
+        frame.pack(fill="both", expand=True)
 
+        tb.Label(frame, text="Edit Profile", font=("Segoe UI", 16, "bold"), bootstyle="success").pack(pady=(0, 20))
 
-    def submit_new_ticket(self, modal):
-        """Submit the ICT Service Request Form to the database."""
-        data = self.collect_ticket_form_data()
+        # Fetch current user data safely
+        user_data = self.current_user if self.current_user else {}
+        first_name_var = tk.StringVar(value=user_data.get('first_name', ''))
+        last_name_var = tk.StringVar(value=user_data.get('last_name', ''))
+        username_var = tk.StringVar(value=user_data.get('username', ''))
 
-        if not data["ict_srf_no"]:
-            messagebox.showwarning("Warning", "ICT SRF No. cannot be empty!")
-            return
+        # First Name
+        tb.Label(frame, text="First Name:", font=("Segoe UI", 11)).pack(anchor="w")
+        first_name_entry = tb.Entry(frame, textvariable=first_name_var)
+        first_name_entry.pack(fill="x", pady=(0, 10))
 
-        try:
-            ticket_utils.create_srf(data, created_by=self.current_user["id"])
-            messagebox.showinfo("Success", "Service Request created successfully!")
-            modal.destroy()
-            self.load_tickets()
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to create Service Request:\n{e}")
+        # Last Name
+        tb.Label(frame, text="Last Name:", font=("Segoe UI", 11)).pack(anchor="w")
+        last_name_entry = tb.Entry(frame, textvariable=last_name_var)
+        last_name_entry.pack(fill="x", pady=(0, 10))
 
+        # Username
+        tb.Label(frame, text="Username:", font=("Segoe UI", 11)).pack(anchor="w")
+        username_entry = tb.Entry(frame, textvariable=username_var)
+        username_entry.pack(fill="x", pady=(0, 10))
 
+        # Button frame for proper layout
+        btn_frame = tb.Frame(frame)
+        btn_frame.pack(fill="x", pady=(20, 0))
+
+        def submit_edit():
+            new_profile = {
+                'first_name': first_name_var.get(),
+                'last_name': last_name_var.get(),
+                'username': username_var.get()
+            }
+            user_id = self.current_user.get('id') if self.current_user else None
+            if not user_id:
+                messagebox.showerror("Error", "User ID not found.")
+                return
+            success = self.backend_edit_profile(user_id, new_profile)
+            if success:
+                messagebox.showinfo("Success", "Profile updated successfully.")
+                modal.destroy()
+
+        save_btn = tb.Button(btn_frame, text="Save Changes", bootstyle="success", command=submit_edit)
+        save_btn.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        cancel_btn = tb.Button(btn_frame, text="Cancel", bootstyle="secondary", command=modal.destroy)
+        cancel_btn.pack(side="right", fill="x", expand=True)
     def submit_edit_ticket(self, ticket_id, modal):
         """Update an existing ICT Service Request Form in the database."""
         updated_data = self.collect_ticket_form_data()
@@ -9890,30 +9954,22 @@ Type: {values[11]}
     def _create_router_notification(self, router_name, router_ip, is_online):
         """Create a router status change notification in the main thread."""
         try:
-            print(f"🔔 Creating router notification: {router_name} ({router_ip}) - {'Online' if is_online else 'Offline'}")
             notification_id = notify_router_status_change(router_name, router_ip, is_online)
-            print(f"🔔 Notification created with ID: {notification_id}")
-            print(f"🔔 Callbacks registered: {len(notification_manager.notification_callbacks)}")
         except Exception as e:
-            print(f"❌ Error creating router notification: {e}")
+            pass
 
     def update_notification_count(self):
         """Update the notification count badge."""
         try:
             count = self.notification_system.get_notification_count()
             self.notification_count = count
-            
-            print(f"🔔 Updating notification count: {count}")
-            
             if count > 0:
                 self.notification_badge.config(text=str(count), background="#dc3545")
                 self.notification_badge.place(in_=self.notification_btn, x=180, y=5)
-                print(f"🔔 Badge updated with count: {count}")
             else:
                 self.notification_badge.place_forget()
-                print("🔔 Badge hidden (no notifications)")
         except Exception as e:
-            print(f"Error updating notification count: {e}")
+            pass
     
     def on_close(self):
         """Confirm and exit the entire application cleanly from the Admin window."""
@@ -9954,6 +10010,246 @@ Type: {values[11]}
             pass
     
     def show_user_profile(self):
+        """Show user profile information with modern UI design"""
+        # Safety check for current_user
+        if not self.current_user:
+            messagebox.showerror("Error", "User information not available.")
+            return
+
+        def backend_change_password(user_id, old_password, new_password):
+            """Backend logic to change user password."""
+            from db import change_user_password
+            try:
+                result = change_user_password(user_id, old_password, new_password)
+                return result  # Should be True/False or error message
+            except Exception as e:
+                return str(e)
+
+        def backend_edit_profile(user_id, new_profile_data):
+            """Backend logic to edit user profile."""
+            from db import update_user_profile
+            try:
+                result = update_user_profile(user_id, new_profile_data)
+                return result  # Should be True/False or error message
+            except Exception as e:
+                return str(e)
+
+        # --- Modal and backend functions ---
+        def backend_change_password(user_id, old_password, new_password):
+            from db import change_user_password
+            try:
+                success, message = change_user_password(user_id, old_password, new_password)
+                if not success:
+                    messagebox.showerror("Error", message)
+                return success
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to change password: {e}")
+                return False
+
+        def backend_edit_profile(user_id, new_profile_data):
+            from db import update_user_profile
+            try:
+                return update_user_profile(user_id, new_profile_data)
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to update profile: {e}")
+                return False
+
+        def open_change_password_modal():
+            modal = tb.Toplevel(self.root)
+            modal.title("Change Password")
+            modal.geometry("400x380")
+            modal.resizable(False, False)
+            modal.transient(self.root)
+            modal.grab_set()
+            modal.lift()  # Bring to front
+            modal.focus_force()  # Focus modal
+
+            # Center modal on screen
+            modal.update_idletasks()
+            x = (modal.winfo_screenwidth() - 400) // 2
+            y = (modal.winfo_screenheight() - 430) // 2
+            modal.geometry(f"400x430+{x}+{y}")
+
+            frame = tb.Frame(modal, padding=20)
+            frame.pack(fill="both", expand=True)
+
+            tb.Label(frame, text="Change Password", font=("Segoe UI", 16, "bold"), bootstyle="primary").pack(pady=(0, 20))
+
+            old_pass_var = tk.StringVar()
+            new_pass_var = tk.StringVar()
+            confirm_pass_var = tk.StringVar()
+
+            tb.Label(frame, text="Current Password:", font=("Segoe UI", 11)).pack(anchor="w")
+            old_pass_entry = tb.Entry(frame, textvariable=old_pass_var, show="*")
+            old_pass_entry.pack(fill="x", pady=(0, 10))
+
+            tb.Label(frame, text="New Password:", font=("Segoe UI", 11)).pack(anchor="w")
+            new_pass_entry = tb.Entry(frame, textvariable=new_pass_var, show="*")
+            new_pass_entry.pack(fill="x", pady=(0, 5))
+            
+            # Password strength indicator
+            strength_label = tb.Label(frame, text="", font=("Segoe UI", 9))
+            strength_label.pack(anchor="w", pady=(0, 10))
+            
+            def check_password_strength(*args):
+                password = new_pass_var.get()
+                if len(password) == 0:
+                    strength_label.config(text="", foreground="")
+                elif len(password) < 6:
+                    strength_label.config(text="⚠️ Too short (min 6 characters)", foreground="red")
+                elif password.isdigit():
+                    strength_label.config(text="⚠️ Weak (numbers only)", foreground="orange")
+                elif password.isalpha():
+                    strength_label.config(text="⚠️ Weak (letters only)", foreground="orange")
+                elif len(password) < 8:
+                    strength_label.config(text="🟡 Fair", foreground="orange")
+                else:
+                    has_upper = any(c.isupper() for c in password)
+                    has_lower = any(c.islower() for c in password)
+                    has_digit = any(c.isdigit() for c in password)
+                    has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
+                    
+                    score = sum([has_upper, has_lower, has_digit, has_special])
+                    if score >= 3:
+                        strength_label.config(text="✅ Strong", foreground="green")
+                    else:
+                        strength_label.config(text="🟡 Good", foreground="darkorange")
+            
+            new_pass_var.trace_add("write", check_password_strength)
+
+            tb.Label(frame, text="Confirm New Password:", font=("Segoe UI", 11)).pack(anchor="w")
+            confirm_pass_entry = tb.Entry(frame, textvariable=confirm_pass_var, show="*")
+            confirm_pass_entry.pack(fill="x", pady=(0, 5))
+            
+            # Password match indicator
+            match_label = tb.Label(frame, text="", font=("Segoe UI", 9))
+            match_label.pack(anchor="w", pady=(0, 15))
+            
+            def check_password_match(*args):
+                new_pass = new_pass_var.get()
+                confirm_pass = confirm_pass_var.get()
+                if len(confirm_pass) == 0:
+                    match_label.config(text="", foreground="")
+                elif new_pass != confirm_pass:
+                    match_label.config(text="❌ Passwords do not match", foreground="red")
+                else:
+                    match_label.config(text="✅ Passwords match", foreground="green")
+            
+            confirm_pass_var.trace_add("write", check_password_match)
+            new_pass_var.trace_add("write", check_password_match)
+
+            status_label = tb.Label(frame, text="", font=("Segoe UI", 10))
+            status_label.pack(pady=(0, 10))
+
+            def submit_change():
+                old_password = old_pass_var.get().strip()
+                new_password = new_pass_var.get().strip()
+                confirm_password = confirm_pass_var.get().strip()
+                
+                # Clear previous status
+                status_label.config(text="", foreground="")
+                
+                # Validation
+                if not old_password:
+                    status_label.config(text="❌ Please enter current password", foreground="red")
+                    return
+                    
+                if not new_password:
+                    status_label.config(text="❌ Please enter new password", foreground="red")
+                    return
+                    
+                if len(new_password) < 6:
+                    status_label.config(text="❌ New password must be at least 6 characters", foreground="red")
+                    return
+                    
+                if new_password != confirm_password:
+                    status_label.config(text="❌ Passwords do not match", foreground="red")
+                    return
+                
+                if old_password == new_password:
+                    status_label.config(text="❌ New password must be different from current password", foreground="red")
+                    return
+                
+                # Show processing
+                status_label.config(text="⏳ Changing password...", foreground="blue")
+                modal.update()
+                
+                # Call backend
+                try:
+                    user_id = self.current_user.get('id')
+                    success = backend_change_password(user_id, old_password, new_password)
+                    if success:
+                        status_label.config(text="✅ Password changed successfully!", foreground="green")
+                        self.root.after(1500, modal.destroy)  # Close after 1.5 seconds
+                    else:
+                        status_label.config(text="❌ Current password is incorrect", foreground="red")
+                except Exception as e:
+                    status_label.config(text=f"❌ Error: {str(e)}", foreground="red")
+
+            # Buttons
+            button_frame = tb.Frame(frame)
+            button_frame.pack(fill="x", pady=(10, 0))
+            
+            tb.Button(button_frame, text="Cancel", command=modal.destroy, bootstyle="secondary").pack(side="right", padx=(10, 0))
+            tb.Button(button_frame, text="Change Password", command=submit_change, bootstyle="primary").pack(side="right")
+
+            # Focus on first entry
+            old_pass_entry.focus_set()
+            
+            # Enter key binding
+            def on_enter(event):
+                submit_change()
+            
+            modal.bind('<Return>', on_enter)
+
+        def open_edit_profile_modal():
+            modal = tb.Toplevel(self.root)
+            modal.title("Edit Profile")
+            modal.geometry("400x400")
+            modal.resizable(False, False)
+            modal.transient(self.root)
+            modal.grab_set()
+
+            # Center modal on screen
+            modal.update_idletasks()
+            x = (modal.winfo_screenwidth() - 400) // 2
+            y = (modal.winfo_screenheight() - 400) // 2
+            modal.geometry(f"400x400+{x}+{y}")
+
+            frame = tb.Frame(modal, padding=20)
+            frame.pack(fill="both", expand=True)
+
+            tb.Label(frame, text="Edit Profile", font=("Segoe UI", 16, "bold"), bootstyle="success").pack(pady=(0, 20))
+
+            first_name_var = tk.StringVar(value=self.current_user.get('first_name', ''))
+            last_name_var = tk.StringVar(value=self.current_user.get('last_name', ''))
+            username_var = tk.StringVar(value=self.current_user.get('username', ''))
+
+            tb.Label(frame, text="First Name:", font=("Segoe UI", 11)).pack(anchor="w")
+            tb.Entry(frame, textvariable=first_name_var).pack(fill="x", pady=(0, 10))
+
+            tb.Label(frame, text="Last Name:", font=("Segoe UI", 11)).pack(anchor="w")
+            tb.Entry(frame, textvariable=last_name_var).pack(fill="x", pady=(0, 10))
+
+            tb.Label(frame, text="Username:", font=("Segoe UI", 11)).pack(anchor="w")
+            tb.Entry(frame, textvariable=username_var).pack(fill="x", pady=(0, 10))
+
+            def submit_edit():
+                new_profile = {
+                    'first_name': first_name_var.get(),
+                    'last_name': last_name_var.get(),
+                    'username': username_var.get()
+                }
+                user_id = self.current_user.get('id')
+                success = backend_edit_profile(user_id, new_profile)
+                if success:
+                    messagebox.showinfo("Success", "Profile updated successfully.")
+                    modal.destroy()
+
+            tb.Button(frame, text="Save Changes", bootstyle="success", command=submit_edit).pack(pady=(10, 0))
+            tb.Button(frame, text="Cancel", bootstyle="secondary", command=modal.destroy).pack(pady=(5, 0))
+
+        # ...existing code...
         """Show user profile information with modern UI design"""
         # Safety check for current_user
         if not self.current_user:
@@ -10085,45 +10381,21 @@ Type: {values[11]}
             last_login_info = None
         # Format last login information
         if last_login_info:
-            login_time = last_login_info.get('login_timestamp')
-            device_ip = last_login_info.get('device_ip', 'Unknown')
-            device_mac = last_login_info.get('device_mac', 'Unknown')
-            
-            # Format the timestamp
-            if login_time:
-                if isinstance(login_time, str):
-                    formatted_time = login_time
-                else:
-                    formatted_time = login_time.strftime('%Y-%m-%d %H:%M:%S')
-                last_login_display = f"{formatted_time} | {device_ip} | {device_mac}"
-            else:
-                last_login_display = f"Unknown | {device_ip} | {device_mac}"
+            last_login_display = last_login_info.get('login_timestamp', 'Unknown')
+            device_hostname = last_login_info.get('device_hostname', 'Unknown')
+            device_platform = last_login_info.get('device_platform', 'Unknown')
         else:
-            last_login_display = "No login data available"
-        
+            last_login_display = 'Unknown'
+            device_hostname = 'Not Available'
+            device_platform = 'Not Available'
+
         user_info_data = [
             ("🆔", "User ID", str(user_id) if user_id != 'N/A' else 'Unknown'),
             ("✅", "Account Status", "Active"),
             ("🕒", "Last Login", last_login_display),
+            ("💻", "Device Hostname", device_hostname),
+            ("🖥️", "Device Platform", device_platform),
         ]
-        
-        # Add additional device information if available
-        if last_login_info:
-            device_hostname = last_login_info.get('device_hostname', 'Unknown')
-            device_platform = last_login_info.get('device_platform', 'Unknown')
-            
-            user_info_data.extend([
-                ("💻", "Device Hostname", device_hostname),
-                ("🖥️", "Device Platform", device_platform),
-            ])
-        else:
-            # Show fallback device info if no login data available
-            user_info_data.extend([
-                ("💻", "Device Hostname", "Not Available"),
-                ("🖥️", "Device Platform", "Not Available"),
-            ])
-        
-        # Create modern info grid
         for i, (icon, label, value) in enumerate(user_info_data):
             info_row = tb.Frame(info_card)
             info_row.pack(fill="x", pady=8)
@@ -10159,10 +10431,8 @@ Type: {values[11]}
         
         # Action buttons in modern vertical layout
         actions = [
-            ("🔒", "Change Password", "primary", lambda: self.handle_profile_option("Change Password")),
+            ("🔒", "Change Password", "primary", open_change_password_modal),
             ("✏️", "Edit Profile", "success", self.edit_user_profile),
-            ("🔔", "Notifications", "warning", lambda: self.handle_profile_option("Notifications")),
-            ("⚙️", "Settings", "secondary", lambda: self.handle_profile_option("Settings")),
         ]
         
         # Create action buttons vertically
@@ -10185,22 +10455,13 @@ Type: {values[11]}
                               width=22)
         logout_btn.pack(fill="x", pady=(0, 6))
         
-        export_btn = tb.Button(account_card, text="📊 Export Data", 
-                              bootstyle="info", 
-                              command=self.open_export_menu,
-                              width=22)
-        export_btn.pack(fill="x")
         
         # Footer with modern styling
         footer_frame = tb.Frame(main_container)
         footer_frame.pack(fill="x", pady=(10, 0))
-        
-        footer_text = tb.Label(footer_frame, 
-                              text="💡 Manage your account settings and preferences from this modern dashboard", 
-                              font=("Segoe UI", 11), 
-                              foreground="#9ca3af")
-        footer_text.pack()
-        
+        footer_label = tb.Label(footer_frame, text="WinyFi © 2024. All rights reserved.",
+                              font=("Segoe UI", 10), foreground="#9ca3af")
+
         # Store reference to modal
         self.profile_modal = profile_modal
 
@@ -10210,7 +10471,134 @@ Type: {values[11]}
 
     def edit_user_profile(self):
         """Edit user profile information"""
-        messagebox.showinfo("Edit Profile", "Profile editing functionality will be implemented soon.")
+        # Open the actual Edit Profile modal
+        if hasattr(self, '_open_edit_profile_modal'):
+            self._open_edit_profile_modal()
+        else:
+            messagebox.showerror("Error", "Edit Profile modal function not found.")
+
+    def _open_edit_profile_modal(self):
+        modal = tb.Toplevel(self.root)
+        modal.title("Edit Profile")
+        modal.geometry("440x420")
+        modal.resizable(False, False)
+        modal.transient(self.root)
+        modal.grab_set()
+        modal.lift()
+        modal.focus_force()
+
+        # Center modal on screen
+        modal.update_idletasks()
+        x = (modal.winfo_screenwidth() - 440) // 2
+        y = (modal.winfo_screenheight() - 420) // 2
+        modal.geometry(f"440x420+{x}+{y}")
+
+        frame = tb.Frame(modal, padding=20)
+        frame.pack(fill="both", expand=True)
+
+        tb.Label(frame, text="Edit Profile", font=("Segoe UI", 16, "bold"), bootstyle="success").pack(pady=(0, 18))
+
+        # Live-load current user from DB for freshness
+        try:
+            from db import get_user_by_id
+            fresh = get_user_by_id(self.current_user.get('id')) or {}
+        except Exception:
+            fresh = {}
+
+        first_name_var = tk.StringVar(value=fresh.get('first_name') or self.current_user.get('first_name', ''))
+        last_name_var = tk.StringVar(value=fresh.get('last_name') or self.current_user.get('last_name', ''))
+        username_var = tk.StringVar(value=fresh.get('username') or self.current_user.get('username', ''))
+
+        def add_field(label, var, placeholder=""):
+            row = tb.Frame(frame)
+            row.pack(fill="x", pady=6)
+            tb.Label(row, text=label, width=14, anchor="w").pack(side="left")
+            entry = tb.Entry(row, textvariable=var)
+            entry.pack(side="left", fill="x", expand=True)
+            if placeholder and not var.get():
+                entry.insert(0, placeholder)
+                entry.configure(foreground="#9aa0a6")
+                def _on_focus_in(event):
+                    if entry.get() == placeholder and entry.cget('foreground') == '#9aa0a6':
+                        entry.delete(0, 'end')
+                        entry.configure(foreground='black')
+                def _on_focus_out(event):
+                    if not entry.get():
+                        entry.insert(0, placeholder)
+                        entry.configure(foreground="#9aa0a6")
+                entry.bind('<FocusIn>', _on_focus_in)
+                entry.bind('<FocusOut>', _on_focus_out)
+            return entry
+
+        add_field("First Name:", first_name_var, "Enter first name")
+        add_field("Last Name:", last_name_var, "Enter last name")
+        username_entry = add_field("Username:", username_var, "e.g. jdoe")
+
+        # Status area
+        status = tb.Label(frame, text="", font=("Segoe UI", 10))
+        status.pack(fill="x", pady=(4,0))
+
+        # Buttons
+        btns = tb.Frame(frame)
+        btns.pack(fill="x", pady=(12, 0))
+
+        save_btn = tb.Button(btns, text="Save Changes", bootstyle="success")
+        cancel_btn = tb.Button(btns, text="Cancel", bootstyle="secondary", command=modal.destroy)
+        cancel_btn.pack(side="right")
+        save_btn.pack(side="right", padx=(0,8))
+
+        # Validation helpers
+        import re
+        def validate():
+            fn = (first_name_var.get() or "").strip()
+            ln = (last_name_var.get() or "").strip()
+            un = (username_var.get() or "").strip()
+
+            if not fn and not ln:
+                return False, "Provide at least a first or last name"
+            if un:
+                if len(un) < 3:
+                    return False, "Username must be at least 3 characters"
+                if not re.fullmatch(r"[A-Za-z0-9_.-]+", un):
+                    return False, "Username may contain letters, numbers, '.', '_' or '-' only"
+            return True, ""
+
+        def set_busy(busy: bool):
+            save_btn.configure(state='disabled' if busy else 'normal')
+            cancel_btn.configure(state='disabled' if busy else 'normal')
+
+        def on_save():
+            ok, msg = validate()
+            if not ok:
+                status.configure(text=f"❌ {msg}", foreground="red")
+                return
+            status.configure(text="⏳ Saving...", foreground="#0d6efd")
+            set_busy(True)
+            self.root.update_idletasks()
+
+            new_profile = {
+                'first_name': (first_name_var.get() or '').strip(),
+                'last_name': (last_name_var.get() or '').strip(),
+                'username': (username_var.get() or '').strip(),
+            }
+
+            try:
+                from db import update_user_profile
+                success, payload = update_user_profile(self.current_user.get('id'), new_profile)
+                if success:
+                    # Refresh current_user cache and UI labels
+                    self.current_user.update(payload or {})
+                    status.configure(text="✅ Profile updated successfully", foreground="green")
+                    # Close shortly after success
+                    self.root.after(900, modal.destroy)
+                else:
+                    status.configure(text=f"❌ {payload}", foreground="red")
+            except Exception as e:
+                status.configure(text=f"❌ Error: {e}", foreground="red")
+            finally:
+                set_busy(False)
+
+        save_btn.configure(command=on_save)
 
     def logout(self):
         """Log out to the login screen without exiting the application."""
