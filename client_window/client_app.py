@@ -1787,13 +1787,25 @@ class ClientDashboard:
         canvas.pack(side="left", fill="both", expand=True)
         vscroll.pack(side="right", fill="y")
 
-        # Smooth scrolling
+        # Smooth scrolling (widget-scoped, avoids global bind_all)
         def _on_mousewheel(event):
-            if event.delta:
-                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        modal.bind_all("<MouseWheel>", _on_mousewheel)
-        modal.bind_all("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
-        modal.bind_all("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
+            try:
+                if event.delta:
+                    canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            except tk.TclError:
+                pass
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        canvas.bind("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
+        canvas.bind("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
+
+        def _cleanup_scroll_bindings():
+            try:
+                canvas.unbind("<MouseWheel>")
+                canvas.unbind("<Button-4>")
+                canvas.unbind("<Button-5>")
+            except Exception:
+                pass
+        modal.bind("<Destroy>", lambda e: _cleanup_scroll_bindings(), add="+")
 
         # Header with logo
         header_frame = tb.Frame(scrollable_frame)

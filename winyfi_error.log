@@ -4811,3 +4811,652 @@ Traceback (most recent call last):
                    ^^
 UnboundLocalError: cannot access local variable 'os' where it is not associated with a value
 
+2025-10-14 13:37:16,490 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 13:37:16,512 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 13:37:16,513 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 13:37:16,514 ERROR [db] Failed to save loop detection to database
+2025-10-14 13:38:16,915 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+2025-10-14 13:38:16,966 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+2025-10-14 13:38:17,011 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+2025-10-14 13:38:17,073 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+2025-10-14 13:38:17,371 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+2025-10-14 13:38:17,430 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+2025-10-14 13:38:17,477 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\notification_ui.py", line 336, in _on_mousewheel
+    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2114, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!toplevel17.!frame.!frame2.!canvas"
+
+2025-10-14 13:47:41,030 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 13:47:41,037 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 13:47:41,038 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 13:47:41,038 ERROR [db] Failed to save loop detection to database
+2025-10-14 13:53:43,658 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 13:53:43,681 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 13:53:43,682 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 13:53:43,683 ERROR [db] Failed to save loop detection to database
+2025-10-14 13:54:02,816 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\main.py", line 154, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
+
+2025-10-14 13:56:56,985 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 13:56:56,995 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 13:56:56,996 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 13:56:56,998 ERROR [db] Failed to save loop detection to database
+2025-10-14 14:05:25,751 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 14:05:25,769 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:05:25,769 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:05:25,777 ERROR [db] Failed to save loop detection to database
+2025-10-14 14:06:06,261 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 14:06:06,275 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:06:06,276 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:06:06,278 ERROR [db] Failed to save loop detection to database
+2025-10-14 14:12:44,929 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 14:12:44,939 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:12:44,940 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:12:44,941 ERROR [db] Failed to save loop detection to database
+2025-10-14 14:24:11,730 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 14:24:11,746 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:24:11,747 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:24:11,749 ERROR [db] Failed to save loop detection to database
+2025-10-14 14:29:11,831 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 14:29:11,839 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:29:11,839 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:29:11,839 ERROR [db] Failed to save loop detection to database
+2025-10-14 14:34:11,908 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 14:34:11,914 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:34:11,915 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 14:34:11,915 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:02:06,818 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:02:06,825 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:02:06,825 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:02:06,825 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:36:40,936 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:36:40,953 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:36:40,955 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:36:40,955 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:37:36,386 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 8934, in <lambda>
+    modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9694, in close_client_modal
+    self.stop_auto_refresh()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9348, in stop_auto_refresh
+    self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'auto_refresh_btn'. Did you mean: 'auto_refresh_var'?
+
+2025-10-14 15:37:46,051 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 8934, in <lambda>
+    modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9694, in close_client_modal
+    self.stop_auto_refresh()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9348, in stop_auto_refresh
+    self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'auto_refresh_btn'. Did you mean: 'auto_refresh_var'?
+
+2025-10-14 15:41:24,245 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:41:24,257 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:41:24,258 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:41:24,260 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:41:52,322 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 8951, in <lambda>
+    modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9711, in close_client_modal
+    self.stop_auto_refresh()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9365, in stop_auto_refresh
+    self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'auto_refresh_btn'. Did you mean: 'auto_refresh_var'?
+
+2025-10-14 15:42:36,022 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:42:36,036 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:42:36,036 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:42:36,036 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:43:01,017 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 8951, in <lambda>
+    modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9711, in close_client_modal
+    self.stop_auto_refresh()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9365, in stop_auto_refresh
+    self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'auto_refresh_btn'. Did you mean: 'auto_refresh_var'?
+
+2025-10-14 15:45:14,084 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:45:14,092 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:45:14,092 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:45:14,098 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:45:31,617 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 8961, in show_clients
+    style.configure("even", background="#f8f9fa")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\ttkbootstrap\style.py", line 516, in configure
+    ttkstyle = Bootstyle.update_ttk_widget_style(None, style)
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\ttkbootstrap\style.py", line 5049, in update_ttk_widget_style
+    builder_method = builder.name_to_method(method_name)
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\ttkbootstrap\style.py", line 1086, in name_to_method
+    func = getattr(StyleBuilderTTK, method_name)
+AttributeError: type object 'StyleBuilderTTK' has no attribute ''
+
+2025-10-14 15:48:44,211 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:48:44,222 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:48:44,223 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:48:44,227 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:49:03,724 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 8998, in <lambda>
+    modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9758, in close_client_modal
+    self.stop_auto_refresh()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9412, in stop_auto_refresh
+    self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'auto_refresh_btn'. Did you mean: 'auto_refresh_var'?
+
+2025-10-14 15:49:29,623 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:49:29,658 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:49:29,660 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:49:29,660 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:54:29,727 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:54:29,732 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:54:29,733 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:54:29,733 ERROR [db] Failed to save loop detection to database
+2025-10-14 15:59:29,800 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 15:59:29,808 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:59:29,808 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 15:59:29,809 ERROR [db] Failed to save loop detection to database
+2025-10-14 16:04:29,943 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 16:04:29,950 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:04:29,950 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:04:29,951 ERROR [db] Failed to save loop detection to database
+2025-10-14 16:34:31,292 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 16:34:31,298 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:34:31,299 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:34:31,300 ERROR [db] Failed to save loop detection to database
+2025-10-14 16:34:45,387 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 8877, in show_clients
+    self.client_search_var = tk.StringVar()
+                             ^^
+UnboundLocalError: cannot access local variable 'tk' where it is not associated with a value
+
+2025-10-14 16:36:32,193 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 16:36:32,210 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:36:32,212 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:36:32,215 ERROR [db] Failed to save loop detection to database
+2025-10-14 16:37:08,318 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9061, in <lambda>
+    modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9826, in close_client_modal
+    self.stop_auto_refresh()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9480, in stop_auto_refresh
+    self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'auto_refresh_btn'. Did you mean: 'auto_refresh_var'?
+
+2025-10-14 16:37:11,501 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9061, in <lambda>
+    modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9826, in close_client_modal
+    self.stop_auto_refresh()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9480, in stop_auto_refresh
+    self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'auto_refresh_btn'. Did you mean: 'auto_refresh_var'?
+
+2025-10-14 16:41:03,115 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 16:41:03,175 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:41:03,177 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:41:03,178 ERROR [db] Failed to save loop detection to database
+2025-10-14 16:42:53,592 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9065, in <lambda>
+    modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9830, in close_client_modal
+    self.stop_auto_refresh()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 9485, in stop_auto_refresh
+    if self.auto_refresh_job:
+       ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'auto_refresh_job'. Did you mean: 'auto_refresh_btn'?
+
+2025-10-14 16:45:32,135 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 16:45:32,144 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:45:32,146 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:45:32,147 ERROR [db] Failed to save loop detection to database
+2025-10-14 16:50:32,196 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-14 16:50:32,215 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:50:32,216 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-14 16:50:32,216 ERROR [db] Failed to save loop detection to database

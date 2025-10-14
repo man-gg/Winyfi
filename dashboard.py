@@ -5988,18 +5988,29 @@ Type: {values[11]}
             canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
             canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
             
-            # Bind mousewheel to canvas
+            # Mouse wheel scrolling (widget-scoped; avoids global bind_all)
             def _on_mousewheel(event):
-                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-            
-            def _bind_to_mousewheel(event):
-                canvas.bind_all("<MouseWheel>", _on_mousewheel)
-            
-            def _unbind_from_mousewheel(event):
-                canvas.unbind_all("<MouseWheel>")
-            
-            canvas.bind('<Enter>', _bind_to_mousewheel)
-            canvas.bind('<Leave>', _unbind_from_mousewheel)
+                try:
+                    if event.delta:
+                        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+                except tk.TclError:
+                    pass
+
+            def _on_button4(event):
+                try:
+                    canvas.yview_scroll(-1, "units")
+                except tk.TclError:
+                    pass
+
+            def _on_button5(event):
+                try:
+                    canvas.yview_scroll(1, "units")
+                except tk.TclError:
+                    pass
+
+            canvas.bind("<MouseWheel>", _on_mousewheel)
+            canvas.bind("<Button-4>", _on_button4)
+            canvas.bind("<Button-5>", _on_button5)
             
             # Header section
             header_frame = tb.LabelFrame(scrollable_frame, text="Report Header", padding=10)
@@ -6068,7 +6079,12 @@ Type: {values[11]}
             
             # Clean up binding when window closes
             def _on_close():
-                canvas.unbind_all("<MouseWheel>")
+                try:
+                    canvas.unbind("<MouseWheel>")
+                    canvas.unbind("<Button-4>")
+                    canvas.unbind("<Button-5>")
+                except Exception:
+                    pass
                 preview_window.destroy()
             
             # Action buttons
@@ -7723,13 +7739,26 @@ Type: {values[11]}
         canvas.pack(side="left", fill="both", expand=True)
         vscroll.pack(side="right", fill="y")
 
-        # Optional: smooth scrolling bindings
+        # Optional: smooth scrolling bindings (widget-scoped)
         def _on_mousewheel(event):
-            if event.delta:
-                canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        modal.bind_all("<MouseWheel>", _on_mousewheel)
-        modal.bind_all("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
-        modal.bind_all("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
+            try:
+                if event.delta:
+                    canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            except tk.TclError:
+                pass
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        canvas.bind("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
+        canvas.bind("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
+
+        def _cleanup_scroll_bindings():
+            try:
+                canvas.unbind("<MouseWheel>")
+                canvas.unbind("<Button-4>")
+                canvas.unbind("<Button-5>")
+            except Exception:
+                pass
+        # Ensure cleanup when modal is destroyed
+        modal.bind("<Destroy>", lambda e: _cleanup_scroll_bindings(), add="+")
 
         # ---------- HEADER WITH LOGO ----------
         header_frame = tb.Frame(scrollable_frame)

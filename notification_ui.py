@@ -34,6 +34,9 @@ class ToastNotification:
         self.on_dismiss = on_dismiss
         self.window = None
         self.auto_dismiss_task = None
+        self._progress_after_id = None
+        self._dismiss_after_id = None
+        self._dismissed = False
         
         self._create_toast()
         self._show_toast()
@@ -119,19 +122,37 @@ class ToastNotification:
                 text="×",
                 style=f"{style}.TButton",
                 width=3,
-                command=self.dismiss
+                command=lambda: self.dismiss(immediate=True)
             )
         else:
             close_btn = tk.Button(
                 header_frame,
                 text="×",
                 width=3,
-                command=self.dismiss,
+                command=lambda: self.dismiss(immediate=True),
                 fg="white",
                 bg=bg_color,
                 relief="flat"
             )
         close_btn.pack(side="right")
+
+        # Make sure the first click is not eaten for focus activation
+        def _on_close_click(event):
+            self.dismiss(immediate=True)
+            return "break"
+        try:
+            close_btn.bind("<Button-1>", _on_close_click, add="+")
+        except Exception:
+            pass
+        try:
+            close_btn.configure(takefocus=1, default="active")
+        except Exception:
+            pass
+        try:
+            # Focus the close button so a single click immediately activates
+            self.window.after(0, close_btn.focus_set)
+        except Exception:
+            pass
         
         # Message
         if window_style:
@@ -165,98 +186,178 @@ class ToastNotification:
             self.progress = tk.Frame(main_frame, height=4, bg="white")
         self.progress.pack(fill="x", pady=(8, 0))
         
-        # Start progress animation
+    # Start progress animation
         self._start_progress_animation()
     
-    def _start_progress_animation(self):
-        """Start the progress bar animation for auto-dismiss."""
-        if hasattr(self.progress, 'configure'):
-            self.progress["maximum"] = 100
-            self.progress["value"] = 0
-        
-        def update_progress():
-            for i in range(101):
-                try:
-                    if self.window and self.window.winfo_exists():
-                        if hasattr(self.progress, 'configure'):
-                            self.progress["value"] = i
-                        self.window.update()
-                        time.sleep(self.duration / 1000 / 100)  # Convert to seconds
-                    else:
-                        break
-                except Exception as e:
-                    pass
+    def _show_toast(self):
+        """Finalize and show the toast window reliably."""
+        if not self.window:
+            return
+        try:
+            # Ensure on top and focused enough to receive clicks
+            self.window.lift()
+            self.window.attributes("-topmost", True)
+            try:
+                # Ensure geometry and widgets are realized so focus/click works on first try
+                self.window.update_idletasks()
+            except Exception:
+                pass
+            try:
+                self.window.focus_force()
+            except Exception:
+                pass
 
-            def dismiss(self):
-                """Dismiss the toast notification."""
-                try:
-                    if self.window and self.window.winfo_exists():
-                        # Fade out animation
-                        def animate_out():
-                            try:
-                                # Fade out by reducing alpha
-                                for i in range(20):
-                                    if self.window and self.window.winfo_exists():
-                                        alpha = 0.95 - (0.95 * (i + 1) / 20)  # Fade from 0.95 to 0
-                                        self.window.attributes("-alpha", alpha)
-                                        self.window.update()
-                                        time.sleep(0.02)
-                                    else:
-                                        break
-                                if self.window and self.window.winfo_exists():
-                                    self.window.destroy()
-                            except RuntimeError:
-                                # Main thread is not in main loop - just destroy
-                                try:
-                                    if self.window and self.window.winfo_exists():
-                                        self.window.destroy()
-                                except:
-                                    pass
-                            except Exception:
-                                pass
-                        threading.Thread(target=animate_out, daemon=True).start()
-                        if self.on_dismiss:
-                            self.on_dismiss()
-                except Exception as e:
-                    pass
-            # End of for loop in update_progress()
-        
-        threading.Thread(target=update_progress, daemon=True).start()
+            # Safety: handle window close requests (even though overrideredirect=True)
+            try:
+                self.window.protocol("WM_DELETE_WINDOW", lambda: self.dismiss(immediate=True))
+            except Exception:
+                pass
 
-    def dismiss(self):
-        """Dismiss the toast notification."""
+            # Cleanup timers if window is destroyed by any means
+            self.window.bind("<Destroy>", lambda e: self._on_window_destroy(), add="+")
+
+            # When the window gets mapped (shown), reinforce focus
+            try:
+                self.window.bind("<Map>", lambda e: self.window.focus_force(), add="+")
+            except Exception:
+                pass
+
+            # Keep interactions limited to explicit controls (like the × button)
+        except Exception:
+            pass
+
+    def _on_window_destroy(self):
+        """Ensure timers are canceled if the window goes away."""
+        self._dismissed = True
         try:
             if self.window and self.window.winfo_exists():
-                # Fade out animation
-                def animate_out():
+                if self._progress_after_id:
                     try:
-                        # Fade out by reducing alpha
-                        for i in range(20):
-                            if self.window and self.window.winfo_exists():
-                                alpha = 0.95 - (0.95 * (i + 1) / 20)  # Fade from 0.95 to 0
-                                self.window.attributes("-alpha", alpha)
-                                self.window.update()
-                                time.sleep(0.02)
-                            else:
-                                break
-                        if self.window and self.window.winfo_exists():
-                            self.window.destroy()
-                    except RuntimeError:
-                        # Main thread is not in main loop - just destroy
-                        try:
-                            if self.window and self.window.winfo_exists():
-                                self.window.destroy()
-                        except:
-                            pass
+                        self.window.after_cancel(self._progress_after_id)
                     except Exception:
                         pass
-                
-                threading.Thread(target=animate_out, daemon=True).start()
-                
-                if self.on_dismiss:
-                    self.on_dismiss()
-        except Exception as e:
+                if self._dismiss_after_id:
+                    try:
+                        self.window.after_cancel(self._dismiss_after_id)
+                    except Exception:
+                        pass
+        except Exception:
             pass
+
+    def _start_progress_animation(self):
+        """Start the progress bar animation for auto-dismiss using Tk after timers."""
+        try:
+            if hasattr(self.progress, 'configure'):
+                self.progress["maximum"] = 100
+                self.progress["value"] = 0
+
+            steps = 100
+            # Minimum interval of 20ms to avoid excessive timer calls
+            interval = max(20, int(self.duration / steps))
+
+            def step(i=0):
+                if self._dismissed or not (self.window and self.window.winfo_exists()):
+                    return
+                try:
+                    if hasattr(self.progress, 'configure'):
+                        self.progress["value"] = min(i, 100)
+                except tk.TclError:
+                    return
+
+                if i < steps:
+                    self._progress_after_id = self.window.after(interval, step, i + 1)
+                else:
+                    # Completed progress; schedule dismiss
+                    self._dismiss_after_id = self.window.after(10, lambda: self.dismiss(immediate=False))
+
+            # Kick off the progress
+            self._progress_after_id = self.window.after(interval, step, 1)
+        except Exception:
+            # If anything goes wrong with progress, still schedule dismissal
+            if self.window and self.window.winfo_exists():
+                self._dismiss_after_id = self.window.after(self.duration, lambda: self.dismiss(immediate=False))
+
+    def dismiss(self, immediate: bool = False):
+        """Dismiss the toast notification."""
+        if self._dismissed:
+            return
+        self._dismissed = True
+
+        try:
+            # Cancel any scheduled timers
+            if self.window and self.window.winfo_exists():
+                try:
+                    if self._progress_after_id:
+                        self.window.after_cancel(self._progress_after_id)
+                except Exception:
+                    pass
+                try:
+                    if self._dismiss_after_id:
+                        self.window.after_cancel(self._dismiss_after_id)
+                except Exception:
+                    pass
+
+            # If immediate, destroy without fade
+            if immediate:
+                try:
+                    if self.window and self.window.winfo_exists():
+                        self.window.destroy()
+                finally:
+                    if self.on_dismiss:
+                        try:
+                            self.on_dismiss()
+                        except Exception:
+                            pass
+                return
+
+            # Fade-out animation using after (UI thread-safe)
+            def animate_out(step=0, total=20):
+                if not (self.window and self.window.winfo_exists()):
+                    return
+                try:
+                    alpha = max(0.0, 0.95 - (0.95 * (step + 1) / total))
+                    self.window.attributes("-alpha", alpha)
+                except tk.TclError:
+                    # Some platforms may not support alpha on overrideredirect; destroy immediately
+                    try:
+                        if self.window and self.window.winfo_exists():
+                            self.window.destroy()
+                    finally:
+                        if self.on_dismiss:
+                            try:
+                                self.on_dismiss()
+                            except Exception:
+                                pass
+                    return
+                if step + 1 < total:
+                    self.window.after(20, animate_out, step + 1, total)
+                else:
+                    try:
+                        if self.window and self.window.winfo_exists():
+                            self.window.destroy()
+                    finally:
+                        if self.on_dismiss:
+                            try:
+                                self.on_dismiss()
+                            except Exception:
+                                pass
+
+            if self.window and self.window.winfo_exists():
+                self.window.after(0, animate_out)
+            else:
+                # If window doesn't exist, still call on_dismiss
+                if self.on_dismiss:
+                    try:
+                        self.on_dismiss()
+                    except Exception:
+                        pass
+        except Exception:
+            # As a last resort, ensure on_dismiss gets called
+            if self.on_dismiss:
+                try:
+                    self.on_dismiss()
+                except Exception:
+                    pass
 
 
 class NotificationPanel:
@@ -331,10 +432,53 @@ class NotificationPanel:
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
         
-        # Bind mousewheel to canvas
-        def _on_mousewheel(event):
-            self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        # Set up safe, widget-scoped scroll bindings (avoid global bind_all)
+        self._setup_scroll_bindings()
+
+    def _setup_scroll_bindings(self):
+        """Configure mouse wheel scrolling with safety checks and unbinds.
+        Uses widget-specific binds to prevent callbacks after widget destruction.
+        """
+        # Windows/macOS wheel
+        self.canvas.bind("<MouseWheel>", self._on_mousewheel)
+        # Linux wheel
+        self.canvas.bind("<Button-4>", lambda e: self._on_scroll_units(-1))
+        self.canvas.bind("<Button-5>", lambda e: self._on_scroll_units(1))
+
+        # Ensure unbinding when the panel is destroyed
+        self.main_frame.bind("<Destroy>", lambda e: self._unbind_scroll_bindings(), add="+")
+
+    def _unbind_scroll_bindings(self):
+        """Unbind mouse wheel events from the canvas if it still exists."""
+        try:
+            if hasattr(self, "canvas") and self.canvas and self.canvas.winfo_exists():
+                self.canvas.unbind("<MouseWheel>")
+                self.canvas.unbind("<Button-4>")
+                self.canvas.unbind("<Button-5>")
+        except tk.TclError:
+            pass
+
+    def _on_scroll_units(self, units: int):
+        """Scroll the canvas by units safely (used for Linux Button-4/5)."""
+        try:
+            if hasattr(self, "canvas") and self.canvas and self.canvas.winfo_exists():
+                self.canvas.yview_scroll(units, "units")
+        except tk.TclError:
+            # Canvas might have been destroyed between event and handler
+            pass
+
+    def _on_mousewheel(self, event):
+        """Handle mouse wheel on Windows/macOS with safety checks."""
+        try:
+            if not (hasattr(self, "canvas") and self.canvas and self.canvas.winfo_exists()):
+                return
+            # On Windows/macOS, event.delta is typically multiples of 120
+            delta = getattr(event, "delta", 0) or 0
+            if delta:
+                self.canvas.yview_scroll(int(-1 * (delta / 120)), "units")
+        except tk.TclError:
+            # Ignore if canvas has been destroyed
+            pass
     
     def _load_notifications(self):
         """Load notifications from database."""
