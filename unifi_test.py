@@ -6,8 +6,9 @@ import urllib3
 # Disable SSL warnings (UniFi uses self-signed SSL by default)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# UniFi Controller details
-CONTROLLER_URL = "https://127.0.0.1:8443/"   # Change if remote
+## UniFi Controller details
+# CONTROLLER_URL = "http://127.0.0.1:8443"   # Use local Flask mock API (original, commented for mock dev)
+CONTROLLER_URL = "http://127.0.0.1:5001"   # Use local Flask mock API for development/testing
 USERNAME = "admin"                          # Replace with your UniFi username
 PASSWORD = "admin123"                       # Replace with your UniFi password
 SITE = "default"                            # Default site is usually 'default'
@@ -20,7 +21,9 @@ def login_unifi():
     login_payload = {"username": USERNAME, "password": PASSWORD}
 
     # Try UniFi v7+
-    resp = session.post(f"{CONTROLLER_URL}/api/auth/login", json=login_payload, verify=False)
+    login_url_v7 = f"{CONTROLLER_URL}/api/auth/login"
+    print(f"DEBUG: Trying login URL: {login_url_v7}")
+    resp = session.post(login_url_v7, json=login_payload, verify=False)
     if resp.status_code == 200:
         return True, "v7+"
 
@@ -99,6 +102,16 @@ class UniFiApp(tk.Tk):
             self.client_tree.column(col, width=130)
         self.client_tree.pack(fill="both", expand=True)
 
+        # API Test Tab
+        self.api_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.api_frame, text="API Endpoints Test")
+
+        self.api_test_btn = ttk.Button(self.api_frame, text="Test Endpoints", command=self.test_api_endpoints)
+        self.api_test_btn.pack(pady=10)
+
+        self.api_result = tk.Text(self.api_frame, height=20, width=100)
+        self.api_result.pack(fill="both", expand=True)
+
         # Auto-refresh loop
         self.after(2000, self.load_data)  # wait 2s then first load
 
@@ -144,6 +157,40 @@ class UniFiApp(tk.Tk):
 
         # Schedule next refresh
         self.after(REFRESH_INTERVAL, self.load_data)
+
+    def test_api_endpoints(self):
+        """Test Flask API endpoints and show results."""
+        import requests
+        base_url = "http://127.0.0.1:5001/api/unifi"
+        self.api_result.delete("1.0", tk.END)
+        try:
+            resp = requests.get(f"{base_url}/devices")
+            self.api_result.insert(tk.END, f"/devices status: {resp.status_code}\n")
+            self.api_result.insert(tk.END, f"/devices response:\n{resp.json()}\n\n")
+        except Exception as e:
+            self.api_result.insert(tk.END, f"Error testing /devices: {e}\n")
+        try:
+            resp = requests.get(f"{base_url}/clients")
+            self.api_result.insert(tk.END, f"/clients status: {resp.status_code}\n")
+            self.api_result.insert(tk.END, f"/clients response:\n{resp.json()}\n\n")
+        except Exception as e:
+            self.api_result.insert(tk.END, f"Error testing /clients: {e}\n")
+
+        # Test total bandwidth endpoint
+        try:
+            resp = requests.get(f"{base_url}/bandwidth/total")
+            self.api_result.insert(tk.END, f"/bandwidth/total status: {resp.status_code}\n")
+            self.api_result.insert(tk.END, f"/bandwidth/total response:\n{resp.json()}\n\n")
+        except Exception as e:
+            self.api_result.insert(tk.END, f"Error testing /bandwidth/total: {e}\n")
+
+        # Test client count endpoint
+        try:
+            resp = requests.get(f"{base_url}/clients/count")
+            self.api_result.insert(tk.END, f"/clients/count status: {resp.status_code}\n")
+            self.api_result.insert(tk.END, f"/clients/count response:\n{resp.json()}\n\n")
+        except Exception as e:
+            self.api_result.insert(tk.END, f"Error testing /clients/count: {e}\n")
 
 if __name__ == "__main__":
     app = UniFiApp()

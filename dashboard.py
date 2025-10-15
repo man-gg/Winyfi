@@ -44,6 +44,7 @@ from matplotlib.figure import Figure
 import ticket_utils
 from ticket_utils import fetch_srfs, create_srf
 import itertools
+from unifi_integration_ui import add_bandwidth_widget, show_router_clients
 from print_utils import print_srf_form
 import numpy as np
 from matplotlib.ticker import MaxNLocator
@@ -760,8 +761,30 @@ class Dashboard:
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
+
+        # === UniFi Integration Example ===
+        # Add UniFi Bandwidth Widget and Client Viewer button to dashboard page
+        self.dashboard_frame.after(1000, self._add_unifi_widgets)
+
         # === Modern Dashboard Page Content ===
         self._build_modern_dashboard()
+
+    def _add_unifi_widgets(self):
+        if not self.router_list:
+            return
+        first_router = self.router_list[0]
+        router_id = first_router.get('id')
+        router_name = first_router.get('name', 'Router')
+        # Add bandwidth widget to dashboard page
+        self.bandwidth_widget = add_bandwidth_widget(self.dashboard_frame, router_id, self.api_base_url)
+        self.bandwidth_widget.frame.pack(pady=10, anchor="w")
+        # Add button to view clients
+        tb.Button(
+            self.dashboard_frame,
+            text=f"👥 View Clients for {router_name}",
+            bootstyle="info",
+            command=lambda: show_router_clients(self.root, router_id, router_name, self.api_base_url)
+        ).pack(pady=5, anchor="w")
 
     def _build_modern_dashboard(self):
         """Build a modern dashboard with enhanced charts and metrics"""

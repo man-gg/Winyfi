@@ -5460,3 +5460,6 @@ AttributeError: 'Dashboard' object has no attribute 'auto_refresh_job'. Did you 
 2025-10-14 16:50:32,215 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
 2025-10-14 16:50:32,216 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
 2025-10-14 16:50:32,216 ERROR [db] Failed to save loop detection to database
+2025-10-15 11:34:22,059 INFO [db] Loop detection saved to database (ID: 240)
+2025-10-15 11:35:25,959 INFO [db] Loop detection saved to database (ID: 241)
+2025-10-15 11:55:35,101 INFO [db] Loop detection saved to database (ID: 242)
