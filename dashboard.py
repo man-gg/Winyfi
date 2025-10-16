@@ -4,6 +4,7 @@ import time
 import threading
 import concurrent.futures
 import csv
+import requests
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from tkinter import messagebox, Toplevel, Menu, filedialog, ttk, simpledialog
@@ -44,7 +45,6 @@ from matplotlib.figure import Figure
 import ticket_utils
 from ticket_utils import fetch_srfs, create_srf
 import itertools
-from unifi_integration_ui import add_bandwidth_widget, show_router_clients
 from print_utils import print_srf_form
 import numpy as np
 from matplotlib.ticker import MaxNLocator
@@ -77,11 +77,12 @@ os.makedirs(IMAGE_FOLDER, exist_ok=True)
 
 router_widgets = {}
 class Dashboard:
-    def __init__(self, root, current_user, api_base_url="http://localhost:5000"):
+    def __init__(self, root, current_user, api_base_url="http://localhost:5000", unifi_api_url="http://localhost:5001"):
         self.app_running = True
         self.root = root
         self.current_user = current_user
         self.api_base_url = api_base_url
+        self.unifi_api_url = unifi_api_url  # Separate URL for UniFi API
         self.router_list = []
         self.status_history = defaultdict(lambda: {"failures": 0, "current": None})
         self.router_widgets = {}
@@ -520,6 +521,33 @@ class Dashboard:
     def _fetch_router_list(self):
         """Return router list from DB."""
         return get_routers()
+    
+    def _fetch_unifi_devices(self):
+        """Fetch UniFi APs from the UniFi API server."""
+        try:
+            # Try to fetch from the UniFi API server
+            response = requests.get(f"{self.unifi_api_url}/api/unifi/devices", timeout=2)
+            if response.status_code == 200:
+                devices = response.json()
+                # Transform UniFi devices to match router structure
+                unifi_routers = []
+                for device in devices:
+                    unifi_routers.append({
+                        'id': f"unifi_{device.get('mac', '')}",  # Unique ID for UniFi devices
+                        'name': device.get('name', 'Unknown AP'),
+                        'ip_address': device.get('ip', 'N/A'),
+                        'mac_address': device.get('mac', 'N/A'),
+                        'brand': device.get('model', 'UniFi'),
+                        'location': 'UniFi Network',
+                        'image_path': None,
+                        'is_unifi': True,  # Flag to identify UniFi devices
+                        'xput_down': device.get('xput_down', 0),
+                        'xput_up': device.get('xput_up', 0)
+                    })
+                return unifi_routers
+        except Exception as e:
+            print(f"Could not fetch UniFi devices: {e}")
+        return []
         
 
 
@@ -764,27 +792,34 @@ class Dashboard:
 
         # === UniFi Integration Example ===
         # Add UniFi Bandwidth Widget and Client Viewer button to dashboard page
-        self.dashboard_frame.after(1000, self._add_unifi_widgets)
+        # TODO: Implement add_bandwidth_widget and show_router_clients functions
+        # self.dashboard_frame.after(1000, self._add_unifi_widgets)
 
         # === Modern Dashboard Page Content ===
         self._build_modern_dashboard()
 
     def _add_unifi_widgets(self):
-        if not self.router_list:
-            return
-        first_router = self.router_list[0]
-        router_id = first_router.get('id')
-        router_name = first_router.get('name', 'Router')
-        # Add bandwidth widget to dashboard page
-        self.bandwidth_widget = add_bandwidth_widget(self.dashboard_frame, router_id, self.api_base_url)
-        self.bandwidth_widget.frame.pack(pady=10, anchor="w")
-        # Add button to view clients
-        tb.Button(
-            self.dashboard_frame,
-            text=f"👥 View Clients for {router_name}",
-            bootstyle="info",
-            command=lambda: show_router_clients(self.root, router_id, router_name, self.api_base_url)
-        ).pack(pady=5, anchor="w")
+        """
+        TODO: Implement UniFi widget integration
+        This method should add bandwidth widgets and client viewer buttons
+        using the UniFi API endpoints from server/unifi_api.py
+        """
+        pass
+        # if not self.router_list:
+        #     return
+        # first_router = self.router_list[0]
+        # router_id = first_router.get('id')
+        # router_name = first_router.get('name', 'Router')
+        # # Add bandwidth widget to dashboard page
+        # self.bandwidth_widget = add_bandwidth_widget(self.dashboard_frame, router_id, self.api_base_url)
+        # self.bandwidth_widget.frame.pack(pady=10, anchor="w")
+        # # Add button to view clients
+        # tb.Button(
+        #     self.dashboard_frame,
+        #     text=f"👥 View Clients for {router_name}",
+        #     bootstyle="info",
+        #     command=lambda: show_router_clients(self.root, router_id, router_name, self.api_base_url)
+        # ).pack(pady=5, anchor="w")
 
     def _build_modern_dashboard(self):
         """Build a modern dashboard with enhanced charts and metrics"""
@@ -1934,7 +1969,8 @@ class Dashboard:
         menu.post(event.x_root, event.y_root)
 
     def open_router_details(self, router):
-        # Creating the modern top-level window
+
+        # --- Creating the modern top-level window ---
         d = Toplevel(self.root)
         d.title(f"Router Details - {router['name']}")
         d.geometry("700x600")
@@ -1950,7 +1986,7 @@ class Dashboard:
         main_container = tb.Frame(d, bootstyle="light")
         main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # --- Header Section with Gradient Effect ---
+        # --- Header Section ---
         header_frame = tb.LabelFrame(main_container, text="", bootstyle="primary", padding=20)
         header_frame.pack(fill="x", pady=(0, 20))
 
@@ -1961,53 +1997,40 @@ class Dashboard:
         # Router status indicator circle
         status_indicator = tb.Frame(title_frame, width=20, height=20)
         status_indicator.pack(side="left", padx=(0, 15))
-        
-        self.status_circle = tb.Label(status_indicator, text="●", font=("Segoe UI", 24), 
-                                     bootstyle="secondary")
+        self.status_circle = tb.Label(status_indicator, text="●", font=("Segoe UI", 24), bootstyle="secondary")
         self.status_circle.pack()
 
         # Title and subtitle
         title_text_frame = tb.Frame(title_frame)
         title_text_frame.pack(side="left", fill="x", expand=True)
 
-        router_title = tb.Label(title_text_frame, text=f"📡 {router['name']}", 
-                               font=("Segoe UI", 20, "bold"), bootstyle="primary")
+        # UniFi badge if applicable
+        if router.get('is_unifi', False):
+            tb.Label(title_text_frame, text="📡 UniFi", font=("Segoe UI", 12, "bold"), bootstyle="primary").pack(anchor="w")
+        router_title = tb.Label(title_text_frame, text=f"{router['name']}", font=("Segoe UI", 20, "bold"), bootstyle="primary")
         router_title.pack(anchor="w")
-
-        router_subtitle = tb.Label(title_text_frame, text=f"IP: {router['ip_address']}", 
-                                  font=("Segoe UI", 12), bootstyle="secondary")
+        router_subtitle = tb.Label(title_text_frame, text=f"IP: {router.get('ip_address', router.get('ip', 'N/A'))}", font=("Segoe UI", 12), bootstyle="secondary")
         router_subtitle.pack(anchor="w")
 
-        # Quick actions in header
-        quick_actions = tb.Frame(header_frame)
-        quick_actions.pack(fill="x", pady=(15, 0))
-
-        tb.Button(quick_actions, text="✏️ Edit Router", bootstyle="success",
-                  command=lambda: [d.destroy(), self.open_router_popup(mode='edit', router=router)],
-                  width=15).pack(side="left", padx=(0, 10))
-
-        tb.Button(quick_actions, text="🗑️ Delete Router", bootstyle="danger",
-                  command=lambda: [d.destroy(), self.delete_selected_router(router)],
-                  width=15).pack(side="left", padx=(0, 10))
-
-        if router.get('image_path'):
-            tb.Button(quick_actions, text="📷 View Image", bootstyle="info",
-                      command=lambda: self.show_router_image(router['image_path']),
-                      width=15).pack(side="left")
+        # Quick actions in header (hide for UniFi)
+        if not router.get('is_unifi', False):
+            quick_actions = tb.Frame(header_frame)
+            quick_actions.pack(fill="x", pady=(15, 0))
+            tb.Button(quick_actions, text="✏️ Edit Router", bootstyle="success",
+                      command=lambda: [d.destroy(), self.open_router_popup(mode='edit', router=router)], width=15).pack(side="left", padx=(0, 10))
+            tb.Button(quick_actions, text="🗑️ Delete Router", bootstyle="danger",
+                      command=lambda: [d.destroy(), self.delete_selected_router(router)], width=15).pack(side="left", padx=(0, 10))
+            if router.get('image_path'):
+                tb.Button(quick_actions, text="📷 View Image", bootstyle="info",
+                          command=lambda: self.show_router_image(router['image_path']), width=15).pack(side="left")
 
         # --- Scrollable Content Area ---
         canvas = tk.Canvas(main_container, highlightthickness=0, bg='#f8f9fa')
         scrollbar = tb.Scrollbar(main_container, orient="vertical", command=canvas.yview, bootstyle="secondary")
         scroll_frame = tb.Frame(canvas, bootstyle="light")
-
-        scroll_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
-
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
@@ -2020,201 +2043,166 @@ class Dashboard:
 
         # --- Router Information Cards ---
         # Basic Information Card
-        basic_info_card = tb.LabelFrame(scroll_frame, text="🔧 Basic Information", 
-                                       bootstyle="info", padding=20)
+        basic_info_card = tb.LabelFrame(scroll_frame, text="🔧 Basic Information", bootstyle="info", padding=20)
         basic_info_card.pack(fill="x", pady=(0, 15))
-
         basic_grid = tb.Frame(basic_info_card)
         basic_grid.pack(fill="x")
         basic_grid.grid_columnconfigure(1, weight=1)
         basic_grid.grid_columnconfigure(3, weight=1)
 
-        # Basic info fields in 2x2 grid
-        basic_fields = [
-            ("🏷️ Name:", router['name']),
-            ("📍 Location:", router['location']),
-            ("🏭 Brand:", router['brand']),
-            ("📱 MAC Address:", router['mac_address']),
-        ]
-
+        # Show only available fields for UniFi
+        basic_fields = [("🏷️ Name:", router['name'])]
+        if not router.get('is_unifi', False):
+            basic_fields += [
+                ("📍 Location:", router.get('location', '')),
+                ("🏭 Brand:", router.get('brand', '')),
+                ("📱 MAC Address:", router.get('mac_address', '')),
+            ]
+        else:
+            # Show MAC and model for UniFi
+            basic_fields += [
+                ("📱 MAC Address:", router.get('mac_address', router.get('mac', ''))),
+                ("🏭 Model:", router.get('brand', router.get('model', 'UniFi'))),
+            ]
         for i, (label, value) in enumerate(basic_fields):
             row, col = i // 2, (i % 2) * 2
-            tb.Label(basic_grid, text=label, font=("Segoe UI", 11, "bold"), 
-                    bootstyle="secondary").grid(row=row, column=col, sticky="w", padx=(0, 10), pady=8)
-            tb.Label(basic_grid, text=value, font=("Segoe UI", 11), 
-                    bootstyle="dark").grid(row=row, column=col+1, sticky="w", padx=(0, 30), pady=8)
+            tb.Label(basic_grid, text=label, font=("Segoe UI", 11, "bold"), bootstyle="secondary").grid(row=row, column=col, sticky="w", padx=(0, 10), pady=8)
+            tb.Label(basic_grid, text=value, font=("Segoe UI", 11), bootstyle="dark").grid(row=row, column=col+1, sticky="w", padx=(0, 30), pady=8)
 
         # Connection Status Card
-        status_card = tb.LabelFrame(scroll_frame, text="🌐 Connection Status", 
-                                   bootstyle="success", padding=20)
+        status_card = tb.LabelFrame(scroll_frame, text="🌐 Connection Status", bootstyle="success", padding=20)
         status_card.pack(fill="x", pady=(0, 15))
-
         status_grid = tb.Frame(status_card)
         status_grid.pack(fill="x")
-
-        # Status row
         status_row = tb.Frame(status_grid)
         status_row.pack(fill="x", pady=(0, 15))
-
-        tb.Label(status_row, text="📶 Current Status:", font=("Segoe UI", 12, "bold"), 
-                bootstyle="secondary").pack(side="left")
-        
-        self.detail_status_lbl = tb.Label(status_row, text="🕒 Checking...", 
-                                         font=("Segoe UI", 12, "bold"), bootstyle="warning")
+        tb.Label(status_row, text="📶 Current Status:", font=("Segoe UI", 12, "bold"), bootstyle="secondary").pack(side="left")
+        self.detail_status_lbl = tb.Label(status_row, text="🕒 Checking...", font=("Segoe UI", 12, "bold"), bootstyle="warning")
         self.detail_status_lbl.pack(side="left", padx=(10, 0))
 
-        # Last seen row
-        last_seen_row = tb.Frame(status_grid)
-        last_seen_row.pack(fill="x")
-
-        tb.Label(last_seen_row, text="🕐 Last Seen:", font=("Segoe UI", 11, "bold"), 
-                bootstyle="secondary").pack(side="left")
-        
-        self.detail_last_seen_lbl = tb.Label(last_seen_row, text="🕒 Checking...", 
-                                            font=("Segoe UI", 11), bootstyle="dark")
-        self.detail_last_seen_lbl.pack(side="left", padx=(10, 0))
+        # Last seen row (hide for UniFi)
+        if not router.get('is_unifi', False):
+            last_seen_row = tb.Frame(status_grid)
+            last_seen_row.pack(fill="x")
+            tb.Label(last_seen_row, text="🕐 Last Seen:", font=("Segoe UI", 11, "bold"), bootstyle="secondary").pack(side="left")
+            self.detail_last_seen_lbl = tb.Label(last_seen_row, text="🕒 Checking...", font=("Segoe UI", 11), bootstyle="dark")
+            self.detail_last_seen_lbl.pack(side="left", padx=(10, 0))
 
         # Performance Metrics Card
-        performance_card = tb.LabelFrame(scroll_frame, text="📊 Performance Metrics", 
-                                        bootstyle="warning", padding=20)
+        performance_card = tb.LabelFrame(scroll_frame, text="📊 Performance Metrics", bootstyle="warning", padding=20)
         performance_card.pack(fill="x", pady=(0, 15))
+        # Latency section (hide for UniFi)
+        if not router.get('is_unifi', False):
+            latency_frame = tb.Frame(performance_card)
+            latency_frame.pack(fill="x", pady=(0, 15))
+            tb.Label(latency_frame, text="⚡ Latency:", font=("Segoe UI", 12, "bold"), bootstyle="secondary").pack(side="left")
+            self.detail_latency_lbl = tb.Label(latency_frame, text="📡 Measuring...", font=("Segoe UI", 12), bootstyle="info")
+            self.detail_latency_lbl.pack(side="left", padx=(10, 0))
 
-        # Latency section
-        latency_frame = tb.Frame(performance_card)
-        latency_frame.pack(fill="x", pady=(0, 15))
-
-        tb.Label(latency_frame, text="⚡ Latency:", font=("Segoe UI", 12, "bold"), 
-                bootstyle="secondary").pack(side="left")
-        
-        self.detail_latency_lbl = tb.Label(latency_frame, text="📡 Measuring...", 
-                                          font=("Segoe UI", 12), bootstyle="info")
-        self.detail_latency_lbl.pack(side="left", padx=(10, 0))
-
-        # Bandwidth section with modern progress-style layout
-        bandwidth_frame = tb.LabelFrame(performance_card, text="🚀 Bandwidth Usage", 
-                                       bootstyle="info", padding=15)
+        # Bandwidth section
+        bandwidth_frame = tb.LabelFrame(performance_card, text="🚀 Bandwidth Usage", bootstyle="info", padding=15)
         bandwidth_frame.pack(fill="x")
-
-        # Download speed
         download_frame = tb.Frame(bandwidth_frame)
         download_frame.pack(fill="x", pady=(0, 10))
-
         download_icon_label = tb.Label(download_frame, text="⬇️", font=("Segoe UI", 16))
         download_icon_label.pack(side="left", padx=(0, 10))
-
         download_text_frame = tb.Frame(download_frame)
         download_text_frame.pack(side="left", fill="x", expand=True)
-
-        tb.Label(download_text_frame, text="Download Speed", font=("Segoe UI", 10, "bold"), 
-                bootstyle="secondary").pack(anchor="w")
-        
-        self.detail_download_lbl = tb.Label(download_text_frame, text="📶 Fetching...", 
-                                           font=("Segoe UI", 14, "bold"), bootstyle="success")
+        tb.Label(download_text_frame, text="Download Speed", font=("Segoe UI", 10, "bold"), bootstyle="secondary").pack(anchor="w")
+        self.detail_download_lbl = tb.Label(download_text_frame, text="📶 Fetching...", font=("Segoe UI", 14, "bold"), bootstyle="success")
         self.detail_download_lbl.pack(anchor="w")
-
-        # Upload speed
         upload_frame = tb.Frame(bandwidth_frame)
         upload_frame.pack(fill="x")
-
         upload_icon_label = tb.Label(upload_frame, text="⬆️", font=("Segoe UI", 16))
         upload_icon_label.pack(side="left", padx=(0, 10))
-
         upload_text_frame = tb.Frame(upload_frame)
         upload_text_frame.pack(side="left", fill="x", expand=True)
-
-        tb.Label(upload_text_frame, text="Upload Speed", font=("Segoe UI", 10, "bold"), 
-                bootstyle="secondary").pack(anchor="w")
-        
-        self.detail_upload_lbl = tb.Label(upload_text_frame, text="📶 Fetching...", 
-                                         font=("Segoe UI", 14, "bold"), bootstyle="primary")
+        tb.Label(upload_text_frame, text="Upload Speed", font=("Segoe UI", 10, "bold"), bootstyle="secondary").pack(anchor="w")
+        self.detail_upload_lbl = tb.Label(upload_text_frame, text="📶 Fetching...", font=("Segoe UI", 14, "bold"), bootstyle="primary")
         self.detail_upload_lbl.pack(anchor="w")
 
-        # Additional Actions Card
-        actions_card = tb.LabelFrame(scroll_frame, text="⚙️ Additional Actions", 
-                                    bootstyle="dark", padding=20)
-        actions_card.pack(fill="x", pady=(0, 15))
-
-        actions_grid = tb.Frame(actions_card)
-        actions_grid.pack(fill="x")
-
-        # Action buttons in grid (removed Advanced Settings and Export to PDF)
-        action_buttons = [
-            ("🔄 Refresh Data", "info", lambda: refresh_details()),
-            ("📈 View History", "secondary", lambda: self.open_router_history(router)),
-        ]
-
-        for i, (text, style, cmd) in enumerate(action_buttons):
-            row, col = i // 2, i % 2
-            tb.Button(actions_grid, text=text, bootstyle=style, command=cmd,
-                     width=25).grid(row=row, column=col, padx=10, pady=5, sticky="ew")
-        
-        actions_grid.grid_columnconfigure(0, weight=1)
-        actions_grid.grid_columnconfigure(1, weight=1)
+        # Additional Actions Card (hide for UniFi)
+        if not router.get('is_unifi', False):
+            actions_card = tb.LabelFrame(scroll_frame, text="⚙️ Additional Actions", bootstyle="dark", padding=20)
+            actions_card.pack(fill="x", pady=(0, 15))
+            actions_grid = tb.Frame(actions_card)
+            actions_grid.pack(fill="x")
+            action_buttons = [
+                ("🔄 Refresh Data", "info", lambda: refresh_details()),
+                ("📈 View History", "secondary", lambda: self.open_router_history(router)),
+            ]
+            for i, (text, style, cmd) in enumerate(action_buttons):
+                row, col = i // 2, i % 2
+                tb.Button(actions_grid, text=text, bootstyle=style, command=cmd, width=25).grid(row=row, column=col, padx=10, pady=5, sticky="ew")
+            actions_grid.grid_columnconfigure(0, weight=1)
+            actions_grid.grid_columnconfigure(1, weight=1)
 
         # --- Auto Update Function ---
         def refresh_details():
             if not d.winfo_exists():
                 return  # stop if closed
-
             rid = router['id']
             hist = self.status_history.get(rid, {})
             bw = self.bandwidth_data.get(rid, {})
-
             # --- Update Status Circle and Label ---
             status = hist.get("current")
-            if status is True:
+            if router.get('is_unifi', False):
+                # UniFi devices: always online if present
                 self.detail_status_lbl.config(text="🟢 Online", bootstyle="success")
                 self.status_circle.config(text="●", bootstyle="success")
-                
-                # Update bandwidth if router is online
-                if bw and bw.get("download") is not None and bw.get("upload") is not None:
-                    self.detail_download_lbl.config(text=f"{bw['download']:.2f} Mbps")
-                    self.detail_upload_lbl.config(text=f"{bw['upload']:.2f} Mbps")
-                    
-                    # Update latency using effective latency (cached when dynamic ping skips)
-                    if not hasattr(self, "_last_latency_by_router"):
-                        self._last_latency_by_router = {}
-                    new_latency = bw.get("latency")
-                    if isinstance(new_latency, (int, float)):
-                        effective_latency = new_latency
-                        self._last_latency_by_router[rid] = new_latency
-                    else:
-                        effective_latency = self._last_latency_by_router.get(rid)
-                    
-                    if isinstance(effective_latency, (int, float)):
-                        self.detail_latency_lbl.config(text=f"{effective_latency:.0f} ms", bootstyle="success")
-                    else:
-                        self.detail_latency_lbl.config(text="📡 Measuring...", bootstyle="info")
-                else:
-                    # If bandwidth not fetched yet, trigger fetching it
-                    self.fetch_and_update_bandwidth(rid, router['ip_address'])
-                    self.detail_download_lbl.config(text="📶 Fetching...")
-                    self.detail_upload_lbl.config(text="📶 Fetching...")
-                    self.detail_latency_lbl.config(text="📡 Measuring...")
-                    
-            elif status is False:
-                self.detail_status_lbl.config(text="🔴 Offline", bootstyle="danger")
-                self.status_circle.config(text="●", bootstyle="danger")
-                self.detail_download_lbl.config(text="N/A - Offline")
-                self.detail_upload_lbl.config(text="N/A - Offline")
-                self.detail_latency_lbl.config(text="N/A - Offline", bootstyle="danger")
+                # Bandwidth from API
+                download = router.get('xput_down', 0)
+                upload = router.get('xput_up', 0)
+                self.detail_download_lbl.config(text=f"{download:.2f} Mbps")
+                self.detail_upload_lbl.config(text=f"{upload:.2f} Mbps")
             else:
-                self.detail_status_lbl.config(text="🔄 Checking...", bootstyle="warning")
-                self.status_circle.config(text="●", bootstyle="warning")
-                self.detail_download_lbl.config(text="📶 Checking...")
-                self.detail_upload_lbl.config(text="📶 Checking...")
-                self.detail_latency_lbl.config(text="📡 Checking...")
-
-            # --- Last Seen ---
-            last_seen = hist.get("last_checked")
-            if self.detail_last_seen_lbl:
-                if last_seen:
-                    self.detail_last_seen_lbl.config(text=last_seen.strftime("%Y-%m-%d %H:%M:%S"))
+                if status is True:
+                    self.detail_status_lbl.config(text="🟢 Online", bootstyle="success")
+                    self.status_circle.config(text="●", bootstyle="success")
+                    # Update bandwidth if router is online
+                    if bw and bw.get("download") is not None and bw.get("upload") is not None:
+                        self.detail_download_lbl.config(text=f"{bw['download']:.2f} Mbps")
+                        self.detail_upload_lbl.config(text=f"{bw['upload']:.2f} Mbps")
+                        # Update latency using effective latency (cached when dynamic ping skips)
+                        if not hasattr(self, "_last_latency_by_router"):
+                            self._last_latency_by_router = {}
+                        new_latency = bw.get("latency")
+                        if isinstance(new_latency, (int, float)):
+                            effective_latency = new_latency
+                            self._last_latency_by_router[rid] = new_latency
+                        else:
+                            effective_latency = self._last_latency_by_router.get(rid)
+                        if isinstance(effective_latency, (int, float)):
+                            self.detail_latency_lbl.config(text=f"{effective_latency:.0f} ms", bootstyle="success")
+                        else:
+                            self.detail_latency_lbl.config(text="📡 Measuring...", bootstyle="info")
+                    else:
+                        # If bandwidth not fetched yet, trigger fetching it
+                        self.fetch_and_update_bandwidth(rid, router['ip_address'])
+                        self.detail_download_lbl.config(text="📶 Fetching...")
+                        self.detail_upload_lbl.config(text="📶 Fetching...")
+                        self.detail_latency_lbl.config(text="📡 Measuring...")
+                elif status is False:
+                    self.detail_status_lbl.config(text="🔴 Offline", bootstyle="danger")
+                    self.status_circle.config(text="●", bootstyle="danger")
+                    self.detail_download_lbl.config(text="N/A - Offline")
+                    self.detail_upload_lbl.config(text="N/A - Offline")
+                    self.detail_latency_lbl.config(text="N/A - Offline", bootstyle="danger")
                 else:
-                    self.detail_last_seen_lbl.config(text="Never")
-
+                    self.detail_status_lbl.config(text="🔄 Checking...", bootstyle="warning")
+                    self.status_circle.config(text="●", bootstyle="warning")
+                    self.detail_download_lbl.config(text="📶 Checking...")
+                    self.detail_upload_lbl.config(text="📶 Checking...")
+                    self.detail_latency_lbl.config(text="📡 Checking...")
+            # --- Last Seen ---
+            if not router.get('is_unifi', False):
+                last_seen = hist.get("last_checked")
+                if self.detail_last_seen_lbl:
+                    if last_seen:
+                        self.detail_last_seen_lbl.config(text=last_seen.strftime("%Y-%m-%d %H:%M:%S"))
+                    else:
+                        self.detail_last_seen_lbl.config(text="Never")
             d.after(3000, refresh_details)  # refresh every 3s
-
         refresh_details()
 
 
@@ -2352,34 +2340,55 @@ class Dashboard:
     # Reload routers list and create/update router cards
     # ------------------------
     def reload_routers(self, force_reload=False):
+
+        # --- Updated for UniFi integration ---
         if force_reload or not self.router_list:
             self.router_list = get_routers()
+
+        # Fetch UniFi devices from API
+        unifi_devices = self._fetch_unifi_devices()
 
         # Clear UI
         for w in self.scrollable_frame.winfo_children():
             w.destroy()
         self.router_widgets.clear()
 
-        online, offline = [], []
+        # Mark regular routers
+        regular_routers = []
         for r in self.router_list:
+            r['is_unifi'] = False
+            regular_routers.append(r)
+
+        # Mark UniFi devices
+        for r in unifi_devices:
+            r['is_unifi'] = True
+
+        # Combine all routers
+        all_routers = regular_routers + unifi_devices
+
+        # Categorize by online/offline status
+        online, offline = [], []
+        unifi_online, unifi_offline = [], []
+        for r in all_routers:
             st = self.status_history.get(r['id'], {}).get('current')
-            (online if st is True else offline).append(r)
+            is_online_status = st is True
+            if r.get('is_unifi', False):
+                # UniFi devices: treat as online if fetched
+                (unifi_online if is_online_status or st is None else unifi_offline).append(r)
+            else:
+                (online if is_online_status else offline).append(r)
 
         def section(title, routers):
             if not routers:
                 return
-
             tb.Label(
                 self.scrollable_frame, text=title,
                 font=("Segoe UI", 12, "bold"), bootstyle="secondary"
             ).pack(anchor="w", padx=10, pady=(15, 5))
-
             sec = tb.Frame(self.scrollable_frame)
             sec.pack(fill="x", padx=10, pady=5)
-
             sec._resize_job = None
             sec._last_cols = None
-
             def render_cards():
                 width = sec.winfo_width() or self.root.winfo_width()
                 if width <= 400:
@@ -2390,88 +2399,102 @@ class Dashboard:
                     max_cols = 3
                 else:
                     max_cols = 4
-
                 if sec._last_cols == max_cols:
                     return
                 sec._last_cols = max_cols
-
                 for w in sec.winfo_children():
                     w.destroy()
-
                 for i, router in enumerate(routers):
                     row, col = divmod(i, max_cols)
-
-                    card = tb.LabelFrame(sec, text=router['name'], bootstyle="info", padding=0)
+                    card_style = "primary" if router.get('is_unifi', False) else "info"
+                    card = tb.LabelFrame(sec, text=router['name'], bootstyle=card_style, padding=0)
                     card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                     sec.grid_columnconfigure(col, weight=1)
-
                     inner = tb.Frame(card, padding=10)
                     inner.pack(fill="both", expand=True)
-
-                    tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
-                    tb.Label(inner, text=router['ip_address'], font=("Segoe UI", 10)).pack(pady=(5, 0))
-
-                    cur = self.status_history.get(router['id'], {}).get('current')
-                    status_text, status_style = (
-                        ("🟢 Online", "success") if cur is True
-                        else ("🔴 Offline", "danger") if cur is False
-                        else ("🕒 Checking...", "secondary")
-                    )
-
-                    # Status label (clickable)
+                    # UniFi badge
+                    if router.get('is_unifi', False):
+                        badge_frame = tb.Frame(inner)
+                        badge_frame.pack()
+                        tb.Label(badge_frame, text="📡", font=("Segoe UI Emoji", 30)).pack(side="left")
+                        tb.Label(badge_frame, text="UniFi", font=("Segoe UI", 8, "bold"), bootstyle="primary").pack(side="left", padx=(5, 0))
+                    else:
+                        tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
+                    tb.Label(inner, text=router.get('ip_address', router.get('ip', 'N/A')), font=("Segoe UI", 10)).pack(pady=(5, 0))
+                    # Status
+                    if router.get('is_unifi', False):
+                        cur = True
+                        status_text, status_style = ("🟢 Online", "success")
+                    else:
+                        cur = self.status_history.get(router['id'], {}).get('current')
+                        status_text, status_style = (
+                            ("🟢 Online", "success") if cur is True
+                            else ("🔴 Offline", "danger") if cur is False
+                            else ("🕒 Checking...", "secondary")
+                        )
                     status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
                     status_label.pack(pady=5)
-
-                    # Bandwidth label - Only check bandwidth if ONLINE
-                    if cur is True:  # ✅ Only check bandwidth if ONLINE
+                    # Bandwidth
+                    if router.get('is_unifi', False):
+                        download = router.get('xput_down', 0)
+                        upload = router.get('xput_up', 0)
+                        lbl_bandwidth = tb.Label(
+                            inner,
+                            text=f"⬇ {download:.2f} Mbps | ⬆ {upload:.2f} Mbps",
+                            bootstyle="info"
+                        )
+                        lbl_bandwidth.pack(pady=2)
+                    elif cur is True:
                         lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: checking...", bootstyle="secondary")
                         lbl_bandwidth.pack(pady=2)
-
                         threading.Thread(
                             target=self.fetch_and_update_bandwidth,
                             args=(router['id'], router['ip_address']),
                             daemon=True
                         ).start()
-                    else:  # ✅ Offline or checking - show N/A for offline routers
+                    else:
                         lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
                         lbl_bandwidth.pack(pady=2)
-
-                    # Save references
                     self.router_widgets[router['id']] = {
                         'card': card,
                         'status_label': status_label,
                         'bandwidth_label': lbl_bandwidth,
                         'data': router
                     }
-
-                    # Click + context menu bindings
                     def bind_card_click(widget, router_obj):
                         widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
                         widget.bind("<Button-3>", lambda e: self.show_context_menu(e, router_obj))
-
                     bind_card_click(inner, router)
                     for child in inner.winfo_children():
                         bind_card_click(child, router)
-
-                    # Hover effect
-                    def on_enter(e, c=card): c.configure(bootstyle="primary")
-                    def on_leave(e, c=card): c.configure(bootstyle="info")
+                    original_style = card_style
+                    hover_style = "success" if router.get('is_unifi', False) else "primary"
+                    def on_enter(e, c=card, hs=hover_style): c.configure(bootstyle=hs)
+                    def on_leave(e, c=card, os=original_style): c.configure(bootstyle=os)
                     card.bind("<Enter>", on_enter)
                     card.bind("<Leave>", on_leave)
-
             def on_resize(event):
                 if sec._resize_job:
                     sec.after_cancel(sec._resize_job)
                 sec._resize_job = sec.after(200, render_cards)
-
             sec.bind("<Configure>", on_resize)
             render_cards()
 
+        # Display sections based on sorting preference
         if self.sort_var.get() == "online":
-            section("🟢 Online Routers", online)
-            section("🔴 Offline Routers", offline)
+            if unifi_online:
+                section("📡 UniFi Access Points - Online", unifi_online)
+            if unifi_offline:
+                section("📡 UniFi Access Points - Offline", unifi_offline)
+            if online:
+                section("⛀ Regular Routers - Online", online)
+            if offline:
+                section("🔴 Regular Routers - Offline", offline)
         else:
-            section("🟢 Online Routers", online + offline)
+            if unifi_online or unifi_offline:
+                section("📡 UniFi Access Points", unifi_online + unifi_offline)
+            if online or offline:
+                section("⛀ Regular Routers", online + offline)
 
 
 
@@ -2685,7 +2708,9 @@ class Dashboard:
                     # Only update if state changes OR router is online (to refresh bandwidth)
                     if new is not prev or new is True:
                         hist['current'] = new
-                        update_router_status_in_db(rid, new)
+                        # Only update DB for regular routers (not UniFi devices)
+                        if not router_data.get('is_unifi', False):
+                            update_router_status_in_db(rid, new)
                         
                         # Send notification for router status change
                         if new is not prev:
@@ -10703,5 +10728,5 @@ Type: {values[11]}
             pass
 
 
-def show_dashboard(root, current_user, api_base_url="http://localhost:5000"):
-    Dashboard(root, current_user, api_base_url)
+def show_dashboard(root, current_user, api_base_url="http://localhost:5000", unifi_api_url="http://localhost:5001"):
+    Dashboard(root, current_user, api_base_url, unifi_api_url)

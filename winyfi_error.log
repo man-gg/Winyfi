@@ -5463,3 +5463,44 @@ AttributeError: 'Dashboard' object has no attribute 'auto_refresh_job'. Did you 
 2025-10-15 11:34:22,059 INFO [db] Loop detection saved to database (ID: 240)
 2025-10-15 11:35:25,959 INFO [db] Loop detection saved to database (ID: 241)
 2025-10-15 11:55:35,101 INFO [db] Loop detection saved to database (ID: 242)
+2025-10-16 13:18:51,378 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-16 13:18:51,402 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:18:51,402 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:18:51,402 ERROR [db] Failed to save loop detection to database
+2025-10-16 13:18:51,737 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 778, in _add_unifi_widgets
+    self.bandwidth_widget = add_bandwidth_widget(self.dashboard_frame, router_id, self.api_base_url)
+                            ^^^^^^^^^^^^^^^^^^^^
+NameError: name 'add_bandwidth_widget' is not defined. Did you mean: 'get_bandwidth_usage'?
+
+2025-10-16 13:20:58,604 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-16 13:20:58,624 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:20:58,625 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:20:58,626 ERROR [db] Failed to save loop detection to database
+2025-10-16 13:44:53,240 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-16 13:44:53,271 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:44:53,272 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:44:53,273 ERROR [db] Failed to save loop detection to database
+2025-10-16 13:46:54,276 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-16 13:46:54,323 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:46:54,325 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:46:54,326 ERROR [db] Failed to save loop detection to database
+2025-10-16 13:51:54,475 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-16 13:51:54,500 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:51:54,500 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:51:54,501 ERROR [db] Failed to save loop detection to database
+2025-10-16 13:52:12,876 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-16 13:52:12,888 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:52:12,889 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:52:12,890 ERROR [db] Failed to save loop detection to database
+2025-10-16 13:55:46,502 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-16 13:55:46,522 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:55:46,526 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-16 13:55:46,529 ERROR [db] Failed to save loop detection to database
