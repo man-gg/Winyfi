@@ -570,7 +570,9 @@ def create_network_clients_table():
         conn.close()
         
     except Exception as e:
-        print(f"Error creating network_clients table: {e}")
+        # Ignore "table already exists" errors since we use IF NOT EXISTS
+        if "already exists" not in str(e).lower():
+            print(f"Error creating network_clients table: {e}")
 
 def create_connection_history_table():
     """Create the connection_history table if it doesn't exist."""
@@ -603,7 +605,9 @@ def create_connection_history_table():
         print(" Connection history table created/verified")
         
     except Exception as e:
-        print(f" Error creating connection_history table: {e}")
+        # Ignore "table already exists" errors since we use IF NOT EXISTS
+        if "already exists" not in str(e).lower():
+            print(f" Error creating connection_history table: {e}")
 
 def save_network_client(mac_address, ip_address=None, hostname=None, vendor=None, 
                        ping_latency=None, device_type=None, notes=None):

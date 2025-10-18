@@ -58,25 +58,95 @@ class DynamicPingManager:
 # Create a global ping manager instance
 ping_manager = DynamicPingManager()
 
-def ping_latency(ip, timeout=1000, bandwidth=None):
-    """Return ping latency in ms, using dynamic interval. Pass bandwidth in Mbps."""
-    if not ping_manager.should_ping():
+def ping_latency(ip, timeout=1000, bandwidth=None, is_unifi=False, use_manager=True):
+    """
+    Return ping latency in ms with improved UniFi API integration support.
+    
+    Args:
+        ip (str): IP address to ping
+        timeout (int): Ping timeout in milliseconds (default: 1000)
+        bandwidth (float): Current bandwidth in Mbps for dynamic interval calculation
+        is_unifi (bool): If True, skips ping and returns None (UniFi devices use API status)
+        use_manager (bool): If True, uses dynamic ping manager; if False, always pings
+    
+    Returns:
+        float or None: Latency in ms, or None if offline/skipped/UniFi device
+        
+    Behavior:
+        - UniFi devices (is_unifi=True): Returns None immediately (status from API)
+        - Regular routers with manager: Respects dynamic ping intervals
+        - Regular routers without manager: Always pings (for manual checks)
+    """
+    # Skip ping for UniFi devices - they get status from API
+    if is_unifi:
+        logging.debug(f"Skipping ping for UniFi device {ip} (using API status)")
+        return None
+    
+    # Check if we should skip this ping based on dynamic manager
+    if use_manager and not ping_manager.should_ping():
         return None  # Skip ping to avoid congestion
+    
+    # Validate IP address
+    if not ip or ip == "N/A" or ip == "Unknown":
+        logging.warning(f"Invalid IP address: {ip}")
+        return None
+    
+    # Build ping command based on OS
     param = "-n" if platform.system().lower() == "windows" else "-c"
-    cmd = ["ping", param, "1", "-w", str(timeout), ip]
+    timeout_param = "-w" if platform.system().lower() == "windows" else "-W"
+    
+    # Convert timeout to seconds for Unix-like systems
+    timeout_value = str(timeout) if platform.system().lower() == "windows" else str(timeout // 1000)
+    
+    cmd = ["ping", param, "1", timeout_param, timeout_value, ip]
+    
     try:
         start = time.time()
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run(
+            cmd, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE,
+            timeout=timeout / 1000 + 1  # Add 1 second buffer to subprocess timeout
+        )
         end = time.time()
+        
         if result.returncode == 0:
+            # Calculate actual latency
             latency = round((end - start) * 1000, 2)  # ms
-            ping_manager.update(latency, bandwidth)
-            logging.debug(f"Ping to {ip}: {latency} ms (interval: {ping_manager.current_interval}s, bandwidth: {bandwidth})")
+            
+            # Update ping manager if using it
+            if use_manager:
+                ping_manager.update(latency, bandwidth)
+                logging.debug(
+                    f"Ping to {ip}: {latency} ms "
+                    f"(interval: {ping_manager.current_interval}s, bandwidth: {bandwidth})"
+                )
+            else:
+                logging.debug(f"Ping to {ip}: {latency} ms (manager disabled)")
+            
             return latency
+        else:
+            # Ping failed (host unreachable or timeout)
+            logging.debug(f"Ping to {ip} failed: return code {result.returncode}")
+            if use_manager:
+                ping_manager.update(None, bandwidth)
+            return None
+            
+    except subprocess.TimeoutExpired:
+        logging.warning(f"Ping to {ip} timed out after {timeout}ms")
+        if use_manager:
+            ping_manager.update(None, bandwidth)
+        return None
+        
+    except FileNotFoundError:
+        logging.error("Ping command not found on this system")
+        return None
+        
     except Exception as e:
-        logging.error(f"Ping failed: {e}")
-    ping_manager.update(None, bandwidth)
-    return None
+        logging.error(f"Ping to {ip} failed with error: {e}")
+        if use_manager:
+            ping_manager.update(None, bandwidth)
+        return None
 
 def _rate_latency(latency):
     """Rate latency quality."""
@@ -89,6 +159,42 @@ def _rate_latency(latency):
     elif latency < 200:
         return "Fair"
     return "Poor"
+
+def is_device_online(ip, timeout=1000, is_unifi=False, unifi_api_check=None):
+    """
+    Check if a device is online with support for UniFi API integration.
+    
+    Args:
+        ip (str): IP address to check
+        timeout (int): Ping timeout in milliseconds
+        is_unifi (bool): If True, uses UniFi API status instead of ping
+        unifi_api_check (callable): Function to check UniFi device status (optional)
+            Should return True if online, False if offline
+    
+    Returns:
+        bool: True if device is online, False otherwise
+        
+    Usage:
+        # Regular router
+        online = is_device_online("192.168.1.1")
+        
+        # UniFi device with API check
+        def check_unifi_status(ip):
+            # Your UniFi API logic here
+            return True  # or False
+        online = is_device_online("192.168.1.105", is_unifi=True, unifi_api_check=check_unifi_status)
+    """
+    if is_unifi and unifi_api_check:
+        # Use UniFi API to check status
+        try:
+            return unifi_api_check(ip)
+        except Exception as e:
+            logging.error(f"UniFi API check failed for {ip}: {e}")
+            return False
+    
+    # Use ping for regular routers or UniFi fallback
+    latency = ping_latency(ip, timeout=timeout, is_unifi=False, use_manager=False)
+    return latency is not None
 
 def _rate_bandwidth(mbps):
     """Rate bandwidth quality."""

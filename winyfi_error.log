@@ -5504,3 +5504,268 @@ NameError: name 'add_bandwidth_widget' is not defined. Did you mean: 'get_bandwi
 2025-10-16 13:55:46,522 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
 2025-10-16 13:55:46,526 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
 2025-10-16 13:55:46,529 ERROR [db] Failed to save loop detection to database
+2025-10-16 22:10:37,421 INFO [db] Loop detection saved to database (ID: 243)
+2025-10-16 22:25:21,147 INFO [db] Loop detection saved to database (ID: 244)
+2025-10-16 22:27:07,162 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 9440, in update_client_display
+    for item in self.client_tree.get_children():
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\ttk.py", line 1205, in get_children
+    self.tk.call(self._w, "children", item or '') or ())
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel2.!frame.!frame3.!frame.!treeview"
+
+2025-10-16 22:27:07,379 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 9440, in update_client_display
+    for item in self.client_tree.get_children():
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\ttk.py", line 1205, in get_children
+    self.tk.call(self._w, "children", item or '') or ())
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel2.!frame.!frame3.!frame.!treeview"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 9391, in <lambda>
+    self.root.after(0, lambda: self.scan_btn.config(
+                               ~~~~~~~~~~~~~~~~~~~~^
+        state="normal", text="🔄 Scan Now"))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\ttkbootstrap\style.py", line 5252, in configure
+    func(self, cnf, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1822, in configure
+    return self._configure('configure', cnf, kw)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1812, in _configure
+    self.tk.call(_flatten((self._w, cmd)) + self._options(cnf))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel2.!frame.!frame2.!frame2.!button"
+
+2025-10-16 22:54:28,529 INFO [db] Loop detection saved to database (ID: 245)
+2025-10-16 22:59:31,638 INFO [db] Loop detection saved to database (ID: 246)
+2025-10-16 23:03:06,897 INFO [db] Loop detection saved to database (ID: 247)
+2025-10-16 23:08:09,947 INFO [db] Loop detection saved to database (ID: 248)
+2025-10-16 23:31:19,934 INFO [db] Loop detection saved to database (ID: 249)
+2025-10-16 23:51:10,759 INFO [db] Loop detection saved to database (ID: 250)
+2025-10-16 23:52:11,636 INFO [db] Loop detection saved to database (ID: 251)
+2025-10-17 00:14:58,047 INFO [db] Loop detection saved to database (ID: 252)
+2025-10-17 00:29:02,568 INFO [db] Loop detection saved to database (ID: 253)
+2025-10-17 15:49:08,772 INFO [db] Loop detection saved to database (ID: 254)
+2025-10-17 16:01:45,117 INFO [db] Loop detection saved to database (ID: 255)
+2025-10-17 16:06:20,068 INFO [db] Loop detection saved to database (ID: 256)
+2025-10-17 16:15:18,579 INFO [db] Loop detection saved to database (ID: 257)
+2025-10-17 16:28:50,431 INFO [db] Loop detection saved to database (ID: 258)
+2025-10-17 16:33:53,565 INFO [db] Loop detection saved to database (ID: 259)
+2025-10-17 16:37:26,858 INFO [db] Loop detection saved to database (ID: 260)
+2025-10-17 16:40:00,513 INFO [db] Loop detection saved to database (ID: 261)
+2025-10-17 16:52:13,430 INFO [db] Loop detection saved to database (ID: 262)
+2025-10-17 16:52:24,863 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 2186, in <lambda>
+    command=lambda: [d.destroy(), self.open_router_popup(mode='edit', router=router)],
+                                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 1877, in open_router_popup
+    return self.open_unifi_edit_popup(router)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 1996, in open_unifi_edit_popup
+    tb.Label(outer, text="Name:", anchor="e", width=15).grid(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        row=0, column=0, sticky="e", pady=10, padx=(0,10)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2693, in grid_configure
+    self.tk.call(
+    ~~~~~~~~~~~~^
+          ('grid', 'configure', self._w)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          + self._options(cnf, kw))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: cannot use geometry manager grid inside .!toplevel.!toplevel12.!frame which already has slaves managed by pack
+
+2025-10-17 17:16:48,468 INFO [db] Loop detection saved to database (ID: 263)
+2025-10-17 17:22:56,999 INFO [db] Loop detection saved to database (ID: 264)
+2025-10-17 17:25:41,997 INFO [db] Loop detection saved to database (ID: 265)
+2025-10-17 17:30:45,029 INFO [db] Loop detection saved to database (ID: 266)
+2025-10-17 17:34:40,261 INFO [db] Loop detection saved to database (ID: 267)
+2025-10-17 17:39:17,704 INFO [db] Loop detection saved to database (ID: 268)
+2025-10-17 17:42:35,123 INFO [db] Loop detection saved to database (ID: 269)
+2025-10-17 17:45:34,982 INFO [db] Loop detection saved to database (ID: 270)
+2025-10-17 17:47:06,239 INFO [db] Loop detection saved to database (ID: 271)
+2025-10-17 17:51:40,202 INFO [db] Loop detection saved to database (ID: 272)
+2025-10-17 17:52:59,458 INFO [db] Loop detection saved to database (ID: 273)
+2025-10-17 17:55:51,445 INFO [db] Loop detection saved to database (ID: 274)
+2025-10-17 17:56:19,072 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 2091, in submit
+    from db import get_routers
+ImportError: cannot import name 'get_routers' from 'db' (C:\Users\63967\Desktop\network monitoring\db.py)
+
+2025-10-17 18:00:07,315 INFO [db] Loop detection saved to database (ID: 275)
+2025-10-17 18:05:19,579 INFO [db] Loop detection saved to database (ID: 276)
+2025-10-17 18:29:33,037 INFO [db] Loop detection saved to database (ID: 277)
+2025-10-17 18:31:16,500 INFO [db] Loop detection saved to database (ID: 278)
+2025-10-17 18:32:54,947 INFO [db] Loop detection saved to database (ID: 279)
+2025-10-17 18:45:47,702 INFO [db] Loop detection saved to database (ID: 280)
+2025-10-17 18:48:47,419 INFO [db] Loop detection saved to database (ID: 281)
+2025-10-17 18:56:03,925 INFO [db] Loop detection saved to database (ID: 282)
+2025-10-17 19:01:54,214 INFO [db] Loop detection saved to database (ID: 283)
+2025-10-17 19:06:57,280 INFO [db] Loop detection saved to database (ID: 284)
+2025-10-17 19:18:39,116 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\login.py", line 419, in handle_login
+    show_client_window(client_top, user)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\client_app.py", line 1990, in show_client_window
+    ClientDashboard(root, current_user)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\client_app.py", line 241, in __init__
+    self.routers_tab = RoutersTab(self.routers_frame, self.api_base_url, self.root)
+                       ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 114, in __init__
+    self.load_routers()
+    ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 160, in load_routers
+    self._show_routers_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 306, in _show_routers_loading
+    self.loading_frame.pack(fill="x", padx=10, pady=10)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'RoutersTab' object has no attribute 'loading_frame'
+
+2025-10-17 19:28:05,308 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 287, in render_cards
+    create_card(i, router)
+    ~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 281, in create_card
+    card.bind("<Leave", on_leave)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1545, in bind
+    return self._bind(('bind', self._w), sequence, func, add)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1499, in _bind
+    self.tk.call(what + (sequence, cmd))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: missing ">" in binding
+
+2025-10-17 19:46:07,930 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 309, in <lambda>
+    sec.bind("<Configure>", lambda event: sec.after_cancel(getattr(sec, '_resize_job', None)) or setattr(sec, '_resize_job', sec.after(300, render_cards)))
+                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 891, in after_cancel
+    raise ValueError('id must be a valid identifier returned from '
+                     'after or after_idle')
+ValueError: id must be a valid identifier returned from after or after_idle
+
+2025-10-17 19:46:07,954 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 309, in <lambda>
+    sec.bind("<Configure>", lambda event: sec.after_cancel(getattr(sec, '_resize_job', None)) or setattr(sec, '_resize_job', sec.after(300, render_cards)))
+                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 891, in after_cancel
+    raise ValueError('id must be a valid identifier returned from '
+                     'after or after_idle')
+ValueError: id must be a valid identifier returned from after or after_idle
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 309, in <lambda>
+    sec.bind("<Configure>", lambda event: sec.after_cancel(getattr(sec, '_resize_job', None)) or setattr(sec, '_resize_job', sec.after(300, render_cards)))
+                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 891, in after_cancel
+    raise ValueError('id must be a valid identifier returned from '
+                     'after or after_idle')
+ValueError: id must be a valid identifier returned from after or after_idle
+
+2025-10-17 19:46:07,985 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 309, in <lambda>
+    sec.bind("<Configure>", lambda event: sec.after_cancel(getattr(sec, '_resize_job', None)) or setattr(sec, '_resize_job', sec.after(300, render_cards)))
+                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 891, in after_cancel
+    raise ValueError('id must be a valid identifier returned from '
+                     'after or after_idle')
+ValueError: id must be a valid identifier returned from after or after_idle
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 309, in <lambda>
+    sec.bind("<Configure>", lambda event: sec.after_cancel(getattr(sec, '_resize_job', None)) or setattr(sec, '_resize_job', sec.after(300, render_cards)))
+                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 891, in after_cancel
+    raise ValueError('id must be a valid identifier returned from '
+                     'after or after_idle')
+ValueError: id must be a valid identifier returned from after or after_idle
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\routers_tab.py", line 309, in <lambda>
+    sec.bind("<Configure>", lambda event: sec.after_cancel(getattr(sec, '_resize_job', None)) or setattr(sec, '_resize_job', sec.after(300, render_cards)))
+                                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 891, in after_cancel
+    raise ValueError('id must be a valid identifier returned from '
+                     'after or after_idle')
+ValueError: id must be a valid identifier returned from after or after_idle
+
+2025-10-17 21:27:27,745 INFO [db] Loop detection saved to database (ID: 285)
+2025-10-17 21:31:57,800 INFO [db] Loop detection saved to database (ID: 286)

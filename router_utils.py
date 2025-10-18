@@ -22,6 +22,49 @@ def insert_router(name, ip, mac, brand, location, image_path):
     result = execute_with_error_handling("insert_router", _insert)
     return result
 
+# Insert or update UniFi router (upsert based on MAC address)
+def upsert_unifi_router(name, ip, mac, brand, location, image_path=None):
+    """
+    Insert or update a UniFi router in the database.
+    Uses MAC address as unique identifier for UniFi devices.
+    """
+    def _upsert():
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        # Check if router with this MAC already exists
+        check_sql = "SELECT id FROM routers WHERE mac_address = %s"
+        cursor.execute(check_sql, (mac,))
+        existing = cursor.fetchone()
+        
+        now = datetime.now()
+        
+        if existing:
+            # Update only controller-managed fields, preserve user-controlled fields
+            router_id = existing[0]
+            update_sql = """
+            UPDATE routers
+            SET ip_address = %s, brand = %s, last_seen = %s
+            WHERE id = %s
+            """
+            cursor.execute(update_sql, (ip, brand, now, router_id))
+        else:
+            # Insert new router
+            insert_sql = """
+            INSERT INTO routers (name, ip_address, mac_address, brand, location, last_seen, image_path)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_sql, (name, ip, mac, brand, location, now, image_path))
+            router_id = cursor.lastrowid
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return router_id
+    
+    result = execute_with_error_handling("upsert_unifi_router", _upsert)
+    return result
+
 # Get all routers
 def get_routers():
     def _get_routers():

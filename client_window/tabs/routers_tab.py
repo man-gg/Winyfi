@@ -17,51 +17,36 @@ class RoutersTab:
         self.is_updating = False
         self.auto_update_job = None
         self.last_update_time = None
-        
-        # Client-related variables
-        self.client_data = []
-        self.filtered_client_data = []
-        self.client_auto_refresh_enabled = True
-        self.client_auto_refresh_interval = 30000  # 30 seconds
-        self.client_auto_refresh_job = None
-        self.client_modal = None
-        
-        self._build_routers_page()
-
-    def _build_routers_page(self):
         router_header_frame = tb.Frame(self.parent_frame)
         router_header_frame.pack(fill="x", padx=10, pady=(10, 0))
-
-        tb.Label(router_header_frame, text="All Routers",
+        tb.Label(router_header_frame, text="Routers",
                  font=("Segoe UI", 14, "bold")).pack(side="left")
 
         # Auto-update controls (more compact)
         auto_update_frame = tb.Frame(router_header_frame)
         auto_update_frame.pack(side="right", padx=5)
-        
         self.auto_update_var = tb.BooleanVar(value=True)
         auto_update_check = tb.Checkbutton(auto_update_frame, text="Auto", 
-                                         variable=self.auto_update_var,
-                                         command=self.toggle_auto_update,
-                                         bootstyle="success")
+                                          variable=self.auto_update_var,
+                                          command=self.toggle_auto_update,
+                                          bootstyle="success")
         auto_update_check.pack(side="right", padx=(0, 5))
-        
+
         # Update interval selector (more compact)
         self.interval_var = tb.StringVar(value="30s")
         interval_combo = tb.Combobox(auto_update_frame, textvariable=self.interval_var, 
-                                   values=["10s", "30s", "1m", "2m", "5m"], 
-                                   width=5, state="readonly")
+                                     values=["10s", "30s", "1m", "2m", "5m"], 
+                                     width=5, state="readonly")
         interval_combo.pack(side="right", padx=(0, 5))
         interval_combo.bind("<<ComboboxSelected>>", self.on_interval_changed)
-        
+
         self.last_update_label = tb.Label(auto_update_frame, text="", 
-                                        font=("Segoe UI", 7), bootstyle="secondary")
+                                         font=("Segoe UI", 7), bootstyle="secondary")
         self.last_update_label.pack(side="right", padx=(0, 5))
 
         # Button container for better organization
         button_frame = tb.Frame(router_header_frame)
         button_frame.pack(side="right", padx=5)
-        
         tb.Button(button_frame, text="🔄 Refresh",
                   bootstyle="info", command=self.load_routers, width=8).pack(side="right", padx=2)
         tb.Button(button_frame, text="👥 Clients",
@@ -78,12 +63,22 @@ class RoutersTab:
         search_entry = tb.Entry(filter_frame, textvariable=self.router_search_var, width=30)
         search_entry.pack(side="left")
         self.router_search_var.trace_add("write", lambda *_: self.apply_router_filter())
+        tb.Label(filter_frame, text="Type:", bootstyle="info").pack(side="left", padx=(20, 5))
+        self.router_type_var = tb.StringVar(value="All")
+        type_combo = tb.Combobox(filter_frame, textvariable=self.router_type_var,
+                                 values=["All", "UniFi", "Non-UniFi"], state="readonly", width=10)
+        type_combo.pack(side="left")
+        type_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_router_filter())
         tb.Label(filter_frame, text="Sort by:", bootstyle="info").pack(side="left", padx=(20, 5))
         self.router_sort_var = tb.StringVar(value="default")
         tb.Radiobutton(filter_frame, text="Default", variable=self.router_sort_var, value="default",
                        command=self.apply_router_filter).pack(side="left")
         tb.Radiobutton(filter_frame, text="Online First", variable=self.router_sort_var, value="online",
                        command=self.apply_router_filter).pack(side="left", padx=(5, 0))
+        # Loading animation frame
+        self.loading_frame = tb.Frame(self.parent_frame)
+        self.loading_label = tb.Label(self.loading_frame, text="Loading...", font=("Segoe UI", 12), bootstyle="info")
+        self.loading_label.pack(padx=10, pady=10)
 
         canvas_frame = tb.Frame(self.parent_frame)
         canvas_frame.pack(fill="both", expand=True, padx=10, pady=10)
@@ -96,6 +91,17 @@ class RoutersTab:
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+        self.router_status_var = tb.StringVar(value="Loading routers…")
+        tb.Label(self.parent_frame, textvariable=self.router_status_var, bootstyle='secondary').pack(padx=10, pady=(0,10), anchor='w')
+
+        # Data state
+        self.router_list = []
+        self.filtered_router_list = []
+        # Load initial
+        self.load_routers()
+        # Start auto-update
+        self.start_auto_update()
 
         self.router_status_var = tb.StringVar(value="Loading routers…")
         tb.Label(self.parent_frame, textvariable=self.router_status_var, bootstyle='secondary').pack(padx=10, pady=(0,10), anchor='w')
@@ -150,15 +156,14 @@ class RoutersTab:
             return False
 
     def load_routers(self):
+        self._show_routers_loading()
         if self.is_updating:
             return  # Prevent multiple simultaneous updates
-        
         self.is_updating = True
         try:
             # Show updating indicator
             self.router_status_var.set("Updating routers...")
             self.root.update_idletasks()
-            
             r = requests.get(f"{self.api_base_url}/api/routers", timeout=8)
             if not r.ok:
                 self.router_status_var.set(f"Failed to load routers: {r.status_code}")
@@ -172,29 +177,33 @@ class RoutersTab:
             self.router_status_var.set(f"Error loading routers: {exc}")
         finally:
             self.is_updating = False
+            self._hide_routers_loading()
 
     def apply_router_filter(self):
+        self._show_routers_loading()
         text = (self.router_search_var.get() or "").strip().lower()
-        if text:
-            flt = []
-            for r in self.router_list:
-                blob = " ".join(str(r.get(k, "")) for k in ("name","ip_address","brand","location")).lower()
-                if text in blob:
-                    flt.append(r)
-        else:
-            flt = list(self.router_list)
-
+        type_filter = self.router_type_var.get()
+        flt = []
+        for r in self.router_list:
+            blob = " ".join(str(r.get(k, "")) for k in ("name","ip_address","brand","location")).lower()
+            if text and text not in blob:
+                continue
+            if type_filter == "UniFi" and not (r.get("brand", "").lower() == "unifi" or r.get("is_unifi")):
+                continue
+            if type_filter == "Non-UniFi" and (r.get("brand", "").lower() == "unifi" or r.get("is_unifi")):
+                continue
+            flt.append(r)
         sort_mode = self.router_sort_var.get()
         if sort_mode == "online":
             flt.sort(key=lambda r: (not self._is_router_online(r), str(r.get('name','')).lower()))
         else:
             flt.sort(key=lambda r: str(r.get('name','')).lower())
-
         self.filtered_router_list = flt
         self.render_router_cards(flt)
+        self._hide_routers_loading()
 
     def render_router_cards(self, routers):
-        # Clear
+        # Clear previous cards
         for child in list(self.scrollable_frame.winfo_children()):
             child.destroy()
 
@@ -205,10 +214,11 @@ class RoutersTab:
         online_list = [r for r in routers if self._is_router_online(r)]
         offline_list = [r for r in routers if not self._is_router_online(r)]
 
+        self.router_widgets = {}  # Store widgets for later updates
+
         def section(title, items):
             if not items:
                 return
-
             tb.Label(
                 self.scrollable_frame, text=title,
                 font=("Segoe UI", 12, "bold"), bootstyle="secondary"
@@ -216,7 +226,6 @@ class RoutersTab:
 
             sec = tb.Frame(self.scrollable_frame)
             sec.pack(fill="x", padx=10, pady=5)
-
             sec._resize_job = None
             sec._last_cols = None
 
@@ -230,60 +239,95 @@ class RoutersTab:
                     max_cols = 3
                 else:
                     max_cols = 4
-
                 if sec._last_cols == max_cols:
                     return
                 sec._last_cols = max_cols
-
                 for w in sec.winfo_children():
                     w.destroy()
-
                 for i, router in enumerate(items):
                     row, col = divmod(i, max_cols)
-                    card = tb.LabelFrame(sec, text=router.get('name', 'Unknown'), bootstyle="info", padding=0)
+                    is_unifi = router.get('brand', '').lower() == 'unifi' or router.get('is_unifi')
+                    card_style = "primary" if is_unifi else "info"
+                    card = tb.LabelFrame(sec, text=router.get('name', 'Unknown'), bootstyle=card_style, padding=0)
                     card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                     sec.grid_columnconfigure(col, weight=1)
-
                     inner = tb.Frame(card, padding=10)
                     inner.pack(fill="both", expand=True)
-
-                    tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
+                    # UniFi badge and icon
+                    if is_unifi:
+                        tb.Label(inner, text="📡", font=("Segoe UI Emoji", 30)).pack()
+                        tb.Label(inner, text="UniFi Device", font=("Segoe UI", 8, "italic"), bootstyle="primary").pack()
+                    else:
+                        tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
                     ip = router.get('ip_address') or router.get('ip') or '—'
                     tb.Label(inner, text=ip, font=("Segoe UI", 10)).pack(pady=(5, 0))
-
+                    # Status
                     online = self._is_router_online(router)
-                    status_text, status_style = ("🟢 Online", "success") if online else ("🔴 Offline", "danger")
+                    if is_unifi:
+                        status_text, status_style = ("🟢 Online", "success")
+                    else:
+                        status_text, status_style = ("🟢 Online", "success") if online else ("🔴 Offline", "danger")
                     status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
                     status_label.pack(pady=5)
-
+                    # Bandwidth/latency
+                    if is_unifi:
+                        down = router.get('download_speed', 0)
+                        up = router.get('upload_speed', 0)
+                        latency = router.get('latency')
+                        if latency is not None:
+                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ {latency:.1f} ms", bootstyle="success")
+                        else:
+                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ N/A", bootstyle="success")
+                        lbl_bandwidth.pack(pady=2)
+                    else:
+                        lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
+                        lbl_bandwidth.pack(pady=2)
+                    # Store widgets for later update
+                    rid = router.get('id')
+                    if rid:
+                        self.router_widgets[rid] = {
+                            'card': card,
+                            'status_label': status_label,
+                            'bandwidth_label': lbl_bandwidth,
+                            'data': router
+                        }
                     # Bind click to open details
                     def bind_card_click(widget, router_obj):
                         widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
-
                     bind_card_click(inner, router)
                     for child in inner.winfo_children():
                         bind_card_click(child, router)
-
                     # Hover effect
-                    def on_enter(e, c=card): c.configure(bootstyle="primary")
-                    def on_leave(e, c=card): c.configure(bootstyle="info")
+                    if is_unifi:
+                        def on_enter(e, c=card): c.configure(bootstyle="success")
+                        def on_leave(e, c=card): c.configure(bootstyle="primary")
+                    else:
+                        def on_enter(e, c=card): c.configure(bootstyle="primary")
+                        def on_leave(e, c=card): c.configure(bootstyle="info")
                     card.bind("<Enter>", on_enter)
                     card.bind("<Leave>", on_leave)
-
             def on_resize(event):
-                if sec._resize_job:
-                    sec.after_cancel(sec._resize_job)
-                sec._resize_job = sec.after(200, render_cards)
-
+                if hasattr(sec, '_resize_job') and sec._resize_job is not None:
+                    try:
+                        sec.after_cancel(sec._resize_job)
+                    except Exception:
+                        pass
+                sec._resize_job = sec.after(300, render_cards)
             sec.bind("<Configure>", on_resize)
             render_cards()
-
         # Respect sort toggle: online first vs default
         if self.router_sort_var.get() == "online":
             section("🟢 Online Routers", online_list)
             section("🔴 Offline Routers", offline_list)
         else:
             section("🟢 Online Routers", online_list + offline_list)
+    def _show_routers_loading(self):
+        self.loading_frame.pack(fill="x", padx=10, pady=10)
+        self.root.update_idletasks()
+
+    def _hide_routers_loading(self):
+        self.loading_frame.pack_forget()
+        self.root.update_idletasks()
 
     def open_router_details(self, router):
         # Modernized client-side router details aligned with admin UI
