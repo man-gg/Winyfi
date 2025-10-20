@@ -42,6 +42,12 @@ def start_bandwidth_logging(get_router_list_func):
         while True:
             routers = get_router_list_func()
             for r in routers:
+                # Skip UniFi routers here to avoid double-logging; they are logged via UniFi API fetch
+                try:
+                    if str(r.get('brand', '')).lower() == 'unifi':
+                        continue
+                except Exception:
+                    pass
                 log_bandwidth(r['id'], r['ip_address'])
             time.sleep(LOG_INTERVAL)
 

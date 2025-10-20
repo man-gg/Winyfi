@@ -29,6 +29,73 @@ class DatabaseOperationError(Exception):
     """Custom exception for database operation issues"""
     pass
 
+# =============================
+# Bandwidth logs helpers
+# =============================
+def create_bandwidth_logs_table():
+    """Create the bandwidth_logs table if it doesn't exist."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS bandwidth_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            router_id INT NOT NULL,
+            download_mbps DOUBLE,
+            upload_mbps DOUBLE,
+            latency_ms DOUBLE,
+            timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_router_time (router_id, timestamp)
+        )
+        """
+
+        cursor.execute(create_table_sql)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        # Ignore "table already exists" errors since IF NOT EXISTS is used
+        logger.warning(f"create_bandwidth_logs_table warning: {e}")
+        return False
+
+
+def insert_bandwidth_log(router_id, download_mbps, upload_mbps, latency_ms=None, when: datetime | None = None):
+    """Insert a single bandwidth log row.
+
+    Args:
+        router_id (int): Router ID (FK to routers.id)
+        download_mbps (float|None): Download throughput
+        upload_mbps (float|None): Upload throughput
+        latency_ms (float|None): Optional latency value
+        when (datetime|None): Optional explicit timestamp; defaults to NOW() if None
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        if when is None:
+            sql = (
+                "INSERT INTO bandwidth_logs (router_id, download_mbps, upload_mbps, latency_ms) "
+                "VALUES (%s, %s, %s, %s)"
+            )
+            params = (router_id, download_mbps, upload_mbps, latency_ms)
+        else:
+            sql = (
+                "INSERT INTO bandwidth_logs (router_id, download_mbps, upload_mbps, latency_ms, timestamp) "
+                "VALUES (%s, %s, %s, %s, %s)"
+            )
+            params = (router_id, download_mbps, upload_mbps, latency_ms, when)
+
+        cursor.execute(sql, params)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"insert_bandwidth_log failed: {e}")
+        return False
+
 def show_database_error_dialog(title, message, error_details=None):
     """Non-intrusive handler for DB errors (logs only; UI decides on dialogs).
 

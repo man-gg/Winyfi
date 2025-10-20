@@ -10,7 +10,6 @@ from tkinter import messagebox
 import tkinter.ttk as ttk
 from ttkbootstrap.widgets import DateEntry
 
-
 class BandwidthTab:
     def __init__(self, parent_frame, api_base_url, root_window):
         self.parent_frame = parent_frame
@@ -28,68 +27,53 @@ class BandwidthTab:
         # Header with title and auto-update controls
         header_frame = tb.Frame(self.parent_frame)
         header_frame.pack(fill="x", padx=20, pady=(20, 0))
-        
-        tb.Label(header_frame, text="📊 Bandwidth Monitoring",
-                 font=("Segoe UI", 16)).pack(side="left")
-        
+        tb.Label(header_frame, text="📊 Bandwidth Monitoring", font=("Segoe UI", 16)).pack(side="left")
+
         # Auto-update controls
         auto_update_frame = tb.Frame(header_frame)
         auto_update_frame.pack(side="right")
-        
         self.auto_update_var = tb.BooleanVar(value=True)
-        auto_update_check = tb.Checkbutton(auto_update_frame, text="Auto Update", 
-                                         variable=self.auto_update_var,
-                                         command=self.toggle_auto_update,
-                                         bootstyle="success")
+        auto_update_check = tb.Checkbutton(auto_update_frame, text="Auto Update", variable=self.auto_update_var, command=self.toggle_auto_update, bootstyle="success")
         auto_update_check.pack(side="right")
-        
+
         # Update interval selector
         interval_frame = tb.Frame(auto_update_frame)
         interval_frame.pack(side="right", padx=(0, 10))
         tb.Label(interval_frame, text="Interval:", font=("Segoe UI", 8)).pack(side="left")
         self.interval_var = tb.StringVar(value="30s")
-        interval_combo = tb.Combobox(interval_frame, textvariable=self.interval_var, 
-                                   values=["10s", "30s", "1m", "2m", "5m"], 
-                                   width=6, state="readonly")
+        interval_combo = tb.Combobox(interval_frame, textvariable=self.interval_var, values=["10s", "30s", "1m", "2m", "5m"], width=6, state="readonly")
         interval_combo.pack(side="left", padx=(2, 0))
         interval_combo.bind("<<ComboboxSelected>>", self.on_interval_changed)
-        
-        self.last_update_label = tb.Label(auto_update_frame, text="", 
-                                        font=("Segoe UI", 8), bootstyle="secondary")
+
+        self.last_update_label = tb.Label(auto_update_frame, text="", font=("Segoe UI", 8), bootstyle="secondary")
         self.last_update_label.pack(side="right", padx=(0, 10))
-        
+
         # Data points counter
-        self.data_points_label = tb.Label(auto_update_frame, text="Data Points: 0", 
-                                        font=("Segoe UI", 8), bootstyle="info")
+        self.data_points_label = tb.Label(auto_update_frame, text="Data Points: 0", font=("Segoe UI", 8), bootstyle="info")
         self.data_points_label.pack(side="right", padx=(0, 10))
 
         # Controls section
-        controls_frame = tb.LabelFrame(self.parent_frame, text="📋 Controls", 
-                                     bootstyle="info", padding=10)
+        controls_frame = tb.LabelFrame(self.parent_frame, text="📋 Controls", bootstyle="info", padding=10)
         controls_frame.pack(fill="x", padx=20, pady=10)
 
         # Router selector
         router_frame = tb.Frame(controls_frame)
         router_frame.pack(fill="x", pady=(0, 10))
-        
         tb.Label(router_frame, text="Select Router:", font=("Segoe UI", 10)).pack(side="left")
         self.router_var = tk.StringVar()
-        self.router_combo = tb.Combobox(router_frame, textvariable=self.router_var, 
-                                      state="readonly", width=30)
+        self.router_combo = tb.Combobox(router_frame, textvariable=self.router_var, state="readonly", width=30)
         self.router_combo.pack(side="left", padx=(10, 0))
         self.router_combo.bind("<<ComboboxSelected>>", self.on_router_changed)
 
         # Date range filter
         date_frame = tb.Frame(controls_frame)
         date_frame.pack(fill="x", pady=(0, 10))
-        
         tb.Label(date_frame, text="From:", font=("Segoe UI", 10)).pack(side="left")
         initial_start = datetime.now() - timedelta(days=7)
         self.start_date = DateEntry(date_frame, width=12, dateformat="%m/%d/%Y", bootstyle="primary")
         self.start_date.entry.delete(0, tk.END)
         self.start_date.entry.insert(0, initial_start.strftime("%m/%d/%Y"))
         self.start_date.pack(side="left", padx=(10, 5))
-        
         tb.Label(date_frame, text="To:", font=("Segoe UI", 10)).pack(side="left", padx=(20, 0))
         initial_end = datetime.now()
         self.end_date = DateEntry(date_frame, width=12, dateformat="%m/%d/%Y", bootstyle="primary")
@@ -100,18 +84,13 @@ class BandwidthTab:
         # Action buttons
         button_frame = tb.Frame(controls_frame)
         button_frame.pack(fill="x")
-        # Store buttons for enabling/disabling
-        self.apply_btn = tb.Button(button_frame, text="🔍 Apply Filter", bootstyle="primary",
-                                   command=self.load_bandwidth_data)
+        self.apply_btn = tb.Button(button_frame, text="🔍 Apply Filter", bootstyle="primary", command=self.load_bandwidth_data)
         self.apply_btn.pack(side="left", padx=(0, 10))
-        self.refresh_btn = tb.Button(button_frame, text="🔄 Refresh", bootstyle="info",
-                                     command=self.refresh_bandwidth_data)
+        self.refresh_btn = tb.Button(button_frame, text="🔄 Refresh", bootstyle="info", command=self.refresh_bandwidth_data)
         self.refresh_btn.pack(side="left", padx=(0, 10))
-        self.last7_btn = tb.Button(button_frame, text="📊 Last 7 Days", bootstyle="secondary",
-                                   command=self.load_last_7_days)
+        self.last7_btn = tb.Button(button_frame, text="📊 Last 7 Days", bootstyle="secondary", command=self.load_last_7_days)
         self.last7_btn.pack(side="left", padx=(0, 10))
-        self.force_refresh_btn = tb.Button(button_frame, text="🔄 Force Chart Refresh", bootstyle="warning",
-                                           command=self.force_chart_refresh)
+        self.force_refresh_btn = tb.Button(button_frame, text="🔄 Force Chart Refresh", bootstyle="warning", command=self.force_chart_refresh)
         self.force_refresh_btn.pack(side="left")
 
         # Inline loader (hidden initially)
@@ -174,13 +153,21 @@ class BandwidthTab:
         table_container = tb.Frame(self.table_frame)
         table_container.pack(fill="both", expand=True, padx=10, pady=10)
 
+        # Subtitle label describing current table context
+        self.table_subtitle = tb.Label(table_container, text="", font=("Segoe UI", 10, "bold"), bootstyle="secondary")
+        self.table_subtitle.pack(anchor="w", pady=(0, 6))
+
+        # Define column configurations for different views
+        self.table_columns_all = ("timestamp", "download", "upload", "latency")
+        self.table_columns_router = ("timestamp", "download", "upload", "latency")
+
         # Create treeview
         columns = ("timestamp", "router", "download", "upload", "latency")
         self.bandwidth_table = ttk.Treeview(table_container, columns=columns, show="headings", height=20)
         
         # Configure columns
         self.bandwidth_table.column("timestamp", width=180, anchor="center")
-        self.bandwidth_table.column("router", width=150, anchor="center")
+        self.bandwidth_table.column("router", width=0, anchor="center", stretch=False)  # Hide router column by default
         self.bandwidth_table.column("download", width=120, anchor="center")
         self.bandwidth_table.column("upload", width=120, anchor="center")
         self.bandwidth_table.column("latency", width=100, anchor="center")
@@ -558,12 +545,25 @@ class BandwidthTab:
             print(f"Error updating charts: {e}")
 
     def update_table(self):
-        """Update the bandwidth data table"""
+        """Update the bandwidth data table to match admin logic"""
         try:
             # Clear existing data
             for item in self.bandwidth_table.get_children():
                 self.bandwidth_table.delete(item)
-            
+
+            selected_router = self.router_var.get() if hasattr(self, 'router_var') else "All Routers"
+            # If 'All Routers', hide router column and aggregate by hour if possible
+            if selected_router == "All Routers":
+                # Show router column for 'All Routers'
+                self.bandwidth_table['displaycolumns'] = ("timestamp", "router", "download", "upload", "latency")
+                self.bandwidth_table.column("router", width=150, anchor="center", stretch=True)
+                self.table_subtitle.config(text="📊 Viewing: All Routers (Hourly Aggregated)")
+            else:
+                # Hide router column for specific router
+                self.bandwidth_table['displaycolumns'] = ("timestamp", "download", "upload", "latency")
+                self.bandwidth_table.column("router", width=0, stretch=False)
+                self.table_subtitle.config(text=f"📊 Viewing: {selected_router}")
+
             # Add new data
             for data in self.bandwidth_data[:100]:  # Limit to 100 rows for performance
                 try:
@@ -579,32 +579,36 @@ class BandwidthTab:
                 except Exception as e:
                     print(f"Error parsing timestamp in table: {e}")
                     formatted_time = "Invalid Date"
-                
+
                 router_name = data.get('router_name', 'Unknown')
-                
+
                 # Handle None values safely
                 try:
                     download_val = data.get('download_mbps')
                     download = f"{float(download_val):.2f}" if download_val is not None else "0.00"
                 except (ValueError, TypeError):
                     download = "0.00"
-                
+
                 try:
                     upload_val = data.get('upload_mbps')
                     upload = f"{float(upload_val):.2f}" if upload_val is not None else "0.00"
                 except (ValueError, TypeError):
                     upload = "0.00"
-                
+
                 try:
                     latency_val = data.get('latency_ms')
                     latency = f"{float(latency_val):.1f}" if latency_val is not None else "0.0"
                 except (ValueError, TypeError):
                     latency = "0.0"
-                
-                self.bandwidth_table.insert('', 'end', values=(
-                    formatted_time, router_name, download, upload, latency
-                ))
-                
+
+                if selected_router == "All Routers":
+                    self.bandwidth_table.insert('', 'end', values=(
+                        formatted_time, router_name, download, upload, latency
+                    ))
+                else:
+                    self.bandwidth_table.insert('', 'end', values=(
+                        formatted_time, download, upload, latency
+                    ))
         except Exception as e:
             print(f"Error updating table: {e}")
 

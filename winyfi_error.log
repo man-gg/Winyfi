@@ -5769,3 +5769,1002 @@ ValueError: id must be a valid identifier returned from after or after_idle
 
 2025-10-17 21:27:27,745 INFO [db] Loop detection saved to database (ID: 285)
 2025-10-17 21:31:57,800 INFO [db] Loop detection saved to database (ID: 286)
+2025-10-19 10:06:37,076 INFO [db] Loop detection saved to database (ID: 287)
+2025-10-19 10:07:44,702 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 7838, in open_ticket_window
+    command=self.open_new_ticket_modal,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'open_new_ticket_modal'. Did you mean: 'open_edit_ticket_modal'?
+
+2025-10-19 10:15:23,301 INFO [db] Loop detection saved to database (ID: 288)
+2025-10-19 10:27:43,859 INFO [db] Loop detection saved to database (ID: 289)
+2025-10-19 10:48:50,937 INFO [db] Loop detection saved to database (ID: 290)
+2025-10-19 10:53:54,011 INFO [db] Loop detection saved to database (ID: 291)
+2025-10-19 10:58:57,049 INFO [db] Loop detection saved to database (ID: 292)
+2025-10-19 11:06:13,730 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:06:16,515 INFO [db] Loop detection saved to database (ID: 293)
+2025-10-19 11:06:18,916 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:06:24,579 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:06:29,631 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:06:30,286 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6570, in finish
+    self._hide_reports_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 504, in _hide_reports_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:06:34,963 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6570, in finish
+    self._hide_reports_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 504, in _hide_reports_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:06:40,140 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6570, in finish
+    self._hide_reports_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 504, in _hide_reports_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+    remaining = self._loader_min_ms - elapsed_ms
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:06:46,291 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.generate_report_table(filter_mode=self.report_mode.get().lower())
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    if self.bandwidth_auto_update_var.get():
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6570, in finish
+    self.toggle_btn = tb.Button(self.reports_charts_frame, text="Hide Chart", command=lambda: self.toggle_chart(), bootstyle="secondary")
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 504, in _hide_reports_loading
+    pass
+    
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:06:50,730 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5388, in start_bandwidth_auto_update
+    self.generate_report_table(filter_mode=self.report_mode.get().lower())
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5406, in auto_update_bandwidth
+    if self.bandwidth_auto_update_var.get():
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6570, in finish
+    self.toggle_btn = tb.Button(self.reports_charts_frame, text="Hide Chart", command=lambda: self.toggle_chart(), bootstyle="secondary")
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 504, in _hide_reports_loading
+    pass
+    
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6190, in refresh_total_bandwidth_chart
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 375, in _hide_bandwidth_loading
+AttributeError: 'Dashboard' object has no attribute '_loader_min_ms'
+
+2025-10-19 11:09:08,446 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5396, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5414, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6198, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 386, in _hide_bandwidth_loading
+    if self._bandwidth_hide_after_job:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_bandwidth_hide_after_job'. Did you mean: '_bandwidth_after_job'?
+
+2025-10-19 11:09:11,252 INFO [db] Loop detection saved to database (ID: 294)
+2025-10-19 11:09:18,968 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5396, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5414, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6198, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 386, in _hide_bandwidth_loading
+    if self._bandwidth_hide_after_job:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_bandwidth_hide_after_job'. Did you mean: '_bandwidth_after_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6198, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 386, in _hide_bandwidth_loading
+    if self._bandwidth_hide_after_job:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_bandwidth_hide_after_job'. Did you mean: '_bandwidth_after_job'?
+
+2025-10-19 11:09:29,342 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6198, in refresh_total_bandwidth_chart
+    self._hide_bandwidth_loading()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 386, in _hide_bandwidth_loading
+    if self._bandwidth_hide_after_job:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_bandwidth_hide_after_job'. Did you mean: '_bandwidth_after_job'?
+
+2025-10-19 11:19:34,722 INFO [db] Loop detection saved to database (ID: 295)
+2025-10-19 11:25:25,817 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5408, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5426, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6255, in refresh_total_bandwidth_chart
+    self._refresh_bandwidth_table(sort_column="timestamp", reverse=False)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5862, in _refresh_bandwidth_table
+    timestamp, router, download, upload, latency = row
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 5, got 4)
+
+2025-10-19 11:25:28,772 INFO [db] Loop detection saved to database (ID: 296)
+2025-10-19 11:29:59,118 INFO [db] Loop detection saved to database (ID: 297)
+2025-10-19 11:35:02,244 INFO [db] Loop detection saved to database (ID: 298)
+2025-10-19 11:35:59,296 INFO [db] Loop detection saved to database (ID: 299)
+2025-10-19 11:45:44,277 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5847, in parse_ts
+    return datetime.strptime(val, "%Y-%m-%d %H:%M:%S")
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\_strptime.py", line 573, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\_strptime.py", line 352, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+                     (data_string, format))
+ValueError: time data '%Y-%m-%d %H:00:00' does not match format '%Y-%m-%d %H:%M:%S'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5408, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5426, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6296, in refresh_total_bandwidth_chart
+    self._refresh_bandwidth_table(sort_column="timestamp", reverse=False)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5850, in _refresh_bandwidth_table
+    data.sort(key=lambda x: parse_ts(x[idx]), reverse=reverse)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5850, in <lambda>
+    data.sort(key=lambda x: parse_ts(x[idx]), reverse=reverse)
+                            ~~~~~~~~^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 5849, in parse_ts
+    return datetime.strptime(val, "%Y-%m-%d")
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\_strptime.py", line 573, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\_strptime.py", line 352, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+                     (data_string, format))
+ValueError: time data '%Y-%m-%d %H:00:00' does not match format '%Y-%m-%d'
+
+2025-10-19 11:45:47,103 INFO [db] Loop detection saved to database (ID: 300)
+2025-10-19 11:52:19,024 INFO [db] Loop detection saved to database (ID: 301)
+2025-10-19 11:57:22,168 INFO [db] Loop detection saved to database (ID: 302)
+2025-10-19 12:02:25,250 INFO [db] Loop detection saved to database (ID: 303)
+2025-10-19 12:07:30,985 INFO [db] Loop detection saved to database (ID: 304)
+2025-10-19 12:08:04,735 INFO [db] Loop detection saved to database (ID: 305)
+2025-10-19 12:53:20,301 INFO [db] Loop detection saved to database (ID: 306)
+2025-10-19 13:12:39,910 INFO [db] Loop detection saved to database (ID: 307)
+2025-10-19 13:37:12,110 INFO [db] Loop detection saved to database (ID: 308)
+2025-10-19 13:42:15,194 INFO [db] Loop detection saved to database (ID: 309)
+2025-10-19 13:47:18,306 INFO [db] Loop detection saved to database (ID: 310)
+2025-10-19 13:52:21,374 INFO [db] Loop detection saved to database (ID: 311)
+2025-10-19 13:57:11,251 INFO [db] Loop detection saved to database (ID: 312)
+2025-10-19 14:01:22,091 INFO [db] Loop detection saved to database (ID: 313)
+2025-10-19 14:05:05,967 INFO [db] Loop detection saved to database (ID: 314)
+2025-10-19 14:24:10,128 INFO [db] Loop detection saved to database (ID: 315)
+2025-10-19 14:44:58,348 INFO [db] Loop detection saved to database (ID: 316)
+2025-10-19 14:50:32,187 INFO [db] Loop detection saved to database (ID: 317)
+2025-10-19 15:00:34,197 INFO [db] Loop detection saved to database (ID: 318)
+2025-10-19 15:05:37,262 INFO [db] Loop detection saved to database (ID: 319)
+2025-10-19 15:15:56,858 INFO [db] Loop detection saved to database (ID: 320)
+2025-10-19 15:18:18,085 INFO [db] Loop detection saved to database (ID: 321)
+2025-10-19 15:36:45,785 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\login.py", line 419, in handle_login
+    show_client_window(client_top, user)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\client_app.py", line 1990, in show_client_window
+    ClientDashboard(root, current_user)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\client_app.py", line 243, in __init__
+    self.bandwidth_tab = BandwidthTab(self.bandwidth_frame, self.api_base_url, self.root)
+                         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\bandwidth_tab.py", line 24, in __init__
+    self._build_bandwidth_page()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\bandwidth_tab.py", line 129, in _build_bandwidth_page
+    self.load_bandwidth_data()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\bandwidth_tab.py", line 309, in load_bandwidth_data
+    self._show_bw_loader("Contacting server...")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\bandwidth_tab.py", line 390, in _show_bw_loader
+    self._bw_loader_container.pack(side='left')
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'BandwidthTab' object has no attribute '_bw_loader_container'
+
+2025-10-19 15:38:18,934 INFO [db] Loop detection saved to database (ID: 322)
+2025-10-19 15:39:47,098 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\login.py", line 419, in handle_login
+    show_client_window(client_top, user)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\client_app.py", line 1990, in show_client_window
+    ClientDashboard(root, current_user)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\client_app.py", line 243, in __init__
+    self.bandwidth_tab = BandwidthTab(self.bandwidth_frame, self.api_base_url, self.root)
+                         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\bandwidth_tab.py", line 24, in __init__
+    self._build_bandwidth_page()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\bandwidth_tab.py", line 135, in _build_bandwidth_page
+    self.load_bandwidth_data()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\bandwidth_tab.py", line 315, in load_bandwidth_data
+    self._show_bw_loader("Contacting server...")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\bandwidth_tab.py", line 396, in _show_bw_loader
+    self._bw_loader_container.pack(side='left')
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'BandwidthTab' object has no attribute '_bw_loader_container'
+
