@@ -125,6 +125,10 @@ class RoutersTab:
             r = requests.get(f"{self.api_base_url}/api/routers/{router['id']}/status", timeout=3)
             if r.ok:
                 status_data = r.json()
+                # If last update is older than 30 seconds, treat as offline (for UniFi APs)
+                age = status_data.get('seconds_since_last_update')
+                if age is not None and age > 30:
+                    return False
                 return status_data.get('is_online', False)
             else:
                 # Fallback to old method if API fails
@@ -168,7 +172,23 @@ class RoutersTab:
             if not r.ok:
                 self.router_status_var.set(f"Failed to load routers: {r.status_code}")
                 return
-            self.router_list = r.json() or []
+            routers_raw = r.json() or []
+            # Ensure bandwidth and latency fields are present for each router
+            for router in routers_raw:
+                # Try to fetch latest bandwidth log for each router
+                try:
+                    rid = router.get('id')
+                    br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params={"router_id": rid, "limit": 1}, timeout=3)
+                    if br.ok:
+                        arr = br.json() or []
+                        if arr:
+                            row = arr[0]
+                            router['download_speed'] = row.get('download_mbps')
+                            router['upload_speed'] = row.get('upload_mbps')
+                            router['latency'] = row.get('latency_ms')
+                except Exception:
+                    pass
+            self.router_list = routers_raw
             self.router_status_var.set(f"Loaded {len(self.router_list)} routers")
             self.last_update_time = datetime.now()
             self.update_last_update_display()
@@ -211,8 +231,25 @@ class RoutersTab:
             tb.Label(self.scrollable_frame, text="No routers to display", font=("Segoe UI", 11)).pack(pady=20)
             return
 
-        online_list = [r for r in routers if self._is_router_online(r)]
-        offline_list = [r for r in routers if not self._is_router_online(r)]
+        online_list = []
+        offline_list = []
+        for r in routers:
+            online = self._is_router_online(r)
+            # For UniFi APs, check last update age and treat as offline if stale
+            if (r.get('brand', '').lower() == 'unifi' or r.get('is_unifi')):
+                try:
+                    r_status = requests.get(f"{self.api_base_url}/api/routers/{r['id']}/status", timeout=3)
+                    if r_status.ok:
+                        status_data = r_status.json()
+                        age = status_data.get('seconds_since_last_update')
+                        if age is not None and age > 30:
+                            online = False
+                except Exception:
+                    online = False
+            if online:
+                online_list.append(r)
+            else:
+                offline_list.append(r)
 
         self.router_widgets = {}  # Store widgets for later updates
 
@@ -261,27 +298,53 @@ class RoutersTab:
                         tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
                     ip = router.get('ip_address') or router.get('ip') or '—'
                     tb.Label(inner, text=ip, font=("Segoe UI", 10)).pack(pady=(5, 0))
-                    # Status
-                    online = self._is_router_online(router)
-                    if is_unifi:
+                    # Status - check if router is in online_list or offline_list
+                    is_in_online_list = router in online_list
+                    if is_in_online_list:
                         status_text, status_style = ("🟢 Online", "success")
                     else:
-                        status_text, status_style = ("🟢 Online", "success") if online else ("🔴 Offline", "danger")
+                        status_text, status_style = ("🔴 Offline", "danger")
                     status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
                     status_label.pack(pady=5)
-                    # Bandwidth/latency
-                    if is_unifi:
-                        down = router.get('download_speed', 0)
-                        up = router.get('upload_speed', 0)
-                        latency = router.get('latency')
-                        if latency is not None:
-                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ {latency:.1f} ms", bootstyle="success")
-                        else:
-                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ N/A", bootstyle="success")
-                        lbl_bandwidth.pack(pady=2)
+                    # Bandwidth/latency - unified display for both UniFi and non-UniFi
+                    if is_in_online_list:
+                        # Online - fetch latest bandwidth and latency from backend
+                        try:
+                            rid = router.get('id')
+                            br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params={"router_id": rid, "limit": 1}, timeout=3)
+                            if br.ok:
+                                arr = br.json() or []
+                                if arr:
+                                    row = arr[0]
+                                    dl = row.get('download_mbps') or router.get('download_speed') or 0
+                                    ul = row.get('upload_mbps') or router.get('upload_speed') or 0
+                                    lat = row.get('latency_ms')
+                                    if lat is None:
+                                        lat = router.get('latency')
+                                    if lat is not None:
+                                        lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{dl:.2f} Mbps ↑{ul:.2f} Mbps   ⚡ {lat:.0f} ms", bootstyle="success")
+                                    else:
+                                        lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{dl:.2f} Mbps ↑{ul:.2f} Mbps   ⚡ N/A", bootstyle="success")
+                                else:
+                                    # Fallback to router fields if API returns no data
+                                    dl = router.get('download_speed')
+                                    ul = router.get('upload_speed')
+                                    lat = router.get('latency')
+                                    if dl is not None and ul is not None:
+                                        if lat is not None:
+                                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{dl:.2f} Mbps ↑{ul:.2f} Mbps   ⚡ {lat:.0f} ms", bootstyle="success")
+                                        else:
+                                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{dl:.2f} Mbps ↑{ul:.2f} Mbps   ⚡ N/A", bootstyle="success")
+                                    else:
+                                        lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
+                            else:
+                                lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
+                        except Exception:
+                            lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
                     else:
+                        # Offline - same display for both UniFi and non-UniFi
                         lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
-                        lbl_bandwidth.pack(pady=2)
+                    lbl_bandwidth.pack(pady=2)
                     # Store widgets for later update
                     rid = router.get('id')
                     if rid:
@@ -424,7 +487,23 @@ class RoutersTab:
         status_row = tb.Frame(status_card)
         status_row.pack(fill="x", pady=(0, 15))
         tb.Label(status_row, text="📶 Current Status:", font=("Segoe UI", 12, "bold"), bootstyle="secondary").pack(side="left")
-        detail_status_lbl = tb.Label(status_row, text="🕒 Checking...", font=("Segoe UI", 12, "bold"), bootstyle="warning")
+        # Real-time status fetch
+        try:
+            r = requests.get(f"{self.api_base_url}/api/routers/{router['id']}/status", timeout=3)
+            if r.ok:
+                status_data = r.json()
+                age = status_data.get('seconds_since_last_update')
+                is_online = status_data.get('is_online', False)
+                if age is not None and age > 30:
+                    is_online = False
+                if is_online:
+                    detail_status_lbl = tb.Label(status_row, text="🟢 Online", font=("Segoe UI", 12, "bold"), bootstyle="success")
+                else:
+                    detail_status_lbl = tb.Label(status_row, text="🔴 Offline", font=("Segoe UI", 12, "bold"), bootstyle="danger")
+            else:
+                detail_status_lbl = tb.Label(status_row, text="🔴 Offline", font=("Segoe UI", 12, "bold"), bootstyle="danger")
+        except Exception:
+            detail_status_lbl = tb.Label(status_row, text="🔴 Offline", font=("Segoe UI", 12, "bold"), bootstyle="danger")
         detail_status_lbl.pack(side="left", padx=(10, 0))
 
         last_seen_row = tb.Frame(status_card)

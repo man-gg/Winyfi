@@ -1127,40 +1127,39 @@ class ClientDashboard:
     def start_router_status_monitoring(self):
         """Start monitoring router status changes."""
         def monitor_router_status():
+            import requests
             while self.status_monitoring_running:
                 try:
                     # Get routers from API
                     response = self.api_get("/api/routers", timeout=(2, 5), show_errors=False)
                     if response is not None and response.ok:
                         routers = response.json() or []
-                        
                         for router in routers:
                             router_id = router.get('id')
                             router_name = router.get('name', f'Router {router_id}')
                             router_ip = router.get('ip_address', 'Unknown')
-                            
-                            # Check if router is online
-                            is_online = self._is_router_online(router_ip)
-                            
+                            # Fetch real-time status from backend
+                            status_resp = None
+                            try:
+                                status_resp = requests.get(f"{self.api_base_url}/api/routers/{router_id}/status", timeout=3)
+                                if status_resp.status_code == 200:
+                                    status_json = status_resp.json()
+                                    is_online = status_json.get('is_online', False)
+                                else:
+                                    is_online = False
+                            except Exception:
+                                is_online = False
                             # Check for status change
                             if router_id in self.router_status_history:
                                 prev_status = self.router_status_history[router_id]
                                 if prev_status != is_online:
-                                    # Status changed - create notification
                                     self.root.after(0, lambda: self._create_router_notification(router_name, router_ip, is_online))
                                     self.root.after(0, self.update_notification_count)
-                            
-                            # Update status history
                             self.router_status_history[router_id] = is_online
-                    
-                    # Wait before next check
-                    time.sleep(30)  # Check every 30 seconds
-                    
+                    time.sleep(30)
                 except Exception as e:
                     print(f"Error in router status monitoring: {e}")
                     time.sleep(30)
-        
-        # Start monitoring in background thread
         threading.Thread(target=monitor_router_status, daemon=True).start()
     
     def _is_router_online(self, ip_address):

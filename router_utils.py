@@ -120,31 +120,43 @@ def is_online(ip):
 
 # New function: update last_seen + save to log
 def update_router_status_in_db(router_id, is_online_status):
-    conn = get_connection()
-    cursor = conn.cursor()
+    """Update router status in database with error handling"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    now = datetime.now()
-    status_text = 'online' if is_online_status else 'offline'
+        now = datetime.now()
+        status_text = 'online' if is_online_status else 'offline'
 
-    # ✅ Only update last_seen if online
-    if is_online_status:
-        sql_update = """
-            UPDATE routers 
-            SET last_seen = %s
-            WHERE id = %s
+        # Update last_seen for online devices (routers or UniFi APs)
+        if is_online_status:
+            sql_update = """
+                UPDATE routers 
+                SET last_seen = %s
+                WHERE id = %s
+            """
+            cursor.execute(sql_update, (now, router_id))
+
+        # Always insert into router_status_log for all devices (routers and UniFi APs)
+        sql_log = """
+            INSERT INTO router_status_log (router_id, status, timestamp)
+            VALUES (%s, %s, %s)
         """
-        cursor.execute(sql_update, (now, router_id))
+        cursor.execute(sql_log, (router_id, status_text, now))
 
-    # ✅ Always insert into router_status_log (this table DOES have `status`)
-    sql_log = """
-        INSERT INTO router_status_log (router_id, status, timestamp)
-        VALUES (%s, %s, %s)
-    """
-    cursor.execute(sql_log, (router_id, status_text, now))
-
-    conn.commit()
-    cursor.close()
-    conn.close()
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        # Log error but don't crash the application
+        print(f"⚠️ Error updating router status in DB for router {router_id}: {str(e)}")
+        try:
+            if 'cursor' in locals() and cursor:
+                cursor.close()
+            if 'conn' in locals() and conn:
+                conn.close()
+        except:
+            pass
 
 # Check if router is online based on router_status_log table
 def is_router_online_by_status(router_id, timeout_seconds=5):

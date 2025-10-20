@@ -6768,3 +6768,454 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'BandwidthTab' object has no attribute '_bw_loader_container'
 
+2025-10-20 16:33:34,316 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 16:33:34,384 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:33:34,390 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:33:34,392 ERROR [db] Failed to save loop detection to database
+2025-10-20 16:36:29,114 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 16:36:29,150 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:36:29,181 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:36:29,209 ERROR [db] Failed to save loop detection to database
+2025-10-20 16:43:27,480 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 16:43:27,499 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:43:27,500 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:43:27,502 ERROR [db] Failed to save loop detection to database
+2025-10-20 16:44:51,439 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 16:44:51,471 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:44:51,471 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:44:51,473 ERROR [db] Failed to save loop detection to database
+2025-10-20 16:48:15,078 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 2649, in refresh_details
+    response = requests.get(f"{self.unifi_api_url}/api/unifi/devices", timeout=3)
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\requests\api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\requests\adapters.py", line 644, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\urllib3\connectionpool.py", line 493, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\urllib3\connection.py", line 494, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\urllib3\connection.py", line 325, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\urllib3\connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\urllib3\util\connection.py", line 81, in create_connection
+    sock.close()
+    ~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 501, in close
+    def close(self):
+    
+KeyboardInterrupt
+
+2025-10-20 16:55:16,245 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 16:55:16,434 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:55:16,434 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 16:55:16,435 ERROR [db] Failed to save loop detection to database
+2025-10-20 17:10:40,086 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 17:10:40,106 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:10:40,109 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:10:40,112 ERROR [db] Failed to save loop detection to database
+2025-10-20 17:28:36,559 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 17:28:36,589 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:28:36,589 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:28:36,590 ERROR [db] Failed to save loop detection to database
+2025-10-20 17:33:36,696 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 17:33:36,702 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:33:36,703 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:33:36,703 ERROR [db] Failed to save loop detection to database
+2025-10-20 17:38:36,836 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 17:38:36,843 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:38:36,844 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:38:36,844 ERROR [db] Failed to save loop detection to database
+2025-10-20 17:43:34,885 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 17:43:34,898 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:43:34,899 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:43:34,900 ERROR [db] Failed to save loop detection to database
+2025-10-20 17:48:34,967 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 17:48:34,973 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:48:34,974 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:48:34,974 ERROR [db] Failed to save loop detection to database
+2025-10-20 17:52:20,407 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 17:52:20,433 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:52:20,437 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:52:20,445 ERROR [db] Failed to save loop detection to database
+2025-10-20 17:58:07,494 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 17:58:07,526 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:58:07,549 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 17:58:07,550 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:03:50,779 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:03:50,806 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:03:50,806 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:03:50,813 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:10:53,037 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:10:53,067 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:10:53,068 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:10:53,070 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:13:59,882 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:13:59,956 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:13:59,957 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:13:59,957 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:17:20,152 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:17:20,174 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:17:20,175 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:17:20,180 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:21:02,211 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:21:02,230 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:21:02,235 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:21:02,237 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:26:08,635 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:26:08,649 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:26:08,650 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:26:08,652 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:29:21,636 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:29:22,176 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:29:22,177 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:29:22,177 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:35:00,007 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:35:00,038 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:35:00,042 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:35:00,044 ERROR [db] Failed to save loop detection to database
+2025-10-20 18:55:43,367 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 18:55:43,396 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:55:43,397 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 18:55:43,397 ERROR [db] Failed to save loop detection to database
+2025-10-20 19:05:43,120 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 19:05:43,158 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:05:43,159 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:05:43,160 ERROR [db] Failed to save loop detection to database
+2025-10-20 19:14:33,090 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 19:14:33,125 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:14:33,125 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:14:33,126 ERROR [db] Failed to save loop detection to database
+2025-10-20 19:19:33,221 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 19:19:33,227 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:19:33,227 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:19:33,228 ERROR [db] Failed to save loop detection to database
+2025-10-20 19:28:08,541 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 19:28:08,555 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:28:08,555 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:28:08,557 ERROR [db] Failed to save loop detection to database
+2025-10-20 19:31:46,831 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 19:31:46,906 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:31:46,907 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:31:46,911 ERROR [db] Failed to save loop detection to database
+2025-10-20 19:41:04,324 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 19:41:04,339 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:41:04,340 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:41:04,342 ERROR [db] Failed to save loop detection to database
+2025-10-20 19:47:26,223 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 19:47:26,250 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:47:26,252 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 19:47:26,255 ERROR [db] Failed to save loop detection to database
+2025-10-20 19:47:32,709 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 3351, in <lambda>
+    widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
+                                        ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 2740, in open_router_details
+    refresh_details()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 2692, in refresh_details
+    self.detail_status_lbl.config(text="🟢 Online", bootstyle="success")
+    ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'detail_status_lbl'
+
+2025-10-20 19:47:50,839 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 3351, in <lambda>
+    widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
+                                        ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 2740, in open_router_details
+    refresh_details()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 2692, in refresh_details
+    self.detail_status_lbl.config(text="🟢 Online", bootstyle="success")
+    ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'detail_status_lbl'
+
+2025-10-20 20:02:33,944 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 20:02:33,967 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:02:33,972 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:02:33,972 ERROR [db] Failed to save loop detection to database
+2025-10-20 20:13:31,150 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 20:13:31,175 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:13:31,176 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:13:31,179 ERROR [db] Failed to save loop detection to database
+2025-10-20 20:17:36,207 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 20:17:36,224 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:17:36,226 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:17:36,227 ERROR [db] Failed to save loop detection to database
+2025-10-20 20:19:08,472 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\login.py", line 49, in <lambda>
+    root.after(0, lambda: callback(ok))
+                          ~~~~~~~~^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\login.py", line 166, in _on_result
+    server_status_label.config(text="🟢 Server: Online", foreground="green")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\ttkbootstrap\style.py", line 5003, in configure
+    func(self, cnf, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1822, in configure
+    return self._configure('configure', cnf, kw)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1812, in _configure
+    self.tk.call(_flatten((self._w, cmd)) + self._options(cnf))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!frame.!frame.!label"
+
+2025-10-20 20:19:18,481 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\login.py", line 49, in <lambda>
+    root.after(0, lambda: callback(ok))
+                          ~~~~~~~~^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\login.py", line 166, in _on_result
+    server_status_label.config(text="🟢 Server: Online", foreground="green")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\ttkbootstrap\style.py", line 5003, in configure
+    func(self, cnf, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1822, in configure
+    return self._configure('configure', cnf, kw)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1812, in _configure
+    self.tk.call(_flatten((self._w, cmd)) + self._options(cnf))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!frame.!frame.!label"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\login.py", line 49, in <lambda>
+    root.after(0, lambda: callback(ok))
+                          ~~~~~~~~^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\login.py", line 166, in _on_result
+    server_status_label.config(text="🟢 Server: Online", foreground="green")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\ttkbootstrap\style.py", line 5003, in configure
+    func(self, cnf, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1822, in configure
+    return self._configure('configure', cnf, kw)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1812, in _configure
+    self.tk.call(_flatten((self._w, cmd)) + self._options(cnf))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!frame.!frame.!label"
+
+2025-10-20 20:20:42,940 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\main.py", line 154, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
+
+2025-10-20 20:20:56,713 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 20:20:56,786 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:20:56,786 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:20:56,787 ERROR [db] Failed to save loop detection to database
+2025-10-20 20:29:29,309 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 20:29:29,323 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:29:29,324 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:29:29,326 ERROR [db] Failed to save loop detection to database
+2025-10-20 20:34:19,220 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\main.py", line 154, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2063, in __call__
+    def __call__(self, *args):
+    
+KeyboardInterrupt
+
+2025-10-20 20:34:40,783 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 20:34:40,802 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:34:40,803 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:34:40,808 ERROR [db] Failed to save loop detection to database
+2025-10-20 20:39:40,866 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 20:39:40,873 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:39:40,873 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 20:39:40,874 ERROR [db] Failed to save loop detection to database
+2025-10-20 20:51:26,432 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\client_window\client_app.py", line 1757, in auto_refresh_tickets
+    self.load_tickets()
+    ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\client_window\client_app.py", line 1704, in load_tickets
+    self.tickets_table.delete(*self.tickets_table.get_children())
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\ttk.py", line 1205, in get_children
+    self.tk.call(self._w, "children", item or '') or ())
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel2.!frame2.!treeview"
+
+2025-10-20 21:14:12,992 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 21:14:13,007 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 21:14:13,008 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 21:14:13,009 ERROR [db] Failed to save loop detection to database
+2025-10-20 21:21:31,367 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 21:21:31,451 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 21:21:31,452 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 21:21:31,454 ERROR [db] Failed to save loop detection to database
+2025-10-20 21:31:43,415 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-20 21:31:43,448 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-20 21:31:43,450 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-20 21:31:43,454 ERROR [db] Failed to save loop detection to database
+2025-10-20 21:32:29,967 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\client_window\tabs\routers_tab.py", line 801, in show_network_clients
+    if self.client_modal and self.client_modal.winfo_exists():
+       ^^^^^^^^^^^^^^^^^
+AttributeError: 'RoutersTab' object has no attribute 'client_modal'
+
+2025-10-20 21:32:53,144 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 10243, in update_client_display
+    for item in self.client_tree.get_children():
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\ttk.py", line 1205, in get_children
+    self.tk.call(self._w, "children", item or '') or ())
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel2.!frame.!frame3.!frame.!treeview"
+
+2025-10-20 21:32:53,162 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 10243, in update_client_display
+    for item in self.client_tree.get_children():
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\ttk.py", line 1205, in get_children
+    self.tk.call(self._w, "children", item or '') or ())
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel2.!frame.!frame3.!frame.!treeview"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 10194, in <lambda>
+    self.root.after(0, lambda: self.scan_btn.config(
+                               ~~~~~~~~~~~~~~~~~~~~^
+        state="normal", text="🔄 Scan Now"))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\ttkbootstrap\style.py", line 5003, in configure
+    func(self, cnf, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1822, in configure
+    return self._configure('configure', cnf, kw)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1812, in _configure
+    self.tk.call(_flatten((self._w, cmd)) + self._options(cnf))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel2.!frame.!frame2.!frame2.!button"
+

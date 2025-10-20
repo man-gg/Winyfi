@@ -77,6 +77,22 @@ os.makedirs(IMAGE_FOLDER, exist_ok=True)
 
 router_widgets = {}
 class Dashboard:
+    def ping_all_online_aps_once(self):
+        """Immediately ping all online APs in parallel and update their cards."""
+        import concurrent.futures
+        import threading
+        online_rids = [rid for rid, w in self.router_widgets.items()
+                       if self.status_history.get(rid, {}).get('current') is True]
+        if not online_rids:
+            return
+        def do_ping():
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(online_rids)) as pool:
+                futures = [
+                    pool.submit(self.fetch_and_update_bandwidth, rid, self.router_widgets[rid]['data']['ip_address'])
+                    for rid in online_rids
+                ]
+                concurrent.futures.wait(futures, timeout=10)
+        threading.Thread(target=do_ping, daemon=True).start()
     def __init__(self, root, current_user, api_base_url="http://localhost:5000"):
         self.app_running = True
         self.unifi_api_url = "http://localhost:5001"  # UniFi API server
@@ -91,6 +107,11 @@ class Dashboard:
         self.bandwidth_data = {}
         self.update_task = None  # Store .after() task ID
         self.db_health_status = {"status": "unknown", "message": "Not checked"}
+        
+        # Routers tab auto-refresh settings
+        self.routers_refresh_job = None
+        self.routers_refresh_interval = 30000  # 30 seconds default
+        self.is_refreshing_routers = False  # Prevent overlapping refreshes
         
         # Perform database health check before proceeding
         self._check_database_health()
@@ -122,6 +143,9 @@ class Dashboard:
         # Start periodic UniFi bandwidth polling
         self._unifi_bandwidth_job = None
         self._start_unifi_bandwidth_polling()
+        
+        # Start routers tab auto-refresh
+        self.start_routers_auto_refresh()
 
         # Start automatic loop detection (only if database is healthy)
         if self.loop_detection_enabled and self.db_health_status["status"] == "healthy":
@@ -568,54 +592,123 @@ class Dashboard:
         return get_routers()
     
     def _fetch_unifi_devices(self):
-        """Fetch UniFi devices from the UniFi API server and save to database."""
+        """Fetch UniFi devices from the UniFi API server and save to database.
+        Uses aggressive timeout and error handling to prevent app slowdown."""
         try:
             import requests
+            from requests.exceptions import ConnectionError, Timeout, RequestException
             from router_utils import upsert_unifi_router
-            from db import insert_bandwidth_log
+            from db import insert_bandwidth_log, get_connection
             
-            response = requests.get(f"{self.unifi_api_url}/api/unifi/devices", timeout=3)
+            # Use short timeout to prevent app slowdown (1 second connection, 2 second read)
+            response = requests.get(
+                f"{self.unifi_api_url}/api/unifi/devices", 
+                timeout=(1, 2)  # (connect timeout, read timeout)
+            )
+            
             if response.status_code == 200:
                 devices = response.json()
+                print(f"📡 Found {len(devices)} UniFi device(s) from API")
+                
+                # Get existing MAC addresses from database to detect new devices
+                try:
+                    conn = get_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT mac_address FROM routers WHERE brand = 'UniFi'")
+                    existing_macs = set(row[0] for row in cursor.fetchall())
+                    cursor.close()
+                    conn.close()
+                except Exception as db_error:
+                    print(f"⚠️ Database error while checking existing UniFi devices: {str(db_error)}")
+                    existing_macs = set()
+                
                 # Transform UniFi devices to match router structure
                 transformed = []
+                new_devices_count = 0
+                
                 for device in devices:
-                    name = device.get('name', 'Unknown AP')
-                    ip = device.get('ip', 'N/A')
-                    mac = device.get('mac', 'N/A')
-                    brand = 'UniFi'
-                    location = device.get('model', 'Access Point')
-                    
-                    # Save/update UniFi device in database
-                    router_id = upsert_unifi_router(name, ip, mac, brand, location, image_path=None)
-                    # Persist current throughput snapshot to bandwidth_logs
                     try:
-                        down = device.get('xput_down')
-                        up = device.get('xput_up')
-                        if router_id and (down is not None or up is not None):
-                            # latency is not provided by this endpoint; leave NULL
-                            insert_bandwidth_log(router_id, float(down or 0), float(up or 0), None)
-                    except Exception:
-                        pass
-                    
-                    transformed.append({
-                        'id': router_id if router_id else f"unifi_{mac}",
-                        'name': name,
-                        'ip_address': ip,
-                        'mac_address': mac,
-                        'brand': brand,
-                        'location': location,
-                        'is_unifi': True,
-                        'download_speed': device.get('xput_down', 0),
-                        'upload_speed': device.get('xput_up', 0),
-                        'last_seen': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        'image_path': None
-                    })
+                        name = device.get('name', 'Unknown AP')
+                        ip = device.get('ip', 'N/A')
+                        mac = device.get('mac', 'N/A')
+                        brand = 'UniFi'
+                        location = device.get('model', 'Access Point')
+                        
+                        # Check if this is a new device
+                        is_new_device = mac not in existing_macs
+                        
+                        # Save/update UniFi device in database
+                        # This will add new devices or update existing ones
+                        router_id = upsert_unifi_router(name, ip, mac, brand, location, image_path=None)
+                        
+                        if is_new_device and router_id:
+                            new_devices_count += 1
+                            print(f"✨ New UniFi device discovered: {name} (MAC: {mac}, IP: {ip})")
+                        
+                        # Persist current throughput snapshot to bandwidth_logs
+                        try:
+                            down = device.get('xput_down')
+                            up = device.get('xput_up')
+                            if router_id and (down is not None or up is not None):
+                                # latency is not provided by this endpoint; leave NULL
+                                insert_bandwidth_log(router_id, float(down or 0), float(up or 0), None)
+                        except Exception:
+                            pass
+                        
+                        transformed.append({
+                            'id': router_id if router_id else f"unifi_{mac}",
+                            'name': name,
+                            'ip_address': ip,
+                            'mac_address': mac,
+                            'brand': brand,
+                            'location': location,
+                            'is_unifi': True,
+                            'download_speed': device.get('xput_down', 0),
+                            'upload_speed': device.get('xput_up', 0),
+                            'last_seen': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            'image_path': None
+                        })
+                    except Exception as device_error:
+                        print(f"⚠️ Error processing UniFi device {device.get('name', 'Unknown')}: {str(device_error)}")
+                        continue
+                
+                if new_devices_count > 0:
+                    print(f"🎉 Added {new_devices_count} new UniFi device(s) to the database and routers tab")
+                
                 return transformed
             else:
+                # API returned non-200 status
+                if not hasattr(self, '_unifi_api_error_logged'):
+                    print(f"⚠️ UniFi API returned status code: {response.status_code}")
+                    self._unifi_api_error_logged = True
                 return []
+                
+        except ConnectionError:
+            # Connection refused or network unreachable - log once to avoid spam
+            if not hasattr(self, '_unifi_connection_error_logged'):
+                print("⚠️ UniFi API server is not reachable (connection refused)")
+                self._unifi_connection_error_logged = True
+            return []
+            
+        except Timeout:
+            # Request timed out - log once to avoid spam
+            if not hasattr(self, '_unifi_timeout_logged'):
+                print("⚠️ UniFi API request timed out (server may be slow or down)")
+                self._unifi_timeout_logged = True
+            return []
+            
+        except RequestException as e:
+            # Other requests-related errors
+            if not hasattr(self, '_unifi_request_error_logged'):
+                print(f"⚠️ UniFi API request error: {str(e)}")
+                self._unifi_request_error_logged = True
+            return []
+            
         except Exception as e:
-            # UniFi API not available - silently return empty list
+            # Catch-all for any other unexpected errors
+            if not hasattr(self, '_unifi_general_error_logged'):
+                print(f"⚠️ Unexpected error fetching UniFi devices: {str(e)}")
+                self._unifi_general_error_logged = True
             return []
     
     def _start_unifi_auto_refresh(self):
@@ -634,6 +727,121 @@ class Dashboard:
         if hasattr(self, 'unifi_refresh_job') and self.unifi_refresh_job:
             self.root.after_cancel(self.unifi_refresh_job)
             self.unifi_refresh_job = None
+    
+    def toggle_routers_auto_refresh(self):
+        """Toggle auto-refresh for routers tab"""
+        if self.routers_auto_refresh_var.get():
+            self.start_routers_auto_refresh()
+            print("✅ Routers auto-refresh enabled")
+        else:
+            self.stop_routers_auto_refresh()
+            print("⏸️ Routers auto-refresh paused")
+    
+    def start_routers_auto_refresh(self):
+        """Start auto-refresh for routers tab with smart updates"""
+        if not self.app_running:
+            return
+        
+        # Cancel any existing refresh job
+        if self.routers_refresh_job:
+            self.root.after_cancel(self.routers_refresh_job)
+        
+        # Schedule the refresh
+        self.routers_refresh_job = self.root.after(self.routers_refresh_interval, self._auto_refresh_routers)
+    
+    def stop_routers_auto_refresh(self):
+        """Stop auto-refresh for routers tab"""
+        if self.routers_refresh_job:
+            self.root.after_cancel(self.routers_refresh_job)
+            self.routers_refresh_job = None
+    
+    def _auto_refresh_routers(self):
+        """Auto-refresh routers tab - called by timer"""
+        if not self.app_running or not self.routers_auto_refresh_var.get():
+            return
+        
+        # Prevent overlapping refreshes
+        if self.is_refreshing_routers:
+            # Reschedule for later
+            self.routers_refresh_job = self.root.after(self.routers_refresh_interval, self._auto_refresh_routers)
+            return
+        
+        # Perform smart refresh in background
+        def background_check():
+            try:
+                # Fetch UniFi devices to check for new APs
+                unifi_devices = self._fetch_unifi_devices()
+                
+                # Get current router list from DB
+                db_routers = get_routers()
+                db_macs = {r.get('mac_address') for r in db_routers if r.get('mac_address')}
+                
+                # Check if there are new UniFi devices not in DB
+                unifi_macs = {d.get('mac_address') for d in unifi_devices if d.get('mac_address')}
+                new_devices = unifi_macs - db_macs
+                
+                # Schedule UI update on main thread if changes detected
+                if new_devices or len(db_routers) != len(self.router_widgets):
+                    self.root.after(0, lambda: self._perform_routers_refresh(f"Found {len(new_devices)} new device(s)"))
+                else:
+                    # Just update the timestamp
+                    from datetime import datetime
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    self.root.after(0, lambda: self.routers_last_update_label.config(text=f"Last checked: {timestamp}"))
+                
+            except Exception as e:
+                print(f"⚠️ Error in auto-refresh check: {str(e)}")
+            finally:
+                # Schedule next refresh
+                if self.app_running and self.routers_auto_refresh_var.get():
+                    self.routers_refresh_job = self.root.after(self.routers_refresh_interval, self._auto_refresh_routers)
+        
+        # Run check in background thread
+        threading.Thread(target=background_check, daemon=True).start()
+    
+    def _perform_routers_refresh(self, reason=""):
+        """Perform actual UI refresh on main thread"""
+        if self.is_refreshing_routers:
+            return
+        
+        self.is_refreshing_routers = True
+        try:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            
+            # Update UI
+            self.reload_routers(force_reload=False)
+            
+            # Update last update label
+            update_text = f"Last updated: {timestamp}"
+            if reason:
+                update_text += f" ({reason})"
+            self.routers_last_update_label.config(text=update_text)
+            
+            print(f"🔄 Routers refreshed at {timestamp}" + (f" - {reason}" if reason else ""))
+        except Exception as e:
+            print(f"⚠️ Error refreshing routers UI: {str(e)}")
+        finally:
+            self.is_refreshing_routers = False
+    
+    def manual_refresh_routers(self):
+        """Manual refresh triggered by button click"""
+        if self.is_refreshing_routers:
+            print("⏳ Refresh already in progress...")
+            return
+        
+        # Temporarily disable button to prevent spam
+        self.refresh_routers_btn.config(state="disabled", text="⏳ Refreshing...")
+        
+        def do_refresh():
+            try:
+                self._perform_routers_refresh("Manual refresh")
+            finally:
+                # Re-enable button after refresh
+                self.root.after(0, lambda: self.refresh_routers_btn.config(state="normal", text="🔄 Refresh"))
+        
+        # Run in background thread
+        threading.Thread(target=do_refresh, daemon=True).start()
         
 
 
@@ -819,9 +1027,34 @@ class Dashboard:
         router_header_frame = tb.Frame(self.routers_frame)
         router_header_frame.pack(fill="x", padx=10, pady=(10, 0))
 
-        tb.Label(router_header_frame, text="All Routers",
+        # Left side - Title and auto-refresh toggle
+        left_header = tb.Frame(router_header_frame)
+        left_header.pack(side="left", fill="x", expand=True)
+        
+        tb.Label(left_header, text="All Routers",
                 font=("Segoe UI", 14, "bold")).pack(side="left")
+        
+        # Auto-refresh toggle for routers tab
+        self.routers_auto_refresh_var = tb.BooleanVar(value=True)
+        self.routers_auto_refresh_check = tb.Checkbutton(
+            left_header,
+            text="Auto-refresh",
+            variable=self.routers_auto_refresh_var,
+            bootstyle="success-round-toggle",
+            command=self.toggle_routers_auto_refresh
+        )
+        self.routers_auto_refresh_check.pack(side="left", padx=(15, 0))
+        
+        # Last update label
+        self.routers_last_update_label = tb.Label(
+            left_header,
+            text="",
+            font=("Segoe UI", 9, "italic"),
+            bootstyle="secondary"
+        )
+        self.routers_last_update_label.pack(side="left", padx=(10, 0))
 
+        # Right side - Action buttons
         tb.Button(router_header_frame, text="➕ Add Router",
                 bootstyle="success", command=self.open_router_popup).pack(side="right")
 
@@ -837,7 +1070,16 @@ class Dashboard:
             text="🔄 Loop Test",
             bootstyle="warning",
             command=self.open_loop_test_modal
-        ).pack(side="right", padx=10)
+        ).pack(side="right", padx=5)
+        
+        # Manual refresh button
+        self.refresh_routers_btn = tb.Button(
+            router_header_frame,
+            text="🔄 Refresh",
+            bootstyle="primary",
+            command=self.manual_refresh_routers
+        )
+        self.refresh_routers_btn.pack(side="right", padx=5)
 
         filter_frame = tb.Frame(self.routers_frame)
         filter_frame.pack(pady=5, padx=10, fill="x")
@@ -2210,18 +2452,28 @@ class Dashboard:
             )
 
     def show_unifi_connected_clients(self, router):
-        """Show connected clients for a UniFi AP"""
+        """Show connected clients for a UniFi AP with robust error handling"""
         try:
+            import requests
+            from requests.exceptions import ConnectionError, Timeout, RequestException
+            
             # Fetch clients from UniFi API for this specific AP
             mac = router.get('mac_address', '')
             if not mac:
                 messagebox.showerror("Error", "MAC address not found for this device.")
                 return
             
-            response = requests.get(f"{self.unifi_api_url}/api/unifi/devices/{mac}/clients", timeout=5)
+            # Use short timeout to prevent UI freeze
+            response = requests.get(
+                f"{self.unifi_api_url}/api/unifi/devices/{mac}/clients", 
+                timeout=(1, 3)  # 1s connection, 3s read timeout
+            )
             
             if response.status_code != 200:
-                messagebox.showerror("Error", f"Failed to fetch clients from UniFi API.\nStatus: {response.status_code}")
+                messagebox.showerror("Error", 
+                                   f"Failed to fetch clients from UniFi API.\n"
+                                   f"Status Code: {response.status_code}\n\n"
+                                   f"Please check if the UniFi API server is running.")
                 return
             
             clients = response.json()
@@ -2323,12 +2575,24 @@ class Dashboard:
             tb.Button(footer_frame, text="Close", bootstyle="secondary",
                      command=modal.destroy, width=15).pack(side="right")
             
-        except requests.exceptions.ConnectionError:
+        except ConnectionError:
             messagebox.showerror("Connection Error", 
                                "Cannot connect to UniFi API server.\n\n"
-                               "Please ensure the UniFi API server is running on port 5001.")
+                               "Please ensure the UniFi API server is running.\n"
+                               f"Server URL: {self.unifi_api_url}")
+        except Timeout:
+            messagebox.showerror("Timeout Error",
+                               "UniFi API server request timed out.\n\n"
+                               "The server may be slow or overloaded.\n"
+                               "Please try again later.")
+        except RequestException as e:
+            messagebox.showerror("Request Error",
+                               f"Failed to communicate with UniFi API:\n{str(e)}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to fetch connected clients:\n{str(e)}")
+            messagebox.showerror("Error", 
+                               f"An unexpected error occurred:\n{str(e)}\n\n"
+                               f"Please check the console for more details.")
+            print(f"⚠️ Error in show_unifi_connected_clients: {str(e)}")
 
     def _format_uptime(self, seconds):
         """Format uptime in seconds to human-readable format"""
@@ -2620,7 +2884,8 @@ class Dashboard:
                 # For UniFi devices, fetch fresh data from API
                 try:
                     import requests
-                    response = requests.get(f"{self.unifi_api_url}/api/unifi/devices", timeout=3)
+                    from requests.exceptions import ConnectionError, Timeout, RequestException
+                    response = requests.get(f"{self.unifi_api_url}/api/unifi/devices", timeout=(1, 2))
                     if response.status_code == 200:
                         devices = response.json()
                         # Find matching device by MAC address
@@ -2651,10 +2916,23 @@ class Dashboard:
                             self.detail_download_lbl.config(text="N/A")
                             self.detail_upload_lbl.config(text="N/A")
                             self.detail_latency_lbl.config(text="N/A", bootstyle="danger")
-                except Exception as e:
-                    # API error
+                except (ConnectionError, Timeout):
+                    # Connection or timeout error - show warning without blocking UI
+                    self.detail_status_lbl.config(text="⚠️ API Unavailable", bootstyle="warning")
+                    self.status_circle.config(text="●", bootstyle="warning")
+                    self.detail_download_lbl.config(text="N/A")
+                    self.detail_upload_lbl.config(text="N/A")
+                    self.detail_latency_lbl.config(text="N/A")
+                except RequestException as e:
+                    # Other request errors
                     self.detail_status_lbl.config(text="⚠️ API Error", bootstyle="warning")
                     self.status_circle.config(text="●", bootstyle="warning")
+                    print(f"⚠️ UniFi API request error in refresh_details: {str(e)}")
+                except Exception as e:
+                    # Unexpected errors
+                    self.detail_status_lbl.config(text="⚠️ Error", bootstyle="danger")
+                    self.status_circle.config(text="●", bootstyle="danger")
+                    print(f"⚠️ Unexpected error in refresh_details (UniFi): {str(e)}")
             else:
                 # Regular router - use existing logic
                 rid = router['id']
@@ -2878,30 +3156,55 @@ class Dashboard:
         unifi_first = True
 
         # --- OPTIMIZED ROUTERS TAB ---
-        # 1. Fetch router list and UniFi devices only once
-        db_routers = get_routers()
+        # 1. Fetch UniFi devices first (this will add new devices to DB via upsert_unifi_router)
         unifi_devices = self._fetch_unifi_devices()
+        
+        # 2. Fetch router list from DB (now includes newly discovered UniFi devices)
+        db_routers = get_routers()
 
         # 2. Build a MAC->UniFi data map for fast lookup
         unifi_mac_to_data = {d.get('mac_address'): d for d in unifi_devices if d.get('mac_address')}
 
         # 3. Merge DB routers and UniFi API data, mark is_unifi, and defer ping/bandwidth to threads
+        # Note: UniFi devices were already added/updated to DB by _fetch_unifi_devices()
         all_devices = []
         for router in db_routers:
             mac = router.get('mac_address')
             is_unifi = router.get('brand') == 'UniFi' or mac in unifi_mac_to_data
             router['is_unifi'] = is_unifi
             if is_unifi and mac in unifi_mac_to_data:
-                # Merge API data, but always use DB values for user-editable fields
+                # Merge API data with fresh bandwidth/speed information
                 api_dev = unifi_mac_to_data[mac]
+                # Update controller-managed fields with latest API data
                 router['ip_address'] = api_dev.get('ip_address', router.get('ip_address'))
                 router['brand'] = api_dev.get('brand', router.get('brand'))
                 router['download_speed'] = api_dev.get('download_speed', 0)
                 router['upload_speed'] = api_dev.get('upload_speed', 0)
-                # Force DB values for user-editable fields
+                # Preserve user-editable fields from database
                 router['name'] = router.get('name', api_dev.get('name', ''))
                 router['location'] = router.get('location', api_dev.get('location', ''))
                 router['image_path'] = router.get('image_path', api_dev.get('image_path', None))
+                # --- Improved online status for UniFi routers ---
+                # 1. Ping result (set by update_unifi_latency thread, fallback to None)
+                ping_online = None
+                if 'latency' in router:
+                    ping_online = router['latency'] is not None
+                # 2. UniFi API status (look for 'is_connected', 'status', or similar)
+                api_online = None
+                # Try common fields for online status
+                for key in ('is_connected', 'connected', 'status', 'state'):
+                    if key in api_dev:
+                        val = api_dev[key]
+                        if isinstance(val, bool):
+                            api_online = val
+                        elif isinstance(val, str):
+                            api_online = val.lower() in ('connected', 'online', 'up', 'true', '1')
+                        break
+                # If not found, fallback to True (assume API doesn't provide status)
+                if api_online is None:
+                    api_online = True
+                # Only online if both ping and API say online
+                router['is_online_unifi'] = bool(ping_online) and bool(api_online)
             all_devices.append(router)
 
         # 4. Defer ping/latency for UniFi devices to background threads
@@ -2937,12 +3240,17 @@ class Dashboard:
                 continue
             elif type_filter == "Non-UniFi" and r.get('is_unifi'):
                 continue
-            
+            # --- Improved online/offline logic for UniFi routers ---
             if r.get('is_unifi'):
-                unifi_group = unifi_online if self.status_history.get(r['id'], {}).get('current') is True else unifi_offline
+                # Use new is_online_unifi field if present, else fallback to status_history
+                is_online = r.get('is_online_unifi')
+                if is_online is None:
+                    is_online = self.status_history.get(r['id'], {}).get('current') is True
+                unifi_group = unifi_online if is_online else unifi_offline
                 unifi_group.append(r)
             else:
-                nonunifi_group = nonunifi_online if self.status_history.get(r['id'], {}).get('current') is True else nonunifi_offline
+                is_online = self.status_history.get(r['id'], {}).get('current') is True
+                nonunifi_group = nonunifi_online if is_online else nonunifi_offline
                 nonunifi_group.append(r)
 
         # Sort each group alphabetically by name
@@ -2959,38 +3267,24 @@ class Dashboard:
             online = nonunifi_online + unifi_online
             offline = nonunifi_offline + unifi_offline
 
-        # 6. Clear UI only if router count or IDs changed, or filter changed
-        prev_ids = set(self.router_widgets.keys())
-        new_ids = set(r['id'] for r in all_devices if r.get('id'))
-        
-        # Check if we need to rebuild UI (router IDs changed or filter applied)
-        filtered_ids = set()
-        for r in (online + offline if hasattr(self, 'sort_var') and self.sort_var.get() == "online" else online + offline):
-            filtered_ids.add(r['id'])
-        
-        needs_rebuild = prev_ids != filtered_ids
-        
-        if needs_rebuild:
-            for w in self.scrollable_frame.winfo_children():
-                w.destroy()
-            self.router_widgets.clear()
+        # 6. ALWAYS clear and rebuild UI for clean filtering (prevents duplicates)
+        # This ensures seamless filter switching without card duplication
+        for w in self.scrollable_frame.winfo_children():
+            w.destroy()
+        self.router_widgets.clear()
 
-        # 7. Debounced card rendering
+        # 7. Debounced card rendering - FIXED for filter
         def section(title, routers):
             if not routers:
                 return
-
             tb.Label(
                 self.scrollable_frame, text=title,
                 font=("Segoe UI", 12, "bold"), bootstyle="secondary"
             ).pack(anchor="w", padx=10, pady=(15, 5))
-
             sec = tb.Frame(self.scrollable_frame)
             sec.pack(fill="x", padx=10, pady=5)
-
             sec._resize_job = None
             sec._last_cols = None
-
             def render_cards():
                 width = sec.winfo_width() or self.root.winfo_width()
                 if width <= 400:
@@ -3001,33 +3295,26 @@ class Dashboard:
                     max_cols = 3
                 else:
                     max_cols = 4
-
                 if sec._last_cols == max_cols:
                     return
                 sec._last_cols = max_cols
-
                 for w in sec.winfo_children():
                     w.destroy()
-
                 for i, router in enumerate(routers):
                     row, col = divmod(i, max_cols)
                     card_style = "primary" if router.get('is_unifi') else "info"
                     card = tb.LabelFrame(sec, text=router['name'], bootstyle=card_style, padding=0)
                     card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                     sec.grid_columnconfigure(col, weight=1)
-
                     inner = tb.Frame(card, padding=10)
                     inner.pack(fill="both", expand=True)
-
                     # Show UniFi badge for UniFi devices
                     if router.get('is_unifi'):
                         tb.Label(inner, text="📡", font=("Segoe UI Emoji", 30)).pack()
                         tb.Label(inner, text="UniFi Device", font=("Segoe UI", 8, "italic"), bootstyle="primary").pack()
                     else:
                         tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
-
                     tb.Label(inner, text=router['ip_address'], font=("Segoe UI", 10)).pack(pady=(5, 0))
-
                     # Status handling
                     if router.get('is_unifi'):
                         status_text, status_style = ("🟢 Online", "success")
@@ -3038,51 +3325,47 @@ class Dashboard:
                             else ("🔴 Offline", "danger") if cur is False
                             else ("🕒 Checking...", "secondary")
                         )
-
                     status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
                     status_label.pack(pady=5)
-
-                    # Bandwidth and Latency label
+                    # Bandwidth and Latency label - UNIFIED FORMAT FOR ALL DEVICES - ALL BLUE
                     if router.get('is_unifi'):
                         down = router.get('download_speed', 0)
                         up = router.get('upload_speed', 0)
                         latency = router.get('latency')
-                        if latency is not None:
-                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ {latency:.1f} ms", bootstyle="success")
+                        if latency is not None and down > 0:
+                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ {latency:.1f} ms", bootstyle="info")
                         else:
-                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ N/A", bootstyle="success")
+                            lbl_bandwidth = tb.Label(inner, text="📶 Bandwidth: Not available   |   ⚡ --", bootstyle="secondary")
                         lbl_bandwidth.pack(pady=2)
-                        # Defer ping/latency to thread (batch to reduce overhead)
                         if not hasattr(self, '_pending_unifi_updates'):
                             self._pending_unifi_updates = []
                         self._pending_unifi_updates.append(router)
-                    elif router.get('id') and self.status_history.get(router['id'], {}).get('current') is True:
-                        lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: checking...", bootstyle="secondary")
-                        lbl_bandwidth.pack(pady=2)
-                        # Batch bandwidth requests
-                        if not hasattr(self, '_pending_bandwidth_updates'):
-                            self._pending_bandwidth_updates = []
-                        self._pending_bandwidth_updates.append((router['id'], router['ip_address']))
                     else:
-                        lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
+                        # Non-UniFi devices - show initial state based on online status
+                        cur_status = self.status_history.get(router['id'], {}).get('current')
+                        if cur_status is True:
+                            # Online - show checking, bandwidth will be fetched by background updater
+                            lbl_bandwidth = tb.Label(inner, text="� Checking...", bootstyle="secondary")
+                        elif cur_status is False:
+                            # Offline
+                            lbl_bandwidth = tb.Label(inner, text="🔴 Device Offline", bootstyle="danger")
+                        else:
+                            # Unknown status - show checking
+                            lbl_bandwidth = tb.Label(inner, text="� Checking...", bootstyle="secondary")
                         lbl_bandwidth.pack(pady=2)
-
                     self.router_widgets[router['id']] = {
                         'card': card,
                         'status_label': status_label,
                         'bandwidth_label': lbl_bandwidth,
                         'data': router
                     }
-
                     def bind_card_click(widget, router_obj):
                         widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
                         if not router_obj.get('is_unifi'):
                             widget.bind("<Button-3>", lambda e: self.show_context_menu(e, router_obj))
-
                     bind_card_click(inner, router)
                     for child in inner.winfo_children():
                         bind_card_click(child, router)
-
                     if router.get('is_unifi'):
                         def on_enter(e, c=card): c.configure(bootstyle="success")
                         def on_leave(e, c=card): c.configure(bootstyle="primary")
@@ -3091,33 +3374,35 @@ class Dashboard:
                         def on_leave(e, c=card): c.configure(bootstyle="info")
                     card.bind("<Enter>", on_enter)
                     card.bind("<Leave>", on_leave)
-
             def on_resize(event):
                 if sec._resize_job:
                     sec.after_cancel(sec._resize_job)
-                sec._resize_job = sec.after(300, render_cards)  # Increased debounce to 300ms
-
+                sec._resize_job = sec.after(300, render_cards)
             sec.bind("<Configure>", on_resize)
             render_cards()
 
+        # Only render filtered routers, never duplicate sections
         if self.sort_var.get() == "online":
-            section("🟢 Online Routers", online)
-            section("🔴 Offline Routers", offline)
+            if online:
+                section("🟢 Online Routers", online)
+            if offline:
+                section("🔴 Offline Routers", offline)
         else:
-            section("🟢 Online Routers", online + offline)
+            if online or offline:
+                section("🟢 Online Routers", online + offline)
 
-        # Batch execute pending updates to reduce thread overhead
+        # Batch execute pending UniFi updates to reduce thread overhead
         import threading
         if hasattr(self, '_pending_unifi_updates') and self._pending_unifi_updates:
             for router in self._pending_unifi_updates:
                 threading.Thread(target=update_unifi_latency, args=(router,), daemon=True).start()
             self._pending_unifi_updates = []
         
-        if hasattr(self, '_pending_bandwidth_updates') and self._pending_bandwidth_updates:
-            for rid, ip in self._pending_bandwidth_updates:
-                threading.Thread(target=self.fetch_and_update_bandwidth, args=(rid, ip), daemon=True).start()
-            self._pending_bandwidth_updates = []
+        # Note: Non-UniFi bandwidth fetching is now handled by background status updater
+        # only when devices are confirmed online, preventing "Checking..." for offline devices
         
+        # Immediately ping all online APs and update their cards
+        self.ping_all_online_aps_once()
         # Hide loading animation
         self._hide_routers_loading()
 
@@ -3148,47 +3433,73 @@ class Dashboard:
             self.root.after(0, self._update_bandwidth_label, rid, None)
 
     def _update_bandwidth_label(self, rid, bandwidth):
+        """Update bandwidth label with UNIFIED formatting for both UniFi and non-UniFi devices"""
         # Ensure the router widget exists
         router_widget = self.router_widgets.get(rid)
         if not router_widget:
             return
 
-        # Access the bandwidth label widget
+        # Access the bandwidth label widget and router data
         bw_label = router_widget.get('bandwidth_label')
-        if not bw_label:
+        if not bw_label or not bw_label.winfo_exists():
             return
 
-        # Update the bandwidth label based on the available data
+        router_data = router_widget.get('data', {})
+        is_unifi = router_data.get('is_unifi', False)
+
+        # Check if device is offline
+        is_offline = self.status_history.get(rid, {}).get('current') is False
+
+        # Latency cache: store last known latency per AP
+        if not hasattr(self, '_latency_cache'):
+            self._latency_cache = {}
+
+        # If device is offline, show offline status and clear cache
+        if is_offline:
+            bw_label.config(text="🔴 Device Offline", bootstyle="danger")
+            self._latency_cache[rid] = None
+            return
+
+        # Handle bandwidth data - UNIFIED FORMAT FOR ALL DEVICES - ALL BLUE
         if bandwidth is None:
-            bw_label.config(text="❌ Bandwidth: Fetch failed", bootstyle="warning")
-        elif bandwidth.get("download") is None or bandwidth.get("upload") is None:
-            bw_label.config(text="⏳ Bandwidth: Fetching...", bootstyle="secondary")
-        else:
-            download = bandwidth.get("download")
-            upload = bandwidth.get("upload")
-            # Determine effective latency using last known value when dynamic ping skips
-            if not hasattr(self, "_last_latency_by_router"):
-                self._last_latency_by_router = {}
-            new_latency = bandwidth.get("latency") if isinstance(bandwidth, dict) else None
-            if isinstance(new_latency, (int, float)):
-                effective_latency = new_latency
-                self._last_latency_by_router[rid] = new_latency
-            else:
-                effective_latency = self._last_latency_by_router.get(rid)
+            # Fetch failed - show Not available, clear cache
+            bw_label.config(text="📶 Bandwidth: Not available   |   ⚡ --", bootstyle="secondary")
+            self._latency_cache[rid] = None
+            return
 
-            # Safeguard None values for bandwidth
-            if download is None or upload is None:
-                bw_label.config(text="⏳ Bandwidth: Fetching...", bootstyle="secondary")
-                return
+        # Extract bandwidth data
+        download = bandwidth.get("download")
+        upload = bandwidth.get("upload")
+        latency = bandwidth.get("latency")
 
-            latency_disp = f"{effective_latency:.0f} ms" if isinstance(effective_latency, (int, float)) else "— ms"
-            try:
+        # Handle None values - can't fetch bandwidth (device unreachable)
+        if download is None or upload is None:
+            bw_label.config(text="📶 Bandwidth: Not available   |   ⚡ --", bootstyle="secondary")
+            self._latency_cache[rid] = None
+            return
+
+        # Update latency cache if valid
+        if latency is not None and isinstance(latency, (int, float)):
+            self._latency_cache[rid] = latency
+        # Use cached latency if available
+        cached_latency = self._latency_cache.get(rid)
+
+        # Update bandwidth label with UNIFIED format for all devices - ALL BLUE
+        try:
+            # UNIFIED FORMAT: "📶 ↓{down} Mbps ↑{up} Mbps   ⚡ {latency} ms" - ALL BLUE (info)
+            if cached_latency is not None:
                 bw_label.config(
-                    text=f"⏱ {latency_disp} | ⬇ {float(download):.2f} Mbps | ⬆ {float(upload):.2f} Mbps",
-                    bootstyle="info"
+                    text=f"📶 ↓{float(download):.1f} Mbps ↑{float(upload):.1f} Mbps   ⚡ {float(cached_latency):.1f} ms",
+                    bootstyle="info"  # ALL BLUE
                 )
-            except Exception:
-                bw_label.config(text="⚠ Bandwidth: Format error", bootstyle="warning")
+            else:
+                bw_label.config(
+                    text=f"📶 ↓{float(download):.1f} Mbps ↑{float(upload):.1f} Mbps   ⚡ N/A",
+                    bootstyle="info"  # ALL BLUE
+                )
+        except Exception as e:
+            print(f"Error formatting bandwidth label for router {rid}: {e}")
+            bw_label.config(text="⚠ Bandwidth: Format error", bootstyle="warning")
 
 
 
@@ -3238,33 +3549,41 @@ class Dashboard:
                 time.sleep(0.1)
 
     def _background_bandwidth_updater(self):
+        import time
+        import concurrent.futures
         while self.app_running:
+            # Only ping APs with high latency (>=150ms) or all online UniFi APs
+            high_latency_ids = []
+            unifi_online_ids = []
+            # Use the latency cache to determine which APs to ping
+            if not hasattr(self, '_latency_cache'):
+                self._latency_cache = {}
+            for rid, widget in self.router_widgets.items():
+                router = widget.get('data', {})
+                is_unifi = router.get('is_unifi', False)
+                is_online = self.status_history.get(rid, {}).get('current') is True
+                if not is_online:
+                    continue
+                if is_unifi:
+                    unifi_online_ids.append((rid, router.get('ip_address')))
+                else:
+                    latency = self._latency_cache.get(rid)
+                    # Retry if latency is None (N/A) or high
+                    if latency is None or (latency is not None and latency >= 150):
+                        high_latency_ids.append((rid, router.get('ip_address')))
+            # Combine all targets
+            targets = high_latency_ids + unifi_online_ids
+            if not targets:
+                time.sleep(2)
+                continue
+            # Fetch bandwidth in parallel for selected APs
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                futures = {
-                    pool.submit(get_bandwidth, w['data']['ip_address']): rid
-                    for rid, w in self.router_widgets.items()
-                }
-                for fut in concurrent.futures.as_completed(futures):
-                    if not self.app_running:
-                        return
-                    rid = futures[fut]
-                    try:
-                        result = fut.result()  # should return {"download_mbps": X, "upload_mbps": Y}
-                    except Exception:
-                        result = {"download_mbps": None, "upload_mbps": None}
-
-                    # ✅ store in shared dict
-                    self.bandwidth_data[rid] = result
-
-                    # ✅ refresh open router details (if visible)
-                    if hasattr(self, "open_details_rid") and self.open_details_rid == rid:
-                        self.root.after(0, self.refresh_details)
-            
-            # small sleep (e.g. 5s)
-            for _ in range(50):  # 50 * 0.1s = 5s
-                if not self.app_running:
-                    return
-                time.sleep(0.1)
+                futures = [
+                    pool.submit(self.fetch_and_update_bandwidth, rid, ip)
+                    for rid, ip in targets if ip
+                ]
+                concurrent.futures.wait(futures, timeout=5)
+            time.sleep(2)
 
     def _update_gui_status(self, rid, online, bandwidth=None):
         if not self.app_running:
@@ -3285,84 +3604,101 @@ class Dashboard:
         # Update bandwidth/latency label
         bw_lbl = w.get('bandwidth_label')
         if bw_lbl and bw_lbl.winfo_exists():
-            if bandwidth is None:
-                bw_lbl.config(text="⏳ Bandwidth: checking...", bootstyle="secondary")
+            # CRITICAL: Check offline status FIRST to prevent "Checking..." on offline devices
+            if not online:
+                # Device is offline - show offline status, don't check bandwidth
+                bw_lbl.config(text="🔴 Device Offline", bootstyle="danger")
+            elif bandwidth is None:
+                # Device is online but bandwidth not fetched yet - this should be rare
+                # as bandwidth is triggered by online status in background updater
+                bw_lbl.config(text="📶 Bandwidth: Not available   |   ⚡ --", bootstyle="secondary")
             else:
+                # Device is online and bandwidth data available
                 latency = bandwidth.get("latency")
                 download = bandwidth.get("download")
                 upload = bandwidth.get("upload")
 
-                if online and latency is not None:
+                if latency is not None and download is not None and upload is not None:
                     bw_lbl.config(
-                        text=f"⏱ {latency:.0f} ms | ⬇ {download:.2f} Mbps | ⬆ {upload:.2f} Mbps",
+                        text=f"📶 ↓{download:.1f} Mbps ↑{upload:.1f} Mbps   ⚡ {latency:.1f} ms",
                         bootstyle="info"
                     )
-                elif not online:
-                    bw_lbl.config(text="🔴 Offline", bootstyle="danger")
                 else:
-                    bw_lbl.config(text="❌ Bandwidth check failed", bootstyle="warning")
+                    bw_lbl.config(text="📶 Bandwidth: Not available   |   ⚡ --", bootstyle="secondary")
 
 
     def _background_status_updater(self):
         print("🔄 Starting router status monitoring...")
         while self.app_running:
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                futures = {
-                    pool.submit(is_online, w['data']['ip_address']): rid
-                    for rid, w in self.router_widgets.items()
-                }
-                for fut in concurrent.futures.as_completed(futures):
-                    if not self.app_running:
-                        return  # Stop safely
-                    rid = futures[fut]
-                    online = fut.result()
-                    hist = self.status_history[rid]
-                    prev = hist['current']
-                    if online:
-                        hist['failures'] = 0
-                        new = True
-                    else:
-                        hist['failures'] += 1
-                        new = False if hist['failures'] >= 3 else prev
+            try:
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    futures = {
+                        pool.submit(is_online, w['data']['ip_address']): rid
+                        for rid, w in self.router_widgets.items()
+                    }
+                    for fut in concurrent.futures.as_completed(futures):
+                        if not self.app_running:
+                            return  # Stop safely
+                        try:
+                            rid = futures[fut]
+                            online = fut.result()
+                            hist = self.status_history[rid]
+                            prev = hist['current']
+                            if online:
+                                hist['failures'] = 0
+                                new = True
+                            else:
+                                hist['failures'] += 1
+                                new = False if hist['failures'] >= 3 else prev
 
-                    # Debug output
-                    router_data = self.router_widgets.get(rid, {}).get('data', {})
-                    router_name = router_data.get('name', f'Router {rid}')
-                    # Removed router status print statement
-
-                    # Only update if state changes OR router is online (to refresh bandwidth)
-                    if new is not prev or new is True:
-                        hist['current'] = new
-                        update_router_status_in_db(rid, new)
-                        
-                        # Send notification for router status change
-                        if new is not prev:
+                            # Debug output
                             router_data = self.router_widgets.get(rid, {}).get('data', {})
                             router_name = router_data.get('name', f'Router {rid}')
-                            router_ip = router_data.get('ip_address', 'Unknown')
-                            
-                            # Debug output
-                            status_text = "Online" if new else "Offline"
-                            print(f"🔔 Router status change: {router_name} ({router_ip}) is now {status_text}")
-                            
-                            # Create notification in main thread to ensure toast notifications work
-                            if self.app_running:
-                                self.root.after(0, lambda: self._create_router_notification(router_name, router_ip, new))
-                                self.root.after(0, lambda r=rid, s=new: self._update_gui_status(r, s))
-                                # Update notification count
-                                self.root.after(0, self.update_notification_count)
+                            # Removed router status print statement
 
-                        if self.app_running:
-                            # fetch bandwidth in a thread if online
-                            if new:
-                                threading.Thread(
-                                    target=self.fetch_and_update_bandwidth,
-                                    args=(rid, self.router_widgets[rid]['data']['ip_address']),
-                                    daemon=True
-                                ).start()
-                            else:
-                                # just update GUI to offline
-                                self.root.after(0, lambda r=rid, s=new: self._update_gui_status(r, s))
+                            # Only update if state changes OR router is online (to refresh bandwidth)
+                            if new is not prev or new is True:
+                                hist['current'] = new
+                                try:
+                                    update_router_status_in_db(rid, new)
+                                except Exception as db_error:
+                                    print(f"⚠️ Failed to update DB for router {router_name}: {str(db_error)}")
+                                
+                                # Send notification for router status change
+                                if new is not prev:
+                                    router_data = self.router_widgets.get(rid, {}).get('data', {})
+                                    router_name = router_data.get('name', f'Router {rid}')
+                                    router_ip = router_data.get('ip_address', 'Unknown')
+                                    
+                                    # Debug output
+                                    status_text = "Online" if new else "Offline"
+                                    print(f"🔔 Router status change: {router_name} ({router_ip}) is now {status_text}")
+                                    
+                                    # Create notification in main thread to ensure toast notifications work
+                                    if self.app_running:
+                                        self.root.after(0, lambda: self._create_router_notification(router_name, router_ip, new))
+                                        self.root.after(0, lambda r=rid, s=new: self._update_gui_status(r, s))
+                                        # Update notification count
+                                        self.root.after(0, self.update_notification_count)
+
+                            if self.app_running:
+                                # fetch bandwidth in a thread if online
+                                if new:
+                                    threading.Thread(
+                                        target=self.fetch_and_update_bandwidth,
+                                        args=(rid, self.router_widgets[rid]['data']['ip_address']),
+                                        daemon=True
+                                    ).start()
+                                else:
+                                    # just update GUI to offline
+                                    self.root.after(0, lambda r=rid, s=new: self._update_gui_status(r, s))
+                        except Exception as e:
+                            print(f"⚠️ Error processing router status for router {rid}: {str(e)}")
+                            continue
+
+            except Exception as e:
+                print(f"⚠️ Error in background status updater: {str(e)}")
+                # Continue running even if there's an error
 
             # Immediately stop if app closed during processing
             for _ in range(30):  # sleep for 3 seconds total, but check every 0.1s
@@ -10629,6 +10965,10 @@ Type: {values[11]}
         self.app_running = False
         try:
             self.stop_loop_detection()
+        except Exception:
+            pass
+        try:
+            self.stop_routers_auto_refresh()
         except Exception:
             pass
         try:

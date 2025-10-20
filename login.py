@@ -163,9 +163,15 @@ def show_login(root):
         def _on_result(ok):
             try:
                 if ok:
-                    server_status_label.config(text="🟢 Server: Online", foreground="green")
+                    try:
+                        server_status_label.config(text="🟢 Server: Online", foreground="green")
+                    except Exception:
+                        pass
                 else:
-                    server_status_label.config(text="🔴 Server: Offline (Client login unavailable)", foreground="red")
+                    try:
+                        server_status_label.config(text="🔴 Server: Offline (Client login unavailable)", foreground="red")
+                    except Exception:
+                        pass
             finally:
                 _server_check_inflight["busy"] = False
 
