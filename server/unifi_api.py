@@ -32,6 +32,8 @@ MOCK_APS = [
         "ip": "192.168.1.22",
         "xput_down": 120.5,
         "xput_up": 30.2,
+        "rx_bytes": 5000000000,  # 5 GB cumulative RX
+        "tx_bytes": 2000000000,  # 2 GB cumulative TX
         "state": 1,          # 1 = online, 0 = offline
         "connected": True
     },
@@ -42,6 +44,8 @@ MOCK_APS = [
         "ip": "192.168.1.23",
         "xput_down": 80.1,
         "xput_up": 20.7,
+        "rx_bytes": 3000000000,  # 3 GB cumulative RX
+        "tx_bytes": 1000000000,  # 1 GB cumulative TX
         "state": 0,
         "connected": False
     },
@@ -52,6 +56,8 @@ MOCK_APS = [
         "ip": "192.168.1.24",
         "xput_down": 80.1,
         "xput_up": 20.7,
+        "rx_bytes": 8000000000,  # 8 GB cumulative RX
+        "tx_bytes": 3500000000,  # 3.5 GB cumulative TX
         "state": 1,
         "connected": False
     }

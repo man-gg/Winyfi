@@ -7219,3 +7219,431 @@ Traceback (most recent call last):
     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _tkinter.TclError: invalid command name ".!toplevel2.!frame.!frame2.!frame2.!button"
 
+2025-10-22 16:03:44,487 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 16:03:44,495 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 16:03:44,495 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 16:03:44,495 ERROR [db] Failed to save loop detection to database
+2025-10-22 20:28:39,331 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 20:28:39,353 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 20:28:39,354 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 20:28:39,360 ERROR [db] Failed to save loop detection to database
+2025-10-22 20:59:27,099 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 20:59:27,121 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 20:59:27,122 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 20:59:27,123 ERROR [db] Failed to save loop detection to database
+2025-10-22 21:04:27,204 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 21:04:27,226 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:04:27,227 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:04:27,228 ERROR [db] Failed to save loop detection to database
+2025-10-22 21:09:27,305 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 21:09:27,312 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:09:27,312 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:09:27,313 ERROR [db] Failed to save loop detection to database
+2025-10-22 21:15:56,329 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 21:15:56,347 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:15:56,349 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:15:56,350 ERROR [db] Failed to save loop detection to database
+2025-10-22 21:28:59,564 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 21:28:59,584 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:28:59,586 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:28:59,589 ERROR [db] Failed to save loop detection to database
+2025-10-22 21:35:05,683 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 21:35:05,728 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:35:05,729 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:35:05,730 ERROR [db] Failed to save loop detection to database
+2025-10-22 21:38:13,443 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 21:38:13,483 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:38:13,483 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:38:13,487 ERROR [db] Failed to save loop detection to database
+2025-10-22 21:42:38,349 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 21:42:38,371 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:42:38,372 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:42:38,375 ERROR [db] Failed to save loop detection to database
+2025-10-22 21:51:49,622 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 21:51:49,719 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:51:49,719 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 21:51:49,723 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:01:00,167 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:01:00,237 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:01:00,237 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:01:00,242 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:10:34,613 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\login.py", line 396, in handle_login
+    show_dashboard(dashboard_window, user, api_base_url)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 11621, in show_dashboard
+    Dashboard(root, current_user, api_base_url)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 133, in __init__
+    self._build_ui()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 986, in _build_ui
+    self.build_reports_tab()
+    ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'build_reports_tab'
+
+2025-10-22 22:10:35,646 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\login.py", line 396, in handle_login
+    show_dashboard(dashboard_window, user, api_base_url)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 11621, in show_dashboard
+    Dashboard(root, current_user, api_base_url)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 133, in __init__
+    self._build_ui()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 986, in _build_ui
+    self.build_reports_tab()
+    ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'build_reports_tab'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5744, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5762, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 6548, in refresh_total_bandwidth_chart
+    if sort_column is not None:
+       ^^^^^^^^^^^
+NameError: name 'sort_column' is not defined
+
+2025-10-22 22:14:36,663 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5747, in start_bandwidth_auto_update
+    self.auto_update_bandwidth()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5765, in auto_update_bandwidth
+    self.refresh_total_bandwidth_chart()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 6542, in refresh_total_bandwidth_chart
+    self.summary_frame.grid_columnconfigure(i, weight=1)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'summary_frame'
+
+2025-10-22 22:14:36,720 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:14:36,736 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:14:36,739 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:14:36,741 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:17:03,478 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:17:03,483 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:17:03,484 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:17:03,484 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:17:04,636 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5685, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:17:23,005 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5685, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5685, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:19:45,131 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:19:45,137 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:19:45,140 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:19:45,141 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:19:46,410 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:20:16,596 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:20:47,401 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:21:17,726 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:21:48,478 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5689, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:24:55,779 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:24:55,799 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:24:55,825 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:24:55,935 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:24:57,361 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5686, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:25:29,897 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 5686, in start_report_auto_update
+    if self.report_auto_update_var.get():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute 'report_auto_update_var'. Did you mean: 'report_auto_update_job'?
+
+2025-10-22 22:32:04,828 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:32:05,126 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:32:05,126 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:32:05,127 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:42:08,203 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:42:08,220 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:42:08,254 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:42:08,281 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:53:22,602 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:53:22,616 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:53:22,617 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:53:22,618 ERROR [db] Failed to save loop detection to database
+2025-10-22 22:56:43,509 ERROR [root] Loop detection failed: Interface 'Wi-Fi' not found !
+2025-10-22 22:56:43,720 ERROR [db] MySQL error during save_loop_detection: 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:56:43,722 ERROR [db] Database Error - save_loop_detection - A database error occurred during save_loop_detection. | Details: MySQL Error 1265: Data truncated for column 'status' at row 1
+2025-10-22 22:56:43,724 ERROR [db] Failed to save loop detection to database

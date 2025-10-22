@@ -242,8 +242,6 @@ class ClientDashboard:
         self.reports_tab = ReportsTab(self.reports_frame, self.root)
         self.bandwidth_tab = BandwidthTab(self.bandwidth_frame, self.api_base_url, self.root)
         self.settings_tab = SettingsTab(self.settings_frame, self.api_base_url, self.root)
-        # Add tickets button to the Reports tab
-        self._add_tickets_button_to_reports()
         # Default tab
         self.show_page("Dashboard")
 
@@ -1304,23 +1302,30 @@ class ClientDashboard:
 
         def _toggle_reports_options(*_):
             # Only toggle interactive widgets; frames/labels might not support 'state'
-            if export_var.get() == "reports":
-                try:
+            try:
+                if export_var.get() == "reports":
                     start_picker.configure(state="normal")
                     end_picker.configure(state="normal")
                     mode_combo.configure(state="readonly")
-                except Exception:
-                    pass
-            else:
-                try:
+                else:
                     start_picker.configure(state="disabled")
                     end_picker.configure(state="disabled")
                     mode_combo.configure(state="disabled")
-                except Exception:
-                    pass
+            except Exception:
+                # Widget already destroyed, remove trace
+                pass
 
-        export_var.trace_add("write", _toggle_reports_options)
+        trace_id = export_var.trace_add("write", _toggle_reports_options)
         _toggle_reports_options()
+        
+        # Clean up trace when modal is destroyed to prevent errors
+        def _cleanup_trace():
+            try:
+                export_var.trace_remove("write", trace_id)
+            except Exception:
+                pass
+        
+        modal.bind("<Destroy>", lambda e: _cleanup_trace())
 
         # Footer buttons
         btns = tb.Frame(outer)

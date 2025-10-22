@@ -5541,7 +5541,7 @@ Type: {values[11]}
         )
         self.router_picker.current(0)  # Default to All Routers
         self.router_picker.pack(side="left", padx=(10, 0))
-        self.router_picker.bind("<<ComboboxSelected>>", lambda e: self.show_last_7_days_for_selected_router())
+        self.router_picker.bind("<<ComboboxSelected>>", lambda e: self.refresh_total_bandwidth_chart())
 
         # Date range filter
         date_frame = tb.Frame(controls_frame)
@@ -6086,7 +6086,8 @@ Type: {values[11]}
 
 
     def show_last_7_days_for_selected_router(self):
-        """On router selection, show last 7 days of data for that router or all routers."""
+        """DEPRECATED: Use load_last_7_days_bandwidth() instead.
+        This function resets dates to last 7 days - only call explicitly when intended."""
         # Cancel any scheduled refresh
         if hasattr(self, "_bandwidth_after_job") and self._bandwidth_after_job:
             try:
@@ -6363,12 +6364,13 @@ Type: {values[11]}
 
     def refresh_total_bandwidth_chart(self):
         """
-        Always refreshes the bandwidth chart and table using the current router and date picker selections.
+        Optimized: Refreshes the bandwidth chart and table, fixes redraw, empty data, and timer issues.
         """
         self._show_bandwidth_loading()
-        # Cancel any scheduled refresh
+        # Cancel any scheduled refresh (auto-update job)
         if hasattr(self, "_bandwidth_after_job") and self._bandwidth_after_job:
             self.bandwidth_frame.after_cancel(self._bandwidth_after_job)
+            self._bandwidth_after_job = None
 
         # Get current router and date picker values directly from UI
         router_name = self.router_var.get() if hasattr(self, 'router_var') else "All Routers"
@@ -6385,18 +6387,12 @@ Type: {values[11]}
         except Exception:
             end_date = None
 
-        # Default to last 7 days if empty
+        # Default to last 7 days if empty (only if dates are None, don't modify the UI)
         today = datetime.now().date()
         if not start_date:
             start_date = today - timedelta(days=7)
-            if hasattr(self, 'start_date'):
-                self.start_date.entry.delete(0, tk.END)
-                self.start_date.entry.insert(0, start_date.strftime("%m/%d/%Y"))
         if not end_date:
             end_date = today
-            if hasattr(self, 'end_date'):
-                self.end_date.entry.delete(0, tk.END)
-                self.end_date.entry.insert(0, end_date.strftime("%m/%d/%Y"))
 
         start_str = start_date.strftime("%Y-%m-%d")
         end_str = end_date.strftime("%Y-%m-%d")
@@ -6417,7 +6413,7 @@ Type: {values[11]}
                 "upload_mbps AS total_upload, latency_ms AS avg_latency "
                 "FROM bandwidth_logs "
                 "WHERE router_id=%s AND DATE(timestamp) BETWEEN %s AND %s "
-                "ORDER BY timestamp DESC LIMIT 500"
+                "ORDER BY timestamp ASC LIMIT 500"
             )
             query_params.extend([router_id, start_str, end_str])
         else:
@@ -6429,7 +6425,7 @@ Type: {values[11]}
                 "FROM bandwidth_logs "
                 "WHERE DATE(timestamp) BETWEEN %s AND %s "
                 "GROUP BY DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00') "
-                "ORDER BY timestamp DESC LIMIT 500"
+                "ORDER BY timestamp ASC LIMIT 500"
             )
             query_params.extend([start_str, end_str])
 
@@ -6439,19 +6435,6 @@ Type: {values[11]}
         cur.execute(query, query_params)
         rows = cur.fetchall()
         conn.close()
-
-        # Handle no data
-        if not rows:
-            if not isinstance(getattr(self, 'bandwidth_data', {}), dict):
-                self.bandwidth_data = {}
-            self.bandwidth_table.delete(*self.bandwidth_table.get_children())
-            self.ax1.clear()
-            self.ax2.clear()
-            self.bandwidth_canvas.draw()
-            if hasattr(self, 'bandwidth_last_update_label'):
-                self.bandwidth_last_update_label.config(text="Last updated: -")
-            self._hide_bandwidth_loading()
-            return
 
         # Prepare data for chart & table
         filtered_rows = []
@@ -6467,11 +6450,9 @@ Type: {values[11]}
                 float(r["avg_latency"] or 0)
             )
             filtered_rows.append(row_tuple)
-        filtered_rows.reverse()
+        
+        # Store filtered rows for table use
         self._bandwidth_rows = filtered_rows
-
-        # Refresh table and chart
-        self._refresh_bandwidth_table(sort_column="timestamp", reverse=False)
 
         # Update subtitle label
         if hasattr(self, 'bandwidth_table_subtitle'):
@@ -6485,9 +6466,24 @@ Type: {values[11]}
         if hasattr(self, 'bandwidth_last_update_label'):
             self.bandwidth_last_update_label.config(text=f"Last updated: {now}")
 
-        # Schedule auto-refresh every 5s
-        self._bandwidth_after_job = self.bandwidth_frame.after(5000, self.refresh_total_bandwidth_chart)
+        # Refresh both table and chart using the unified method
+        # This ensures chart and table are always in sync
+        self._refresh_bandwidth_table(sort_column=None, reverse=False)
+
+        # Schedule auto-refresh (interval from UI)
+        interval_map = {"10s": 10000, "30s": 30000, "1m": 60000, "2m": 120000, "5m": 300000}
+        interval_str = self.bandwidth_interval_var.get() if hasattr(self, 'bandwidth_interval_var') else "30s"
+        interval_ms = interval_map.get(interval_str, 30000)
+        if getattr(self, 'bandwidth_auto_update_var', None) and self.bandwidth_auto_update_var.get():
+            self._bandwidth_after_job = self.bandwidth_frame.after(interval_ms, self.refresh_total_bandwidth_chart)
         self._hide_bandwidth_loading()
+
+    # Helper: force chart refresh and cancel any pending auto-refresh
+    def force_total_bandwidth_chart_refresh(self):
+        if hasattr(self, '_bandwidth_after_job') and self._bandwidth_after_job:
+            self.bandwidth_frame.after_cancel(self._bandwidth_after_job)
+            self._bandwidth_after_job = None
+        self.refresh_total_bandwidth_chart()
 
 
 
