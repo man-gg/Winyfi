@@ -352,11 +352,49 @@ def create_loop_detections_table():
         return False
     return True
 
-def save_loop_detection(total_packets, offenders, stats, status, severity_score, interface="Wi-Fi", duration=3):
-    """Save a loop detection result to the database."""
+def save_loop_detection(total_packets, offenders, stats, status, severity_score, interface="Wi-Fi", duration=3, efficiency_metrics=None):
+    """
+    Save a loop detection result to the database with enhanced fields.
+    
+    Args:
+        total_packets: Total packet count
+        offenders: List of offending MAC addresses
+        stats: Detection statistics
+        status: Detection status ('clean', 'suspicious', 'loop_detected')
+        severity_score: Severity score (float or dict)
+        interface: Network interface name
+        duration: Detection duration in seconds
+        efficiency_metrics: Optional dict with efficiency data
+    """
     def _save_detection():
         conn = get_connection()
         cursor = conn.cursor()
+        
+        # Extract efficiency metrics
+        cross_subnet = False
+        unique_subnets = 0
+        unique_macs = 0
+        packets_analyzed = total_packets
+        sample_rate = 1.0
+        efficiency_score = 0.0
+        severity_breakdown = None
+        
+        if efficiency_metrics:
+            cross_subnet = efficiency_metrics.get('cross_subnet_detected', False)
+            unique_subnets = efficiency_metrics.get('unique_subnets', 0)
+            unique_macs = efficiency_metrics.get('unique_macs', 0)
+            packets_analyzed = efficiency_metrics.get('packets_analyzed', total_packets)
+            sample_rate = efficiency_metrics.get('sample_rate', 1.0)
+            
+            # Calculate efficiency score
+            if packets_analyzed > 0:
+                efficiency_score = (total_packets / packets_analyzed) * 100
+        
+        # If severity_score is a dict (advanced mode), extract breakdown
+        actual_severity = severity_score
+        if isinstance(severity_score, dict):
+            severity_breakdown = severity_score
+            actual_severity = severity_score.get('total', 0)
         
         # Prepare offenders data for JSON storage
         offenders_data = {
@@ -366,20 +404,29 @@ def save_loop_detection(total_packets, offenders, stats, status, severity_score,
         
         insert_sql = """
         INSERT INTO loop_detections 
-        (total_packets, offenders_count, offenders_data, severity_score, network_interface, detection_duration, status)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        (total_packets, offenders_count, offenders_data, severity_score, network_interface, detection_duration, status,
+         cross_subnet_detected, unique_subnets, unique_macs, packets_analyzed, sample_rate, efficiency_score, severity_breakdown)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         
         offenders_count = len(offenders) if isinstance(offenders, list) else offenders
+        severity_json = json.dumps(severity_breakdown) if severity_breakdown else None
         
         cursor.execute(insert_sql, (
             total_packets,
             offenders_count,
             json.dumps(offenders_data),
-            severity_score,
+            actual_severity,
             interface,
             duration,
-            status
+            status,
+            cross_subnet,
+            unique_subnets,
+            unique_macs,
+            packets_analyzed,
+            sample_rate,
+            efficiency_score,
+            severity_json
         ))
         
         conn.commit()
@@ -387,7 +434,7 @@ def save_loop_detection(total_packets, offenders, stats, status, severity_score,
         cursor.close()
         conn.close()
         
-        logger.info(f"Loop detection saved to database (ID: {detection_id})")
+        logger.info(f"Loop detection saved to database (ID: {detection_id}, severity: {actual_severity:.2f}, cross-subnet: {cross_subnet})")
         return detection_id
     
     result = execute_with_error_handling("save_loop_detection", _save_detection)
@@ -595,6 +642,8 @@ def create_network_clients_table():
             ip_address VARCHAR(15),
             hostname VARCHAR(255),
             vendor VARCHAR(255),
+            router_id INT NULL,
+            router_name VARCHAR(255),
             first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             is_online BOOLEAN DEFAULT TRUE,
@@ -641,6 +690,27 @@ def create_network_clients_table():
         if "already exists" not in str(e).lower():
             print(f"Error creating network_clients table: {e}")
 
+def ensure_network_clients_router_columns():
+    """Ensure router_id and router_name columns exist on network_clients table (for migrations)."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        # Check and add router_id
+        cursor.execute("SHOW COLUMNS FROM network_clients LIKE 'router_id'")
+        if cursor.fetchone() is None:
+            cursor.execute("ALTER TABLE network_clients ADD COLUMN router_id INT NULL AFTER vendor")
+            conn.commit()
+        # Check and add router_name
+        cursor.execute("SHOW COLUMNS FROM network_clients LIKE 'router_name'")
+        if cursor.fetchone() is None:
+            cursor.execute("ALTER TABLE network_clients ADD COLUMN router_name VARCHAR(255) NULL AFTER router_id")
+            conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        # Log but don't crash
+        print(f" Warning: ensure_network_clients_router_columns failed: {e}")
+
 def create_connection_history_table():
     """Create the connection_history table if it doesn't exist."""
     try:
@@ -677,7 +747,8 @@ def create_connection_history_table():
             print(f" Error creating connection_history table: {e}")
 
 def save_network_client(mac_address, ip_address=None, hostname=None, vendor=None, 
-                       ping_latency=None, device_type=None, notes=None):
+                       ping_latency=None, device_type=None, notes=None,
+                       router_id=None, router_name=None):
     """Save or update a network client in the database."""
     try:
         conn = get_connection()
@@ -695,6 +766,8 @@ def save_network_client(mac_address, ip_address=None, hostname=None, vendor=None
             SET ip_address = COALESCE(%s, ip_address),
                 hostname = COALESCE(%s, hostname),
                 vendor = COALESCE(%s, vendor),
+                router_id = COALESCE(%s, router_id),
+                router_name = COALESCE(%s, router_name),
                 last_seen = CURRENT_TIMESTAMP,
                 is_online = TRUE,
                 ping_latency_ms = %s,
@@ -703,17 +776,17 @@ def save_network_client(mac_address, ip_address=None, hostname=None, vendor=None
                 notes = COALESCE(%s, notes)
             WHERE id = %s
             """
-            cursor.execute(update_sql, (ip_address, hostname, vendor, ping_latency, 
+            cursor.execute(update_sql, (ip_address, hostname, vendor, router_id, router_name, ping_latency, 
                                       device_type, notes, client_id))
         else:
             # Insert new client
             insert_sql = """
             INSERT INTO network_clients 
-            (mac_address, ip_address, hostname, vendor, ping_latency_ms, device_type, notes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            (mac_address, ip_address, hostname, vendor, router_id, router_name, ping_latency_ms, device_type, notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(insert_sql, (mac_address, ip_address, hostname, vendor, 
-                                      ping_latency, device_type, notes))
+                                      router_id, router_name, ping_latency, device_type, notes))
             client_id = cursor.lastrowid
         
         conn.commit()
@@ -726,27 +799,25 @@ def save_network_client(mac_address, ip_address=None, hostname=None, vendor=None
         print(f" Error saving network client: {e}")
         return None
 
-def get_network_clients(online_only=False, limit=100):
-    """Get network clients from database."""
+def get_network_clients(online_only=False, limit=100, router_id=None):
+    """Get network clients from database. Optionally filter by router_id."""
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         
+        base_sql = "SELECT * FROM network_clients"
+        where_clauses = []
+        params = []
         if online_only:
-            select_sql = """
-            SELECT * FROM network_clients 
-            WHERE is_online = TRUE
-            ORDER BY last_seen DESC 
-            LIMIT %s
-            """
-            cursor.execute(select_sql, (limit,))
-        else:
-            select_sql = """
-            SELECT * FROM network_clients 
-            ORDER BY last_seen DESC 
-            LIMIT %s
-            """
-            cursor.execute(select_sql, (limit,))
+            where_clauses.append("is_online = TRUE")
+        if router_id is not None:
+            where_clauses.append("router_id = %s")
+            params.append(router_id)
+        if where_clauses:
+            base_sql += " WHERE " + " AND ".join(where_clauses)
+        base_sql += " ORDER BY last_seen DESC LIMIT %s"
+        params.append(limit)
+        cursor.execute(base_sql, tuple(params))
         
         results = cursor.fetchall()
         cursor.close()

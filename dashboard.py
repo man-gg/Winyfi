@@ -2444,12 +2444,237 @@ class Dashboard:
         if is_unifi:
             self.show_unifi_connected_clients(router)
         else:
-            # Non-UniFi devices not supported yet
-            messagebox.showinfo(
-                "Not Supported",
-                f"Connected clients view is not supported for non-UniFi devices yet.\n\n"
-                f"This feature is currently only available for UniFi Access Points."
-            )
+            # Non-UniFi devices: fetch clients from database via API
+            self.show_non_unifi_connected_clients(router)
+
+    def show_non_unifi_connected_clients(self, router):
+        """Show connected clients for a non-UniFi router/AP from database via API"""
+        try:
+            import requests
+            from requests.exceptions import ConnectionError, Timeout, RequestException
+            
+            router_id = router.get('id')
+            if not router_id:
+                messagebox.showerror("Error", "Router ID not found.")
+                return
+            
+            # Create modal window
+            modal = Toplevel(self.root)
+            modal.title(f"👥 Connected Clients - {router.get('name', 'Router')}")
+            modal.geometry("900x600")
+            modal.transient(self.root)
+            modal.grab_set()
+            
+            # Center window
+            self._center_window(modal, 900, 600)
+            
+            # Main container
+            main_container = tb.Frame(modal, padding=20)
+            main_container.pack(fill="both", expand=True)
+            
+            # Header
+            header_frame = tb.Frame(main_container)
+            header_frame.pack(fill="x", pady=(0, 15))
+            
+            tb.Label(header_frame, text=f"📡 {router.get('name', 'Router')}", 
+                    font=("Segoe UI", 16, "bold"), bootstyle="primary").pack(side="left")
+            
+            # Status label for loading
+            status_label = tb.Label(header_frame, 
+                                   text="⏳ Loading clients...", 
+                                   font=("Segoe UI", 12), bootstyle="info")
+            status_label.pack(side="right")
+            
+            # Info banner
+            info_frame = tb.LabelFrame(main_container, text="ℹ️ Router Info", bootstyle="secondary", padding=10)
+            info_frame.pack(fill="x", pady=(0, 15))
+            
+            info_text = f"IP: {router.get('ip_address', 'N/A')} | MAC: {router.get('mac_address', 'N/A')} | Location: {router.get('location', 'N/A')}"
+            tb.Label(info_frame, text=info_text, font=("Segoe UI", 9)).pack()
+            
+            # Content frame that will hold the clients table
+            content_frame = tb.Frame(main_container)
+            content_frame.pack(fill="both", expand=True)
+            
+            # Loading label
+            loading_label = tb.Label(content_frame, text="⏳ Fetching clients from database...", 
+                                    font=("Segoe UI", 12), bootstyle="info")
+            loading_label.pack(pady=50)
+            
+            # Footer with buttons
+            footer_frame = tb.Frame(main_container)
+            footer_frame.pack(fill="x", pady=(15, 0))
+            
+            refresh_btn = tb.Button(footer_frame, text="🔄 Refresh", bootstyle="info",
+                                   command=lambda: [modal.destroy(), self.show_non_unifi_connected_clients(router)],
+                                   width=15, state="disabled")
+            refresh_btn.pack(side="left")
+            
+            tb.Button(footer_frame, text="Close", bootstyle="secondary",
+                     command=modal.destroy, width=15).pack(side="right")
+            
+            # Fetch clients (and persist to DB) from API in background thread
+            def fetch_clients():
+                try:
+                    # First, ask server to discover and save clients for this router
+                    response = requests.post(
+                        f"{self.api_base_url}/api/routers/{router_id}/clients/discover_save",
+                        timeout=12
+                    )
+                    
+                    if response.status_code != 200:
+                        self.root.after(0, lambda: update_ui_error(
+                            f"Failed to refresh clients.\nStatus Code: {response.status_code}"
+                        ))
+                        return
+                    
+                    data = response.json()
+                    clients = data.get('clients', [])
+                    
+                    # Update UI in main thread
+                    self.root.after(0, lambda: update_ui_with_clients(clients))
+                    
+                except ConnectionError:
+                    self.root.after(0, lambda: update_ui_error(
+                        "Cannot connect to server.\nPlease ensure the server is running."
+                    ))
+                except Timeout:
+                    self.root.after(0, lambda: update_ui_error(
+                        "Request timed out.\nPlease try again later."
+                    ))
+                except RequestException as e:
+                    self.root.after(0, lambda: update_ui_error(f"Request error:\n{str(e)}"))
+                except Exception as e:
+                    self.root.after(0, lambda: update_ui_error(f"Unexpected error:\n{str(e)}"))
+            
+            def update_ui_error(error_msg):
+                loading_label.config(text=f"❌ {error_msg}", bootstyle="danger")
+                refresh_btn.config(state="normal")
+            
+            def update_ui_with_clients(clients):
+                # Clear loading message
+                loading_label.destroy()
+                
+                # Update status label
+                status_label.config(
+                    text=f"{len(clients)} Client{'s' if len(clients) != 1 else ''} Saved to DB",
+                    bootstyle="success"
+                )
+                
+                # Enable refresh button
+                refresh_btn.config(state="normal")
+                
+                if not clients:
+                    # No clients found
+                    no_clients_label = tb.Label(content_frame, 
+                                               text="No clients found for this router in the database", 
+                                               font=("Segoe UI", 12), bootstyle="secondary")
+                    no_clients_label.pack(pady=50)
+                    return
+                
+                # Create treeview for clients
+                tree_frame = tb.Frame(content_frame)
+                tree_frame.pack(fill="both", expand=True)
+                
+                # Define columns
+                columns = ("Status", "IP Address", "MAC Address", "Hostname", "Vendor", "Last Seen")
+                
+                # Create Treeview
+                tree = tb.Treeview(tree_frame, columns=columns, show="headings", 
+                                  height=15, bootstyle="info")
+                
+                # Configure columns
+                column_widths = [80, 120, 150, 180, 150, 150]
+                for col, width in zip(columns, column_widths):
+                    tree.heading(col, text=col)
+                    tree.column(col, width=width, anchor="center")
+                
+                # Scrollbars
+                v_scrollbar = tb.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+                h_scrollbar = tb.Scrollbar(tree_frame, orient="horizontal", command=tree.xview)
+                tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+                
+                # Pack treeview and scrollbars
+                tree.pack(side="left", fill="both", expand=True)
+                v_scrollbar.pack(side="right", fill="y")
+                h_scrollbar.pack(side="bottom", fill="x")
+                
+                # Insert client data
+                for client in clients:
+                    is_online = client.get('is_online', False)
+                    status = "🟢 Online" if is_online else "🔴 Offline"
+                    
+                    ip_address = client.get('ip_address', 'Unknown')
+                    mac_address = client.get('mac_address', 'Unknown')
+                    hostname = client.get('hostname', 'Unknown')
+                    vendor = client.get('vendor', 'Unknown')
+                    
+                    # Format last_seen
+                    last_seen = client.get('last_seen', 'N/A')
+                    if last_seen and last_seen != 'N/A':
+                        try:
+                            from datetime import datetime
+                            if isinstance(last_seen, str):
+                                # Try to parse and reformat
+                                dt = datetime.fromisoformat(last_seen.replace('Z', '+00:00'))
+                                last_seen = dt.strftime("%Y-%m-%d %H:%M:%S")
+                        except:
+                            pass
+                    
+                    tree.insert("", "end", values=(
+                        status,
+                        ip_address,
+                        mac_address,
+                        hostname,
+                        vendor,
+                        last_seen
+                    ))
+                
+                # Add context menu for right-click
+                context_menu = tk.Menu(modal, tearoff=0)
+                context_menu.add_command(label="📋 Copy IP", command=lambda: copy_selected_ip(tree))
+                context_menu.add_command(label="📋 Copy MAC", command=lambda: copy_selected_mac(tree))
+                
+                def show_context_menu(event):
+                    try:
+                        item = tree.selection()[0]
+                        context_menu.post(event.x_root, event.y_root)
+                    except IndexError:
+                        pass
+                
+                tree.bind("<Button-3>", show_context_menu)
+            
+            def copy_selected_ip(tree):
+                try:
+                    item = tree.selection()[0]
+                    values = tree.item(item, "values")
+                    ip = values[1]  # IP is in column 1
+                    modal.clipboard_clear()
+                    modal.clipboard_append(ip)
+                    messagebox.showinfo("Copied", f"IP address copied: {ip}")
+                except IndexError:
+                    messagebox.showwarning("No Selection", "Please select a client first.")
+            
+            def copy_selected_mac(tree):
+                try:
+                    item = tree.selection()[0]
+                    values = tree.item(item, "values")
+                    mac = values[2]  # MAC is in column 2
+                    modal.clipboard_clear()
+                    modal.clipboard_append(mac)
+                    messagebox.showinfo("Copied", f"MAC address copied: {mac}")
+                except IndexError:
+                    messagebox.showwarning("No Selection", "Please select a client first.")
+            
+            # Start fetching clients in background thread
+            import threading
+            threading.Thread(target=fetch_clients, daemon=True).start()
+            
+        except Exception as e:
+            messagebox.showerror("Error", 
+                               f"An unexpected error occurred:\n{str(e)}\n\n"
+                               f"Please check the console for more details.")
+            print(f"⚠️ Error in show_non_unifi_connected_clients: {str(e)}")
 
     def show_unifi_connected_clients(self, router):
         """Show connected clients for a UniFi AP with robust error handling"""
@@ -9370,12 +9595,15 @@ Type: {values[11]}
         tb.Button(history_controls, text="🔄 Refresh History", bootstyle="info",
                  command=self._refresh_loop_detection_history, width=15).pack(side='left')
         
-        tb.Label(history_controls, text="History updates automatically after each detection", 
-                font=("Segoe UI", 9), bootstyle="secondary").pack(side='left', padx=(10, 0))
+        tb.Button(history_controls, text="🔍 View Details", bootstyle="primary",
+                 command=self._show_selected_detection_details, width=15).pack(side='left', padx=(10, 0))
         
         # Create treeview for history
         columns = ("Time", "Status", "Packets", "Offenders", "Severity", "Interface")
         self.loop_detection_tree = ttk.Treeview(history_frame, columns=columns, show="headings", height=10)
+        
+        # Double-click to view details
+        self.loop_detection_tree.bind("<Double-Button-1>", lambda e: self._show_selected_detection_details())
         
         # Configure columns
         for col in columns:
@@ -9478,6 +9706,7 @@ Type: {values[11]}
                 # Handle both database records and in-memory records
                 if "detection_time" in record:
                     # Database record
+                    record_id = record.get("id")
                     timestamp = record["detection_time"].strftime("%Y-%m-%d %H:%M:%S") if hasattr(record["detection_time"], 'strftime') else str(record["detection_time"])[:19]
                     status = record["status"]
                     packets = record["total_packets"]
@@ -9486,6 +9715,7 @@ Type: {values[11]}
                     interface = record["network_interface"]
                 else:
                     # In-memory record
+                    record_id = record.get("id")
                     timestamp = record["timestamp"][:19]  # Format timestamp
                     status = record["status"]
                     packets = record["total_packets"]
@@ -9504,6 +9734,7 @@ Type: {values[11]}
                     'loop_detected': '⚠️ Loop Detected'
                 }.get(status, f'❓ {status}')
                 
+                # Insert with record ID as tag for retrieval
                 self.loop_detection_tree.insert("", "end", values=(
                     timestamp,
                     status_emoji,
@@ -9511,7 +9742,7 @@ Type: {values[11]}
                     offenders,
                     f"{severity:.2f}",
                     interface
-                ))
+                ), tags=(str(record_id),))
                 
         except Exception as e:
             print(f"Error loading loop detection history: {e}")
@@ -9536,6 +9767,400 @@ Type: {values[11]}
         except Exception as e:
             print(f"Error updating status display: {e}")
 
+    def _analyze_loop_problem(self, record, stats, sorted_stats):
+        """Analyze the detection and provide insights about potential problems."""
+        analysis = []
+        
+        analysis.append("=== PROBLEM ANALYSIS ===\n")
+        analysis.append(f"Detection Status: {record['status'].upper()}\n")
+        analysis.append(f"Severity Score: {record['severity_score']:.2f}\n")
+        analysis.append(f"Threshold: Clean < 7.5, Suspicious 7.5-22.5, Loop > 22.5\n\n")
+
+        if record['status'] == 'clean':
+            analysis.append("✅ NETWORK STATUS: CLEAN\n")
+            analysis.append("No significant loop activity detected. The network is operating normally.\n\n")
+            
+            if stats:
+                analysis.append("📊 TRAFFIC SUMMARY:\n")
+                for mac, mac_stats in sorted_stats[:3]:
+                    ips = ', '.join(mac_stats.get('ips', ['N/A']))
+                    analysis.append(f"  • {mac} ({ips})\n")
+                    analysis.append(f"    - Total: {mac_stats.get('count', 0)} packets\n")
+                    analysis.append(f"    - ARP: {mac_stats.get('arp_count', 0)}, Broadcast: {mac_stats.get('broadcast_count', 0)}\n")
+                    analysis.append(f"    - Severity: {mac_stats.get('severity', 0):.2f}\n\n")
+
+        elif record['status'] == 'suspicious':
+            analysis.append("🟡 NETWORK STATUS: SUSPICIOUS ACTIVITY\n")
+            analysis.append("Elevated traffic detected but below loop threshold. This could be:\n")
+            analysis.append("  • Normal network activity during high usage\n")
+            analysis.append("  • A device performing legitimate operations (DHCP, ARP discovery)\n")
+            analysis.append("  • Early signs of a developing loop\n\n")
+
+            if sorted_stats:
+                top_offender = sorted_stats[0]
+                mac = top_offender[0]
+                mac_stats = top_offender[1]
+                ips = ', '.join(mac_stats.get('ips', ['N/A']))
+
+                analysis.append("🔍 TOP SUSPICIOUS DEVICE:\n")
+                analysis.append(f"  MAC: {mac}\n")
+                analysis.append(f"  IP: {ips}\n")
+                analysis.append(f"  Severity: {mac_stats.get('severity', 0):.2f}\n")
+                analysis.append(f"  Total Packets: {mac_stats.get('count', 0)}\n")
+                analysis.append(f"  ARP Count: {mac_stats.get('arp_count', 0)}\n")
+                analysis.append(f"  Broadcast: {mac_stats.get('broadcast_count', 0)}\n\n")
+
+                analysis.append("💡 RECOMMENDATIONS:\n")
+                if mac_stats.get('arp_count', 0) > 15:
+                    analysis.append("  • High ARP traffic detected - device may be scanning network\n")
+                if mac_stats.get('broadcast_count', 0) > 20:
+                    analysis.append("  • High broadcast traffic - check for misconfigured applications\n")
+                if mac == "3c:91:80:80:ac:97":
+                    analysis.append("  • This is your whitelisted laptop - traffic is legitimate\n")
+                else:
+                    analysis.append("  • Monitor this device - if severity increases, investigate further\n")
+                    analysis.append("  • Check if device is a router, server, or IoT device\n")
+
+        else:  # loop_detected
+            analysis.append("🔴 NETWORK STATUS: LOOP DETECTED!\n")
+            analysis.append("CRITICAL: A network loop has been detected. This will cause:\n")
+            analysis.append("  • Network performance degradation\n")
+            analysis.append("  • Broadcast storms\n")
+            analysis.append("  • Potential network outage\n\n")
+
+            if sorted_stats:
+                analysis.append("⚠️ OFFENDING DEVICES:\n")
+                for i, (mac, mac_stats) in enumerate(sorted_stats[:5], 1):
+                    ips = ', '.join(mac_stats.get('ips', ['N/A']))
+                    analysis.append(f"\n{i}. {mac} ({ips})\n")
+                    analysis.append(f"   Severity: {mac_stats.get('severity', 0):.2f}\n")
+                    analysis.append(f"   Packets: {mac_stats.get('count', 0)}\n")
+                    analysis.append(f"   ARP: {mac_stats.get('arp_count', 0)}, ")
+                    analysis.append(f"Broadcast: {mac_stats.get('broadcast_count', 0)}, ")
+                    analysis.append(f"STP: {mac_stats.get('stp_count', 0)}\n")
+
+                top_offender = sorted_stats[0]
+                mac_stats = top_offender[1]
+
+                analysis.append("\n💡 IMMEDIATE ACTIONS REQUIRED:\n")
+                analysis.append("  1. Locate the physical connections for devices listed above\n")
+                analysis.append("  2. Check for cable loops between switches/routers\n")
+                analysis.append("  3. Verify STP (Spanning Tree Protocol) is enabled on switches\n")
+                
+                if mac_stats.get('broadcast_count', 0) > 50:
+                    analysis.append("  4. HIGH BROADCAST TRAFFIC - Disconnect suspected switch immediately\n")
+                if mac_stats.get('arp_count', 0) > 50:
+                    analysis.append("  4. HIGH ARP TRAFFIC - Check for duplicate IP addresses\n")
+                if mac_stats.get('stp_count', 0) > 10:
+                    analysis.append("  4. STP PACKETS DETECTED - Check switch STP configuration\n")
+
+                analysis.append("\n🔧 TROUBLESHOOTING STEPS:\n")
+                analysis.append("  • Disconnect one cable at a time from switches\n")
+                analysis.append("  • Run detection again after each disconnection\n")
+                analysis.append("  • Once severity drops, you've found the loop\n")
+                analysis.append("  • Configure STP on all switches to prevent future loops\n")
+
+        analysis.append("\n" + "="*60 + "\n")
+        
+        return ''.join(analysis)
+
+    def _show_selected_detection_details(self):
+        """Show details for the currently selected detection in the history tree."""
+        selected = self.loop_detection_tree.selection()
+        if not selected:
+            messagebox.showwarning("No Selection", "Please select a detection record to view details.")
+            return
+        
+        # Get record ID from the item tags
+        item = selected[0]
+        tags = self.loop_detection_tree.item(item, 'tags')
+        if not tags:
+            messagebox.showerror("Error", "Could not find record ID.")
+            return
+        
+        try:
+            record_id = int(tags[0])
+            
+            # Find record in in-memory history
+            record = None
+            for hist_record in self.loop_detection_history:
+                if hist_record.get('id') == record_id:
+                    record = hist_record
+                    break
+            
+            if record:
+                self._show_detection_details_modal(record)
+            else:
+                messagebox.showerror("Error", f"Record #{record_id} not found in history.")
+        except (ValueError, IndexError) as e:
+            messagebox.showerror("Error", f"Invalid record ID: {e}")
+
+    def _show_detection_details_modal(self, record):
+        """Show detailed information about a detection record."""
+        if not record:
+            messagebox.showerror("Error", "Record not found!")
+            return
+        
+        record_id = record['id']
+
+        try:
+            # Create detail modal
+            detail_modal = tb.Toplevel(self.root)
+            detail_modal.title(f"🔍 Detection Details - ID #{record_id}")
+            detail_modal.geometry("700x550")
+            detail_modal.resizable(True, True)
+            detail_modal.transient(self.root)
+
+            # Center modal (calculate before showing)
+            x = self.root.winfo_x() + (self.root.winfo_width() // 2) - 350
+            y = self.root.winfo_y() + (self.root.winfo_height() // 2) - 275
+            detail_modal.geometry(f"700x550+{x}+{y}")
+
+            # Simple scrollable container
+            main_canvas = tk.Canvas(detail_modal, highlightthickness=0)
+            main_scrollbar = tb.Scrollbar(detail_modal, orient="vertical", command=main_canvas.yview)
+            scrollable_frame = tb.Frame(main_canvas)
+
+            scrollable_frame.bind("<Configure>", 
+                lambda e: main_canvas.configure(scrollregion=main_canvas.bbox("all")))
+
+            main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw", width=680)
+            main_canvas.configure(yscrollcommand=main_scrollbar.set)
+
+            main_canvas.pack(side="left", fill="both", expand=True)
+            main_scrollbar.pack(side="right", fill="y")
+
+            content = tb.Frame(scrollable_frame)
+            content.pack(fill='both', expand=True, padx=15, pady=10)
+
+            # Header with close button
+            header_frame = tb.Frame(content)
+            header_frame.pack(fill='x', pady=(0, 10))
+            
+            status_emoji = {
+                'clean': '✅',
+                'suspicious': '🟡',
+                'loop_detected': '🔴'
+            }.get(record['status'], '❓')
+
+            tb.Label(header_frame, text=f"{status_emoji} ID #{record_id} - {record['status'].replace('_', ' ').title()}",
+                    font=("Segoe UI", 13, "bold")).pack(side='left')
+            
+            tb.Button(header_frame, text="✕", bootstyle="danger-link",
+                     command=detail_modal.destroy, width=3).pack(side='right')
+
+            # Basic Information Card - compact
+            basic_info = tb.LabelFrame(content, text="📋 Basic Information", padding=10, bootstyle="info")
+            basic_info.pack(fill='x', pady=(0, 8))
+
+            basic_grid = tb.Frame(basic_info)
+            basic_grid.pack(fill='x')
+
+            # Row 1
+            tb.Label(basic_grid, text="Time:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky='w', pady=3)
+            tb.Label(basic_grid, text=record['detection_time'].strftime('%Y-%m-%d %H:%M:%S'),
+                    font=("Segoe UI", 9)).grid(row=0, column=1, sticky='w', padx=(5, 0), pady=3)
+
+            tb.Label(basic_grid, text="Severity:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky='w', padx=(15, 0), pady=3)
+            severity_color = "danger" if record['severity_score'] > 22.5 else ("warning" if record['severity_score'] > 7.5 else "success")
+            tb.Label(basic_grid, text=f"{record['severity_score']:.2f}",
+                    font=("Segoe UI", 9, "bold"), bootstyle=severity_color).grid(row=0, column=3, sticky='w', padx=(5, 0), pady=3)
+
+            # Row 2
+            tb.Label(basic_grid, text="Interface:", font=("Segoe UI", 9, "bold")).grid(row=1, column=0, sticky='w', pady=3)
+            tb.Label(basic_grid, text=record['network_interface'] or "N/A",
+                    font=("Segoe UI", 9)).grid(row=1, column=1, sticky='w', padx=(5, 0), pady=3)
+
+            tb.Label(basic_grid, text="Duration:", font=("Segoe UI", 9, "bold")).grid(row=1, column=2, sticky='w', padx=(15, 0), pady=3)
+            tb.Label(basic_grid, text=f"{record['detection_duration']}s",
+                    font=("Segoe UI", 9)).grid(row=1, column=3, sticky='w', padx=(5, 0), pady=3)
+
+            # Row 3
+            tb.Label(basic_grid, text="Packets:", font=("Segoe UI", 9, "bold")).grid(row=2, column=0, sticky='w', pady=3)
+            tb.Label(basic_grid, text=str(record['total_packets']),
+                    font=("Segoe UI", 9)).grid(row=2, column=1, sticky='w', padx=(5, 0), pady=3)
+
+            tb.Label(basic_grid, text="Offenders:", font=("Segoe UI", 9, "bold")).grid(row=2, column=2, sticky='w', padx=(15, 0), pady=3)
+            tb.Label(basic_grid, text=str(record['offenders_count']),
+                    font=("Segoe UI", 9)).grid(row=2, column=3, sticky='w', padx=(5, 0), pady=3)
+
+            # Offenders Information - compact
+            offenders_frame = tb.LabelFrame(content, text="⚠️ Top Offenders", padding=8, bootstyle="warning")
+            offenders_frame.pack(fill='both', expand=True, pady=(0, 8))
+
+            # Parse offenders data
+            import json
+            try:
+                offenders_data = json.loads(record['offenders_data']) if record['offenders_data'] else {}
+                stats = offenders_data.get('stats', {})
+
+                if stats:
+                    # Create a treeview for offenders
+                    offenders_tree_frame = tb.Frame(offenders_frame)
+                    offenders_tree_frame.pack(fill='both', expand=True)
+
+                    offenders_scroll = tb.Scrollbar(offenders_tree_frame, orient="vertical")
+                    offenders_scroll.pack(side='right', fill='y')
+
+                    offenders_cols = ("MAC", "IP", "Packets", "ARP", "Broadcast", "Severity")
+                    offenders_tree = tb.Treeview(offenders_tree_frame, columns=offenders_cols,
+                                                show="headings", yscrollcommand=offenders_scroll.set,
+                                                height=4)
+
+                    offenders_scroll.config(command=offenders_tree.yview)
+
+                    offenders_tree.heading("MAC", text="MAC")
+                    offenders_tree.heading("IP", text="IP")
+                    offenders_tree.heading("Packets", text="Pkts")
+                    offenders_tree.heading("ARP", text="ARP")
+                    offenders_tree.heading("Broadcast", text="Bcast")
+                    offenders_tree.heading("Severity", text="Score")
+
+                    offenders_tree.column("MAC", width=130)
+                    offenders_tree.column("IP", width=120)
+                    offenders_tree.column("Packets", width=60, anchor='center')
+                    offenders_tree.column("ARP", width=50, anchor='center')
+                    offenders_tree.column("Broadcast", width=50, anchor='center')
+                    offenders_tree.column("Severity", width=60, anchor='center')
+
+                    # Sort by severity
+                    sorted_stats = sorted(stats.items(), key=lambda x: x[1].get('severity', 0), reverse=True)
+
+                    for mac, mac_stats in sorted_stats[:10]:  # Show only top 10
+                        ips = ', '.join(mac_stats.get('ips', ['N/A']))[:20]  # Limit IP length
+                        offenders_tree.insert("", "end", values=(
+                            mac[-17:],  # Last 17 chars of MAC
+                            ips,
+                            mac_stats.get('count', 0),
+                            mac_stats.get('arp_count', 0),
+                            mac_stats.get('broadcast_count', 0),
+                            f"{mac_stats.get('severity', 0):.1f}"
+                        ))
+
+                    offenders_tree.pack(fill='both', expand=True)
+
+                    # Problem Analysis - compact
+                    analysis_frame = tb.LabelFrame(content, text="🔍 Analysis", padding=8, bootstyle="danger")
+                    analysis_frame.pack(fill='x', pady=(0, 8))
+
+                    analysis_text = tb.Text(analysis_frame, height=6, wrap=tk.WORD, font=("Segoe UI", 8))
+                    analysis_text.pack(fill='both', expand=True)
+
+                    # Analyze the problem
+                    analysis = self._analyze_loop_problem(record, stats, sorted_stats)
+                    analysis_text.insert("1.0", analysis)
+                    analysis_text.config(state="disabled")
+
+                else:
+                    tb.Label(offenders_frame, text="No offenders detected in this scan.",
+                            font=("Segoe UI", 10)).pack()
+
+            except json.JSONDecodeError:
+                tb.Label(offenders_frame, text="Error parsing offenders data.",
+                        font=("Segoe UI", 10), bootstyle="danger").pack()
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load detection details: {e}")
+            print(f"Error loading detection details: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _analyze_loop_problem(self, record, stats, sorted_stats):
+        """Analyze the detection and provide insights about potential problems."""
+        analysis = []
+        
+        analysis.append("=== PROBLEM ANALYSIS ===\n")
+        analysis.append(f"Detection Status: {record['status'].upper()}\n")
+        analysis.append(f"Severity Score: {record['severity_score']:.2f}\n")
+        analysis.append(f"Threshold: Clean < 7.5, Suspicious 7.5-22.5, Loop > 22.5\n\n")
+
+        if record['status'] == 'clean':
+            analysis.append("✅ NETWORK STATUS: CLEAN\n")
+            analysis.append("No significant loop activity detected. The network is operating normally.\n\n")
+            
+            if stats:
+                analysis.append("📊 TRAFFIC SUMMARY:\n")
+                for mac, mac_stats in sorted_stats[:3]:
+                    ips = ', '.join(mac_stats.get('ips', ['N/A']))
+                    analysis.append(f"  • {mac} ({ips})\n")
+                    analysis.append(f"    - Total: {mac_stats.get('count', 0)} packets\n")
+                    analysis.append(f"    - ARP: {mac_stats.get('arp_count', 0)}, Broadcast: {mac_stats.get('broadcast_count', 0)}\n")
+                    analysis.append(f"    - Severity: {mac_stats.get('severity', 0):.2f}\n\n")
+
+        elif record['status'] == 'suspicious':
+            analysis.append("🟡 NETWORK STATUS: SUSPICIOUS ACTIVITY\n")
+            analysis.append("Elevated traffic detected but below loop threshold. This could be:\n")
+            analysis.append("  • Normal network activity during high usage\n")
+            analysis.append("  • A device performing legitimate operations (DHCP, ARP discovery)\n")
+            analysis.append("  • Early signs of a developing loop\n\n")
+
+            if sorted_stats:
+                top_offender = sorted_stats[0]
+                mac = top_offender[0]
+                mac_stats = top_offender[1]
+                ips = ', '.join(mac_stats.get('ips', ['N/A']))
+
+                analysis.append("🔍 TOP SUSPICIOUS DEVICE:\n")
+                analysis.append(f"  MAC: {mac}\n")
+                analysis.append(f"  IP: {ips}\n")
+                analysis.append(f"  Severity: {mac_stats.get('severity', 0):.2f}\n")
+                analysis.append(f"  Total Packets: {mac_stats.get('count', 0)}\n")
+                analysis.append(f"  ARP Count: {mac_stats.get('arp_count', 0)}\n")
+                analysis.append(f"  Broadcast: {mac_stats.get('broadcast_count', 0)}\n\n")
+
+                analysis.append("💡 RECOMMENDATIONS:\n")
+                if mac_stats.get('arp_count', 0) > 15:
+                    analysis.append("  • High ARP traffic detected - device may be scanning network\n")
+                if mac_stats.get('broadcast_count', 0) > 20:
+                    analysis.append("  • High broadcast traffic - check for misconfigured applications\n")
+                if mac == "3c:91:80:80:ac:97":
+                    analysis.append("  • This is your whitelisted laptop - traffic is legitimate\n")
+                else:
+                    analysis.append("  • Monitor this device - if severity increases, investigate further\n")
+                    analysis.append("  • Check if device is a router, server, or IoT device\n")
+
+        else:  # loop_detected
+            analysis.append("🔴 NETWORK STATUS: LOOP DETECTED!\n")
+            analysis.append("CRITICAL: A network loop has been detected. This will cause:\n")
+            analysis.append("  • Network performance degradation\n")
+            analysis.append("  • Broadcast storms\n")
+            analysis.append("  • Potential network outage\n\n")
+
+            if sorted_stats:
+                analysis.append("⚠️ OFFENDING DEVICES:\n")
+                for i, (mac, mac_stats) in enumerate(sorted_stats[:5], 1):
+                    ips = ', '.join(mac_stats.get('ips', ['N/A']))
+                    analysis.append(f"\n{i}. {mac} ({ips})\n")
+                    analysis.append(f"   Severity: {mac_stats.get('severity', 0):.2f}\n")
+                    analysis.append(f"   Packets: {mac_stats.get('count', 0)}\n")
+                    analysis.append(f"   ARP: {mac_stats.get('arp_count', 0)}, ")
+                    analysis.append(f"Broadcast: {mac_stats.get('broadcast_count', 0)}, ")
+                    analysis.append(f"STP: {mac_stats.get('stp_count', 0)}\n")
+
+                top_offender = sorted_stats[0]
+                mac_stats = top_offender[1]
+
+                analysis.append("\n💡 IMMEDIATE ACTIONS REQUIRED:\n")
+                analysis.append("  1. Locate the physical connections for devices listed above\n")
+                analysis.append("  2. Check for cable loops between switches/routers\n")
+                analysis.append("  3. Verify STP (Spanning Tree Protocol) is enabled on switches\n")
+                
+                if mac_stats.get('broadcast_count', 0) > 50:
+                    analysis.append("  4. HIGH BROADCAST TRAFFIC - Disconnect suspected switch immediately\n")
+                if mac_stats.get('arp_count', 0) > 50:
+                    analysis.append("  4. HIGH ARP TRAFFIC - Check for duplicate IP addresses\n")
+                if mac_stats.get('stp_count', 0) > 10:
+                    analysis.append("  4. STP PACKETS DETECTED - Check switch STP configuration\n")
+
+                analysis.append("\n🔧 TROUBLESHOOTING STEPS:\n")
+                analysis.append("  • Disconnect one cable at a time from switches\n")
+                analysis.append("  • Run detection again after each disconnection\n")
+                analysis.append("  • Once severity drops, you've found the loop\n")
+                analysis.append("  • Configure STP on all switches to prevent future loops\n")
+
+        analysis.append("\n" + "="*60 + "\n")
+        
+        return ''.join(analysis)
 
     def start_loop_scan(self, modal):
         # Update UI
@@ -9562,25 +10187,24 @@ Type: {values[11]}
 
     def _run_loop_scan_thread(self, modal):
         try:
-            # Use the same lightweight detection as automatic detection
-            from network_utils import detect_loops_lightweight
-            iface = "Wi-Fi"  # or get_default_iface()
+            # Use multi-interface detection to scan entire network
+            from network_utils import detect_loops_multi_interface
             
-            # Run lightweight detection with same parameters as automatic
-            total_packets, offenders, stats, status, severity_score = detect_loops_lightweight(
-                timeout=3,  # 3 seconds for efficiency
-                threshold=30,  # Same threshold as automatic detection
-                iface=iface
+            # Run multi-interface detection across all network interfaces
+            total_packets, offenders, stats, status, severity_score, efficiency_metrics = detect_loops_multi_interface(
+                timeout=5,  # 5 seconds per interface for thorough manual scan
+                threshold=15,  # LOWERED threshold for better sensitivity (matches automatic detection)
+                use_sampling=False  # DISABLED sampling to capture all packets (matches automatic detection)
             )
 
-            modal.after(0, self._finish_loop_scan_lightweight, total_packets, offenders, stats, status, severity_score)
+            modal.after(0, self._finish_loop_scan_lightweight, total_packets, offenders, stats, status, severity_score, efficiency_metrics)
 
         except Exception as e:
-            modal.after(0, self._finish_loop_scan_lightweight, None, None, None, None, None, str(e))
+            modal.after(0, self._finish_loop_scan_lightweight, None, None, None, None, None, None, str(e))
 
 
-    def _finish_loop_scan_lightweight(self, total_packets, offenders, stats, status, severity_score, error=None):
-        """Finish lightweight loop scan with proper status handling."""
+    def _finish_loop_scan_lightweight(self, total_packets, offenders, stats, status, severity_score, efficiency_metrics=None, error=None):
+        """Finish lightweight loop scan with proper status handling and efficiency metrics."""
         # Stop spinner
         self._spinner_running = False
         self.spinner_lbl.config(text="")
@@ -9592,7 +10216,12 @@ Type: {values[11]}
             self.loop_status_lbl.config(text="❌ Error during scan", bootstyle="danger")
             self.loop_results.insert(tk.END, f"Error: {error}\n")
         else:
-            # Save to database
+            # Get scanned interfaces info
+            interfaces = efficiency_metrics.get('interfaces_scanned', ['Unknown']) if efficiency_metrics else ['Unknown']
+            interface_str = ', '.join(interfaces)
+            duration = efficiency_metrics.get('detection_duration', 3) if efficiency_metrics else 3
+            
+            # Save to database with efficiency metrics
             from db import save_loop_detection
             detection_id = save_loop_detection(
                 total_packets=total_packets,
@@ -9600,13 +10229,14 @@ Type: {values[11]}
                 stats=stats,
                 status=status,
                 severity_score=severity_score,
-                interface="Wi-Fi",
-                duration=3
+                interface=interface_str,  # All scanned interfaces
+                duration=duration,
+                efficiency_metrics=efficiency_metrics  # Pass efficiency metrics
             )
             
             # Send notification for loop detection
             if status in ["loop_detected", "suspicious"]:
-                notify_loop_detected(severity_score, offenders, "Wi-Fi")
+                notify_loop_detected(severity_score, offenders, interface_str)
                 # Update notification count
                 self.update_notification_count()
             
@@ -9658,6 +10288,29 @@ Type: {values[11]}
                 self.loop_results.insert(tk.END, f"Severity Score: {severity_score:.2f}\n")
                 self.loop_results.insert(tk.END, f"Total Packets: {total_packets}\n")
                 self.loop_results.insert(tk.END, f"No suspicious activity detected\n")
+            
+            # Show efficiency metrics if available
+            if efficiency_metrics:
+                self.loop_results.insert(tk.END, f"\n⚡ Multi-Interface Scan Metrics:\n")
+                self.loop_results.insert(tk.END, f"• Detection Method: {efficiency_metrics.get('detection_method', 'Unknown').upper()}\n")
+                self.loop_results.insert(tk.END, f"• Interfaces Scanned: {len(interfaces)}/{efficiency_metrics.get('total_interfaces', 0)}\n")
+                self.loop_results.insert(tk.END, f"• Interface Names: {interface_str}\n")
+                self.loop_results.insert(tk.END, f"• Scan Duration: {duration:.2f}s\n")
+                self.loop_results.insert(tk.END, f"• Packets/Second: {efficiency_metrics.get('packets_per_second', 0):.1f}\n")
+                self.loop_results.insert(tk.END, f"• Cross-Interface Activity: {'⚠️ YES!' if efficiency_metrics.get('cross_interface_activity', False) else 'No'}\n")
+                self.loop_results.insert(tk.END, f"• Unique MACs Detected: {efficiency_metrics.get('unique_macs', 0)}\n")
+                
+                # Show per-interface breakdown
+                interface_results = efficiency_metrics.get('interface_results', [])
+                if interface_results:
+                    self.loop_results.insert(tk.END, f"\n📡 Per-Interface Results:\n")
+                    for result in interface_results:
+                        iface_name = result.get('interface', 'Unknown')
+                        iface_packets = result.get('packets', 0)
+                        iface_offenders = len(result.get('offenders', []))
+                        iface_status = result.get('status', 'unknown')
+                        status_icon = "⚠️" if iface_status in ["loop_detected", "suspicious"] else "✓"
+                        self.loop_results.insert(tk.END, f"  {status_icon} {iface_name}: {iface_packets} packets, {iface_offenders} offenders\n")
 
             # Show detailed stats
             if stats:
@@ -9755,6 +10408,41 @@ Type: {values[11]}
             )
 
         self.loop_results.config(state="disabled")
+
+    def _show_detection_details_from_stats_tree(self):
+        """Show detailed information from the stats tree (wrapper for _show_detection_details)."""
+        selection = self.loop_detection_tree.selection()
+        if not selection:
+            return
+        
+        # Get the record ID from tags
+        item = self.loop_detection_tree.item(selection[0])
+        tags = item.get('tags', ())
+        
+        if not tags or tags[0] == 'None':
+            messagebox.showwarning("No Details", "This record doesn't have detailed information available.")
+            return
+        
+        try:
+            record_id = int(tags[0])
+            
+            # Fetch and display details from in-memory history
+            record = None
+            for hist_record in self.loop_detection_history:
+                if hist_record.get('id') == record_id:
+                    record = hist_record
+                    break
+            
+            if record:
+                self._show_detection_details_modal(record)
+            else:
+                messagebox.showerror("Error", "Record not found in history!")
+                
+        except (ValueError, TypeError):
+            messagebox.showwarning("No Details", "This record doesn't have a valid ID.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load details: {e}")
+            print(f"Error loading details: {e}")
 
     def _refresh_loop_detection_history(self):
         """Refresh loop detection history from database."""
@@ -10726,19 +11414,30 @@ Type: {values[11]}
         print("⏹️ Automatic loop detection stopped")
 
     def _run_loop_detection(self):
-        """Background loop detection thread."""
+        """Background loop detection thread with multi-interface support."""
         while self.loop_detection_running and self.app_running:
             try:
-                from network_utils import detect_loops_lightweight
+                from network_utils import detect_loops_multi_interface
                 
-                # Run lightweight detection
-                total_packets, offenders, stats, status, severity_score = detect_loops_lightweight(
-                    timeout=3,  # 3 seconds for efficiency
-                    threshold=30,  # Lower threshold for sensitivity
-                    iface="Wi-Fi"  # or get_default_iface()
+                # Run multi-interface detection across entire network
+                # This monitors ALL active network interfaces (WiFi + LAN)
+                # LOWERED THRESHOLD from 30 to 15 for better sensitivity
+                total_packets, offenders, stats, status, severity_score, efficiency_metrics = detect_loops_multi_interface(
+                    timeout=5,  # Increased from 3 to 5 seconds for better capture
+                    threshold=15,  # LOWERED from 30 to 15 for more sensitive detection
+                    use_sampling=False  # DISABLED sampling to capture all packets
                 )
                 
-                # Save to database
+                # Get scanned interfaces for logging
+                interfaces = efficiency_metrics.get('interfaces_scanned', ['Unknown'])
+                interface_str = ', '.join(interfaces)
+                
+                # Enhanced logging
+                print(f"📊 Detection: packets={total_packets}, offenders={len(offenders)}, severity={severity_score:.1f}, status={status}")
+                if offenders:
+                    print(f"   Offending MACs: {', '.join(offenders[:3])}")
+                
+                # Save to database with efficiency metrics
                 from db import save_loop_detection
                 detection_id = save_loop_detection(
                     total_packets=total_packets,
@@ -10746,15 +11445,30 @@ Type: {values[11]}
                     stats=stats,
                     status=status,
                     severity_score=severity_score,
-                    interface="Wi-Fi",
-                    duration=3
+                    interface=interface_str,  # Log all scanned interfaces
+                    duration=efficiency_metrics.get('detection_duration', 5),
+                    efficiency_metrics=efficiency_metrics  # Pass enhanced metrics
                 )
                 
                 # Send notification for loop detection
                 if status in ["loop_detected", "suspicious"]:
-                    notify_loop_detected(severity_score, offenders, "Wi-Fi")
+                    notify_loop_detected(severity_score, offenders, interface_str)
                     # Update notification count in main thread
                     self.root.after(0, self.update_notification_count)
+                    
+                    # Show popup alert for loop detected (more visible than notification badge)
+                    if status == "loop_detected":
+                        self.root.after(0, lambda: messagebox.showwarning(
+                            "⚠️ Network Loop Detected!",
+                            f"A network loop has been detected!\n\n"
+                            f"Severity Score: {severity_score:.1f}\n"
+                            f"Offending Devices: {len(offenders)}\n"
+                            f"Interface: {interface_str}\n\n"
+                            f"Click 'Loop Test' button to view details."
+                        ))
+                    elif status == "suspicious":
+                        # Less intrusive notification for suspicious activity
+                        print(f"🟡 SUSPICIOUS ACTIVITY: Severity {severity_score:.1f}")
                 
                 # Reload stats and history from database
                 from db import get_loop_detection_stats, get_loop_detections_history
@@ -10777,16 +11491,17 @@ Type: {values[11]}
                     "stats": stats,
                     "status": status,
                     "severity_score": severity_score,
-                    "duration": 3
+                    "duration": 5,
+                    "efficiency_metrics": efficiency_metrics  # Added for enhanced loop detection
                 }
                 
                 # Update UI if loop detection tab is visible
-                self._update_loop_detection_ui(detection_record)
+                self.root.after(0, lambda: self._update_loop_detection_ui(detection_record))
                 
                 # Refresh history table if modal is open
                 try:
                     if hasattr(self, 'loop_detection_tree') and self.loop_detection_tree.winfo_exists():
-                        self._load_loop_detection_history_modal()
+                        self.root.after(0, self._load_loop_detection_history_modal)
                 except:
                     pass  # Modal might not be open
                 

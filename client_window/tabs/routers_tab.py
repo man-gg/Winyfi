@@ -17,6 +17,9 @@ class RoutersTab:
         self.is_updating = False
         self.auto_update_job = None
         self.last_update_time = None
+        # Initialize optional modals to avoid AttributeError on first use/cleanup
+        self.client_modal = None
+        self.loop_modal = None
         router_header_frame = tb.Frame(self.parent_frame)
         router_header_frame.pack(fill="x", padx=10, pady=(10, 0))
         tb.Label(router_header_frame, text="Routers",
@@ -551,6 +554,7 @@ class RoutersTab:
         actions_grid.pack(fill="x")
         tb.Button(actions_grid, text="🔄 Refresh Data", bootstyle="info", command=lambda: refresh_details(), width=20).grid(row=0, column=0, padx=10, pady=5, sticky="ew")
         tb.Button(actions_grid, text="📈 View History", bootstyle="secondary", command=lambda: self.open_router_history(router), width=20).grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+        tb.Button(actions_grid, text="👥 Connected Clients", bootstyle="success", command=lambda: self.show_connected_clients_for_router(router), width=20).grid(row=1, column=0, columnspan=2, padx=10, pady=5, sticky="ew")
         actions_grid.grid_columnconfigure(0, weight=1)
         actions_grid.grid_columnconfigure(1, weight=1)
 
@@ -624,6 +628,227 @@ class RoutersTab:
             lbl.pack(padx=10, pady=10)
         except Exception:
             messagebox.showerror("Error", "Could not display image.")
+
+    def show_connected_clients_for_router(self, router):
+        """Show connected clients for a specific router/AP via API (with DB fallback)."""
+        try:
+            router_id = router.get('id')
+            if not router_id:
+                messagebox.showerror("Error", "Router ID not found.")
+                return
+
+            # Create modal window
+            modal = tk.Toplevel(self.root)
+            modal.title(f"👥 Connected Clients - {router.get('name', 'Router')}")
+            modal.geometry("900x600")
+            modal.transient(self.root)
+            modal.grab_set()
+
+            # Center window
+            self.root.update_idletasks()
+            rx, ry = self.root.winfo_x(), self.root.winfo_y()
+            rw, rh = self.root.winfo_width(), self.root.winfo_height()
+            w, h = 900, 600
+            x = rx + (rw // 2) - (w // 2)
+            y = ry + (rh // 2) - (h // 2)
+            modal.geometry(f"{w}x{h}+{x}+{y}")
+
+            # Main container
+            main_container = tb.Frame(modal, padding=20)
+            main_container.pack(fill="both", expand=True)
+
+            # Header
+            header_frame = tb.Frame(main_container)
+            header_frame.pack(fill="x", pady=(0, 15))
+
+            tb.Label(header_frame, text=f"📡 {router.get('name', 'Router')}", 
+                     font=("Segoe UI", 16, "bold"), bootstyle="primary").pack(side="left")
+
+            # Status label for loading
+            status_label = tb.Label(header_frame, 
+                                    text="⏳ Loading clients...", 
+                                    font=("Segoe UI", 12), bootstyle="info")
+            status_label.pack(side="right")
+
+            # Info banner
+            info_frame = tb.LabelFrame(main_container, text="ℹ️ Router Info", bootstyle="secondary", padding=10)
+            info_frame.pack(fill="x", pady=(0, 15))
+
+            info_text = f"IP: {router.get('ip_address', 'N/A')} | MAC: {router.get('mac_address', 'N/A')} | Location: {router.get('location', 'N/A')}"
+            tb.Label(info_frame, text=info_text, font=("Segoe UI", 9)).pack()
+
+            # Content frame that will hold the clients table
+            content_frame = tb.Frame(main_container)
+            content_frame.pack(fill="both", expand=True)
+
+            # Loading label
+            loading_label = tb.Label(content_frame, text="⏳ Fetching clients...", 
+                                     font=("Segoe UI", 12), bootstyle="info")
+            loading_label.pack(pady=50)
+
+            # Footer with buttons
+            footer_frame = tb.Frame(main_container)
+            footer_frame.pack(fill="x", pady=(15, 0))
+
+            refresh_btn = tb.Button(footer_frame, text="🔄 Refresh", bootstyle="info",
+                                    command=lambda: [modal.destroy(), self.show_connected_clients_for_router(router)],
+                                    width=15, state="disabled")
+            refresh_btn.pack(side="left")
+
+            tb.Button(footer_frame, text="Close", bootstyle="secondary",
+                      command=modal.destroy, width=15).pack(side="right")
+
+            # Fetch clients from DB via API (router_id filter) in background thread
+            def fetch_clients():
+                try:
+                    db_resp = requests.get(f"{self.api_base_url}/api/clients", params={"router_id": router_id}, timeout=10)
+                    clients = []
+                    if db_resp.ok:
+                        all_clients = (db_resp.json() or {}).get('clients', [])
+                        clients = all_clients
+                    else:
+                        raise RuntimeError(f"Status {db_resp.status_code}")
+
+                    self.root.after(0, lambda: update_ui_with_clients(clients))
+
+                except requests.exceptions.ConnectionError:
+                    self.root.after(0, lambda: update_ui_error(
+                        "Cannot connect to server.\nPlease ensure the server is running."
+                    ))
+                except requests.exceptions.Timeout:
+                    self.root.after(0, lambda: update_ui_error(
+                        "Request timed out.\nPlease try again later."
+                    ))
+                except Exception as e:
+                    self.root.after(0, lambda: update_ui_error(f"Unexpected error:\n{str(e)}"))
+
+            def update_ui_error(error_msg):
+                loading_label.config(text=f"❌ {error_msg}", bootstyle="danger")
+                refresh_btn.config(state="normal")
+
+            def update_ui_with_clients(clients):
+                # Clear loading message
+                loading_label.destroy()
+
+                # Update status label
+                status_label.config(
+                    text=f"{len(clients)} Client{'s' if len(clients) != 1 else ''} Found",
+                    bootstyle="success"
+                )
+
+                # Enable refresh button
+                refresh_btn.config(state="normal")
+
+                if not clients:
+                    # No clients found
+                    no_clients_label = tb.Label(content_frame, 
+                                                text="No clients found for this router in the database", 
+                                                font=("Segoe UI", 12), bootstyle="secondary")
+                    no_clients_label.pack(pady=50)
+                    return
+
+                # Create treeview for clients
+                tree_frame = tb.Frame(content_frame)
+                tree_frame.pack(fill="both", expand=True)
+
+                # Define columns
+                columns = ("Status", "IP Address", "MAC Address", "Hostname", "Vendor", "Last Seen")
+
+                # Create Treeview
+                tree = tb.Treeview(tree_frame, columns=columns, show="headings", 
+                                   height=15, bootstyle="info")
+
+                # Configure columns
+                column_widths = [80, 120, 150, 180, 150, 150]
+                for col, width in zip(columns, column_widths):
+                    tree.heading(col, text=col)
+                    tree.column(col, width=width, anchor="center")
+
+                # Scrollbars
+                v_scrollbar = tb.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+                h_scrollbar = tb.Scrollbar(tree_frame, orient="horizontal", command=tree.xview)
+                tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+
+                # Pack treeview and scrollbars
+                tree.pack(side="left", fill="both", expand=True)
+                v_scrollbar.pack(side="right", fill="y")
+                h_scrollbar.pack(side="bottom", fill="x")
+
+                # Insert client data
+                for client in clients:
+                    is_online = client.get('is_online', False)
+                    status = "🟢 Online" if is_online else "🔴 Offline"
+
+                    ip_address = client.get('ip_address', 'Unknown')
+                    mac_address = client.get('mac_address', 'Unknown')
+                    hostname = client.get('hostname', 'Unknown')
+                    vendor = client.get('vendor', 'Unknown')
+
+                    # Format last_seen
+                    last_seen = client.get('last_seen', 'N/A')
+                    if last_seen and last_seen != 'N/A':
+                        try:
+                            if isinstance(last_seen, str):
+                                # Try to parse and reformat
+                                dt = datetime.fromisoformat(last_seen.replace('Z', '+00:00'))
+                                last_seen = dt.strftime("%Y-%m-%d %H:%M:%S")
+                        except:
+                            pass
+
+                    tree.insert("", "end", values=(
+                        status,
+                        ip_address,
+                        mac_address,
+                        hostname,
+                        vendor,
+                        last_seen
+                    ))
+
+                # Add context menu for right-click
+                context_menu = tk.Menu(modal, tearoff=0)
+                context_menu.add_command(label="📋 Copy IP", command=lambda: copy_selected_ip(tree))
+                context_menu.add_command(label="📋 Copy MAC", command=lambda: copy_selected_mac(tree))
+
+                def show_context_menu(event):
+                    try:
+                        item = tree.selection()[0]
+                        context_menu.post(event.x_root, event.y_root)
+                    except IndexError:
+                        pass
+
+                tree.bind("<Button-3>", show_context_menu)
+
+            def copy_selected_ip(tree):
+                try:
+                    item = tree.selection()[0]
+                    values = tree.item(item, "values")
+                    ip = values[1]  # IP is in column 1
+                    modal.clipboard_clear()
+                    modal.clipboard_append(ip)
+                    messagebox.showinfo("Copied", f"IP address copied: {ip}")
+                except IndexError:
+                    messagebox.showwarning("No Selection", "Please select a client first.")
+
+            def copy_selected_mac(tree):
+                try:
+                    item = tree.selection()[0]
+                    values = tree.item(item, "values")
+                    mac = values[2]  # MAC is in column 2
+                    modal.clipboard_clear()
+                    modal.clipboard_append(mac)
+                    messagebox.showinfo("Copied", f"MAC address copied: {mac}")
+                except IndexError:
+                    messagebox.showwarning("No Selection", "Please select a client first.")
+
+            # Start fetching clients in background thread
+            import threading
+            threading.Thread(target=fetch_clients, daemon=True).start()
+
+        except Exception as e:
+            messagebox.showerror("Error", 
+                                 f"An unexpected error occurred:\n{str(e)}\n\n"
+                                 f"Please check the console for more details.")
+            print(f"⚠️ Error in show_connected_clients_for_router: {str(e)}")
 
     def open_router_history(self, router):
         # History modal for client side using API; falls back to report_utils if available
@@ -938,7 +1163,7 @@ class RoutersTab:
         status_frame = tb.Frame(main_container)
         status_frame.pack(fill="x", pady=(10, 0))
 
-        self.client_status_label = tb.Label(status_frame, text="Ready to scan network...", 
+        self.client_status_label = tb.Label(status_frame, text="Ready to load clients from database...", 
                                           bootstyle="secondary", font=("Segoe UI", 9))
         self.client_status_label.pack(side="left")
 
@@ -1081,25 +1306,57 @@ class RoutersTab:
             print(f"❌ Error loading existing clients: {e}")
 
     def load_clients_from_db(self):
-        """Load clients from database via API (READ-ONLY)"""
+        """Load clients from database via API (READ-ONLY) and map to display shape."""
         try:
-            response = requests.get(f"{self.api_base_url}/api/clients", timeout=5)
+            response = requests.get(f"{self.api_base_url}/api/clients", timeout=8)
             if response.ok:
-                data = response.json()
-                self.client_data = data.get('clients', [])
+                data = response.json() or {}
+                raw_clients = data.get('clients', [])
+
+                # Normalize to display structure expected by update_client_display
+                mapped = []
+                now = datetime.now()
+                for client in raw_clients:
+                    first_seen = client.get('first_seen') or now
+                    last_seen = client.get('last_seen') or now
+                    # Coerce to strings HH:MM:SS
+                    if hasattr(first_seen, 'strftime'):
+                        first_seen_str = first_seen.strftime('%H:%M:%S')
+                    else:
+                        first_seen_str = str(first_seen)
+                    if hasattr(last_seen, 'strftime'):
+                        last_seen_str = last_seen.strftime('%H:%M:%S')
+                    else:
+                        last_seen_str = str(last_seen)
+
+                    is_online = bool(client.get('is_online', False))
+                    ping_ms = client.get('ping_latency_ms')
+
+                    mapped.append({
+                        'status': '🟢 Online' if is_online else '🔴 Offline',
+                        'ip': client.get('ip_address', 'Unknown') or 'Unknown',
+                        'mac': client.get('mac_address', 'Unknown') or 'Unknown',
+                        'hostname': client.get('hostname', 'Unknown') or 'Unknown',
+                        'vendor': client.get('vendor', 'Unknown') or 'Unknown',
+                        'ping': ping_ms,
+                        'first_seen': first_seen_str,
+                        'last_seen': last_seen_str,
+                        'is_online': is_online,
+                    })
+
+                self.client_data = mapped
                 self.update_client_display()
-                self.client_status_label.config(text="Clients loaded successfully", bootstyle="success")
+                self.client_status_label.config(text="Clients loaded from database", bootstyle="success")
             else:
                 self.client_data = []
-                self.client_status_label.config(text="Failed to load clients", bootstyle="danger")
+                self.client_status_label.config(text=f"Failed to load clients (HTTP {response.status_code})", bootstyle="danger")
         except Exception as e:
             print(f"❌ Error loading clients: {e}")
             self.client_data = []
             self.client_status_label.config(text="Error loading clients", bootstyle="danger")
-        
+
         # Update last update time
-        from datetime import datetime
-        time_str = datetime.now().strftime("%H:%M:%S")
+        time_str = datetime.now().strftime('%H:%M:%S')
         self.client_last_update.config(text=f"Last update: {time_str}")
 
     def start_client_scan(self):
@@ -1412,7 +1669,7 @@ class RoutersTab:
 
     def stop_auto_refresh(self):
         """Stop automatic refresh."""
-        self.client_auto_refresh_enabled = True
+        self.client_auto_refresh_enabled = False
         self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
         if self.client_auto_refresh_job:
             self.root.after_cancel(self.client_auto_refresh_job)
@@ -1424,9 +1681,9 @@ class RoutersTab:
             self.client_auto_refresh_job = self.root.after(self.client_auto_refresh_interval, self.auto_refresh_clients)
 
     def auto_refresh_clients(self):
-        """Perform automatic client refresh."""
+        """Perform automatic client refresh by reloading from DB via API (no local scanning)."""
         if self.client_auto_refresh_enabled:
-            self.start_client_scan()
+            self.load_clients_from_db()
             self.schedule_auto_refresh()
 
     def export_clients(self):

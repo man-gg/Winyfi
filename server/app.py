@@ -143,6 +143,271 @@ def create_app():
         except Exception as exc:
             return jsonify({"error": str(exc)}), 500
 
+    # ==================== CLIENT DISCOVERY ENDPOINTS ====================
+    
+    @app.post("/api/clients/scan")
+    def scan_network_clients():
+        """
+        Trigger a network-wide client discovery scan across all AP subnets.
+        Returns discovered clients with router associations.
+        """
+        try:
+            from network_utils import discover_clients
+            from db import save_network_client, create_network_clients_table, create_connection_history_table
+            
+            # Ensure tables exist
+            create_network_clients_table()
+            create_connection_history_table()
+            
+            # Get scan parameters from request
+            data = request.get_json(silent=True) or {}
+            timeout = int(data.get("timeout", 2))
+            use_db_routers = data.get("use_db_routers", True)
+            
+            # Run discovery
+            clients = discover_clients(
+                timeout=timeout,
+                use_db_routers=use_db_routers,
+                scan_all_subnets=False
+            )
+            
+            # Save all discovered clients to database
+            saved_count = 0
+            for mac, info in clients.items():
+                try:
+                    save_network_client(
+                        mac_address=mac,
+                        ip_address=info.get("ip"),
+                        hostname=info.get("hostname", "Unknown"),
+                        vendor=info.get("vendor", "Unknown"),
+                        ping_latency=None  # Can be measured separately if needed
+                    )
+                    saved_count += 1
+                except Exception as e:
+                    print(f"Error saving client {mac}: {e}")
+            
+            # Convert clients dict to list format for API response
+            client_list = []
+            for mac, info in clients.items():
+                client_list.append({
+                    "mac_address": mac,
+                    "ip_address": info.get("ip"),
+                    "hostname": info.get("hostname", "Unknown"),
+                    "vendor": info.get("vendor", "Unknown"),
+                    "subnet": info.get("subnet"),
+                    "interface": info.get("interface"),
+                    "router_id": info.get("router_id"),
+                    "router_name": info.get("router_name"),
+                    "last_seen": info.get("last_seen").isoformat() if info.get("last_seen") else None
+                })
+            
+            return jsonify({
+                "success": True,
+                "total_discovered": len(clients),
+                "saved_to_db": saved_count,
+                "clients": client_list
+            })
+            
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.get("/api/clients")
+    def get_all_clients():
+        """
+        Get all network clients from database.
+        Query params: online_only (bool), limit (int)
+        """
+        try:
+            from db import get_network_clients, create_network_clients_table
+            
+            create_network_clients_table()
+            
+            online_only = request.args.get("online_only", "false").lower() == "true"
+            limit = int(request.args.get("limit", 1000))
+            router_id = request.args.get("router_id")
+            if router_id is not None:
+                try:
+                    router_id = int(router_id)
+                except Exception:
+                    router_id = None
+            
+            clients = get_network_clients(online_only=online_only, limit=limit, router_id=router_id)
+            
+            # Convert datetime objects to ISO format strings
+            for client in clients:
+                for key in ['first_seen', 'last_seen', 'created_at', 'updated_at']:
+                    if key in client and client[key]:
+                        if hasattr(client[key], 'isoformat'):
+                            client[key] = client[key].isoformat()
+            
+            return jsonify({
+                "success": True,
+                "total": len(clients),
+                "clients": clients
+            })
+            
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.get("/api/routers/<int:router_id>/clients")
+    def get_router_clients(router_id):
+        """
+        Get clients associated with a specific router/AP.
+        Uses network discovery filtered by router_id.
+        """
+        try:
+            from network_utils import discover_clients
+            from router_utils import get_routers
+            
+            # Get router info
+            routers = get_routers()
+            router = next((r for r in routers if r['id'] == router_id), None)
+            
+            if not router:
+                return jsonify({"error": "Router not found"}), 404
+            
+            # Check if UniFi device
+            is_unifi = router.get('is_unifi', False) or router.get('brand', '').lower() == 'unifi'
+            
+            if is_unifi:
+                # For UniFi, return message to use UniFi API
+                return jsonify({
+                    "success": False,
+                    "message": "UniFi devices should use UniFi API endpoint",
+                    "is_unifi": True
+                })
+            
+            # Run discovery for all routers, then filter by router_id
+            all_clients = discover_clients(
+                timeout=2,
+                use_db_routers=True,
+                scan_all_subnets=False
+            )
+            
+            # Filter clients belonging to this router
+            router_clients = []
+            for mac, info in all_clients.items():
+                if info.get("router_id") == router_id:
+                    router_clients.append({
+                        "mac_address": mac,
+                        "ip_address": info.get("ip"),
+                        "hostname": info.get("hostname", "Unknown"),
+                        "vendor": info.get("vendor", "Unknown"),
+                        "subnet": info.get("subnet"),
+                        "interface": info.get("interface"),
+                        "last_seen": info.get("last_seen").isoformat() if info.get("last_seen") else None
+                    })
+            
+            return jsonify({
+                "success": True,
+                "router_id": router_id,
+                "router_name": router.get('name'),
+                "total_clients": len(router_clients),
+                "clients": router_clients
+            })
+            
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.post("/api/routers/<int:router_id>/clients/discover_save")
+    def discover_and_save_router_clients(router_id):
+        """
+        Discover clients for a specific router, save them to DB with router association,
+        and return the saved list. Intended for admin use.
+        """
+        try:
+            from network_utils import discover_clients
+            from router_utils import get_routers
+            from db import save_network_client, create_network_clients_table, ensure_network_clients_router_columns
+
+            create_network_clients_table()
+            ensure_network_clients_router_columns()
+
+            routers = get_routers()
+            router = next((r for r in routers if r['id'] == router_id), None)
+            if not router:
+                return jsonify({"error": "Router not found"}), 404
+
+            is_unifi = router.get('is_unifi', False) or router.get('brand', '').lower() == 'unifi'
+            if is_unifi:
+                return jsonify({
+                    "success": False,
+                    "message": "UniFi devices should use UniFi API endpoint",
+                    "is_unifi": True
+                }), 400
+
+            all_clients = discover_clients(
+                timeout=2,
+                use_db_routers=True,
+                scan_all_subnets=False
+            )
+
+            saved_clients = []
+            for mac, info in all_clients.items():
+                if info.get("router_id") == router_id:
+                    # Save/update client with router association
+                    save_network_client(
+                        mac_address=mac,
+                        ip_address=info.get("ip"),
+                        hostname=info.get("hostname", "Unknown"),
+                        vendor=info.get("vendor", "Unknown"),
+                        ping_latency=None,
+                        device_type=None,
+                        notes=None,
+                        router_id=router_id,
+                        router_name=router.get('name')
+                    )
+
+                    saved_clients.append({
+                        "mac_address": mac,
+                        "ip_address": info.get("ip"),
+                        "hostname": info.get("hostname", "Unknown"),
+                        "vendor": info.get("vendor", "Unknown"),
+                        "router_id": router_id,
+                        "router_name": router.get('name'),
+                        "last_seen": info.get("last_seen").isoformat() if info.get("last_seen") else None
+                    })
+
+            return jsonify({
+                "success": True,
+                "router_id": router_id,
+                "router_name": router.get('name'),
+                "total_saved": len(saved_clients),
+                "clients": saved_clients
+            })
+
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.get("/api/clients/<string:mac_address>/history")
+    def get_client_connection_history(mac_address):
+        """Get connection history for a specific client by MAC address."""
+        try:
+            from db import get_connection_history, create_connection_history_table
+            
+            create_connection_history_table()
+            
+            limit = int(request.args.get("limit", 50))
+            history = get_connection_history(mac_address, limit=limit)
+            
+            # Convert datetime to ISO format
+            for event in history:
+                if 'event_time' in event and event['event_time']:
+                    if hasattr(event['event_time'], 'isoformat'):
+                        event['event_time'] = event['event_time'].isoformat()
+            
+            return jsonify({
+                "success": True,
+                "mac_address": mac_address,
+                "total_events": len(history),
+                "history": history
+            })
+            
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    # ==================== END CLIENT DISCOVERY ENDPOINTS ====================
+
     @app.get("/api/user/<int:user_id>/login-info")
     def get_user_login_info(user_id):
         """Get user's last login information including device details."""
