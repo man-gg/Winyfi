@@ -1294,6 +1294,62 @@ def scan_subnet(iface=None, timeout=2):
     return clients
 
 
+def scan_router_subnet(router_ip, netmask="255.255.255.0", iface=None, timeout=2):
+    """
+    Scan a specific router's subnet based on its IP address.
+    
+    Args:
+        router_ip: The router's IP address (e.g., "192.168.1.1")
+        netmask: The subnet mask (default: "255.255.255.0" for /24)
+        iface: Network interface to use (optional, auto-detected if None)
+        timeout: ARP scan timeout in seconds
+    
+    Returns:
+        dict {mac: {"ip": str, "hostname": str, "vendor": str, "last_seen": datetime}}
+    """
+    try:
+        # Calculate the network range from router IP and netmask
+        network = ipaddress.IPv4Network(f"{router_ip}/{netmask}", strict=False)
+        hosts = list(network.hosts())
+        
+        if not hosts:
+            print(f"⚠️ No hosts found in subnet {network}")
+            return {}
+        
+        if iface is None:
+            iface = get_default_iface()
+        
+        print(f"🔍 Scanning {len(hosts)} hosts in subnet {network} on interface {iface}...")
+        
+        clients = {}
+        
+        # ARP request for all hosts in the router's subnet
+        pkt = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=[str(h) for h in hosts])
+        ans, _ = srp(pkt, timeout=timeout, iface=iface, verbose=0)
+        
+        for snd, rcv in ans:
+            mac = rcv[Ether].src
+            ip = rcv[ARP].psrc
+            try:
+                hostname = socket.gethostbyaddr(ip)[0]
+            except Exception:
+                hostname = "Unknown"
+            
+            clients[mac] = {
+                "ip": ip,
+                "hostname": hostname,
+                "vendor": "Unknown",
+                "last_seen": datetime.now()
+            }
+        
+        print(f"✅ Found {len(clients)} clients in subnet {network}")
+        return clients
+        
+    except Exception as e:
+        print(f"❌ Error scanning router subnet {router_ip}: {e}")
+        return {}
+
+
 def get_all_active_interfaces():
     """
     Get all active network interfaces (both WiFi and LAN).

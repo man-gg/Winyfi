@@ -1,0 +1,586 @@
+"""
+IMPLEMENTATION GUIDE: Integrating RouterBandwidthMonitor into network_utils.py
+
+This guide shows exactly how to add bandwidth monitoring to your existing network_utils.py file.
+
+NOTE: This is a GUIDE FILE with code examples, not meant to be executed directly.
+Copy the relevant code snippets into your actual network_utils.py file.
+"""
+
+# Suppress Pylance warnings - this is a guide file with example snippets
+# type: ignore
+# pyright: reportUndefinedVariable=false
+
+# These imports would be in your actual network_utils.py
+# (shown here for reference only)
+import threading
+import logging
+import time
+
+# ============================================================================
+# STEP 1: Add import at the top of network_utils.py
+# ============================================================================
+
+"""
+Add this import near the top of your network_utils.py file:
+"""
+
+# Example: Add this line to your imports
+# from router_bandwidth_monitor import RouterBandwidthMonitor, get_router_bandwidth_realtime
+
+# ============================================================================
+# STEP 2: Create global monitor instance
+# ============================================================================
+
+"""
+Add this after your existing global variables (around line 20-30):
+"""
+
+# Example code to add:
+# Global bandwidth monitor instance
+# _global_bandwidth_monitor = None
+# _monitor_lock = threading.Lock()
+
+# Example function to add to network_utils.py:
+"""
+def get_bandwidth_monitor():
+    '''
+    Get or create the global RouterBandwidthMonitor instance.
+    Thread-safe singleton pattern.
+    '''
+    global _global_bandwidth_monitor
+    
+    with _monitor_lock:
+        if _global_bandwidth_monitor is None:
+            _global_bandwidth_monitor = RouterBandwidthMonitor(
+                sampling_interval=5,
+                history_size=60
+            )
+            logging.info("RouterBandwidthMonitor instance created")
+        
+        return _global_bandwidth_monitor
+"""
+
+# Example function to add to network_utils.py:
+"""
+def start_bandwidth_monitoring(routers_list):
+    '''
+    Initialize and start bandwidth monitoring for a list of routers.
+    
+    Args:
+        routers_list: List of dict with keys: ip, mac (optional), name (optional)
+        
+    Example:
+        routers = [
+            {"ip": "192.168.1.1", "mac": "AA:BB:CC:DD:EE:FF", "name": "Main Router"},
+            {"ip": "192.168.1.100", "name": "Living Room AP"}
+        ]
+        start_bandwidth_monitoring(routers)
+    '''
+    monitor = get_bandwidth_monitor()
+    
+    for router in routers_list:
+        monitor.add_router(
+            ip=router['ip'],
+            mac=router.get('mac'),
+            name=router.get('name')
+        )
+        logging.info(f"Added router for bandwidth monitoring: {router['ip']}")
+    
+    # Start monitoring if not already started
+    if not monitor.running:
+        try:
+            monitor.start()
+            logging.info("Bandwidth monitoring started")
+        except PermissionError:
+            logging.error("Permission denied for packet capture. Run as Administrator.")
+        except Exception as e:
+            logging.error(f"Failed to start bandwidth monitoring: {e}")
+
+def stop_bandwidth_monitoring():
+    '''
+    Stop bandwidth monitoring.
+    Call this before application exit.
+    '''
+    global _global_bandwidth_monitor
+    
+    if _global_bandwidth_monitor:
+        _global_bandwidth_monitor.stop()
+        logging.info("Bandwidth monitoring stopped")
+"""
+
+# ============================================================================
+# STEP 3: Enhanced get_bandwidth() function
+# ============================================================================
+
+"""
+Replace or modify your existing get_bandwidth() function (around line 346):
+"""
+
+def get_bandwidth(ip, is_unifi=False, use_monitor=True):
+    """
+    Enhanced bandwidth function with router monitoring support.
+    
+    Args:
+        ip (str): Router IP address
+        is_unifi (bool): True for UniFi devices (use existing logic)
+        use_monitor (bool): True to use RouterBandwidthMonitor, False for legacy method
+    
+    Returns:
+        dict: Bandwidth data with latency, download, upload, and quality ratings
+    """
+    # Get latency using existing ping function
+    latency = ping_latency(ip, is_unifi=is_unifi)
+    
+    # For UniFi devices, use existing logic
+    if is_unifi:
+        # ... keep your existing UniFi bandwidth logic ...
+        return existing_unifi_bandwidth_logic(ip, latency)
+    
+    # For non-UniFi routers, try monitoring first
+    if use_monitor:
+        monitor = get_bandwidth_monitor()
+        
+        # Check if router is registered
+        with monitor.lock:
+            if ip in monitor.routers:
+                # Get monitored bandwidth
+                bandwidth_data = get_router_bandwidth_realtime(ip, monitor)
+                
+                # Add latency from ping
+                bandwidth_data['latency'] = latency
+                bandwidth_data['quality']['latency'] = _rate_latency(latency)
+                
+                # If we have valid data, return it
+                if bandwidth_data['download'] > 0 or bandwidth_data['upload'] > 0:
+                    return bandwidth_data
+    
+    # Fallback: If no monitor data or offline, return minimal data
+    if latency is None:
+        return {
+            "latency": None,
+            "download": 0,
+            "upload": 0,
+            "quality": {
+                "latency": "Poor",
+                "download": "None",
+                "upload": "None"
+            }
+        }
+    
+    # If DISABLE_BANDWIDTH is True, return latency only
+    if DISABLE_BANDWIDTH:
+        return {
+            "latency": latency,
+            "download": 0,
+            "upload": 0,
+            "quality": {
+                "latency": _rate_latency(latency),
+                "download": "Disabled",
+                "upload": "Disabled"
+            }
+        }
+    
+    # Final fallback: Use throughput method (your existing logic)
+    dl, ul = get_throughput(interval=1)
+    return {
+        "latency": latency,
+        "download": dl,
+        "upload": ul,
+        "quality": {
+            "latency": _rate_latency(latency),
+            "download": _rate_bandwidth(dl),
+            "upload": _rate_bandwidth(ul)
+        }
+    }
+
+# ============================================================================
+# STEP 4: Add helper functions for router bandwidth queries
+# ============================================================================
+
+"""
+Add these helper functions after get_bandwidth():
+"""
+
+def get_router_bandwidth_data(router_ip):
+    """
+    Get current bandwidth data for a specific router.
+    
+    Args:
+        router_ip (str): Router IP address
+    
+    Returns:
+        dict or None: Bandwidth data or None if not available
+    """
+    monitor = get_bandwidth_monitor()
+    return monitor.get_router_bandwidth(router_ip)
+
+def get_all_routers_bandwidth():
+    """
+    Get bandwidth data for all monitored routers.
+    
+    Returns:
+        list: List of bandwidth data dictionaries
+    """
+    monitor = get_bandwidth_monitor()
+    return monitor.get_all_routers_bandwidth()
+
+def get_router_bandwidth_history(router_ip, limit=None):
+    """
+    Get historical bandwidth data for a router.
+    
+    Args:
+        router_ip (str): Router IP address
+        limit (int): Max number of entries (None = all)
+    
+    Returns:
+        list: Historical bandwidth data
+    """
+    monitor = get_bandwidth_monitor()
+    return monitor.get_router_history(router_ip, limit=limit)
+
+def get_router_bandwidth_average(router_ip, minutes=5):
+    """
+    Get average bandwidth over last N minutes.
+    
+    Args:
+        router_ip (str): Router IP address
+        minutes (int): Time window in minutes
+    
+    Returns:
+        dict or None: Average bandwidth data
+    """
+    monitor = get_bandwidth_monitor()
+    return monitor.get_average_bandwidth(router_ip, minutes=minutes)
+
+def get_router_bandwidth_peak(router_ip):
+    """
+    Get peak bandwidth values for a router.
+    
+    Args:
+        router_ip (str): Router IP address
+    
+    Returns:
+        dict or None: Peak bandwidth data
+    """
+    monitor = get_bandwidth_monitor()
+    return monitor.get_peak_bandwidth(router_ip)
+
+# ============================================================================
+# STEP 5: Integration into main.py or dashboard.py
+# ============================================================================
+
+"""
+Add this to your main.py or dashboard.py initialization:
+"""
+
+# In your main() or __init__() function:
+
+def initialize_application():
+    """Initialize the application with bandwidth monitoring."""
+    
+    # ... your existing initialization code ...
+    
+    # Load routers from database
+    routers = db.execute("""
+        SELECT ip, mac, name 
+        FROM routers 
+        WHERE brand != 'UniFi' OR brand IS NULL
+    """).fetchall()
+    
+    # Convert to list of dicts
+    routers_list = [
+        {
+            "ip": router['ip'],
+            "mac": router.get('mac'),
+            "name": router.get('name') or f"Router {router['ip']}"
+        }
+        for router in routers
+    ]
+    
+    # Start bandwidth monitoring
+    from network_utils import start_bandwidth_monitoring
+    start_bandwidth_monitoring(routers_list)
+    
+    print(f"✅ Started bandwidth monitoring for {len(routers_list)} router(s)")
+
+# In your cleanup/exit function:
+
+def cleanup_on_exit():
+    """Cleanup before application exit."""
+    
+    # ... your existing cleanup code ...
+    
+    # Stop bandwidth monitoring
+    from network_utils import stop_bandwidth_monitoring
+    stop_bandwidth_monitoring()
+    
+    print("✅ Bandwidth monitoring stopped")
+
+# ============================================================================
+# STEP 6: Dashboard UI Integration
+# ============================================================================
+
+"""
+Modify your show_routers() or display_router_info() function:
+"""
+
+def show_router_info(router_ip):
+    """Display router information with bandwidth data."""
+    
+    # ... your existing router info display ...
+    
+    # Add bandwidth display
+    from network_utils import get_router_bandwidth_data
+    
+    bandwidth = get_router_bandwidth_data(router_ip)
+    
+    if bandwidth:
+        # Create bandwidth display frame
+        bandwidth_frame = tb.LabelFrame(
+            parent,
+            text="Real-time Bandwidth",
+            padding=10
+        )
+        bandwidth_frame.pack(fill='x', pady=5)
+        
+        # Download
+        tb.Label(
+            bandwidth_frame,
+            text=f"Download: {bandwidth['download_mbps']:.2f} Mbps",
+            font=('Segoe UI', 10)
+        ).pack()
+        
+        # Upload
+        tb.Label(
+            bandwidth_frame,
+            text=f"Upload: {bandwidth['upload_mbps']:.2f} Mbps",
+            font=('Segoe UI', 10)
+        ).pack()
+        
+        # Status
+        status_color = "green" if bandwidth['status'] == 'active' else "gray"
+        tb.Label(
+            bandwidth_frame,
+            text=f"● {bandwidth['status']}",
+            foreground=status_color
+        ).pack()
+
+# ============================================================================
+# STEP 7: Periodic UI Updates
+# ============================================================================
+
+"""
+Add periodic bandwidth updates to your dashboard:
+"""
+
+def start_bandwidth_ui_updates():
+    """Start periodic UI updates for bandwidth displays."""
+    
+    def update_bandwidth_displays():
+        """Update all bandwidth displays."""
+        from network_utils import get_all_routers_bandwidth
+        
+        all_bandwidth = get_all_routers_bandwidth()
+        
+        for bandwidth in all_bandwidth:
+            # Update UI for each router
+            router_ip = bandwidth['router_ip']
+            
+            # Update your UI elements here
+            # Example:
+            if router_ip in bandwidth_labels:
+                bandwidth_labels[router_ip]['download'].config(
+                    text=f"↓ {bandwidth['download_mbps']:.2f} Mbps"
+                )
+                bandwidth_labels[router_ip]['upload'].config(
+                    text=f"↑ {bandwidth['upload_mbps']:.2f} Mbps"
+                )
+        
+        # Schedule next update (5 seconds)
+        root.after(5000, update_bandwidth_displays)
+    
+    # Start updates
+    update_bandwidth_displays()
+
+# ============================================================================
+# STEP 8: API Endpoints (if using Flask/FastAPI)
+# ============================================================================
+
+"""
+Add these endpoints to your API server:
+"""
+
+from flask import Flask, jsonify, request
+
+@app.route('/api/bandwidth/router/<router_ip>', methods=['GET'])
+def api_get_router_bandwidth(router_ip):
+    """Get bandwidth for specific router."""
+    from network_utils import get_router_bandwidth_data
+    
+    bandwidth = get_router_bandwidth_data(router_ip)
+    
+    if not bandwidth:
+        return jsonify({"error": "Router not found"}), 404
+    
+    return jsonify(bandwidth)
+
+@app.route('/api/bandwidth/routers', methods=['GET'])
+def api_get_all_routers_bandwidth():
+    """Get bandwidth for all routers."""
+    from network_utils import get_all_routers_bandwidth
+    
+    all_bandwidth = get_all_routers_bandwidth()
+    
+    return jsonify({
+        "count": len(all_bandwidth),
+        "routers": all_bandwidth
+    })
+
+@app.route('/api/bandwidth/router/<router_ip>/history', methods=['GET'])
+def api_get_router_history(router_ip):
+    """Get bandwidth history for router."""
+    from network_utils import get_router_bandwidth_history
+    
+    limit = request.args.get('limit', type=int)
+    history = get_router_bandwidth_history(router_ip, limit=limit)
+    
+    return jsonify({
+        "router_ip": router_ip,
+        "count": len(history),
+        "history": history
+    })
+
+@app.route('/api/bandwidth/router/<router_ip>/average', methods=['GET'])
+def api_get_router_average(router_ip):
+    """Get average bandwidth for router."""
+    from network_utils import get_router_bandwidth_average
+    
+    minutes = request.args.get('minutes', default=5, type=int)
+    average = get_router_bandwidth_average(router_ip, minutes=minutes)
+    
+    if not average:
+        return jsonify({"error": "No data available"}), 404
+    
+    return jsonify(average)
+
+# ============================================================================
+# COMPLETE EXAMPLE: Modified network_utils.py structure
+# ============================================================================
+
+"""
+Your network_utils.py should now have this structure:
+
+# Imports
+import time
+import logging
+import speedtest
+...
+from router_bandwidth_monitor import RouterBandwidthMonitor, get_router_bandwidth_realtime
+
+# Global variables
+DISABLE_BANDWIDTH = True
+...
+_global_bandwidth_monitor = None
+_monitor_lock = threading.Lock()
+
+# Bandwidth monitor functions
+def get_bandwidth_monitor():
+    ...
+
+def start_bandwidth_monitoring(routers_list):
+    ...
+
+def stop_bandwidth_monitoring():
+    ...
+
+# Enhanced get_bandwidth()
+def get_bandwidth(ip, is_unifi=False, use_monitor=True):
+    ...
+
+# Helper functions
+def get_router_bandwidth_data(router_ip):
+    ...
+
+def get_all_routers_bandwidth():
+    ...
+
+# ... rest of your existing functions ...
+"""
+
+# ============================================================================
+# TESTING THE INTEGRATION
+# ============================================================================
+
+"""
+Test the integration with this code:
+"""
+
+if __name__ == "__main__":
+    # Test bandwidth monitoring integration
+    print("Testing bandwidth monitoring integration...")
+    
+    # Example routers
+    test_routers = [
+        {"ip": "192.168.1.1", "name": "Main Router"},
+        {"ip": "192.168.1.100", "name": "Living Room AP"}
+    ]
+    
+    # Start monitoring
+    start_bandwidth_monitoring(test_routers)
+    
+    # Wait for data
+    print("Collecting data for 15 seconds...")
+    time.sleep(15)
+    
+    # Get bandwidth using enhanced function
+    for router in test_routers:
+        print(f"\nTesting get_bandwidth('{router['ip']}'):")
+        result = get_bandwidth(router['ip'], use_monitor=True)
+        print(f"  Download: {result['download']:.2f} Mbps")
+        print(f"  Upload: {result['upload']:.2f} Mbps")
+        print(f"  Latency: {result['latency']} ms")
+        print(f"  Quality: {result['quality']}")
+    
+    # Get all routers
+    print("\n\nTesting get_all_routers_bandwidth():")
+    all_bandwidth = get_all_routers_bandwidth()
+    for bandwidth in all_bandwidth:
+        print(f"  {bandwidth['router_name']}: "
+              f"↓{bandwidth['download_mbps']:.2f} ↑{bandwidth['upload_mbps']:.2f} Mbps")
+    
+    # Cleanup
+    stop_bandwidth_monitoring()
+    print("\n✅ Integration test complete!")
+
+# ============================================================================
+# TROUBLESHOOTING
+# ============================================================================
+
+"""
+Common issues and solutions:
+
+1. Permission Denied
+   - Windows: Run as Administrator
+   - Linux: Run with sudo or add capabilities
+
+2. No bandwidth data
+   - Check if router is sending traffic
+   - Generate traffic with ping
+   - Verify router IP is correct
+
+3. Monitor not starting
+   - Check if another instance is running
+   - Verify network interface is correct
+   - Check firewall settings
+
+4. High CPU usage
+   - Increase sampling_interval (default: 5)
+   - Reduce number of monitored routers
+   - Check for packet storms
+
+5. Memory usage growing
+   - Reduce history_size (default: 60)
+   - Call stop_bandwidth_monitoring() on exit
+   - Restart monitoring periodically
+"""

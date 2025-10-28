@@ -119,6 +119,14 @@ class ClientDashboard:
                         relief='flat')
         style.map('ActiveSidebar.TButton', background=[('active', '#b71c1c')])
         style.configure('Dashboard.TFrame', background='white')
+        
+        # Section header label style
+        style.configure('SectionHeader.TLabel',
+                        background="#830000",
+                        foreground='white',
+                        font=('Segoe UI', 9, 'bold'),
+                        padding=(10, 5))
+        
         r = self.root
         r.title("WINYFI Client Portal")
         W, H = 1000, 600
@@ -128,6 +136,12 @@ class ClientDashboard:
         # Sidebar and content
         self.sidebar = tb.Frame(r, style='Sidebar.TFrame', width=220)
         self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack_propagate(False)
+        
+        # Add black border line on the right side of sidebar only
+        sidebar_border = tk.Frame(r, width=1, bg='#000000', bd=0, highlightthickness=3)
+        sidebar_border.pack(side="left", fill="y")
+        
         self.content_frame = tb.Frame(r)
         self.content_frame.pack(side="left", fill="both", expand=True)
         # Pages
@@ -144,6 +158,14 @@ class ClientDashboard:
             "Settings": self.settings_frame,
         }
         self.sidebar_buttons = {}
+        
+        def add_section_header(text):
+            """Add a red section header"""
+            header = tb.Label(self.sidebar, 
+                            text=text.upper(),
+                            style='SectionHeader.TLabel')
+            header.pack(fill='x', pady=(10, 0))
+        
         def add_sidebar_button(text, icon):
             btn = tb.Button(self.sidebar,
                             text=f"{icon} {text}",
@@ -159,17 +181,36 @@ class ClientDashboard:
             img = img.resize((85, 50), Image.Resampling.LANCZOS)
             self.sidebar_logo = ImageTk.PhotoImage(img)
             tb.Label(self.sidebar, image=self.sidebar_logo,
-                     background='white', borderwidth=0).pack(pady=(15, 45))
+                     background='white', borderwidth=0).pack(pady=(15, 10))
         else:
             tb.Label(self.sidebar, text="WINYFI",
                      font=("Segoe UI", 16, "bold"),
                      foreground='#d32f2f',
                      background='white').pack(pady=15)
-        # Navigation
-        add_sidebar_button("Dashboard", "📊")
-        add_sidebar_button("Routers", "📡")
-        add_sidebar_button("Reports", "📑")
+        
+        # Overview section
+        add_section_header("Overview")
+        add_sidebar_button("Dashboard", "🏠")
+        add_sidebar_button("Routers", "🚗")
         add_sidebar_button("Bandwidth", "📶")
+        
+        # Reports & Analysis section
+        add_section_header("Reports & Analysis")
+        add_sidebar_button("Reports", "📄")
+        
+        # Export button
+        self.export_btn = tb.Button(
+            self.sidebar,
+            text="📁 Export To Csv",
+            style='Sidebar.TButton',
+            width=22,
+            command=self.open_export_menu
+        )
+        self.export_btn.pack(pady=5)
+        
+        # Notifications section
+        add_section_header("Notifications")
+        
         # Notification bell button
         self.notification_btn = tb.Button(
             self.sidebar,
@@ -188,6 +229,10 @@ class ClientDashboard:
             background="#dc3545",
             width=3
         )
+        
+        # Account & Settings section
+        add_section_header("Account & Settings")
+        
         # Server status indicator (sidebar footer) with Retry (anchored at bottom)
         status_row = tb.Frame(self.sidebar, style='Sidebar.TFrame', padding=(0,0))
         status_row.pack(side='bottom', fill='x', pady=(10, 10))
@@ -217,25 +262,27 @@ class ClientDashboard:
         self.sidebar_buttons["Settings"] = settings_btn
         self.settings_dropdown = tb.Frame(self.sidebar, style='Sidebar.TFrame')
         self.dropdown_target_height = 90
-        um_btn = tb.Button(self.settings_dropdown, text="👤 User Profile",
-                           bootstyle="link", command=self.open_user_mgmt)
+        
+        # Dropdown buttons with proper alignment and styling
+        um_btn = tb.Button(self.settings_dropdown, 
+                           text="  👤 User Profile",
+                           style='Sidebar.TButton',
+                           width=22,
+                           command=self.open_user_mgmt)
         sep = ttk.Separator(self.settings_dropdown, orient='horizontal')
-        lo_btn = tb.Button(self.settings_dropdown, text="⏏️ Log Out",
-                           bootstyle="link", command=self.logout)
-        um_btn.pack(fill='x', pady=(5, 2))
+        lo_btn = tb.Button(self.settings_dropdown, 
+                           text="  ⏏️ Log Out",
+                           style='Sidebar.TButton',
+                           width=22,
+                           command=self.logout)
+        
+        um_btn.pack(fill='x', pady=2, padx=0)
         sep.pack(fill='x', pady=2)
-        lo_btn.pack(fill='x', pady=(2, 5))
+        lo_btn.pack(fill='x', pady=2, padx=0)
+        
         self.settings_dropdown.pack_propagate(False)
         self.settings_dropdown.config(height=0)
-        # Export button
-        self.export_btn = tb.Button(
-            self.sidebar,
-            text="⬇️ Export to CSV",
-            width=22,
-            style='Sidebar.TButton',
-            command=self.open_export_menu
-        )
-        self.export_btn.pack(pady=(0, 0))
+        
         # Build page UIs using separate tab classes
         self.dashboard_tab = DashboardTab(self.dashboard_frame, self.api_base_url, self.root)
         self.routers_tab = RoutersTab(self.routers_frame, self.api_base_url, self.root)
@@ -280,9 +327,9 @@ class ClientDashboard:
         steps, delay = 5, 20
         opening = not getattr(self, 'dropdown_open', False)
 
-        # if opening, pack it just before Export so it pushes Export down
+        # if opening, pack it directly after the Settings button
         if opening:
-            self.settings_dropdown.pack(fill='x', before=self.export_btn)
+            self.settings_dropdown.pack(fill='x', pady=0)
 
         def animate(step):
             frac = step / steps

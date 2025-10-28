@@ -882,6 +882,13 @@ class Dashboard:
 
         # Dashboard frame style
         style.configure('Dashboard.TFrame', background='white')
+        
+        # Section header label style
+        style.configure('SectionHeader.TLabel',
+                        background="#830000",
+                        foreground='white',
+                        font=('Segoe UI', 9, 'bold'),
+                        padding=(10, 5))
 
         # —— WINDOW SETUP ——————————————————————————————
         r = self.root
@@ -892,8 +899,14 @@ class Dashboard:
         r.geometry(f"{W}x{H}+{x}+{y}")
 
         # === Sidebar and content layout ===
+        # Create sidebar
         self.sidebar = tb.Frame(r, style='Sidebar.TFrame', width=220)
         self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack_propagate(False)
+        
+        # Add black border line on the right side of sidebar only
+        sidebar_border = tk.Frame(r, width=1, bg='#000000', bd=0, highlightthickness=3)
+        sidebar_border.pack(side="left", fill="y")
 
         self.content_frame = tb.Frame(r)  # replaces Notebook
         self.content_frame.pack(side="left", fill="both", expand=True)
@@ -929,6 +942,13 @@ class Dashboard:
         # === Sidebar Buttons ===
         self.sidebar_buttons = {}
 
+        def add_section_header(text):
+            """Add a red section header"""
+            header = tb.Label(self.sidebar, 
+                            text=text.upper(),
+                            style='SectionHeader.TLabel')
+            header.pack(fill='x', pady=(10, 0))
+
         def add_sidebar_button(text, icon):
             btn = tb.Button(self.sidebar,
                             text=f"{icon} {text}",
@@ -945,18 +965,35 @@ class Dashboard:
             img = img.resize((85, 50), Image.Resampling.LANCZOS)
             self.sidebar_logo = ImageTk.PhotoImage(img)
             tb.Label(self.sidebar, image=self.sidebar_logo,
-                    background='white', borderwidth=0).pack(pady=(15, 45))
+                    background='white', borderwidth=0).pack(pady=(15, 10))
         else:
             tb.Label(self.sidebar, text="WINYFI",
                     font=("Segoe UI", 16, "bold"),
                     foreground='#d32f2f',
                     background='white').pack(pady=15)
 
-        # Navigation buttons
-        add_sidebar_button("Dashboard", "📊")
-        add_sidebar_button("Routers", "📡")
-        add_sidebar_button("Reports", "📑")
+        # Overview section
+        add_section_header("Overview")
+        add_sidebar_button("Dashboard", "🏠")
+        add_sidebar_button("Routers", "�")
         add_sidebar_button("Bandwidth", "📶")
+        
+        # Reports & Analysis section
+        add_section_header("Reports & Analysis")
+        add_sidebar_button("Reports", "📄")
+        
+        # Export button
+        self.export_btn = tb.Button(
+            self.sidebar,
+            text="📁 Export To Csv",
+            style='Sidebar.TButton',
+            width=22,
+            command=self.open_export_menu
+        )
+        self.export_btn.pack(pady=5)
+        
+        # Notifications section
+        add_section_header("Notifications")
 
         # Notification bell button
         self.notification_btn = tb.Button(
@@ -985,6 +1022,9 @@ class Dashboard:
         self.build_bandwidth_tab()
         self.build_reports_tab()
 
+        # Account & Settings section
+        add_section_header("Account & Settings")
+
         # Settings dropdown
         settings_btn = tb.Button(self.sidebar,
                                 text="⚙️ Settings ▼",
@@ -996,34 +1036,44 @@ class Dashboard:
 
         self.settings_dropdown = tb.Frame(self.sidebar, style='Sidebar.TFrame')
         self.dropdown_target_height = 170
-        profile_btn = tb.Button(self.settings_dropdown, text="👤 User Profile",
-                        bootstyle="link", command=self.show_user_profile)
-        um_btn = tb.Button(self.settings_dropdown, text="👥 User Management",
-                        bootstyle="link", command=self.open_user_mgmt)
-        notif_btn = tb.Button(self.settings_dropdown, text="🔔 Notification Settings",
-                        bootstyle="link", command=self.show_notification_settings)
+        
+        # Dropdown buttons with proper alignment and styling
+        profile_btn = tb.Button(self.settings_dropdown, 
+                        text="  👤 User Profile",
+                        style='Sidebar.TButton',
+                        width=22,
+                        command=self.show_user_profile)
+        um_btn = tb.Button(self.settings_dropdown, 
+                        text="  👥 User Management",
+                        style='Sidebar.TButton',
+                        width=22,
+                        command=self.open_user_mgmt)
+        notif_btn = tb.Button(self.settings_dropdown, 
+                        text="  🔔 Notification Settings",
+                        style='Sidebar.TButton',
+                        width=22,
+                        command=self.show_notification_settings)
         sep = ttk.Separator(self.settings_dropdown, orient='horizontal')
-        lo_btn = tb.Button(self.settings_dropdown, text="⏏️ Log Out",
-                        bootstyle="link", command=self.logout)
-        profile_btn.pack(fill='x', pady=(5, 2))
-        um_btn.pack(fill='x', pady=(2, 2))
-        notif_btn.pack(fill='x', pady=(2, 2))
+        lo_btn = tb.Button(self.settings_dropdown, 
+                        text="  ⏏️ Log Out",
+                        style='Sidebar.TButton',
+                        width=22,
+                        command=self.logout)
+        
+        profile_btn.pack(fill='x', pady=2, padx=0)
+        um_btn.pack(fill='x', pady=2, padx=0)
+        notif_btn.pack(fill='x', pady=2, padx=0)
         sep.pack(fill='x', pady=2)
-        lo_btn.pack(fill='x', pady=(2, 5))
+        lo_btn.pack(fill='x', pady=2, padx=0)
+        
         self.settings_dropdown.pack_propagate(False)
         self.settings_dropdown.config(height=0)
 
-        # Export button with dropdown
-        self.export_btn = tb.Button(
-            self.sidebar,
-            text="⬇️ Export to CSV",
-            width=22,
-            style='Sidebar.TButton',
-            command=self.open_export_menu
-        )
-        self.export_btn.pack(pady=(0,0))
-
         # === Routers Page Content ===
+        # Add horizontal separator line at the top
+        router_top_separator = tk.Frame(self.routers_frame, height=1, bg='#000000')
+        router_top_separator.pack(fill="x", pady=0)
+        
         router_header_frame = tb.Frame(self.routers_frame)
         router_header_frame.pack(fill="x", padx=10, pady=(10, 0))
 
@@ -1157,9 +1207,8 @@ class Dashboard:
         title_frame.pack(side="left")
         
         tb.Label(title_frame, text="📊 Network Dashboard", 
-                font=("Segoe UI", 24, "bold"), 
-                bootstyle="primary").pack(side="left")
-        
+                font=("Segoe UI", 16)).pack(side="left")
+
         # Auto-refresh controls
         refresh_frame = tb.Frame(header_frame)
         refresh_frame.pack(side="right")
@@ -1461,9 +1510,9 @@ class Dashboard:
         steps, delay = 5, 20
         opening = not getattr(self, 'dropdown_open', False)
 
-        # if opening, pack it just before Export so it pushes Export down
+        # if opening, pack it directly after the Settings button
         if opening:
-            self.settings_dropdown.pack(fill='x', before=self.export_btn)
+            self.settings_dropdown.pack(fill='x', pady=0)
 
         def animate(step):
             frac = step / steps
@@ -2448,14 +2497,20 @@ class Dashboard:
             self.show_non_unifi_connected_clients(router)
 
     def show_non_unifi_connected_clients(self, router):
-        """Show connected clients for a non-UniFi router/AP from database via API"""
+        """Show connected clients for a non-UniFi router/AP by scanning the router's specific subnet"""
         try:
-            import requests
-            from requests.exceptions import ConnectionError, Timeout, RequestException
+            from network_utils import scan_router_subnet, get_default_iface, ping_latency
+            from db import save_network_client, create_network_clients_table
             
             router_id = router.get('id')
+            router_ip = router.get('ip_address')
+            
             if not router_id:
                 messagebox.showerror("Error", "Router ID not found.")
+                return
+            
+            if not router_ip:
+                messagebox.showerror("Error", "Router IP address not found. Please update the router information.")
                 return
             
             # Create modal window
@@ -2481,7 +2536,7 @@ class Dashboard:
             
             # Status label for loading
             status_label = tb.Label(header_frame, 
-                                   text="⏳ Loading clients...", 
+                                   text="⏳ Scanning network...", 
                                    font=("Segoe UI", 12), bootstyle="info")
             status_label.pack(side="right")
             
@@ -2497,7 +2552,7 @@ class Dashboard:
             content_frame.pack(fill="both", expand=True)
             
             # Loading label
-            loading_label = tb.Label(content_frame, text="⏳ Fetching clients from database...", 
+            loading_label = tb.Label(content_frame, text="⏳ Scanning subnet for clients...", 
                                     font=("Segoe UI", 12), bootstyle="info")
             loading_label.pack(pady=50)
             
@@ -2513,39 +2568,77 @@ class Dashboard:
             tb.Button(footer_frame, text="Close", bootstyle="secondary",
                      command=modal.destroy, width=15).pack(side="right")
             
-            # Fetch clients (and persist to DB) from API in background thread
-            def fetch_clients():
+            # Scan network for clients in background thread
+            def scan_clients():
                 try:
-                    # First, ask server to discover and save clients for this router
-                    response = requests.post(
-                        f"{self.api_base_url}/api/routers/{router_id}/clients/discover_save",
-                        timeout=12
-                    )
+                    # Ensure tables exist
+                    create_network_clients_table()
                     
-                    if response.status_code != 200:
+                    # Get network interface
+                    iface = get_default_iface()
+                    if not iface:
                         self.root.after(0, lambda: update_ui_error(
-                            f"Failed to refresh clients.\nStatus Code: {response.status_code}"
+                            "No active network interface found."
                         ))
                         return
                     
-                    data = response.json()
-                    clients = data.get('clients', [])
+                    # Perform network scan using ARP on the router's specific subnet
+                    print(f"🔍 Scanning subnet for router {router.get('name')} (IP: {router_ip}) on interface {iface}...")
+                    scanned_clients = scan_router_subnet(
+                        router_ip=router_ip,
+                        netmask="255.255.255.0",  # Default /24 subnet
+                        iface=iface,
+                        timeout=3
+                    )
+                    
+                    if not scanned_clients:
+                        self.root.after(0, lambda: update_ui_with_clients([]))
+                        return
+                    
+                    # Process and save scanned clients to database
+                    saved_clients = []
+                    for mac, info in scanned_clients.items():
+                        # Get ping latency
+                        ping_lat = None
+                        if info.get("ip"):
+                            ping_lat = ping_latency(info["ip"], timeout=1000)
+                        
+                        # Determine vendor (simplified)
+                        vendor = info.get("vendor", "Unknown")
+                        
+                        # Save to database with router association
+                        try:
+                            save_network_client(
+                                mac_address=mac,
+                                ip_address=info.get("ip"),
+                                hostname=info.get("hostname", "Unknown"),
+                                vendor=vendor,
+                                ping_latency=ping_lat,
+                                device_type=None,
+                                notes=None,
+                                router_id=router_id,
+                                router_name=router.get('name')
+                            )
+                            
+                            saved_clients.append({
+                                "mac_address": mac,
+                                "ip_address": info.get("ip"),
+                                "hostname": info.get("hostname", "Unknown"),
+                                "vendor": vendor,
+                                "ping_latency": ping_lat,
+                                "is_online": True,
+                                "last_seen": info.get("last_seen").isoformat() if info.get("last_seen") else None
+                            })
+                        except Exception as e:
+                            print(f"Error saving client {mac}: {e}")
+                    
+                    print(f"✅ Scanned and saved {len(saved_clients)} clients for router {router.get('name')}")
                     
                     # Update UI in main thread
-                    self.root.after(0, lambda: update_ui_with_clients(clients))
+                    self.root.after(0, lambda: update_ui_with_clients(saved_clients))
                     
-                except ConnectionError:
-                    self.root.after(0, lambda: update_ui_error(
-                        "Cannot connect to server.\nPlease ensure the server is running."
-                    ))
-                except Timeout:
-                    self.root.after(0, lambda: update_ui_error(
-                        "Request timed out.\nPlease try again later."
-                    ))
-                except RequestException as e:
-                    self.root.after(0, lambda: update_ui_error(f"Request error:\n{str(e)}"))
                 except Exception as e:
-                    self.root.after(0, lambda: update_ui_error(f"Unexpected error:\n{str(e)}"))
+                    self.root.after(0, lambda: update_ui_error(f"Scan error:\n{str(e)}"))
             
             def update_ui_error(error_msg):
                 loading_label.config(text=f"❌ {error_msg}", bootstyle="danger")
@@ -2666,9 +2759,9 @@ class Dashboard:
                 except IndexError:
                     messagebox.showwarning("No Selection", "Please select a client first.")
             
-            # Start fetching clients in background thread
+            # Start scanning clients in background thread
             import threading
-            threading.Thread(target=fetch_clients, daemon=True).start()
+            threading.Thread(target=scan_clients, daemon=True).start()
             
         except Exception as e:
             messagebox.showerror("Error", 

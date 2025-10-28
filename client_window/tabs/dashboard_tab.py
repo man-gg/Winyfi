@@ -43,8 +43,7 @@ class DashboardTab:
         title_frame.pack(side="left")
         
         tb.Label(title_frame, text="📊 Network Dashboard", 
-                font=("Segoe UI", 24, "bold"), 
-                bootstyle="primary").pack(side="left")
+                        font=("Segoe UI", 16)).pack(side="left")
         
         # Auto-refresh controls
         refresh_frame = tb.Frame(header_frame)
