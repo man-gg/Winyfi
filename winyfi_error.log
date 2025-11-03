@@ -9297,3 +9297,421 @@ Traceback (most recent call last):
     ~~~~~~~~~~~~~~~~^^^
 KeyboardInterrupt
 
+2025-10-29 12:50:51,628 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-10-29 12:50:51,704 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-10-29 12:50:51,706 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-10-29 12:50:51,707 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-10-29 12:50:51,716 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-10-29 12:50:51,718 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-10-29 12:50:56,741 INFO [root] 📦 Capture complete. Packets seen: 51, Analyzed: 51
+2025-10-29 12:50:56,742 INFO [root] Unique MACs detected: 1
+2025-10-29 12:50:56,743 INFO [root] Max severity: 3.6 (threshold: 15)
+2025-10-29 12:50:56,743 INFO [root] Detection status: CLEAN
+2025-10-29 12:50:56,762 INFO [root] 📦 Capture complete. Packets seen: 475, Analyzed: 475
+2025-10-29 12:50:56,762 INFO [root] Unique MACs detected: 0
+2025-10-29 12:50:56,763 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-29 12:50:56,764 INFO [root] Detection status: CLEAN
+2025-10-29 12:50:56,765 INFO [root] Overall status: CLEAN, max_severity=3.6
+2025-10-29 12:50:56,794 INFO [db] Loop detection saved to database (ID: 396, severity: 3.60, cross-subnet: False)
+2025-10-30 15:54:09,266 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-10-30 15:54:09,352 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-10-30 15:54:09,365 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-10-30 15:54:09,366 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-10-30 15:54:09,368 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-10-30 15:54:09,373 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-10-30 15:54:14,385 INFO [root] 📦 Capture complete. Packets seen: 22, Analyzed: 22
+2025-10-30 15:54:14,386 INFO [root] Unique MACs detected: 0
+2025-10-30 15:54:14,386 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 15:54:14,387 INFO [root] Detection status: CLEAN
+2025-10-30 15:54:14,389 INFO [root] 📦 Capture complete. Packets seen: 2103, Analyzed: 2103
+2025-10-30 15:54:14,390 INFO [root] Unique MACs detected: 0
+2025-10-30 15:54:14,391 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 15:54:14,391 INFO [root] Detection status: CLEAN
+2025-10-30 15:54:14,392 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-10-30 15:54:14,406 INFO [db] Loop detection saved to database (ID: 397, severity: 0.00, cross-subnet: False)
+2025-10-30 16:02:30,748 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-10-30 16:02:30,832 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-10-30 16:02:30,842 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-10-30 16:02:30,843 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-10-30 16:02:30,844 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-10-30 16:02:30,846 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-10-30 16:02:35,877 INFO [root] 📦 Capture complete. Packets seen: 44, Analyzed: 44
+2025-10-30 16:02:35,877 INFO [root] Unique MACs detected: 3
+2025-10-30 16:02:35,878 INFO [root] Max severity: 4.5 (threshold: 15)
+2025-10-30 16:02:35,879 INFO [root] Detection status: CLEAN
+2025-10-30 16:02:36,001 INFO [root] 📦 Capture complete. Packets seen: 2238, Analyzed: 2238
+2025-10-30 16:02:36,004 INFO [root] Unique MACs detected: 0
+2025-10-30 16:02:36,016 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:02:36,027 INFO [root] Detection status: CLEAN
+2025-10-30 16:02:36,031 INFO [root] Overall status: CLEAN, max_severity=4.5
+2025-10-30 16:02:36,054 INFO [db] Loop detection saved to database (ID: 398, severity: 4.50, cross-subnet: False)
+2025-10-30 16:04:13,178 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-10-30 16:04:13,288 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-10-30 16:04:13,295 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-10-30 16:04:13,298 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-10-30 16:04:13,301 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-10-30 16:04:13,302 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-10-30 16:04:18,324 INFO [root] 📦 Capture complete. Packets seen: 15, Analyzed: 15
+2025-10-30 16:04:18,326 INFO [root] Unique MACs detected: 0
+2025-10-30 16:04:18,327 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:04:18,328 INFO [root] Detection status: CLEAN
+2025-10-30 16:04:18,329 INFO [root] 📦 Capture complete. Packets seen: 2457, Analyzed: 2457
+2025-10-30 16:04:18,330 INFO [root] Unique MACs detected: 0
+2025-10-30 16:04:18,330 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:04:18,331 INFO [root] Detection status: CLEAN
+2025-10-30 16:04:18,333 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-10-30 16:04:18,369 INFO [db] Loop detection saved to database (ID: 399, severity: 0.00, cross-subnet: False)
+2025-10-30 16:22:22,702 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-10-30 16:22:22,758 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-10-30 16:22:22,769 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-10-30 16:22:22,770 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-10-30 16:22:22,773 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-10-30 16:22:22,775 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-10-30 16:22:27,792 INFO [root] 📦 Capture complete. Packets seen: 1801, Analyzed: 1801
+2025-10-30 16:22:27,793 INFO [root] Unique MACs detected: 0
+2025-10-30 16:22:27,793 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:22:27,794 INFO [root] Detection status: CLEAN
+2025-10-30 16:22:27,900 INFO [root] 📦 Capture complete. Packets seen: 702, Analyzed: 702
+2025-10-30 16:22:27,908 INFO [root] Unique MACs detected: 46
+2025-10-30 16:22:27,914 INFO [root]   fa:7e:d5:dc:5c:5c: severity=246.6 (ARP:274, BC:0, total:274)
+2025-10-30 16:22:27,915 INFO [root]   fc:b6:9d:b5:d5:b3: severity=10.8 (ARP:12, BC:0, total:12)
+2025-10-30 16:22:27,918 INFO [root]   fc:b6:9d:b5:d5:b4: severity=10.8 (ARP:12, BC:0, total:12)
+2025-10-30 16:22:27,919 INFO [root] Max severity: 246.6 (threshold: 15)
+2025-10-30 16:22:27,920 INFO [root] Detection status: LOOP_DETECTED
+2025-10-30 16:22:27,925 INFO [root]   High severity MAC: fa:7e:d5:dc:5c:5c, score=246.6, packets=274
+2025-10-30 16:22:27,928 INFO [root]   High severity MAC: 6e:ca:57:b9:fd:4c, score=9.9, packets=11
+2025-10-30 16:22:27,931 INFO [root]   High severity MAC: fc:b6:9d:b5:d5:b3, score=10.8, packets=12
+2025-10-30 16:22:27,932 INFO [root]   High severity MAC: fc:b6:9d:b5:d5:b4, score=10.8, packets=12
+2025-10-30 16:22:27,934 INFO [root] Overall status: LOOP_DETECTED, max_severity=246.6
+2025-10-30 16:22:27,958 INFO [db] Loop detection saved to database (ID: 400, severity: 246.60, cross-subnet: False)
+2025-10-30 16:26:44,369 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+2025-10-30 16:27:29,842 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-10-30 16:27:29,889 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-10-30 16:27:29,891 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-10-30 16:27:29,892 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-10-30 16:27:29,893 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-10-30 16:27:29,894 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-10-30 16:27:34,904 INFO [root] 📦 Capture complete. Packets seen: 5577, Analyzed: 5577
+2025-10-30 16:27:34,904 INFO [root] Unique MACs detected: 0
+2025-10-30 16:27:34,905 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:27:34,905 INFO [root] Detection status: CLEAN
+2025-10-30 16:27:34,908 INFO [root] 📦 Capture complete. Packets seen: 58, Analyzed: 58
+2025-10-30 16:27:34,909 INFO [root] Unique MACs detected: 0
+2025-10-30 16:27:34,909 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:27:34,910 INFO [root] Detection status: CLEAN
+2025-10-30 16:27:34,912 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-10-30 16:27:34,927 INFO [db] Loop detection saved to database (ID: 401, severity: 0.00, cross-subnet: False)
+2025-10-30 16:27:39,055 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+2025-10-30 16:27:51,442 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+2025-10-30 16:28:03,658 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+2025-10-30 16:28:23,951 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+2025-10-30 16:28:51,813 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3653, in render_cards
+    if latency is not None and down > 0:
+                               ^^^^^^^^
+TypeError: '>' not supported between instances of 'NoneType' and 'int'
+
+2025-10-30 16:31:27,801 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-10-30 16:31:27,926 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-10-30 16:31:27,932 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-10-30 16:31:27,935 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-10-30 16:31:27,962 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-10-30 16:31:27,964 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-10-30 16:31:32,978 INFO [root] 📦 Capture complete. Packets seen: 97, Analyzed: 97
+2025-10-30 16:31:32,981 INFO [root] Unique MACs detected: 0
+2025-10-30 16:31:32,986 INFO [root] 📦 Capture complete. Packets seen: 1364, Analyzed: 1364
+2025-10-30 16:31:32,986 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:31:32,990 INFO [root] Unique MACs detected: 0
+2025-10-30 16:31:32,994 INFO [root] Detection status: CLEAN
+2025-10-30 16:31:32,994 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:31:32,996 INFO [root] Detection status: CLEAN
+2025-10-30 16:31:33,006 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-10-30 16:31:33,029 INFO [db] Loop detection saved to database (ID: 402, severity: 0.00, cross-subnet: False)
+2025-10-30 16:35:47,844 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-10-30 16:35:47,902 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-10-30 16:35:47,915 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-10-30 16:35:47,917 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-10-30 16:35:47,920 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-10-30 16:35:47,924 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-10-30 16:35:52,932 INFO [root] 📦 Capture complete. Packets seen: 93, Analyzed: 93
+2025-10-30 16:35:52,933 INFO [root] Unique MACs detected: 0
+2025-10-30 16:35:52,935 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:35:52,936 INFO [root] Detection status: CLEAN
+2025-10-30 16:35:52,937 INFO [root] 📦 Capture complete. Packets seen: 1297, Analyzed: 1297
+2025-10-30 16:35:52,938 INFO [root] Unique MACs detected: 0
+2025-10-30 16:35:52,938 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-10-30 16:35:52,938 INFO [root] Detection status: CLEAN
+2025-10-30 16:35:52,940 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-10-30 16:35:52,964 INFO [db] Loop detection saved to database (ID: 403, severity: 0.00, cross-subnet: False)
+2025-10-30 16:36:31,747 WARNING [root] Ping to 192.168.198.38 timed out after 1000ms
+2025-10-30 16:36:31,763 WARNING [root] Ping to 192.168.196.189 timed out after 1000ms
+2025-10-30 16:36:31,763 WARNING [root] Ping to 192.168.198.7 timed out after 1000ms
+2025-10-30 16:36:31,765 WARNING [root] Ping to 192.168.198.87 timed out after 1000ms
+2025-10-30 16:36:31,768 WARNING [root] Ping to 192.168.193.241 timed out after 1000ms
+2025-10-30 16:36:31,768 WARNING [root] Ping to 192.168.192.240 timed out after 1000ms
+2025-10-30 16:36:31,773 WARNING [root] Ping to 192.168.198.177 timed out after 1000ms
+2025-10-30 16:36:31,784 WARNING [root] Ping to 192.168.197.91 timed out after 1000ms
+2025-10-30 16:36:31,793 WARNING [root] Ping to 192.168.194.48 timed out after 1000ms
+2025-10-30 16:36:31,819 WARNING [root] Ping to 192.168.193.241 timed out after 1000ms
+2025-10-30 16:36:31,824 WARNING [root] Ping to 192.168.194.246 timed out after 1000ms
+2025-10-30 16:36:31,826 WARNING [root] Ping to 192.168.1.24 timed out after 1000ms
+2025-10-30 16:36:31,832 WARNING [root] Ping to 192.168.193.210 timed out after 1000ms
+2025-10-30 16:36:31,837 WARNING [root] Ping to 192.168.1.23 timed out after 1000ms
+2025-10-30 16:36:31,838 WARNING [root] Ping to 192.168.193.210 timed out after 1000ms
+2025-10-30 16:36:31,843 WARNING [root] Ping to 192.168.196.33 timed out after 1000ms
+2025-10-30 16:36:31,845 WARNING [root] Ping to 192.168.197.91 timed out after 1000ms
+2025-10-30 16:36:31,849 WARNING [root] Ping to 192.168.192.220 timed out after 1000ms
+2025-10-30 16:36:31,851 WARNING [root] Ping to 192.168.196.232 timed out after 1000ms
+2025-10-30 16:36:31,868 WARNING [root] Ping to 192.168.193.33 timed out after 1000ms
+2025-10-30 16:36:31,878 WARNING [root] Ping to 192.168.197.61 timed out after 1000ms
+2025-10-30 16:36:31,900 WARNING [root] Ping to 192.168.197.63 timed out after 1000ms
+2025-10-30 16:36:31,901 WARNING [root] Ping to 192.168.195.49 timed out after 1000ms
+2025-10-30 16:36:31,904 WARNING [root] Ping to 192.168.198.38 timed out after 1000ms
+2025-10-30 16:36:31,905 WARNING [root] Ping to 192.168.194.30 timed out after 1000ms
+2025-10-30 16:36:31,913 WARNING [root] Ping to 192.168.199.7 timed out after 1000ms
+2025-10-30 16:36:31,918 WARNING [root] Ping to 192.168.195.13 timed out after 1000ms
+2025-10-30 16:36:31,922 WARNING [root] Ping to 192.168.198.67 timed out after 1000ms
+2025-10-30 16:36:46,359 WARNING [root] Ping to 192.168.1.22 timed out after 1000ms
+2025-10-30 16:36:46,425 WARNING [root] Ping to 192.168.198.87 timed out after 1000ms
+2025-10-30 16:36:46,426 WARNING [root] Ping to 192.168.197.91 timed out after 1000ms
+2025-10-30 16:36:46,443 WARNING [root] Ping to 192.168.198.38 timed out after 1000ms
+2025-10-30 16:36:46,564 WARNING [root] Ping to 192.168.197.196 timed out after 1000ms
+2025-10-30 16:36:46,565 WARNING [root] Ping to 192.168.199.171 timed out after 1000ms
+2025-10-30 16:36:46,571 WARNING [root] Ping to 192.168.198.7 timed out after 1000ms
+2025-10-30 16:36:46,572 WARNING [root] Ping to 192.168.196.220 timed out after 1000ms
+2025-10-30 16:36:46,574 WARNING [root] Ping to 192.168.197.63 timed out after 1000ms
+2025-10-30 16:36:46,576 WARNING [root] Ping to 192.168.192.240 timed out after 1000ms
+2025-10-30 16:36:46,579 WARNING [root] Ping to 192.168.193.173 timed out after 1000ms
+2025-10-30 16:36:46,580 WARNING [root] Ping to 192.168.194.48 timed out after 1000ms
+2025-10-30 16:36:46,583 WARNING [root] Ping to 192.168.198.18 timed out after 1000ms
+2025-10-30 16:36:46,584 WARNING [root] Ping to 192.168.195.13 timed out after 1000ms
+2025-10-30 16:36:46,584 WARNING [root] Ping to 192.168.193.33 timed out after 1000ms
+2025-10-30 16:36:46,585 WARNING [root] Ping to 192.168.196.33 timed out after 1000ms
+2025-10-30 16:36:46,585 WARNING [root] Ping to 192.168.195.49 timed out after 1000ms
+2025-10-30 16:36:46,633 WARNING [root] Ping to 192.168.1.24 timed out after 1000ms
+2025-10-30 16:36:46,633 WARNING [root] Ping to 192.168.194.30 timed out after 1000ms
+2025-10-30 16:36:46,647 WARNING [root] Ping to 192.168.199.171 timed out after 1000ms
+2025-10-30 16:36:46,648 WARNING [root] Ping to 192.168.193.241 timed out after 1000ms
+2025-10-30 16:36:46,690 WARNING [root] Ping to 192.168.197.12 timed out after 1000ms
+2025-10-30 16:36:46,648 WARNING [root] Ping to 192.168.194.246 timed out after 1000ms
+2025-10-30 16:36:46,680 WARNING [root] Ping to 192.168.198.87 timed out after 1000ms
+2025-10-30 16:36:46,681 WARNING [root] Ping to 192.168.198.38 timed out after 1000ms
+2025-10-30 16:36:46,682 WARNING [root] Ping to 192.168.1.22 timed out after 1000ms
+2025-10-30 16:36:46,682 WARNING [root] Ping to 192.168.197.61 timed out after 1000ms
+2025-10-30 16:36:46,683 WARNING [root] Ping to 192.168.193.33 timed out after 1000ms
+2025-10-30 16:36:46,683 WARNING [root] Ping to 192.168.197.12 timed out after 1000ms
+2025-10-30 16:36:46,683 WARNING [root] Ping to 192.168.193.210 timed out after 1000ms
+2025-10-30 16:36:46,683 WARNING [root] Ping to 192.168.198.177 timed out after 1000ms
+2025-10-30 16:36:46,683 WARNING [root] Ping to 192.168.192.240 timed out after 1000ms
+2025-10-30 16:36:46,684 WARNING [root] Ping to 192.168.197.91 timed out after 1000ms
+2025-10-30 16:36:46,684 WARNING [root] Ping to 192.168.193.210 timed out after 1000ms
+2025-10-30 16:36:46,685 WARNING [root] Ping to 192.168.198.18 timed out after 1000ms
+2025-10-30 16:36:46,686 WARNING [root] Ping to 192.168.197.63 timed out after 1000ms
+2025-10-30 16:36:46,687 WARNING [root] Ping to 192.168.193.173 timed out after 1000ms
+2025-10-30 16:36:46,687 WARNING [root] Ping to 192.168.198.177 timed out after 1000ms
+2025-10-30 16:36:46,687 WARNING [root] Ping to 192.168.197.61 timed out after 1000ms
+2025-10-30 16:36:46,687 WARNING [root] Ping to 192.168.197.196 timed out after 1000ms
+2025-10-30 16:36:46,687 WARNING [root] Ping to 192.168.196.189 timed out after 1000ms
+2025-10-30 16:36:46,688 WARNING [root] Ping to 192.168.198.7 timed out after 1000ms
+2025-10-30 16:36:46,688 WARNING [root] Ping to 192.168.196.232 timed out after 1000ms
+2025-10-30 16:36:46,688 WARNING [root] Ping to 192.168.196.232 timed out after 1000ms
+2025-10-30 16:36:46,689 WARNING [root] Ping to 192.168.198.67 timed out after 1000ms
+2025-10-30 16:36:46,689 WARNING [root] Ping to 192.168.192.220 timed out after 1000ms
+2025-10-30 16:36:46,690 WARNING [root] Ping to 192.168.194.48 timed out after 1000ms
+2025-10-30 16:36:46,680 WARNING [root] Ping to 192.168.199.7 timed out after 1000ms
+2025-10-30 16:36:46,691 WARNING [root] Ping to 192.168.192.220 timed out after 1000ms
+2025-10-30 16:36:46,691 WARNING [root] Ping to 192.168.198.67 timed out after 1000ms
+2025-10-30 16:36:46,692 WARNING [root] Ping to 192.168.1.23 timed out after 1000ms
+2025-10-30 16:36:46,728 WARNING [root] Ping to 192.168.199.7 timed out after 1000ms
+2025-10-30 16:36:46,731 WARNING [root] Ping to 192.168.195.13 timed out after 1000ms
+2025-10-30 16:36:46,732 WARNING [root] Ping to 192.168.195.49 timed out after 1000ms
+2025-10-30 16:36:46,755 WARNING [root] Ping to 192.168.196.33 timed out after 1000ms
+2025-10-30 16:36:46,756 WARNING [root] Ping to 192.168.196.55 timed out after 1000ms
+2025-10-30 16:36:46,763 WARNING [root] Ping to 192.168.196.220 timed out after 1000ms
+2025-11-02 23:48:56,223 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-02 23:48:56,290 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-02 23:48:56,293 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-02 23:48:56,294 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-02 23:48:56,294 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-02 23:48:56,295 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-02 23:49:01,358 INFO [root] 📦 Capture complete. Packets seen: 39, Analyzed: 39
+2025-11-02 23:49:01,359 INFO [root] Unique MACs detected: 1
+2025-11-02 23:49:01,359 INFO [root]   3c:91:80:80:ac:97: severity=11.7 (ARP:13, BC:0, total:13)
+2025-11-02 23:49:01,360 INFO [root] Max severity: 11.7 (threshold: 15)
+2025-11-02 23:49:01,360 INFO [root] Detection status: SUSPICIOUS
+2025-11-02 23:49:01,399 INFO [root] 📦 Capture complete. Packets seen: 873, Analyzed: 873
+2025-11-02 23:49:01,399 INFO [root] Unique MACs detected: 0
+2025-11-02 23:49:01,400 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-02 23:49:01,402 INFO [root] Detection status: CLEAN
+2025-11-02 23:49:01,403 INFO [root]   High severity MAC: 3c:91:80:80:ac:97, score=11.7, packets=13
+2025-11-02 23:49:01,403 INFO [root] Overall status: CLEAN, max_severity=11.7
+2025-11-02 23:49:01,427 INFO [db] Loop detection saved to database (ID: 404, severity: 11.70, cross-subnet: False)
+2025-11-02 23:54:01,464 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-02 23:54:01,551 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-02 23:54:01,553 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-02 23:54:01,553 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-02 23:54:01,553 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-02 23:54:01,554 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-02 23:54:06,566 INFO [root] 📦 Capture complete. Packets seen: 40, Analyzed: 40
+2025-11-02 23:54:06,586 INFO [root] Unique MACs detected: 1
+2025-11-02 23:54:06,603 INFO [root] 📦 Capture complete. Packets seen: 187, Analyzed: 187
+2025-11-02 23:54:06,604 INFO [root]   3c:91:80:80:ac:97: severity=11.7 (ARP:13, BC:0, total:13)
+2025-11-02 23:54:06,606 INFO [root] Unique MACs detected: 0
+2025-11-02 23:54:06,608 INFO [root] Max severity: 11.7 (threshold: 15)
+2025-11-02 23:54:06,632 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-02 23:54:06,639 INFO [root] Detection status: SUSPICIOUS
+2025-11-02 23:54:06,649 INFO [root] Detection status: CLEAN
+2025-11-02 23:54:06,673 INFO [root]   High severity MAC: 3c:91:80:80:ac:97, score=11.7, packets=13
+2025-11-02 23:54:06,680 INFO [root] Overall status: CLEAN, max_severity=11.7
+2025-11-02 23:54:06,828 INFO [db] Loop detection saved to database (ID: 405, severity: 11.70, cross-subnet: False)

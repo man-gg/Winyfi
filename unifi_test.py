@@ -7,14 +7,17 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 ## UniFi Controller details
-# CONTROLLER_URL = "http://127.0.0.1:8443"   # Use local Flask mock API (original, commented for mock dev)
-CONTROLLER_URL = "http://127.0.0.1:5001"   # Use local Flask mock API for development/testing
-USERNAME = "admin"                          # Replace with your UniFi username
-PASSWORD = "admin123"                       # Replace with your UniFi password
+# Your UniFi controller configuration
+CONTROLLER_URL = "http://127.0.0.1:8080"      # Your controller URL
+USERNAME = "admin"                            # Your UniFi username
+PASSWORD = "admin123"                         # Your UniFi password
 SITE = "default"                            # Default site is usually 'default'
 REFRESH_INTERVAL = 5000                     # Auto-refresh every 5000 ms (5 sec)
 
 session = requests.Session()
+
+# Flask API base URL (tests improved unifi_api.py)
+FLASK_API_BASE = "http://127.0.0.1:5001/api/unifi"
 
 def login_unifi():
     """Try login for UniFi v7+ (/api/auth/login), fallback to v6 (/api/login)."""
@@ -35,18 +38,46 @@ def login_unifi():
     return False, resp.text
 
 def fetch_devices():
-    """Fetch UniFi devices (APs)."""
+    """Fetch UniFi devices (APs) directly from controller."""
     resp = session.get(f"{CONTROLLER_URL}/api/s/{SITE}/stat/device", verify=False)
     if resp.status_code == 200:
-        return resp.json().get("data", [])
+        try:
+            return resp.json().get("data", [])
+        except Exception:
+            return []
     return []
 
+def fetch_devices_via_flask():
+    """Fetch devices via Flask API (improved unifi_api.py)."""
+    try:
+        resp = requests.get(f"{FLASK_API_BASE}/devices")
+        if resp.status_code == 200:
+            return resp.json() if isinstance(resp.json(), list) else []
+        return []
+    except Exception:
+        return []
+
 def fetch_clients():
-    """Fetch connected clients."""
+    """Fetch connected clients directly from controller."""
     resp = session.get(f"{CONTROLLER_URL}/api/s/{SITE}/stat/sta", verify=False)
     if resp.status_code == 200:
-        return resp.json().get("data", [])
+        try:
+            return resp.json().get("data", [])
+        except Exception:
+            return []
     return []
+
+def fetch_clients_via_flask():
+    """Fetch connected clients via Flask API (improved unifi_api.py)."""
+    try:
+        resp = requests.get(f"{FLASK_API_BASE}/clients")
+        if resp.status_code == 200:
+            data = resp.json()
+            # Flask returns a list (not wrapped), pass-through
+            return data if isinstance(data, list) else []
+        return []
+    except Exception:
+        return []
 
 def logout_unifi():
     """Logout cleanly."""
@@ -69,6 +100,12 @@ class UniFiApp(tk.Tk):
 
         self.status_label = ttk.Label(top_frame, text="Status: Not connected")
         self.status_label.pack(side="left", padx=10)
+
+        # Data source toggle
+        self.source_var = tk.StringVar(value="Flask API")
+        self.source_combo = ttk.Combobox(top_frame, textvariable=self.source_var, state="readonly", values=["Flask API", "Controller"])
+        self.source_combo.pack(side="right", padx=5)
+        ttk.Label(top_frame, text="Data Source:").pack(side="right")
 
         # Notebook (tabs)
         self.notebook = ttk.Notebook(self)
@@ -112,85 +149,166 @@ class UniFiApp(tk.Tk):
         self.api_result = tk.Text(self.api_frame, height=20, width=100)
         self.api_result.pack(fill="both", expand=True)
 
+        # Mock controls
+        self.mock_frame = ttk.Frame(self.api_frame)
+        self.mock_frame.pack(fill="x", pady=5)
+        ttk.Label(self.mock_frame, text="Mock Mode:").pack(side="left")
+        ttk.Button(self.mock_frame, text="Enable Mock (all)", command=lambda: self.set_mock(True)).pack(side="left", padx=5)
+        ttk.Button(self.mock_frame, text="Disable Mock", command=lambda: self.set_mock(False)).pack(side="left", padx=5)
+
         # Auto-refresh loop
         self.after(2000, self.load_data)  # wait 2s then first load
 
     def load_data(self):
-        ok, version = login_unifi()
-        if not ok:
-            self.status_label.config(text=f"Status: Login failed ({version})")
-            return
-
         # Clear tables
         for i in self.ap_tree.get_children():
             self.ap_tree.delete(i)
         for i in self.client_tree.get_children():
             self.client_tree.delete(i)
 
-        # Load APs
-        aps = fetch_devices()
+        source = self.source_var.get()
+        version_info = "n/a"
+        ok = False
+
+        if source == "Controller":
+            ok, version_info = login_unifi()
+            if ok:
+                aps = fetch_devices()
+                clients = fetch_clients()
+            else:
+                aps, clients = [], []
+            logout_unifi()
+        else:  # Flask API
+            # Use Flask endpoints directly
+            try:
+                aps = fetch_devices_via_flask()
+                clients = fetch_clients_via_flask()
+                ok = True
+                version_info = "Flask"
+            except Exception as e:
+                aps, clients = [], []
+                version_info = f"Flask error: {e}"
+
+        # Populate tables
         for d in aps:
             self.ap_tree.insert("", "end", values=(
                 d.get("model", "Unknown"),
-                d.get("name", "Unnamed"),
+                d.get("name", d.get("device_id", d.get("mac", "Unnamed"))),
                 d.get("mac"),
                 d.get("ip"),
-                d.get("xput_down", "N/A"),
-                d.get("xput_up", "N/A")
+                d.get("xput_down", d.get("speedtest-status", {}).get("xput_down", "N/A")),
+                d.get("xput_up", d.get("speedtest-status", {}).get("xput_up", "N/A"))
             ))
 
-        # Load Clients
-        clients = fetch_clients()
         for c in clients:
             self.client_tree.insert("", "end", values=(
-                c.get("hostname", "Unknown"),
+                c.get("hostname", c.get("name", "Unknown")),
                 c.get("mac"),
                 c.get("ip"),
                 c.get("ap_mac"),
-                round(c.get("rx_bytes", 0) / 1_000_000, 2),
-                round(c.get("tx_bytes", 0) / 1_000_000, 2)
+                round((c.get("rx_bytes", 0) or 0) / 1_000_000, 2),
+                round((c.get("tx_bytes", 0) or 0) / 1_000_000, 2)
             ))
 
-        self.status_label.config(text=f"Status: Connected (API {version})")
-
-        logout_unifi()
+        status = "Connected" if ok else "Not connected"
+        self.status_label.config(text=f"Status: {status} (Source: {source}, API {version_info})")
 
         # Schedule next refresh
         self.after(REFRESH_INTERVAL, self.load_data)
 
     def test_api_endpoints(self):
         """Test Flask API endpoints and show results."""
-        import requests
-        base_url = "http://127.0.0.1:5001/api/unifi"
         self.api_result.delete("1.0", tk.END)
+
+        def log_line(line: str):
+            self.api_result.insert(tk.END, line + "\n")
+
+        base_url = FLASK_API_BASE
+
+        # Health: try root login endpoints (Flask stubs)
+        try:
+            resp = requests.post(base_url.replace("/api/unifi", "/api/auth/login"), json={"username": "x", "password": "y"})
+            log_line(f"[Flask] /api/auth/login -> {resp.status_code}")
+        except Exception as e:
+            log_line(f"[Flask] /api/auth/login error: {e}")
+
+        # Devices
         try:
             resp = requests.get(f"{base_url}/devices")
-            self.api_result.insert(tk.END, f"/devices status: {resp.status_code}\n")
-            self.api_result.insert(tk.END, f"/devices response:\n{resp.json()}\n\n")
+            log_line(f"/devices status: {resp.status_code}")
+            devices = resp.json()
+            log_line(f"/devices count: {len(devices) if isinstance(devices, list) else 'n/a'}")
         except Exception as e:
-            self.api_result.insert(tk.END, f"Error testing /devices: {e}\n")
+            log_line(f"Error testing /devices: {e}")
+            devices = []
+
+        # Clients
         try:
             resp = requests.get(f"{base_url}/clients")
-            self.api_result.insert(tk.END, f"/clients status: {resp.status_code}\n")
-            self.api_result.insert(tk.END, f"/clients response:\n{resp.json()}\n\n")
+            log_line(f"/clients status: {resp.status_code}")
+            clients = resp.json()
+            log_line(f"/clients count: {len(clients) if isinstance(clients, list) else 'n/a'}")
         except Exception as e:
-            self.api_result.insert(tk.END, f"Error testing /clients: {e}\n")
+            log_line(f"Error testing /clients: {e}")
 
-        # Test total bandwidth endpoint
+        # Total bandwidth
         try:
             resp = requests.get(f"{base_url}/bandwidth/total")
-            self.api_result.insert(tk.END, f"/bandwidth/total status: {resp.status_code}\n")
-            self.api_result.insert(tk.END, f"/bandwidth/total response:\n{resp.json()}\n\n")
+            log_line(f"/bandwidth/total status: {resp.status_code}")
+            log_line(f"/bandwidth/total response: {resp.json()}")
         except Exception as e:
-            self.api_result.insert(tk.END, f"Error testing /bandwidth/total: {e}\n")
+            log_line(f"Error testing /bandwidth/total: {e}")
 
-        # Test client count endpoint
+        # Client count
         try:
             resp = requests.get(f"{base_url}/clients/count")
-            self.api_result.insert(tk.END, f"/clients/count status: {resp.status_code}\n")
-            self.api_result.insert(tk.END, f"/clients/count response:\n{resp.json()}\n\n")
+            log_line(f"/clients/count status: {resp.status_code}")
+            log_line(f"/clients/count response: {resp.json()}")
         except Exception as e:
-            self.api_result.insert(tk.END, f"Error testing /clients/count: {e}\n")
+            log_line(f"Error testing /clients/count: {e}")
+
+        # Compatibility endpoints (should proxy controller)
+        try:
+            resp = requests.get(base_url.replace("/api/unifi", f"/api/s/{SITE}/stat/device"))
+            log_line(f"/api/s/{SITE}/stat/device status: {resp.status_code}")
+            if resp.status_code == 200:
+                data = resp.json().get("data", [])
+                log_line(f"compat devices count: {len(data)}")
+        except Exception as e:
+            log_line(f"Error compat /stat/device: {e}")
+
+        try:
+            resp = requests.get(base_url.replace("/api/unifi", f"/api/s/{SITE}/stat/sta"))
+            log_line(f"/api/s/{SITE}/stat/sta status: {resp.status_code}")
+            if resp.status_code == 200:
+                data = resp.json().get("data", [])
+                log_line(f"compat clients count: {len(data)}")
+        except Exception as e:
+            log_line(f"Error compat /stat/sta: {e}")
+
+        # Ping first device (if any)
+        try:
+            if isinstance(devices, list) and devices:
+                mac = devices[0].get("mac")
+                if mac:
+                    resp = requests.get(f"{base_url}/ping/{mac}")
+                    log_line(f"/ping/{mac} status: {resp.status_code}")
+                    log_line(f"/ping/{mac} response: {resp.json()}")
+                else:
+                    log_line("No MAC on first device to ping.")
+            else:
+                log_line("No devices available to ping.")
+        except Exception as e:
+            log_line(f"Error testing /ping/<mac>: {e}")
+
+    def set_mock(self, enabled: bool):
+        """Toggle mock on Flask API."""
+        try:
+            payload = {"routers": enabled, "clients": enabled, "bandwidth": enabled}
+            resp = requests.post(FLASK_API_BASE + "/mock", json=payload)
+            self.api_result.insert(tk.END, f"Set mock={enabled} -> {resp.status_code}, {resp.json()}\n")
+        except Exception as e:
+            self.api_result.insert(tk.END, f"Error toggling mock: {e}\n")
 
 if __name__ == "__main__":
     app = UniFiApp()

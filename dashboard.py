@@ -3647,8 +3647,8 @@ class Dashboard:
                     status_label.pack(pady=5)
                     # Bandwidth and Latency label - UNIFIED FORMAT FOR ALL DEVICES - ALL BLUE
                     if router.get('is_unifi'):
-                        down = router.get('download_speed', 0)
-                        up = router.get('upload_speed', 0)
+                        down = router.get('download_speed') or 0
+                        up = router.get('upload_speed') or 0
                         latency = router.get('latency')
                         if latency is not None and down > 0:
                             lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ {latency:.1f} ms", bootstyle="info")

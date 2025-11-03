@@ -1,27 +1,158 @@
-# Flask API for UniFi integration (mockable for home development)
-# Extended with:
-# - /api/unifi/ping/<mac>: Simulated ping + online/offline status
-# - Added `state` and `connected` fields in mock devices
+"""
+Flask API for UniFi integration
+
+Adds real UniFi Controller integration while keeping mock mode as a fallback.
+
+Key endpoints (unchanged for consumers):
+- GET  /api/unifi/devices                -> List APs with simplified fields
+- GET  /api/unifi/clients                -> List client stations
+- GET  /api/unifi/bandwidth/total        -> Aggregate down/up throughput
+- GET  /api/unifi/clients/count          -> Count of active clients
+- GET  /api/unifi/devices/<mac>/clients  -> Clients connected to specific AP
+- GET  /api/unifi/ping/<mac>             -> Ping AP by MAC (real latency if possible)
+
+Compatibility endpoints (raw UniFi-like):
+- GET  /api/s/<site>/stat/device
+- GET  /api/s/<site>/stat/sta
+
+Configuration:
+- CONTROLLER_URL: default http://127.0.0.1:8080
+- USERNAME:        default admin
+- PASSWORD:        default admin 123
+- SITE:            default default
+
+Environment variables can override these: UNIFI_URL, UNIFI_USER, UNIFI_PASS, UNIFI_SITE.
+"""
 
 from flask import Flask, jsonify, request
 import random
 import time
 import platform
 import subprocess
+import os
+from typing import Any, Dict, List, Optional, Tuple
+
+import requests
 
 app = Flask(__name__)
 
-# --- Mock credentials for reference ---
-USERNAME = "admin"  # Replace with your UniFi username
-PASSWORD = "admin123"  # Replace with your UniFi password
-SITE = "default"  # Default site is usually 'default'
+# --- Controller configuration (overridable via env) ---
+# Your UniFi controller runs on HTTP port 8080
+CONTROLLER_URL = os.getenv("UNIFI_URL", "http://127.0.0.1:8080").rstrip("/")
+USERNAME = os.getenv("UNIFI_USER", "admin")
+PASSWORD = os.getenv("UNIFI_PASS", "admin123")
+SITE = os.getenv("UNIFI_SITE", "default")
 REFRESH_INTERVAL = 5000  # Auto-refresh every 5000 ms (5 sec)
+
+# Debug logging
+print(f"[UniFi API] Starting with config:")
+print(f"  Controller URL: {CONTROLLER_URL}")
+print(f"  Username: {USERNAME}")
+print(f"  Site: {SITE}")
+
+
+# --- Real UniFi session helper ---
+class UniFiSession:
+    """Manages login, cookies, and CSRF headers for UniFi Network Application.
+
+    Supports both newer /api/auth/login and legacy /api/login flows.
+    """
+
+    def __init__(self, base_url: str, username: str, password: str):
+        self.base_url = base_url.rstrip("/")
+        self.username = username
+        self.password = password
+        self.s = requests.Session()
+        # Disable redirects on login calls to better detect auth issues
+        self.s.max_redirects = 3
+        # Some controllers use self-signed certs (mostly on https); the user provided http.
+        self.verify = True if self.base_url.startswith("http://") else False
+        self._csrf_header = None  # type: Optional[str]
+
+    def _set_csrf_from_response(self, resp: requests.Response):
+        # UniFi sets a cookie named csrf_token; echo as X-CSRF-Token header on subsequent calls
+        csrf_token = resp.cookies.get("csrf_token")
+        if csrf_token:
+            self._csrf_header = csrf_token
+
+    def _auth_headers(self) -> Dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        if self._csrf_header:
+            headers["X-CSRF-Token"] = self._csrf_header
+        return headers
+
+    def login(self) -> None:
+        """Attempt login using new then legacy endpoints."""
+        payload = {"username": self.username, "password": self.password}
+        last_error = None
+        
+        # Try new auth
+        try:
+            url = f"{self.base_url}/api/auth/login"
+            print(f"[UniFi] Attempting login to {url}")
+            resp = self.s.post(url, json=payload, headers={"Content-Type": "application/json"}, allow_redirects=False, verify=self.verify, timeout=10)
+            print(f"[UniFi] New auth response: {resp.status_code}")
+            if resp.status_code in (200, 204):
+                self._set_csrf_from_response(resp)
+                print("[UniFi] Login successful (new auth)")
+                return
+        except Exception as e:
+            last_error = str(e)
+            print(f"[UniFi] New auth failed: {e}")
+
+        # Fallback to legacy auth
+        try:
+            url = f"{self.base_url}/api/login"
+            print(f"[UniFi] Trying legacy login to {url}")
+            resp = self.s.post(url, json=payload, headers={"Content-Type": "application/json"}, allow_redirects=False, verify=self.verify, timeout=10)
+            print(f"[UniFi] Legacy auth response: {resp.status_code}")
+            if resp.status_code not in (200, 204):
+                raise RuntimeError(f"UniFi login failed: {resp.status_code} {resp.text}")
+            self._set_csrf_from_response(resp)
+            print("[UniFi] Login successful (legacy auth)")
+        except Exception as e:
+            print(f"[UniFi] Legacy auth failed: {e}")
+            raise RuntimeError(f"UniFi login failed. Last error: {e}. Controller URL: {self.base_url}")
+
+    def _request(self, method: str, path: str, **kwargs) -> requests.Response:
+        url = f"{self.base_url}{path}"
+        headers = kwargs.pop("headers", {})
+        merged_headers = {**self._auth_headers(), **headers}
+        resp = self.s.request(method, url, headers=merged_headers, verify=self.verify, **kwargs)
+        # If unauthorized, try a re-login once
+        if resp.status_code in (401, 403):
+            self.login()
+            resp = self.s.request(method, url, headers=self._auth_headers(), verify=self.verify, **kwargs)
+        return resp
+
+    def get_devices(self, site: str) -> List[Dict[str, Any]]:
+        resp = self._request("GET", f"/api/s/{site}/stat/device")
+        resp.raise_for_status()
+        data = resp.json().get("data", [])
+        return data
+
+    def get_clients(self, site: str) -> List[Dict[str, Any]]:
+        resp = self._request("GET", f"/api/s/{site}/stat/sta")
+        resp.raise_for_status()
+        data = resp.json().get("data", [])
+        return data
+
+
+# Create a lazy session (login on first use)
+_unifi_session: Optional[UniFiSession] = None
+
+def get_session() -> UniFiSession:
+    global _unifi_session
+    if _unifi_session is None:
+        _unifi_session = UniFiSession(CONTROLLER_URL, USERNAME, PASSWORD)
+        _unifi_session.login()
+    return _unifi_session
 
 # --- Mock Data ---
 MOCK_MODE = {
-    'routers': True,
-    'bandwidth': True,
-    'clients': True
+    'routers': False,   # When True, serve APs from MOCK_APS
+    'bandwidth': False, # When True, compute bandwidth from MOCK_APS
+    'clients': False    # When True, serve clients from MOCK_CLIENTS
 }
 
 MOCK_APS = [
@@ -133,13 +264,21 @@ def compat_login_root():
 def compat_stat_device(site):
     if MOCK_MODE['routers']:
         return jsonify({'data': MOCK_APS})
-    return jsonify({'data': []})
+    try:
+        devices = get_session().get_devices(site)
+        return jsonify({'data': devices})
+    except Exception as e:
+        return jsonify({'data': [], 'error': str(e)}), 502
 
 @app.route('/api/s/<site>/stat/sta')
 def compat_stat_sta(site):
     if MOCK_MODE['clients']:
         return jsonify({'data': MOCK_CLIENTS})
-    return jsonify({'data': []})
+    try:
+        clients = get_session().get_clients(site)
+        return jsonify({'data': clients})
+    except Exception as e:
+        return jsonify({'data': [], 'error': str(e)}), 502
 
 
 # --- Additional endpoints for dashboard integration ---
@@ -147,13 +286,67 @@ def compat_stat_sta(site):
 def api_devices():
     if MOCK_MODE['routers']:
         return jsonify(MOCK_APS)
-    return jsonify([])
+    try:
+        raw = get_session().get_devices(SITE)
+        # Debug: print first device to see available fields
+        if raw and len(raw) > 0:
+            print(f"[UniFi API] Sample device keys: {list(raw[0].keys())}")
+        
+        # Map to simplified structure similar to mocks
+        mapped = []
+        for d in raw:
+            # Try multiple field locations for bandwidth/throughput
+            # Real-time throughput (current speed)
+            xput_down = None
+            xput_up = None
+            
+            # Check speedtest-status (scheduled speedtests)
+            if d.get('speedtest-status'):
+                xput_down = d['speedtest-status'].get('xput_down')
+                xput_up = d['speedtest-status'].get('xput_up')
+            
+            # Check uplink stats (actual current usage)
+            if d.get('uplink'):
+                xput_down = xput_down or d['uplink'].get('rx_rate')
+                xput_up = xput_up or d['uplink'].get('tx_rate')
+            
+            # Check stat aggregates
+            stat = d.get('stat', {})
+            
+            mapped.append({
+                'model': d.get('model'),
+                'name': d.get('name') or d.get('hostname') or d.get('device_id') or d.get('mac'),
+                'mac': d.get('mac'),
+                'ip': d.get('ip'),
+                'xput_down': xput_down,
+                'xput_up': xput_up,
+                'rx_bytes': d.get('rx_bytes') or stat.get('rx_bytes'),
+                'tx_bytes': d.get('tx_bytes') or stat.get('tx_bytes'),
+                'state': d.get('state'),
+                'connected': True if d.get('state') == 1 else False,
+            })
+        return jsonify(mapped)
+    except Exception as e:
+        print(f"[UniFi API] /api/unifi/devices error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 502
 
 @app.route('/api/unifi/clients')
 def api_clients():
     if MOCK_MODE['clients']:
         return jsonify(MOCK_CLIENTS)
-    return jsonify([])
+    try:
+        clients = get_session().get_clients(SITE)
+        if clients and len(clients) > 0:
+            print(f"[UniFi API] Found {len(clients)} clients")
+            print(f"[UniFi API] Sample client keys: {list(clients[0].keys())}")
+        else:
+            print("[UniFi API] No clients found")
+        return jsonify(clients)
+    except Exception as e:
+        print(f"[UniFi API] /api/unifi/clients error: {e}")
+        return jsonify({'error': str(e)}), 502
 
 @app.route('/api/unifi/mock', methods=['POST'])
 def api_mock_toggle():
@@ -166,62 +359,146 @@ def api_mock_toggle():
 @app.route('/api/unifi/bandwidth/total')
 def api_bandwidth_total():
     if MOCK_MODE['bandwidth']:
-        total_down = sum(ap['xput_down'] for ap in MOCK_APS)
-        total_up = sum(ap['xput_up'] for ap in MOCK_APS)
+        total_down = sum(ap.get('xput_down') or 0 for ap in MOCK_APS)
+        total_up = sum(ap.get('xput_up') or 0 for ap in MOCK_APS)
         return jsonify({'total_down': total_down, 'total_up': total_up})
-    return jsonify({'total_down': 0, 'total_up': 0})
+    try:
+        devices = get_session().get_devices(SITE)
+        total_down = 0.0
+        total_up = 0.0
+        for d in devices:
+            st = d.get('speedtest-status') or {}
+            total_down += float(st.get('xput_down') or 0)
+            total_up += float(st.get('xput_up') or 0)
+        return jsonify({'total_down': total_down, 'total_up': total_up})
+    except Exception as e:
+        return jsonify({'total_down': 0, 'total_up': 0, 'error': str(e)}), 502
 
 @app.route('/api/unifi/clients/count')
 def api_clients_count():
     if MOCK_MODE['clients']:
         return jsonify({'count': len(MOCK_CLIENTS)})
-    return jsonify({'count': 0})
+    try:
+        clients = get_session().get_clients(SITE)
+        return jsonify({'count': len(clients)})
+    except Exception as e:
+        return jsonify({'count': 0, 'error': str(e)}), 502
 
 @app.route('/api/unifi/devices/<mac>/clients')
 def api_device_clients(mac):
     """Get all clients connected to a specific AP by MAC address"""
     if MOCK_MODE['clients']:
-        # Filter clients by AP MAC address
         device_clients = [c for c in MOCK_CLIENTS if c.get('ap_mac', '').upper() == mac.upper()]
         return jsonify(device_clients)
-    return jsonify([])
+    try:
+        clients = get_session().get_clients(SITE)
+        device_clients = [c for c in clients if (c.get('ap_mac') or '').upper() == mac.upper()]
+        return jsonify(device_clients)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 502
 
 
 # --- NEW: Simulated Ping Endpoint ---
 @app.route('/api/unifi/ping/<mac>')
 def api_ping_device(mac):
-    ap = next((a for a in MOCK_APS if a['mac'].upper() == mac.upper()), None)
-    if not ap:
-        return jsonify({'error': 'Device not found'}), 404
+    # Try real devices first
+    ip = None
+    try:
+        devices = get_session().get_devices(SITE)
+        ap = next((d for d in devices if (d.get('mac') or '').upper() == mac.upper()), None)
+        if ap:
+            ip = ap.get('ip')
+            state = ap.get('state')
+    except Exception:
+        ap = None
+        state = None
 
-    if MOCK_MODE['routers']:
-        # Simulate ping: 75% online, 25% offline
-        latency = round(random.uniform(1, 100), 2)
-        is_online = random.choice([True, True, True, False])
+    # Fallback to mock list for metadata if needed
+    if ip is None:
+        ap = next((a for a in MOCK_APS if a['mac'].upper() == mac.upper()), None)
+        if ap:
+            ip = ap.get('ip')
+            state = ap.get('state')
+    if not ip:
+        return jsonify({'error': 'Device not found or IP unavailable'}), 404
 
-        ap['connected'] = is_online
-        ap['state'] = 1 if is_online else 0
-
-        return jsonify({
-            'mac': ap['mac'],
-            'ip': ap['ip'],
-            'connected': is_online,
-            'latency_ms': latency if is_online else None,
-            'timestamp': int(time.time())
-        })
-
-    return jsonify({'connected': False, 'latency_ms': None})
+    is_online, latency = ping_with_latency(ip)
+    payload = {
+        'mac': mac.upper(),
+        'ip': ip,
+        'connected': is_online if is_online is not None else (state == 1),
+        'latency_ms': latency,
+        'timestamp': int(time.time())
+    }
+    return jsonify(payload)
 
 
 # --- OPTIONAL: real ping helper (for future real devices) ---
-def ping_host(ip):
-    count_flag = '-n' if platform.system().lower() == 'windows' else '-c'
+def ping_with_latency(ip: str) -> Tuple[Optional[bool], Optional[float]]:
+    """Ping a host once and return (is_online, latency_ms).
+
+    Returns (None, None) if parsing fails.
+    """
     try:
-        subprocess.check_output(['ping', count_flag, '1', ip],
-                                stderr=subprocess.DEVNULL)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+        is_windows = platform.system().lower().startswith('win')
+        count_flag = '-n' if is_windows else '-c'
+        # Timeout flags: Windows -w in ms, Linux/mac -W seconds
+        if is_windows:
+            cmd = ['ping', count_flag, '1', '-w', '2000', ip]
+        else:
+            cmd = ['ping', count_flag, '1', '-W', '2', ip]
+        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True)
+        # Parse latency
+        latency = None
+        for line in out.splitlines():
+            line = line.strip()
+            if is_windows and 'time=' in line.lower():
+                # Example: Reply from 192.168.1.1: bytes=32 time=3ms TTL=64
+                try:
+                    part = [p for p in line.split() if 'time=' in p.lower()][0]
+                    val = part.split('=')[1]
+                    val = val.replace('ms', '').replace('MS', '')
+                    latency = float(val)
+                    break
+                except Exception:
+                    continue
+            elif not is_windows and 'time=' in line:
+                # Example: time=3.12 ms
+                try:
+                    after = line.split('time=')[1]
+                    val = after.split()[0]
+                    latency = float(val)
+                    break
+                except Exception:
+                    continue
+        return True, latency
+    except subprocess.CalledProcessError as e:
+        # Ping failed; try to parse latency anyway
+        try:
+            out = e.output.decode() if isinstance(e.output, bytes) else e.output
+            if out:
+                # Try parse like above
+                is_windows = platform.system().lower().startswith('win')
+                latency = None
+                for line in out.splitlines():
+                    line = line.strip()
+                    if is_windows and 'time=' in line.lower():
+                        part = [p for p in line.split() if 'time=' in p.lower()][0]
+                        val = part.split('=')[1]
+                        val = val.replace('ms', '').replace('MS', '')
+                        latency = float(val)
+                        break
+                    elif not is_windows and 'time=' in line:
+                        after = line.split('time=')[1]
+                        val = after.split()[0]
+                        latency = float(val)
+                        break
+                return False, latency
+        except Exception:
+            pass
+        return False, None
+    except Exception:
+        return None, None
 
 
 if __name__ == '__main__':
