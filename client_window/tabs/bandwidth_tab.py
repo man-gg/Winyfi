@@ -360,6 +360,9 @@ class BandwidthTab:
     def _update_all_components(self):
         """Update all chart components consistently"""
         try:
+            # Build a unified filtered dataset so chart, table, and stats stay in sync
+            # Limit to 100 rows to match table size and user expectations
+            self._bw_filtered = list(self.bandwidth_data[:100]) if self.bandwidth_data else []
             self.update_charts()
             self.update_table()
             self.update_statistics()
@@ -403,7 +406,12 @@ class BandwidthTab:
             self.ax1.grid(False)
             self.ax2.grid(False)
 
-            if not self.bandwidth_data:
+            # Use the unified filtered list to keep chart aligned with table
+            source = getattr(self, "_bw_filtered", None)
+            if source is None:
+                source = list(self.bandwidth_data[:100]) if self.bandwidth_data else []
+
+            if not source:
                 self.ax1.text(0.5, 0.5, 'No data available', ha='center', va='center', 
                             transform=self.ax1.transAxes, fontsize=12)
                 self.ax2.text(0.5, 0.5, 'No data available', ha='center', va='center', 
@@ -413,36 +421,44 @@ class BandwidthTab:
                 self.canvas.draw_idle()
                 return
 
-            sorted_data = sorted(self.bandwidth_data, key=lambda x: x['timestamp'])
-            max_points = 200
-            if len(sorted_data) > max_points:
-                step = len(sorted_data) // max_points
-                recent_data = sorted_data[-50:]
-                remaining_data = sorted_data[:-50]
-                sampled_remaining = remaining_data[::max(1, step)]
-                sorted_data = recent_data + sampled_remaining
-                if len(sorted_data) > max_points:
-                    sorted_data = sorted_data[-max_points:]
-
-            timestamps = []
-            for d in sorted_data:
+            # Parse timestamps once and sort by real datetime to keep chart aligned with data
+            parsed_records = []
+            for d in source:
                 try:
-                    timestamp_str = d['timestamp']
-                    if 'GMT' in timestamp_str:
-                        timestamp = datetime.strptime(timestamp_str, '%a, %d %b %Y %H:%M:%S GMT')
-                    elif 'Z' in timestamp_str:
-                        timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                    ts_str = d['timestamp']
+                    if 'GMT' in ts_str:
+                        ts = datetime.strptime(ts_str, '%a, %d %b %Y %H:%M:%S GMT')
+                    elif 'Z' in ts_str:
+                        ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
                     else:
-                        timestamp = datetime.fromisoformat(timestamp_str)
-                    timestamps.append(timestamp)
+                        ts = datetime.fromisoformat(ts_str)
                 except Exception as e:
-                    print(f"Error parsing timestamp {d['timestamp']}: {e}")
-                    timestamps.append(datetime.now())
+                    print(f"Error parsing timestamp {d.get('timestamp')}: {e}")
+                    ts = datetime.now()
+                parsed_records.append((ts, d))
+
+            # Sort ascending by timestamp for proper time series plotting
+            parsed_records.sort(key=lambda x: x[0])
+
+            # Downsample older points while preserving chronological order
+            max_points = 200
+            if len(parsed_records) > max_points:
+                step = max(1, len(parsed_records) // max_points)
+                # Keep the most recent 50 points in full resolution
+                recent = parsed_records[-50:]
+                older = parsed_records[:-50]
+                sampled_older = older[::step]
+                parsed_records = sampled_older + recent  # maintain ascending order
+                if len(parsed_records) > max_points:
+                    parsed_records = parsed_records[-max_points:]
+
+            # Rebuild lists in the final plotting order
+            timestamps = [ts for ts, _ in parsed_records]
 
             downloads = []
             uploads = []
             latencies = []
-            for d in sorted_data:
+            for _, d in parsed_records:
                 download_val = d.get('download_mbps')
                 if download_val is None or download_val == '':
                     downloads.append(0.0)
@@ -499,10 +515,30 @@ class BandwidthTab:
             if downloads or uploads:
                 max_bandwidth = max(max(downloads) if downloads else 0, max(uploads) if uploads else 0)
                 min_bandwidth = min(min(downloads) if downloads else 0, min(uploads) if uploads else 0)
+
+                # Robust scaling: clamp to 95th percentile to avoid old outliers (e.g., unit mismatches)
+                def _percentile(values, p):
+                    vals = sorted([v for v in values if isinstance(v, (int, float))])
+                    if not vals:
+                        return 0
+                    k = int((len(vals) - 1) * (p / 100.0))
+                    return vals[k]
+
+                valid_vals = [v for v in downloads + uploads if v is not None]
+                p95 = _percentile(valid_vals, 95) if valid_vals else 0
+
                 if max_bandwidth == 0 and min_bandwidth == 0:
                     self.ax1.set_ylim(-0.1, 0.1)
                 else:
-                    self.ax1.set_ylim(min_bandwidth * 0.9, max_bandwidth * 1.1)
+                    upper = max_bandwidth
+                    if p95 > 0:
+                        # Use the smaller of actual max and 110% of 95th percentile
+                        upper = min(max_bandwidth, p95 * 1.1)
+                    lower = min_bandwidth * 0.9 if min_bandwidth < 0 else 0
+                    # Ensure non-degenerate range
+                    if upper - lower < 0.1:
+                        upper = lower + 0.1
+                    self.ax1.set_ylim(lower, upper)
             else:
                 self.ax1.set_ylim(-0.1, 0.1)
 
@@ -529,8 +565,9 @@ class BandwidthTab:
             else:
                 self.ax2.set_ylim(0, 1000)
 
+            # Update data points counter to reflect any downsampling
             total_points = len(self.bandwidth_data)
-            displayed_points = len(sorted_data)
+            displayed_points = len(timestamps)
             if total_points > displayed_points:
                 self.data_points_label.config(text=f"Data Points: {displayed_points}/{total_points} (sampled)")
             else:
@@ -565,7 +602,11 @@ class BandwidthTab:
                 self.table_subtitle.config(text=f"📊 Viewing: {selected_router}")
 
             # Add new data
-            for data in self.bandwidth_data[:100]:  # Limit to 100 rows for performance
+            # Use the same unified filtered list as the chart
+            source = getattr(self, "_bw_filtered", None)
+            if source is None:
+                source = list(self.bandwidth_data[:100]) if self.bandwidth_data else []
+            for data in source:  # Already limited for performance
                 try:
                     # Handle timestamp parsing
                     timestamp_str = data['timestamp']
@@ -615,7 +656,11 @@ class BandwidthTab:
     def update_statistics(self):
         """Update the statistics cards"""
         try:
-            if not self.bandwidth_data:
+            # Use the same unified filtered list as table/chart for consistency
+            source = getattr(self, "_bw_filtered", None)
+            if source is None:
+                source = list(self.bandwidth_data[:100]) if self.bandwidth_data else []
+            if not source:
                 for key in self.stats_cards:
                     self.stats_cards[key].config(text="—")
                 return
@@ -625,7 +670,7 @@ class BandwidthTab:
             uploads = []
             latencies = []
             
-            for d in self.bandwidth_data:
+            for d in source:
                 # Handle download_mbps
                 download_val = d.get('download_mbps')
                 if download_val is not None:

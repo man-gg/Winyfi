@@ -10,6 +10,22 @@ def log_bandwidth(router_id, ip_address):
     """Run bandwidth test and insert result into bandwidth_logs table."""
     try:
         bw = get_bandwidth(ip_address)
+        
+        # Handle new response format (download/upload can be "N/A" for offline devices)
+        download = bw.get("download", 0)
+        upload = bw.get("upload", 0)
+        latency = bw.get("latency", None)
+        
+        # Convert "N/A" to 0 for database storage
+        if download == "N/A":
+            download = 0
+        if upload == "N/A":
+            upload = 0
+        
+        # Skip logging if device is offline (all zeros)
+        if download == 0 and upload == 0 and latency is None:
+            print(f"[INFO] Router {router_id} ({ip_address}) is offline, skipping bandwidth log")
+            return
 
         conn = get_connection()
         cur = conn.cursor()
@@ -19,16 +35,17 @@ def log_bandwidth(router_id, ip_address):
             VALUES (%s, %s, %s, %s)
         """, (
             router_id,
-            bw.get("download", 0),
-            bw.get("upload", 0),
-            bw.get("latency", None)
+            float(download),
+            float(upload),
+            latency
         ))
 
         conn.commit()
         cur.close()
         conn.close()
+        
+        print(f"[SUCCESS] Logged bandwidth for router {router_id}: ↓{download}Mbps ↑{upload}Mbps (latency: {latency}ms)")
 
- 
     except Exception as e:
         print(f"[ERROR] Logging bandwidth for {router_id}: {e}")
 

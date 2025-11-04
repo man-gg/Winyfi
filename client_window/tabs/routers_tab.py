@@ -20,6 +20,9 @@ class RoutersTab:
         # Initialize optional modals to avoid AttributeError on first use/cleanup
         self.client_modal = None
         self.loop_modal = None
+        # Flags to prevent multiple modal openings
+        self.client_modal_is_open = False
+        self.loop_modal_is_open = False
         router_header_frame = tb.Frame(self.parent_frame)
         router_header_frame.pack(fill="x", padx=10, pady=(10, 0))
         tb.Label(router_header_frame, text="Routers",
@@ -1046,15 +1049,34 @@ class RoutersTab:
 
     def show_network_clients(self):
         """Show network clients modal."""
-        if self.client_modal and self.client_modal.winfo_exists():
-            self.client_modal.lift()
+        # Set flag FIRST before any other checks to prevent race condition
+        if self.client_modal_is_open:
+            print("⚠️ Client modal already open - bringing to front")
+            if self.client_modal and self.client_modal.winfo_exists():
+                try:
+                    self.client_modal.lift()
+                    self.client_modal.focus_force()
+                    self.client_modal.attributes('-topmost', True)
+                    self.client_modal.after(100, lambda: self.client_modal.attributes('-topmost', False))
+                except:
+                    # Modal might have been destroyed, reset flag
+                    self.client_modal_is_open = False
+                    print("⚠️ Modal was destroyed, resetting flag")
             return
+        
+        # Set flag immediately to prevent multiple openings
+        print("✅ Opening new client modal")
+        self.client_modal_is_open = True
             
         self.client_modal = tb.Toplevel(self.root)
         self.client_modal.title("🌐 Network Clients Monitor")
         self.client_modal.geometry("1000x700")
         self.client_modal.resizable(True, True)
         self.client_modal.configure(bg='#f8f9fa')
+        
+        # Make it a proper modal window
+        self.client_modal.transient(self.root)
+        self.client_modal.grab_set()
 
         # Center modal
         self.client_modal.update_idletasks()
@@ -1202,6 +1224,13 @@ class RoutersTab:
 
         # Handle window close
         self.client_modal.protocol("WM_DELETE_WINDOW", self.close_client_modal)
+        
+        # Bind destroy event to reset flag as fallback
+        def on_modal_destroy(event):
+            if event.widget == self.client_modal:
+                self.client_modal_is_open = False
+                print("🗑️ Client modal destroyed, flag reset")
+        self.client_modal.bind("<Destroy>", on_modal_destroy)
 
     def setup_client_context_menu(self):
         """Setup right-click context menu for client tree."""
@@ -2028,21 +2057,45 @@ class RoutersTab:
     def close_client_modal(self):
         """Handle closing the client modal."""
         self.stop_auto_refresh()
-        if self.client_modal:
+        if self.client_modal and self.client_modal.winfo_exists():
+            try:
+                self.client_modal.grab_release()
+            except:
+                pass
             self.client_modal.destroy()
-            self.client_modal = None
+        self.client_modal = None
+        self.client_modal_is_open = False  # Reset flag
 
     def show_loop_detection(self):
         """Show loop detection modal (client view only - data fetch from database)."""
-        if hasattr(self, 'loop_modal') and self.loop_modal and self.loop_modal.winfo_exists():
-            self.loop_modal.lift()
+        # Set flag FIRST before any other checks to prevent race condition
+        if self.loop_modal_is_open:
+            print("⚠️ Loop modal already open - bringing to front")
+            if self.loop_modal and self.loop_modal.winfo_exists():
+                try:
+                    self.loop_modal.lift()
+                    self.loop_modal.focus_force()
+                    self.loop_modal.attributes('-topmost', True)
+                    self.loop_modal.after(100, lambda: self.loop_modal.attributes('-topmost', False))
+                except:
+                    # Modal might have been destroyed, reset flag
+                    self.loop_modal_is_open = False
+                    print("⚠️ Loop modal was destroyed, resetting flag")
             return
+        
+        # Set flag immediately to prevent multiple openings
+        print("✅ Opening new loop detection modal")
+        self.loop_modal_is_open = True
             
         self.loop_modal = tb.Toplevel(self.root)
         self.loop_modal.title("🔄 Loop Detection Monitor")
         self.loop_modal.geometry("1000x700")
         self.loop_modal.resizable(True, True)
         self.loop_modal.configure(bg='#f8f9fa')
+        
+        # Make it a proper modal window
+        self.loop_modal.transient(self.root)
+        self.loop_modal.grab_set()
 
         # Center modal
         self.loop_modal.update_idletasks()
@@ -2160,6 +2213,13 @@ class RoutersTab:
 
         # Handle window close
         self.loop_modal.protocol("WM_DELETE_WINDOW", self.close_loop_modal)
+        
+        # Bind destroy event to reset flag as fallback
+        def on_modal_destroy(event):
+            if event.widget == self.loop_modal:
+                self.loop_modal_is_open = False
+                print("🗑️ Loop modal destroyed, flag reset")
+        self.loop_modal.bind("<Destroy>", on_modal_destroy)
 
     def load_loop_detection_data(self):
         """Load loop detection data from database via API."""
@@ -2375,9 +2435,14 @@ class RoutersTab:
     def close_loop_modal(self):
         """Handle closing the loop detection modal."""
         self.stop_loop_auto_refresh()
-        if self.loop_modal:
+        if self.loop_modal and self.loop_modal.winfo_exists():
+            try:
+                self.loop_modal.grab_release()
+            except:
+                pass
             self.loop_modal.destroy()
-            self.loop_modal = None
+        self.loop_modal = None
+        self.loop_modal_is_open = False  # Reset flag
 
     def cleanup(self):
         """Clean up resources when tab is destroyed"""

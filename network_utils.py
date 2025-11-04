@@ -267,22 +267,52 @@ def get_bandwidth(ip, test_size=256_000):
 
 
 
+# ============================================================
+# BANDWIDTH MONITORING - ZERO DATA CONSUMPTION
+# ============================================================
+# 
+# PRIMARY FUNCTIONS (Automatic - No Data Usage):
+#   - get_bandwidth(ip): Lightweight psutil-based monitoring
+#   - get_throughput(interval): Network-wide throughput snapshot
+#   - get_per_device_bandwidth(timeout): Passive per-device traffic capture
+#
+# MANUAL FUNCTIONS (User-triggered - High Data Usage):
+#   - manual_speedtest(full=False): Convenience wrapper for speed tests
+#   - get_speedtest_results(manual=True): Full ISP test (~150MB)
+#   - get_mini_speedtest(manual=True): Quick test (~1.5MB)
+#
+# IMPLEMENTATION:
+#   - Uses psutil.net_io_counters() for passive monitoring
+#   - Uses scapy packet capture for per-device tracking
+#   - Speedtest.net ONLY available via manual trigger (prevents auto-consumption)
+# ============================================================
+
 # ---------------- SETTINGS ----------------
-DISABLE_BANDWIDTH = True
-SPEEDTEST_COOLDOWN = 3600    # seconds (1 hour)
-MINI_SPEEDTEST_INTERVAL = 1200   # seconds (6 minutes)
+DISABLE_BANDWIDTH = False    # Now safe to enable (no data consumption)
+BANDWIDTH_INTERVAL = 5       # seconds (measurement window) - Increased for better averaging
 LATENCY_THRESHOLD = 200      # ms
 ANOMALY_WINDOW = 5           # check last N pings
 # ------------------------------------------
 
 # Trackers
-LAST_SPEEDTEST = 0
-LAST_MINI = 0
 latency_history = deque(maxlen=ANOMALY_WINDOW)
 
+# Per-device bandwidth tracking
+device_bandwidth = {}  # {ip: {"bytes_sent": int, "bytes_recv": int, "last_update": timestamp}}
 
-def get_speedtest_results():
-    """Full Speedtest (heavy)."""
+
+def get_speedtest_results(manual=False):
+    """
+    Full Speedtest (heavy - MANUAL USE ONLY).
+    
+    Args:
+        manual (bool): Must be True to run. Prevents accidental automatic execution.
+    
+    WARNING: Consumes ~150MB of data per test!
+    """
+    if not manual:
+        raise ValueError("Speedtest must be manually triggered (set manual=True). Use get_bandwidth() for automatic monitoring.")
+    
     st = speedtest.Speedtest()
     st.get_best_server()
     st.download()
@@ -306,7 +336,16 @@ def get_speedtest_results():
 
 
 def get_throughput(interval=1):
-    """Lightweight throughput measurement."""
+    """
+    Lightweight network-wide throughput measurement using psutil.
+    Measures total network interface traffic (no data consumption).
+    
+    Args:
+        interval (float): Measurement window in seconds
+    
+    Returns:
+        tuple: (download_mbps, upload_mbps)
+    """
     counters1 = psutil.net_io_counters()
     time.sleep(interval)
     counters2 = psutil.net_io_counters()
@@ -320,8 +359,137 @@ def get_throughput(interval=1):
     return round(download_mbps, 2), round(upload_mbps, 2)
 
 
-def get_mini_speedtest():
-    """Mini speedtest (1MB download, 512KB upload)."""
+def get_per_device_bandwidth(timeout=5, iface=None):
+    """
+    Passive per-device bandwidth monitoring using packet capture.
+    Measures actual traffic per IP address without generating any network traffic.
+    
+    Args:
+        timeout (int): Capture duration in seconds
+        iface (str): Network interface to monitor (auto-detected if None)
+    
+    Returns:
+        dict: {
+            ip: {
+                "bytes_sent": int,
+                "bytes_recv": int,
+                "download_mbps": float,
+                "upload_mbps": float,
+                "packets_sent": int,
+                "packets_recv": int,
+                "mac": str
+            }
+        }
+    
+    Example:
+        >>> bandwidth = get_per_device_bandwidth(timeout=10)
+        >>> for ip, stats in bandwidth.items():
+        ...     print(f"{ip}: ↓{stats['download_mbps']}Mbps ↑{stats['upload_mbps']}Mbps")
+    """
+    if iface is None:
+        iface = get_default_iface()
+    
+    device_stats = defaultdict(lambda: {
+        "bytes_sent": 0,
+        "bytes_recv": 0,
+        "packets_sent": 0,
+        "packets_recv": 0,
+        "mac": "Unknown"
+    })
+    
+    # Get local IP to identify direction
+    local_ip = None
+    try:
+        addrs = psutil.net_if_addrs()
+        for iface_name, snic_list in addrs.items():
+            for snic in snic_list:
+                if snic.family.name == "AF_INET" and snic.address != "127.0.0.1":
+                    local_ip = snic.address
+                    break
+            if local_ip:
+                break
+    except Exception as e:
+        logging.warning(f"Could not detect local IP: {e}")
+    
+    def pkt_handler(pkt):
+        try:
+            if pkt.haslayer(IP):
+                src_ip = pkt[IP].src
+                dst_ip = pkt[IP].dst
+                pkt_len = len(pkt)
+                
+                # Determine direction based on local IP
+                if local_ip:
+                    if src_ip == local_ip:
+                        # Outgoing packet (upload from perspective of local device)
+                        device_stats[dst_ip]["bytes_recv"] += pkt_len
+                        device_stats[dst_ip]["packets_recv"] += 1
+                    elif dst_ip == local_ip:
+                        # Incoming packet (download from perspective of local device)
+                        device_stats[src_ip]["bytes_sent"] += pkt_len
+                        device_stats[src_ip]["packets_sent"] += 1
+                else:
+                    # Fallback: count both directions
+                    device_stats[src_ip]["bytes_sent"] += pkt_len
+                    device_stats[src_ip]["packets_sent"] += 1
+                    device_stats[dst_ip]["bytes_recv"] += pkt_len
+                    device_stats[dst_ip]["packets_recv"] += 1
+                
+                # Store MAC address
+                if pkt.haslayer(Ether):
+                    if src_ip in device_stats:
+                        device_stats[src_ip]["mac"] = pkt[Ether].src
+                    if dst_ip in device_stats:
+                        device_stats[dst_ip]["mac"] = pkt[Ether].dst
+                        
+        except Exception as e:
+            logging.debug(f"Per-device bandwidth packet error: {e}")
+    
+    # Capture packets
+    try:
+        logging.info(f"Starting per-device bandwidth capture for {timeout}s on {iface}...")
+        sniff(prn=pkt_handler, timeout=timeout, store=0, iface=iface)
+    except Exception as e:
+        logging.error(f"Per-device capture failed: {e}")
+        return {}
+    
+    # Calculate Mbps for each device
+    results = {}
+    for ip, stats in device_stats.items():
+        # Skip localhost and broadcast
+        if ip in ("127.0.0.1", "0.0.0.0", "255.255.255.255"):
+            continue
+        
+        # Calculate Mbps
+        download_mbps = (stats["bytes_sent"] * 8) / (timeout * 1_000_000)
+        upload_mbps = (stats["bytes_recv"] * 8) / (timeout * 1_000_000)
+        
+        results[ip] = {
+            "bytes_sent": stats["bytes_sent"],
+            "bytes_recv": stats["bytes_recv"],
+            "download_mbps": round(download_mbps, 3),
+            "upload_mbps": round(upload_mbps, 3),
+            "packets_sent": stats["packets_sent"],
+            "packets_recv": stats["packets_recv"],
+            "mac": stats["mac"]
+        }
+    
+    logging.info(f"Per-device bandwidth capture complete: {len(results)} devices detected")
+    return results
+
+
+def get_mini_speedtest(manual=False):
+    """
+    Mini speedtest (1MB download, 512KB upload - MANUAL USE ONLY).
+    
+    Args:
+        manual (bool): Must be True to run. Prevents accidental automatic execution.
+    
+    WARNING: Consumes ~1.5MB of data per test!
+    """
+    if not manual:
+        raise ValueError("Mini speedtest must be manually triggered (set manual=True). Use get_bandwidth() for automatic monitoring.")
+    
     st = speedtest.Speedtest()
     st.get_best_server()
 
@@ -343,12 +511,57 @@ def get_mini_speedtest():
     }
 
 
-def get_bandwidth(ip):
-    """Hybrid: Ping + Throughput + Mini Speedtest + Full Speedtest.
-       Returns 0 bandwidth if device is offline.
+def manual_speedtest(full=False):
     """
-    global LAST_SPEEDTEST, LAST_MINI
-    latency = ping_latency(ip)
+    Convenience function for manual speedtest execution.
+    
+    Args:
+        full (bool): If True, run full speedtest (~150MB). If False, run mini (~1.5MB).
+    
+    Returns:
+        dict: Speed test results with latency, download, upload, and quality ratings
+    
+    Example:
+        >>> # Quick mini test
+        >>> results = manual_speedtest()
+        >>> print(f"Speed: ↓{results['download']}Mbps ↑{results['upload']}Mbps")
+        
+        >>> # Full ISP test
+        >>> results = manual_speedtest(full=True)
+    """
+    if full:
+        print("⚠️ Running FULL speedtest (consumes ~150MB data)...")
+        return get_speedtest_results(manual=True)
+    else:
+        print("⚠️ Running MINI speedtest (consumes ~1.5MB data)...")
+        return get_mini_speedtest(manual=True)
+
+
+def get_bandwidth(ip, interval=None):
+    """
+    Lightweight bandwidth measurement using psutil (NO DATA CONSUMPTION).
+    Measures actual network throughput passively.
+    
+    Args:
+        ip (str): Target IP address (for status check and future per-device tracking)
+        interval (float): Measurement window in seconds (default: BANDWIDTH_INTERVAL)
+    
+    Returns:
+        dict: {
+            "latency": float or None,
+            "download": float (Mbps),
+            "upload": float (Mbps),
+            "quality": {"latency": str, "download": str, "upload": str},
+            "method": "psutil" or "offline"
+        }
+    
+    Note: For ISP speed tests, use get_speedtest_results(manual=True) or get_mini_speedtest(manual=True).
+    """
+    if interval is None:
+        interval = BANDWIDTH_INTERVAL
+    
+    # Check device status first (disable ping manager to always get fresh ping)
+    latency = ping_latency(ip, use_manager=False)
 
     # If no ping response → consider offline → return 0 bandwidth
     if latency is None:
@@ -360,7 +573,8 @@ def get_bandwidth(ip):
                 "latency": "Poor",
                 "download": "None",
                 "upload": "None"
-            }
+            },
+            "method": "offline"
         }
 
     latency_history.append(latency)
@@ -374,51 +588,37 @@ def get_bandwidth(ip):
                 "latency": _rate_latency(latency),
                 "download": "Disabled",
                 "upload": "Disabled"
-            }
+            },
+            "method": "disabled"
         }
 
-    now = time.time()
-    need_speedtest = False
-    need_mini = False
-
-    # Condition 1: full speedtest cooldown
-    if now - LAST_SPEEDTEST > SPEEDTEST_COOLDOWN:
-        need_speedtest = True
-
-    # Condition 2: anomaly detection
-    avg_latency = sum(latency_history) / len(latency_history)
-    if avg_latency > LATENCY_THRESHOLD and (now - LAST_SPEEDTEST > 900):  # 15 min guard
-        logging.warning(f"Latency anomaly detected (avg {avg_latency:.1f} ms), forcing full speedtest...")
-        need_speedtest = True
-
-    # Condition 3: mini speedtest interval
-    if now - LAST_MINI > MINI_SPEEDTEST_INTERVAL:
-        need_mini = True
-
+    # Use lightweight psutil-based throughput measurement
     try:
-        if need_speedtest:
-            results = get_speedtest_results()
-            LAST_SPEEDTEST = now
-            return results
-        elif need_mini:
-            results = get_mini_speedtest()
-            LAST_MINI = now
-            return results
-    except Exception as e:
-        logging.error(f"Speedtest failed: {e}")
-
-    # fallback → throughput
-    dl, ul = get_throughput(interval=1)
-    return {
-        "latency": latency,
-        "download": dl,
-        "upload": ul,
-        "quality": {
-            "latency": _rate_latency(latency),
-            "download": _rate_bandwidth(dl),
-            "upload": _rate_bandwidth(ul)
+        dl, ul = get_throughput(interval=interval)
+        return {
+            "latency": latency,
+            "download": dl,
+            "upload": ul,
+            "quality": {
+                "latency": _rate_latency(latency),
+                "download": _rate_bandwidth(dl),
+                "upload": _rate_bandwidth(ul)
+            },
+            "method": "psutil"
         }
-    }
+    except Exception as e:
+        logging.error(f"Bandwidth measurement failed: {e}")
+        return {
+            "latency": latency,
+            "download": 0,
+            "upload": 0,
+            "quality": {
+                "latency": _rate_latency(latency),
+                "download": "Error",
+                "upload": "Error"
+            },
+            "method": "error"
+        }
 
 
 

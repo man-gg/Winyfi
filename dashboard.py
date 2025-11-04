@@ -124,6 +124,10 @@ class Dashboard:
         self.loop_detection_thread = None
         self.loop_detection_history = []
         
+        # Client modal tracking
+        self.client_modal = None
+        self.client_modal_is_open = False
+        
         # Initialize database and load stats (with error handling)
         self._initialize_database()
         
@@ -655,12 +659,31 @@ class Dashboard:
                             print(f"✨ New UniFi device discovered: {name} (MAC: {mac}, IP: {ip})")
                         
                         # Persist current throughput snapshot to bandwidth_logs
+                        # UniFi API throughput units may vary (bps, Kbps, or Mbps). Normalize to Mbps.
                         try:
-                            down = device.get('xput_down')
-                            up = device.get('xput_up')
-                            if router_id and (down is not None or up is not None):
+                            def _to_mbps(val):
+                                try:
+                                    v = float(val or 0)
+                                except Exception:
+                                    return 0.0
+                                # Heuristics:
+                                # - If value > 1,000,000 it's likely in bps -> convert to Mbps
+                                # - If 1,000 < value <= 1,000,000 it's likely in Kbps -> convert to Mbps
+                                # - Else assume already in Mbps
+                                if v > 1_000_000:
+                                    return v / 1_000_000.0
+                                if v > 1_000:
+                                    return v / 1_000.0
+                                return v
+
+                            raw_down = device.get('xput_down')
+                            raw_up = device.get('xput_up')
+                            down_mbps = _to_mbps(raw_down)
+                            up_mbps = _to_mbps(raw_up)
+
+                            if router_id and (raw_down is not None or raw_up is not None):
                                 # latency is not provided by this endpoint; leave NULL
-                                insert_bandwidth_log(router_id, float(down or 0), float(up or 0), None)
+                                insert_bandwidth_log(router_id, down_mbps, up_mbps, None)
                         except Exception:
                             pass
                         
@@ -672,8 +695,9 @@ class Dashboard:
                             'brand': brand,
                             'location': location,
                             'is_unifi': True,
-                            'download_speed': device.get('xput_down', 0),
-                            'upload_speed': device.get('xput_up', 0),
+                            # Expose normalized Mbps in UI payload for consistency
+                            'download_speed': down_mbps if 'down_mbps' in locals() else device.get('xput_down', 0),
+                            'upload_speed': up_mbps if 'up_mbps' in locals() else device.get('xput_up', 0),
                             'last_seen': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             'image_path': None
                         })
@@ -1887,7 +1911,11 @@ class Dashboard:
             from router_utils import get_routers
             routers = get_routers()
             fieldnames = ['id', 'name', 'ip_address', 'mac_address', 'brand', 'location', 'last_seen', 'image_path']
-            data = routers
+            # Filter data to only include specified fields to avoid CSV DictWriter errors
+            data = []
+            for router in routers:
+                filtered_router = {field: router.get(field, '') for field in fieldnames}
+                data.append(filtered_router)
 
         elif export_type == "reports":
             # Use current date if no filter applied
@@ -1981,18 +2009,42 @@ class Dashboard:
                     "bandwidth_mb": bandwidth_out
                 })
 
+        elif export_type == "loop_detection":
+            # Export recent loop detection history
+            from db import get_loop_detections_history
+            history = get_loop_detections_history(limit=1000) or []
+            fieldnames = ["id", "detection_time", "status", "severity", "offenders", "interface", "duration_s"]
+            for row in history:
+                # Normalize/format values safely
+                det_time = row.get("detection_time")
+                if hasattr(det_time, 'strftime'):
+                    det_time = det_time.strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    det_time = str(det_time)
+                data.append({
+                    "id": row.get("id"),
+                    "detection_time": det_time,
+                    "status": row.get("status"),
+                    "severity": row.get("severity_score"),
+                    "offenders": row.get("offenders_count"),
+                    "interface": row.get("network_interface"),
+                    "duration_s": row.get("detection_duration"),
+                })
+
         elif export_type == "tickets":
             tickets = ticket_utils.fetch_tickets()
-            fieldnames = ["id", "router", "issue", "status", "created_by", "created_at", "updated_at"]
+            # Add SRF column alongside ID in the export
+            fieldnames = ["id", "srf", "router", "issue", "status", "created_by", "created_at", "updated_at"]
             for t in tickets:
                 data.append({
-                    "id": t["id"],
-                    "router": t["router_name"] or "General",
-                    "issue": t["issue"],
-                    "status": t["status"],
-                    "created_by": t["created_by"],
-                    "created_at": t["created_at"].strftime("%Y-%m-%d %H:%M:%S"),
-                    "updated_at": t["updated_at"].strftime("%Y-%m-%d %H:%M:%S")
+                    "id": t.get("id"),
+                    "srf": t.get("id"),  # SRF number maps to ticket id (ict_srf_no)
+                    "router": t.get("router_name") or "General",
+                    "issue": t.get("issue"),
+                    "status": t.get("status"),
+                    "created_by": t.get("created_by"),
+                    "created_at": t.get("created_at").strftime("%Y-%m-%d %H:%M:%S") if hasattr(t.get("created_at"), 'strftime') else str(t.get("created_at")),
+                    "updated_at": t.get("updated_at").strftime("%Y-%m-%d %H:%M:%S") if hasattr(t.get("updated_at"), 'strftime') else str(t.get("updated_at"))
                 })
 
         else:
@@ -2033,6 +2085,7 @@ class Dashboard:
         tb.Radiobutton(type_frame, text="Routers", variable=export_var, value="routers").pack(side="left", padx=5)
         tb.Radiobutton(type_frame, text="Reports", variable=export_var, value="reports").pack(side="left", padx=5)
         tb.Radiobutton(type_frame, text="Tickets", variable=export_var, value="tickets").pack(side="left", padx=5)
+        tb.Radiobutton(type_frame, text="Loop Detection", variable=export_var, value="loop_detection").pack(side="left", padx=5)
 
         # Reports options (date range)
         reports_frame = tb.LabelFrame(outer, text="Report Options", bootstyle="info", padding=10)
@@ -2144,13 +2197,18 @@ class Dashboard:
                     from router_utils import get_routers
                     routers = get_routers()
                     fieldnames = ['id', 'name', 'ip_address', 'mac_address', 'brand', 'location', 'last_seen', 'image_path']
-                    rows = routers or []
+                    # Filter data to only include specified fields to avoid CSV DictWriter errors
+                    rows = []
+                    for router in (routers or []):
+                        filtered_router = {field: router.get(field, '') for field in fieldnames}
+                        rows.append(filtered_router)
 
                 elif export_type == "tickets":
                     lbl.after(0, lambda: lbl.config(text="Fetching tickets…"))
                     import ticket_utils
                     tickets = ticket_utils.fetch_tickets() or []
-                    fieldnames = ["id", "router", "issue", "status", "created_by", "created_at", "updated_at"]
+                    # Include SRF column in async export as well
+                    fieldnames = ["id", "srf", "router", "issue", "status", "created_by", "created_at", "updated_at"]
                     def fmt(dt):
                         try:
                             return dt.strftime("%Y-%m-%d %H:%M:%S") if hasattr(dt, 'strftime') else str(dt)
@@ -2161,12 +2219,37 @@ class Dashboard:
                             break
                         rows.append({
                             "id": t.get("id"),
+                            "srf": t.get("id"),  # SRF number maps to ticket id (ict_srf_no)
                             "router": t.get("router_name") or "General",
                             "issue": t.get("issue"),
                             "status": t.get("status"),
                             "created_by": t.get("created_by"),
                             "created_at": fmt(t.get("created_at")),
                             "updated_at": fmt(t.get("updated_at")),
+                        })
+
+                elif export_type == "loop_detection":
+                    # Export loop detection history in async worker
+                    lbl.after(0, lambda: lbl.config(text="Fetching loop detections…"))
+                    from db import get_loop_detections_history
+                    hist = get_loop_detections_history(limit=1000) or []
+                    fieldnames = ["id", "detection_time", "status", "severity", "offenders", "interface", "duration_s"]
+                    def fmt_dt(dt):
+                        try:
+                            return dt.strftime("%Y-%m-%d %H:%M:%S") if hasattr(dt, 'strftime') else str(dt)
+                        except Exception:
+                            return str(dt)
+                    for r in hist:
+                        if cancel_event.is_set():
+                            break
+                        rows.append({
+                            "id": r.get("id"),
+                            "detection_time": fmt_dt(r.get("detection_time")),
+                            "status": r.get("status"),
+                            "severity": r.get("severity_score"),
+                            "offenders": r.get("offenders_count"),
+                            "interface": r.get("network_interface"),
+                            "duration_s": r.get("detection_duration"),
                         })
 
                 else:  # reports
@@ -6004,6 +6087,17 @@ Type: {values[11]}
         self.start_date.entry.delete(0, tk.END)
         self.start_date.entry.insert(0, initial_start.strftime("%m/%d/%Y"))
         self.start_date.pack(side="left", padx=(10, 5))
+        # Trigger refresh when user picks a date or edits manually
+        def _on_start_date_change(e=None):
+            self.refresh_total_bandwidth_chart()
+        try:
+            # Bind to the DateEntry widget itself for calendar selection
+            self.start_date.bind("<<DateEntrySelected>>", _on_start_date_change)
+            # Also bind to entry for manual edits
+            self.start_date.entry.bind("<Return>", _on_start_date_change)
+            self.start_date.entry.bind("<FocusOut>", _on_start_date_change)
+        except Exception:
+            pass
 
         # To date
         tb.Label(date_frame, text="To:", font=("Segoe UI", 10)).pack(side="left", padx=(20, 0))
@@ -6012,6 +6106,17 @@ Type: {values[11]}
         self.end_date.entry.delete(0, tk.END)
         self.end_date.entry.insert(0, initial_end.strftime("%m/%d/%Y"))
         self.end_date.pack(side="left", padx=(10, 5))
+        # Trigger refresh when user picks a date or edits manually
+        def _on_end_date_change(e=None):
+            self.refresh_total_bandwidth_chart()
+        try:
+            # Bind to the DateEntry widget itself for calendar selection
+            self.end_date.bind("<<DateEntrySelected>>", _on_end_date_change)
+            # Also bind to entry for manual edits
+            self.end_date.entry.bind("<Return>", _on_end_date_change)
+            self.end_date.entry.bind("<FocusOut>", _on_end_date_change)
+        except Exception:
+            pass
 
         # Action buttons
         button_frame = tb.Frame(controls_frame)
@@ -6020,7 +6125,7 @@ Type: {values[11]}
         tb.Button(button_frame, text="🔍 Apply Filter", bootstyle="primary",
                  command=self.refresh_total_bandwidth_chart).pack(side="left", padx=(0, 10))
         tb.Button(button_frame, text="🔄 Refresh", bootstyle="info",
-                 command=lambda: self.load_bandwidth_data_by_name(self.router_var.get())).pack(side="left", padx=(0, 10))
+                 command=self.refresh_total_bandwidth_chart).pack(side="left", padx=(0, 10))
         tb.Button(button_frame, text="📅 Last 7 Days", bootstyle="secondary",
                  command=self.load_last_7_days_bandwidth).pack(side="left")
 
@@ -6075,9 +6180,17 @@ Type: {values[11]}
                                    bootstyle="info", padding=10)
         chart_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
+        # Create figure with explicit tight layout
         self.bandwidth_fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(10, 8), dpi=100)
+        self.bandwidth_fig.tight_layout(pad=2.0)
+        
+        # Embed canvas
         self.bandwidth_canvas = FigureCanvasTkAgg(self.bandwidth_fig, master=chart_frame)
-        self.bandwidth_canvas.get_tk_widget().pack(fill="both", expand=True)
+        canvas_widget = self.bandwidth_canvas.get_tk_widget()
+        canvas_widget.pack(fill="both", expand=True)
+        
+        # Force initial draw
+        self.bandwidth_canvas.draw()
 
         # Data table tab
         self.bandwidth_table_frame = tb.Frame(self.bandwidth_notebook)
@@ -6117,14 +6230,25 @@ Type: {values[11]}
         v_scrollbar.pack(side="right", fill="y")
         h_scrollbar.pack(side="bottom", fill="x")
 
+        # Initialize sort flags for column header toggles
+        if not hasattr(self, "_reverse_flags"):
+            self._reverse_flags = {}
+
+        # Initialize storage for bandwidth rows
+        self._bandwidth_rows = []
+        
         # Initialize auto-update
         self.bandwidth_auto_update_interval = 30000  # 30 seconds
         self.bandwidth_auto_update_job = None
-        # Start auto-update after a short delay to ensure UI is fully built
-        self.root.after(1000, self.start_bandwidth_auto_update)
 
         # After job tracker for auto-refresh
         self._bandwidth_after_job = None
+        
+        # Load initial data immediately after UI is built
+        self.root.after(800, self.refresh_total_bandwidth_chart)
+        
+        # Start auto-update after initial load
+        self.root.after(1500, self.start_bandwidth_auto_update)
 
     # Auto-update methods for reports tab
     def start_report_auto_update(self):
@@ -6632,14 +6756,18 @@ Type: {values[11]}
 
     def _update_bandwidth_chart_from_data(self, data):
         """Updates chart from table data."""
+        # Ensure axes exist
+        if not hasattr(self, 'ax1') or not hasattr(self, 'ax2'):
+            return
+            
         self.ax1.clear()
         self.ax2.clear()
         if not data:
             self.bandwidth_canvas.draw()
             return
 
-        timestamps = [r[0] for r in data]
         # Column order in data rows: (timestamp, download, upload, latency)
+        raw_ts = [r[0] for r in data]
         def to_float(v):
             try:
                 return float(v)
@@ -6649,64 +6777,126 @@ Type: {values[11]}
         uploads    = [to_float(r[2]) for r in data]
         latencies  = [to_float(r[3]) for r in data]
 
-        # Dynamic downsampling for readability
-        max_points = 48
-        n = len(timestamps)
+        # Parse timestamps to datetime for reliable time-series plotting
+        from datetime import datetime as _dt
+        parsed_ts = []
+        for s in raw_ts:
+            dt = None
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:00:00", "%Y-%m-%d"):
+                try:
+                    dt = _dt.strptime(s, fmt)
+                    break
+                except Exception:
+                    continue
+            if dt is None:
+                try:
+                    dt = _dt.fromisoformat(str(s))
+                except Exception:
+                    dt = _dt.now()
+            parsed_ts.append(dt)
+
+        # Dynamic downsampling for readability - use uniform sampling
+        max_points = 100
+        n = len(parsed_ts)
         binned = False
+        timestamps = parsed_ts
         if n > max_points:
             import math
-            bin_size = math.ceil(n / max_points)
-            agg_ts, agg_down, agg_up, agg_lat = [], [], [], []
-            for i in range(0, n, bin_size):
-                j = min(i + bin_size, n)
-                # Use the first timestamp in the bin for labeling
-                agg_ts.append(timestamps[i])
-                # Average values within the bin
-                window_d = downloads[i:j]
-                window_u = uploads[i:j]
-                window_l = latencies[i:j]
-                # Guard against empty slices
-                denom = max(1, len(window_d))
-                agg_down.append(sum(window_d) / denom)
-                agg_up.append(sum(window_u) / denom)
-                agg_lat.append(sum(window_l) / denom)
-
-            timestamps, downloads, uploads, latencies = agg_ts, agg_down, agg_up, agg_lat
+            # Use uniform downsampling to maintain visual distribution
+            step = max(1, n // max_points)
+            timestamps = parsed_ts[::step]
+            downloads = downloads[::step]
+            uploads = uploads[::step]
+            latencies = latencies[::step]
             binned = True
 
-        # Plot
-        self.ax1.plot(timestamps, downloads, label="Download (Mbps)", color="blue")
-        self.ax1.plot(timestamps, uploads, label="Upload (Mbps)", color="green")
-        suffix = f" (binned to ~{len(timestamps)} pts)" if binned else ""
-        self.ax1.set_title(f"Bandwidth Trends{suffix}")
-        self.ax1.set_xlabel("Time")
-        self.ax1.set_ylabel("Mbps")
+        # Plot bandwidth (with robust scaling to avoid outliers flattening the view)
+        self.ax1.plot(timestamps, downloads, label="Download (Mbps)", color="blue", linewidth=2, marker='o', markersize=3)
+        self.ax1.plot(timestamps, uploads, label="Upload (Mbps)", color="green", linewidth=2, marker='s', markersize=3)
+        suffix = f" (showing {len(timestamps)} pts)" if binned else f" ({len(timestamps)} points)"
+        self.ax1.set_title(f"Bandwidth Trends{suffix}", fontsize=12, fontweight='bold')
+        self.ax1.set_xlabel("Date & Time", fontsize=10)
+        self.ax1.set_ylabel("Mbps", fontsize=10)
+        self.ax1.grid(True, alpha=0.3, linestyle='--')
+        # Use date formatting on x-axis for readability
+        try:
+            import matplotlib.dates as mdates
+            self.ax1.xaxis.set_major_locator(mdates.AutoDateLocator())
+            self.ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d\n%H:%M'))
+        except Exception:
+            pass
+        # Robust y-limits using 95th percentile clamping
+        def _percentile(values, p):
+            vals = [v for v in values if isinstance(v, (int, float))]
+            if not vals:
+                return 0.0
+            vals.sort()
+            k = int((len(vals) - 1) * (p / 100.0))
+            return vals[k]
+        if downloads or uploads:
+            all_bw = [v for v in downloads + uploads if v is not None]
+            max_bw = max(all_bw) if all_bw else 0.0
+            min_bw = min(all_bw) if all_bw else 0.0
+            p95 = _percentile(all_bw, 95) if all_bw else 0.0
+            if max_bw == 0 and min_bw == 0:
+                self.ax1.set_ylim(-0.1, 0.1)
+            else:
+                upper = min(max_bw, p95 * 1.1) if p95 > 0 else max_bw
+                lower = min_bw * 0.9 if min_bw < 0 else 0
+                if upper - lower < 0.1:
+                    upper = lower + 0.1
+                self.ax1.set_ylim(lower, upper)
         # Manage x ticks
         try:
             import matplotlib.ticker as mticker
-            self.ax1.xaxis.set_major_locator(mticker.MaxNLocator(nbins=8, prune='both'))
+            self.ax1.xaxis.set_major_locator(mticker.MaxNLocator(nbins=10, prune='lower'))
         except Exception:
             pass
-        self.ax1.tick_params(axis="x", rotation=30)
-        self.ax1.legend(loc="upper left")
+        self.ax1.tick_params(axis="x", rotation=0, labelsize=8)
+        self.ax1.legend(loc="upper left", fontsize=9, framealpha=0.9)
 
-        self.ax2.plot(timestamps, latencies, label="Latency (ms)", color="red", marker="o")
-        self.ax2.set_title(f"Latency Trends{suffix}")
-        self.ax2.set_ylabel("Latency (ms)")
+        # Plot latency with gentle clamping (98th percentile) to ignore spikes
+        self.ax2.plot(timestamps, latencies, label="Latency (ms)", color="red", linewidth=2, marker="o", markersize=4)
+        self.ax2.set_title(f"Latency Trends{suffix}", fontsize=12, fontweight='bold')
+        self.ax2.set_xlabel("Date & Time", fontsize=10)
+        self.ax2.set_ylabel("Latency (ms)", fontsize=10)
+        self.ax2.grid(True, alpha=0.3, linestyle='--')
         try:
-            import matplotlib.ticker as mticker
-            self.ax2.xaxis.set_major_locator(mticker.MaxNLocator(nbins=8, prune='both'))
+            import matplotlib.dates as mdates
+            self.ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
+            self.ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d\n%H:%M'))
         except Exception:
             pass
-        self.ax2.tick_params(axis="x", rotation=30)
-        self.ax2.legend(loc="upper right")
+        if latencies:
+            valid_lat = [v for v in latencies if isinstance(v, (int, float))]
+            if valid_lat:
+                lat_min = min(valid_lat)
+                lat_max = max(valid_lat)
+                p98 = _percentile(valid_lat, 98)
+                upper = min(lat_max, p98 * 1.1) if p98 > 0 else lat_max
+                lower = max(0, lat_min * 0.9)
+                if upper - lower < 1:
+                    upper = lower + 1
+                self.ax2.set_ylim(lower, upper)
+        self.ax2.tick_params(axis="x", rotation=0, labelsize=8)
+        self.ax2.legend(loc="upper right", fontsize=9, framealpha=0.9)
 
         # Tight layout for readability
         try:
             self.bandwidth_fig.tight_layout()
-        except Exception:
-            pass
-        self.bandwidth_canvas.draw()
+        except Exception as e:
+            print(f"⚠️ tight_layout failed: {e}")
+        
+        # Force canvas redraw with explicit update
+        try:
+            self.bandwidth_fig.canvas.draw_idle()
+            self.bandwidth_canvas.draw()
+            self.bandwidth_canvas.flush_events()
+            # Force Tkinter to update the display
+            self.root.update_idletasks()
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
 
     def _reverse_column(self, col_name):
         """Toggles column sorting on header click."""
@@ -6816,11 +7006,16 @@ Type: {values[11]}
         """
         Optimized: Refreshes the bandwidth chart and table, fixes redraw, empty data, and timer issues.
         """
-        self._show_bandwidth_loading()
-        # Cancel any scheduled refresh (auto-update job)
-        if hasattr(self, "_bandwidth_after_job") and self._bandwidth_after_job:
-            self.bandwidth_frame.after_cancel(self._bandwidth_after_job)
-            self._bandwidth_after_job = None
+        try:
+            self._show_bandwidth_loading()
+            # Cancel any scheduled refresh (auto-update job)
+            if hasattr(self, "_bandwidth_after_job") and self._bandwidth_after_job:
+                self.bandwidth_frame.after_cancel(self._bandwidth_after_job)
+                self._bandwidth_after_job = None
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return
 
         # Get current router and date picker values directly from UI
         router_name = self.router_var.get() if hasattr(self, 'router_var') else "All Routers"
@@ -6918,7 +7113,11 @@ Type: {values[11]}
 
         # Refresh both table and chart using the unified method
         # This ensures chart and table are always in sync
-        self._refresh_bandwidth_table(sort_column=None, reverse=False)
+        try:
+            self._refresh_bandwidth_table(sort_column=None, reverse=False)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
 
         # Schedule auto-refresh (interval from UI)
         interval_map = {"10s": 10000, "30s": 30000, "1m": 60000, "2m": 120000, "5m": 300000}
@@ -10880,11 +11079,35 @@ Type: {values[11]}
 
     def show_clients(self):
         """Enhanced popup modal that shows discovered network clients with modern UI."""
+        # Check if modal is already open using flag
+        if self.client_modal_is_open:
+            print("⚠️ Client modal already open - bringing to front")
+            if self.client_modal and self.client_modal.winfo_exists():
+                try:
+                    self.client_modal.lift()
+                    self.client_modal.focus_force()
+                    self.client_modal.attributes('-topmost', True)
+                    self.client_modal.after(100, lambda: self.client_modal.attributes('-topmost', False))
+                except:
+                    # Modal might have been destroyed, reset flag
+                    self.client_modal_is_open = False
+                    print("⚠️ Modal was destroyed, resetting flag")
+            return
+        
+        # Set flag immediately to prevent multiple openings
+        print("✅ Opening new client modal")
+        self.client_modal_is_open = True
+        
         modal = tb.Toplevel(self.root)
+        self.client_modal = modal  # Store reference
         modal.title("🌐 Network Clients Monitor")
         modal.geometry("1000x700")
         modal.resizable(True, True)
         modal.configure(bg='#f8f9fa')
+        
+        # Make it a proper modal window
+        modal.transient(self.root)
+        modal.grab_set()
 
         # Center modal
         modal.update_idletasks()
@@ -11033,6 +11256,14 @@ Type: {values[11]}
 
         # Handle window close
         modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+        
+        # Bind destroy event to reset flag as fallback
+        def on_modal_destroy(event):
+            if event.widget == modal:
+                self.client_modal_is_open = False
+                self.client_modal = None
+                print("🗑️ Client modal destroyed, flag reset")
+        modal.bind("<Destroy>", on_modal_destroy)
 
     def load_existing_clients(self):
         """Load existing clients from database."""
@@ -11823,14 +12054,22 @@ Type: {values[11]}
     def close_client_modal(self, modal=None):
         """Handle closing the client modal."""
         self.stop_auto_refresh()
-        if modal:
+        
+        # Use stored modal reference if no modal parameter provided
+        if modal is None:
+            modal = self.client_modal
+            
+        if modal and modal.winfo_exists():
+            try:
+                modal.grab_release()
+            except:
+                pass
             modal.destroy()
-        else:
-            # Find and close the modal window
-            for child in self.root.winfo_children():
-                if isinstance(child, tb.Toplevel) and child.title() == "🌐 Network Clients Monitor":
-                    child.destroy()
-                    break
+        
+        # Reset flag and reference
+        self.client_modal_is_open = False
+        self.client_modal = None
+        print("✅ Client modal closed, flag reset")
 
     #auto update 
     def schedule_update(self):
