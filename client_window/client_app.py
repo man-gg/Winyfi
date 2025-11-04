@@ -1686,7 +1686,7 @@ class ClientDashboard:
                                 break
                             writer.writerow(r)
                 except Exception as e:
-                    self.root.after(0, lambda: on_done(False, f"Failed to write file: {e}"))
+                    self.root.after(0, lambda e=e: on_done(False, f"Failed to write file: {e}"))
                     return
 
                 if cancel_event.is_set():
@@ -1695,7 +1695,7 @@ class ClientDashboard:
                     self.root.after(0, lambda: on_done(True, f"{export_type.capitalize()} exported successfully!"))
 
             except Exception as e:
-                self.root.after(0, lambda: on_done(False, f"Export failed: {e}"))
+                self.root.after(0, lambda e=e: on_done(False, f"Export failed: {e}"))
 
         threading.Thread(target=worker, daemon=True).start()
 

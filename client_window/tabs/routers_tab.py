@@ -290,7 +290,14 @@ class RoutersTab:
                     card_style = "primary" if is_unifi else "info"
                     card = tb.LabelFrame(sec, text=router.get('name', 'Unknown'), bootstyle=card_style, padding=0)
                     card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
-                    sec.grid_columnconfigure(col, weight=1)
+                    
+                    # Configure uniform card sizing
+                    card.grid_propagate(False)  # Prevent content from affecting card size
+                    card.config(width=280, height=200)  # Fixed dimensions for uniformity
+                    
+                    sec.grid_columnconfigure(col, weight=1, uniform="router_cards")  # Equal column sizing
+                    sec.grid_rowconfigure(row, weight=0)  # Fixed row height
+                    
                     inner = tb.Frame(card, padding=10)
                     inner.pack(fill="both", expand=True)
                     # UniFi badge and icon

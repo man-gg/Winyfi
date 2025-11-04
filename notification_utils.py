@@ -361,6 +361,42 @@ class NotificationManager:
         conn.commit()
         conn.close()
     
+    def dismiss_all_notifications(self) -> int:
+        """Dismiss ALL non-dismissed notifications in one batch.
+        Returns the number of rows affected.
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            '''
+            UPDATE notifications 
+            SET dismissed_at = CURRENT_TIMESTAMP 
+            WHERE dismissed_at IS NULL
+            '''
+        )
+        affected = cursor.rowcount if hasattr(cursor, 'rowcount') else 0
+        conn.commit()
+        conn.close()
+        return affected
+
+    def mark_all_unread_as_read(self) -> int:
+        """Mark ALL unread (and not dismissed) notifications as read in one batch.
+        Returns the number of rows affected.
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            '''
+            UPDATE notifications 
+            SET read_at = CURRENT_TIMESTAMP 
+            WHERE read_at IS NULL AND dismissed_at IS NULL
+            '''
+        )
+        affected = cursor.rowcount if hasattr(cursor, 'rowcount') else 0
+        conn.commit()
+        conn.close()
+        return affected
+    
     def get_notification_count(self) -> int:
         """Get count of unread notifications."""
         conn = sqlite3.connect(self.db_path)

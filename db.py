@@ -658,6 +658,13 @@ def create_network_clients_table():
         cursor.execute(create_table_sql)
         conn.commit()
         print(" Network clients table created/verified")
+
+        # Ensure backward-compat columns exist for older databases
+        try:
+            ensure_network_clients_router_columns()
+        except Exception as _e:
+            # Non-fatal: table may already have columns or permissions limited
+            print(f"  Warning: could not ensure router columns: {_e}")
         
         # Create connection history table
         create_history_table_sql = """
@@ -750,10 +757,8 @@ def save_network_client(mac_address, ip_address=None, hostname=None, vendor=None
                        ping_latency=None, device_type=None, notes=None,
                        router_id=None, router_name=None):
     """Save or update a network client in the database."""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
+    import mysql.connector
+    def _upsert(conn, cursor):
         # Check if client exists
         cursor.execute("SELECT id, connection_count FROM network_clients WHERE mac_address = %s", (mac_address,))
         existing_client = cursor.fetchone()
@@ -788,6 +793,12 @@ def save_network_client(mac_address, ip_address=None, hostname=None, vendor=None
             cursor.execute(insert_sql, (mac_address, ip_address, hostname, vendor, 
                                       router_id, router_name, ping_latency, device_type, notes))
             client_id = cursor.lastrowid
+        return existing_client[0] if existing_client else client_id
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        client_id = _upsert(conn, cursor)
         
         conn.commit()
         cursor.close()
@@ -795,9 +806,24 @@ def save_network_client(mac_address, ip_address=None, hostname=None, vendor=None
         
         return client_id
         
-    except Exception as e:
-        print(f" Error saving network client: {e}")
-        return None
+    except mysql.connector.Error as e:
+        # If missing router_id/router_name columns, attempt to add and retry once
+        if getattr(e, 'errno', None) == 1054 or "Unknown column 'router_id'" in str(e) or "Unknown column 'router_name'" in str(e):
+            try:
+                ensure_network_clients_router_columns()
+                conn = get_connection()
+                cursor = conn.cursor()
+                client_id = _upsert(conn, cursor)
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return client_id
+            except Exception as inner:
+                print(f" Error saving network client after migrating columns: {inner}")
+                return None
+        else:
+            print(f" Error saving network client: {e}")
+            return None
 
 def get_network_clients(online_only=False, limit=100, router_id=None):
     """Get network clients from database. Optionally filter by router_id."""
@@ -1457,3 +1483,183 @@ def update_user_profile(user_id, new_profile_data):
     except Exception as e:
         print(f"Error updating user profile: {e}")
         return False, f"Database error: {str(e)}"
+
+
+# =============================
+# Activity Log Helpers
+# =============================
+def create_activity_logs_table():
+    """Create the activity_logs table if it doesn't exist."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS activity_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT,
+            action VARCHAR(255) NOT NULL,
+            target VARCHAR(255),
+            ip_address VARCHAR(50),
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_user_id (user_id),
+            INDEX idx_timestamp (timestamp),
+            INDEX idx_action (action),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+        """
+
+        cursor.execute(create_table_sql)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        logger.info("activity_logs table created or already exists")
+        return True
+    except Exception as e:
+        logger.error(f"create_activity_logs_table error: {e}")
+        return False
+
+
+def log_activity(user_id, action, target=None, ip_address=None):
+    """
+    Log a user activity.
+    
+    Args:
+        user_id (int): User ID performing the action
+        action (str): Action performed (e.g., "Login", "Logout", "Add Router", "Delete User")
+        target (str): Target of the action (e.g., router name, username)
+        ip_address (str): IP address of the user
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        sql = """
+        INSERT INTO activity_logs (user_id, action, target, ip_address)
+        VALUES (%s, %s, %s, %s)
+        """
+        
+        cursor.execute(sql, (user_id, action, target, ip_address))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        logger.info(f"Activity logged: User {user_id} - {action} - {target}")
+        return True
+    except Exception as e:
+        logger.error(f"log_activity error: {e}")
+        return False
+
+
+def get_activity_logs(limit=100, user_id=None, action_filter=None, search_term=None):
+    """
+    Get activity logs with optional filtering.
+    
+    Args:
+        limit (int): Maximum number of logs to return
+        user_id (int): Filter by specific user ID
+        action_filter (str): Filter by action type
+        search_term (str): Search in action or target fields
+    
+    Returns:
+        list: List of activity log dictionaries
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Build dynamic query
+        where_clauses = []
+        params = []
+        
+        if user_id:
+            where_clauses.append("al.user_id = %s")
+            params.append(user_id)
+        
+        if action_filter:
+            where_clauses.append("al.action LIKE %s")
+            params.append(f"%{action_filter}%")
+        
+        if search_term:
+            where_clauses.append("(al.action LIKE %s OR al.target LIKE %s)")
+            params.append(f"%{search_term}%")
+            params.append(f"%{search_term}%")
+        
+        where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+        
+        sql = f"""
+        SELECT 
+            al.id,
+            al.user_id,
+            al.action,
+            al.target,
+            al.ip_address,
+            al.timestamp,
+            CONCAT(u.first_name, ' ', u.last_name) as user_name,
+            u.username
+        FROM activity_logs al
+        LEFT JOIN users u ON al.user_id = u.id
+        WHERE {where_sql}
+        ORDER BY al.timestamp DESC
+        LIMIT %s
+        """
+        
+        params.append(limit)
+        cursor.execute(sql, tuple(params))
+        results = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return results
+    except Exception as e:
+        logger.error(f"get_activity_logs error: {e}")
+        return []
+
+
+def get_activity_stats():
+    """
+    Get activity statistics.
+    
+    Returns:
+        dict: Statistics about activities
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Total activities
+        cursor.execute("SELECT COUNT(*) as total FROM activity_logs")
+        total = cursor.fetchone()['total']
+        
+        # Activities by action type
+        cursor.execute("""
+            SELECT action, COUNT(*) as count 
+            FROM activity_logs 
+            GROUP BY action 
+            ORDER BY count DESC
+        """)
+        by_action = cursor.fetchall()
+        
+        # Recent activities (last 24 hours)
+        cursor.execute("""
+            SELECT COUNT(*) as count 
+            FROM activity_logs 
+            WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        """)
+        recent = cursor.fetchone()['count']
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            'total': total,
+            'by_action': by_action,
+            'recent_24h': recent
+        }
+    except Exception as e:
+        logger.error(f"get_activity_stats error: {e}")
+        return {'total': 0, 'by_action': [], 'recent_24h': 0}

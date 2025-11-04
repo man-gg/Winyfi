@@ -14,6 +14,8 @@ from db import (
     get_connection,
     DatabaseConnectionError,
     check_mysql_server_status,
+    create_activity_logs_table,
+    log_activity,
 )
 import requests
 import os
@@ -334,6 +336,7 @@ def show_login(root):
         if login_type == 'admin':
             try:
                 create_login_sessions_table()
+                create_activity_logs_table()
                 log_user_login(
                     user_id=user['id'],
                     username=user['username'],
@@ -343,6 +346,13 @@ def show_login(root):
                     device_platform=device_info.get('platform'),
                     user_agent=device_info.get('user_agent'),
                     login_type=login_type
+                )
+                # Log activity for admin login
+                log_activity(
+                    user_id=user['id'],
+                    action='Login',
+                    target=None,
+                    ip_address=device_info.get('ip_address')
                 )
             except Exception:
                 # Non-blocking: if DB is unavailable, continue without logging

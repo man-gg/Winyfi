@@ -270,7 +270,7 @@ class BandwidthTab:
                     self.root.after(0, lambda: finish(False, "Timeout (15s)."))
                     return
                 except Exception as e:
-                    self.root.after(0, lambda: finish(False, f"Connection error: {e}"))
+                    self.root.after(0, lambda e=e: finish(False, f"Connection error: {e}"))
                     return
                 if self._bw_cancel_event.is_set():
                     self.root.after(0, lambda: finish(False, "Cancelled."))
@@ -297,7 +297,7 @@ class BandwidthTab:
             except Exception as e:
                 self.bandwidth_data = []
                 self.root.after(0, self._update_all_components)
-                self.root.after(0, lambda: finish(False, f"Unexpected: {e}"))
+                self.root.after(0, lambda e=e: finish(False, f"Unexpected: {e}"))
 
         threading.Thread(target=worker, daemon=True).start()
 

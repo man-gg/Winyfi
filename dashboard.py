@@ -40,6 +40,7 @@ from network_utils import ping_latency,get_bandwidth, detect_loops, discover_cli
 from bandwidth_logger import start_bandwidth_logging
 from db import get_connection 
 from db import database_health_check, get_database_info, DatabaseConnectionError
+from db import create_activity_logs_table, log_activity, get_activity_logs
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import ticket_utils
@@ -129,6 +130,14 @@ class Dashboard:
         # Initialize notification system
         self.notification_system = NotificationSystem(self.root)
         self.notification_count = 0
+        
+        # Initialize performance optimization for notifications
+        from notification_performance import initialize_cached_count, get_throttler
+        self._notification_throttler = get_throttler()
+        self._cached_notification_count = initialize_cached_count(
+            lambda: self.notification_system.get_notification_count(),
+            cache_duration=2.0  # Cache for 2 seconds
+        )
         
         self._build_ui()
         self.reload_routers(force_reload=True)
@@ -1035,7 +1044,7 @@ class Dashboard:
         self.sidebar_buttons["Settings"] = settings_btn
 
         self.settings_dropdown = tb.Frame(self.sidebar, style='Sidebar.TFrame')
-        self.dropdown_target_height = 170
+        self.dropdown_target_height = 205  # Increased height for Activity Log button
         
         # Dropdown buttons with proper alignment and styling
         profile_btn = tb.Button(self.settings_dropdown, 
@@ -1053,6 +1062,11 @@ class Dashboard:
                         style='Sidebar.TButton',
                         width=22,
                         command=self.show_notification_settings)
+        activity_log_btn = tb.Button(self.settings_dropdown, 
+                        text="  📋 Activity Log",
+                        style='Sidebar.TButton',
+                        width=22,
+                        command=self.show_activity_log)
         sep = ttk.Separator(self.settings_dropdown, orient='horizontal')
         lo_btn = tb.Button(self.settings_dropdown, 
                         text="  ⏏️ Log Out",
@@ -1063,6 +1077,7 @@ class Dashboard:
         profile_btn.pack(fill='x', pady=2, padx=0)
         um_btn.pack(fill='x', pady=2, padx=0)
         notif_btn.pack(fill='x', pady=2, padx=0)
+        activity_log_btn.pack(fill='x', pady=2, padx=0)
         sep.pack(fill='x', pady=2)
         lo_btn.pack(fill='x', pady=2, padx=0)
         
@@ -1228,52 +1243,61 @@ class Dashboard:
         metrics_frame = tb.Frame(main_container)
         metrics_frame.pack(fill="x", pady=(0, 20))
         
-        # Configure grid weights
+        # Configure grid weights for equal spacing between cards
         for i in range(4):
-            metrics_frame.grid_columnconfigure(i, weight=1)
+            metrics_frame.grid_columnconfigure(i, weight=1, uniform="cards")  # Equal column sizing
+        metrics_frame.grid_rowconfigure(0, weight=0)  # Fixed height row
         
         # Router Status Card
         self.router_card = self._create_metric_card(
             metrics_frame, "🌐 Router Status", "primary", 0, 0
         )
-        self.total_routers_label = tb.Label(self.router_card, text="0", 
+        card_content = tb.Frame(self.router_card)
+        card_content.pack(expand=True, fill="both")
+        self.total_routers_label = tb.Label(card_content, text="0", 
                                           font=("Segoe UI", 28, "bold"),
                                           bootstyle="primary")
         self.total_routers_label.pack(pady=(10, 5))
-        tb.Label(self.router_card, text="Total Routers", 
+        tb.Label(card_content, text="Total Routers", 
                 font=("Segoe UI", 10), bootstyle="secondary").pack()
         
         # Online Routers Card
         self.online_card = self._create_metric_card(
             metrics_frame, "🟢 Online", "success", 0, 1
         )
-        self.online_routers_label = tb.Label(self.online_card, text="0", 
+        card_content = tb.Frame(self.online_card)
+        card_content.pack(expand=True, fill="both")
+        self.online_routers_label = tb.Label(card_content, text="0", 
                                            font=("Segoe UI", 28, "bold"),
                                            bootstyle="success")
         self.online_routers_label.pack(pady=(10, 5))
-        tb.Label(self.online_card, text="Online Routers", 
+        tb.Label(card_content, text="Online Routers", 
                 font=("Segoe UI", 10), bootstyle="secondary").pack()
         
         # Offline Routers Card
         self.offline_card = self._create_metric_card(
             metrics_frame, "🔴 Offline", "danger", 0, 2
         )
-        self.offline_routers_label = tb.Label(self.offline_card, text="0", 
+        card_content = tb.Frame(self.offline_card)
+        card_content.pack(expand=True, fill="both")
+        self.offline_routers_label = tb.Label(card_content, text="0", 
                                             font=("Segoe UI", 28, "bold"),
                                             bootstyle="danger")
         self.offline_routers_label.pack(pady=(10, 5))
-        tb.Label(self.offline_card, text="Offline Routers", 
+        tb.Label(card_content, text="Offline Routers", 
                 font=("Segoe UI", 10), bootstyle="secondary").pack()
         
         # Uptime Card
         self.uptime_card = self._create_metric_card(
             metrics_frame, "⏱️ Avg Uptime", "info", 0, 3
         )
-        self.uptime_label = tb.Label(self.uptime_card, text="0%", 
+        card_content = tb.Frame(self.uptime_card)
+        card_content.pack(expand=True, fill="both")
+        self.uptime_label = tb.Label(card_content, text="0%", 
                                    font=("Segoe UI", 28, "bold"),
                                    bootstyle="info")
         self.uptime_label.pack(pady=(10, 5))
-        tb.Label(self.uptime_card, text="Average Uptime", 
+        tb.Label(card_content, text="Average Uptime", 
                 font=("Segoe UI", 10), bootstyle="secondary").pack()
         
         # Add status indicator
@@ -1353,10 +1377,35 @@ class Dashboard:
         })
 
     def _create_metric_card(self, parent, title, style, row, col):
-        """Create a modern metric card"""
+        """Create a modern metric card with uniform sizing"""
         card = tb.LabelFrame(parent, text=title, bootstyle=style, padding=15)
         card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+        
+        # Configure uniform sizing - prevent content from affecting card size
+        card.grid_propagate(False)  # Prevent card from resizing based on content
+        card.pack_propagate(False)  # Prevent pack from resizing the card
+        
+        # Set fixed dimensions for uniform appearance
+        card.config(width=250, height=140)  # Fixed width and height for uniformity
+        
         return card
+    
+    def _enforce_card_sizes(self):
+        """Re-enforce fixed sizes on metric cards after content updates"""
+        cards = [
+            ('router_card', 250, 140),
+            ('online_card', 250, 140),
+            ('offline_card', 250, 140),
+            ('uptime_card', 250, 140)
+        ]
+        
+        for card_name, width, height in cards:
+            if hasattr(self, card_name):
+                card = getattr(self, card_name)
+                if card.winfo_exists():
+                    card.config(width=width, height=height)
+                    card.grid_propagate(False)
+                    card.pack_propagate(False)
 
     def _create_pie_chart(self, parent, title, row):
         """Create a modern pie chart for router status"""
@@ -1614,6 +1663,9 @@ class Dashboard:
         self.online_routers_label.config(text=str(online))
         self.offline_routers_label.config(text=str(offline))
         self.uptime_label.config(text=f"{uptime_percentage:.1f}%")
+        
+        # Ensure cards maintain their fixed size after content update
+        self._enforce_card_sizes()
         
         # Update status indicators
         self._update_status_indicators(online, offline, uptime_percentage)
@@ -2216,7 +2268,7 @@ class Dashboard:
                                 break
                             writer.writerow(r)
                 except Exception as e:
-                    self.root.after(0, lambda: on_done(False, f"Failed to write file: {e}"))
+                    self.root.after(0, lambda e=e: on_done(False, f"Failed to write file: {e}"))
                     return
 
                 if cancel_event.is_set():
@@ -2225,7 +2277,7 @@ class Dashboard:
                     self.root.after(0, lambda: on_done(True, f"{export_type.capitalize()} exported successfully!"))
 
             except Exception as e:
-                self.root.after(0, lambda: on_done(False, f"Export failed: {e}"))
+                self.root.after(0, lambda e=e: on_done(False, f"Export failed: {e}"))
 
         import threading
         threading.Thread(target=worker, daemon=True).start()
@@ -2317,9 +2369,33 @@ class Dashboard:
                     return
                 update_router(router['id'], *vals, img_path)
                 messagebox.showinfo("Updated","Router updated.")
+                # Log activity for router edit
+                try:
+                    from device_utils import get_device_info
+                    device_info = get_device_info()
+                    log_activity(
+                        user_id=self.current_user.get('id'),
+                        action='Edit Router',
+                        target=vals[0],  # Router name
+                        ip_address=device_info.get('ip_address')
+                    )
+                except Exception as e:
+                    print(f"Error logging router edit activity: {e}")
             else:
                 insert_router(*vals, img_path)
                 messagebox.showinfo("Success","Router added.")
+                # Log activity for router add
+                try:
+                    from device_utils import get_device_info
+                    device_info = get_device_info()
+                    log_activity(
+                        user_id=self.current_user.get('id'),
+                        action='Add Router',
+                        target=vals[0],  # Router name
+                        ip_address=device_info.get('ip_address')
+                    )
+                except Exception as e:
+                    print(f"Error logging router add activity: {e}")
             popup.destroy()
             self.reload_routers(force_reload=True)
 
@@ -2483,7 +2559,20 @@ class Dashboard:
 
     def delete_selected_router(self, router):
         if messagebox.askyesno("Delete", f"Delete router '{router['name']}'?"):
+            router_name = router.get('name', 'Unknown')
             delete_router(router['id'])
+            # Log activity for router delete
+            try:
+                from device_utils import get_device_info
+                device_info = get_device_info()
+                log_activity(
+                    user_id=self.current_user.get('id'),
+                    action='Delete Router',
+                    target=router_name,
+                    ip_address=device_info.get('ip_address')
+                )
+            except Exception as e:
+                print(f"Error logging router delete activity: {e}")
             self.reload_routers()
 
     def show_connected_clients_for_router(self, router):
@@ -3623,7 +3712,14 @@ class Dashboard:
                     card_style = "primary" if router.get('is_unifi') else "info"
                     card = tb.LabelFrame(sec, text=router['name'], bootstyle=card_style, padding=0)
                     card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
-                    sec.grid_columnconfigure(col, weight=1)
+                    
+                    # Configure uniform card sizing
+                    card.grid_propagate(False)  # Prevent content from affecting card size
+                    card.config(width=280, height=200)  # Fixed dimensions for uniformity
+                    
+                    sec.grid_columnconfigure(col, weight=1, uniform="router_cards")  # Equal column sizing
+                    sec.grid_rowconfigure(row, weight=0)  # Fixed row height
+                    
                     inner = tb.Frame(card, padding=10)
                     inner.pack(fill="both", expand=True)
                     # Show UniFi badge for UniFi devices
@@ -4381,6 +4477,18 @@ class Dashboard:
             try:
                 insert_user(username, password, first, last, role=role)
                 messagebox.showinfo("Success", f"User '{username}' created successfully with {role} role.")
+                # Log activity for user add
+                try:
+                    from device_utils import get_device_info
+                    device_info = get_device_info()
+                    log_activity(
+                        user_id=self.current_user.get('id'),
+                        action='Add User',
+                        target=username,
+                        ip_address=device_info.get('ip_address')
+                    )
+                except Exception as log_err:
+                    print(f"Error logging user add activity: {log_err}")
                 _close()
                 self._refresh_user_table()
             except Exception as e:
@@ -4558,6 +4666,18 @@ class Dashboard:
                     update_user(uid, new_username, None, new_first, new_last)
                 
                 messagebox.showinfo("Success", f"User '{new_username}' updated successfully.")
+                # Log activity for user edit
+                try:
+                    from device_utils import get_device_info
+                    device_info = get_device_info()
+                    log_activity(
+                        user_id=self.current_user.get('id'),
+                        action='Edit User',
+                        target=new_username,
+                        ip_address=device_info.get('ip_address')
+                    )
+                except Exception as log_err:
+                    print(f"Error logging user edit activity: {log_err}")
                 popup.destroy()
                 self._refresh_user_table()
             except Exception as e:
@@ -4601,6 +4721,18 @@ class Dashboard:
                 if hasattr(self, 'user_status_label'):
                     self.user_status_label.config(text=f"User '{username}' deleted successfully")
                 messagebox.showinfo("Success", f"User '{username}' has been deleted.")
+                # Log activity for user delete
+                try:
+                    from device_utils import get_device_info
+                    device_info = get_device_info()
+                    log_activity(
+                        user_id=self.current_user.get('id'),
+                        action='Delete User',
+                        target=username,
+                        ip_address=device_info.get('ip_address')
+                    )
+                except Exception as log_err:
+                    print(f"Error logging user delete activity: {log_err}")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to delete user: {str(e)}")
 
@@ -7137,6 +7269,13 @@ Type: {values[11]}
                 def draw_chart():
                     for widget in self.reports_charts_frame.winfo_children():
                         widget.destroy()
+                    # Close any previously open figure to avoid accumulating pyplot figures
+                    try:
+                        import matplotlib.pyplot as plt
+                        if hasattr(self, 'current_fig') and getattr(self, 'current_fig') is not None:
+                            plt.close(self.current_fig)
+                    except Exception:
+                        pass
                     fig, ax = plt.subplots(figsize=(8, 4))
                     line, = ax.plot(range(len(agg_dates)), agg_uptimes, marker="o", linestyle="-", color="blue", label="Avg Uptime %")
                     ax.set_ylim(0, 100)
@@ -8232,6 +8371,14 @@ Type: {values[11]}
                         for widget in self.reports_charts_frame.winfo_children():
                             if isinstance(widget, FigureCanvasTkAgg) or hasattr(widget, 'winfo_children'):
                                 widget.destroy()
+                        # Also close current matplotlib figure to free resources
+                        try:
+                            import matplotlib.pyplot as plt
+                            if hasattr(self, 'current_fig') and getattr(self, 'current_fig') is not None:
+                                plt.close(self.current_fig)
+                                self.current_fig = None
+                        except Exception:
+                            pass
         except Exception as e:
             print(f"Error toggling chart: {e}")
             
@@ -8486,7 +8633,7 @@ Type: {values[11]}
             action_frame,
             text="➕ New Request",
             bootstyle="success",
-            command=self.open_edit_ticket_modal,
+            command=self.open_new_ticket_modal,
             width=12
         ).pack(side="right", padx=(5, 0))
 
@@ -9502,6 +9649,59 @@ Type: {values[11]}
             command=lambda: self.submit_edit_ticket(srf["ict_srf_no"], modal)
         ).pack(pady=20)
 
+    def open_new_ticket_modal(self):
+        """Open modal for creating a new ICT Service Request."""
+        modal = tb.Toplevel(self.root)
+        modal.title("New ICT Service Request Form")
+        modal.geometry("725x600")
+        modal.resizable(False, False)
+        modal.grab_set()
+
+        # Build empty form
+        button_host = self.build_ticket_form(modal, initial_data={}, is_edit=False)
+
+        # Save button for create
+        tb.Button(
+            button_host,
+            text="Create Request",
+            bootstyle="success",
+            command=lambda: self.submit_new_ticket(modal)
+        ).pack(pady=20)
+
+    def submit_new_ticket(self, modal):
+        """Collect form and create a new SRF entry."""
+        try:
+            data = self.collect_ticket_form_data()
+            # Basic validation
+            ict_srf_no_str = str(data.get("ict_srf_no", "")).strip()
+            if not ict_srf_no_str.isdigit():
+                from tkinter import messagebox
+                messagebox.showerror("Validation Error", "ICT SRF NO. must be a number.")
+                return
+            data["ict_srf_no"] = int(ict_srf_no_str)
+            # Created by current user id if available
+            created_by = None
+            try:
+                created_by = int(self.current_user.get('id')) if getattr(self, 'current_user', None) else None
+            except Exception:
+                created_by = None
+            if not created_by:
+                created_by = 1  # fallback admin id
+            # Create via utils
+            ticket_utils.create_srf(data, created_by)
+            from tkinter import messagebox
+            messagebox.showinfo("Success", f"Service Request #{data['ict_srf_no']} created successfully!")
+            try:
+                modal.destroy()
+            except Exception:
+                pass
+            # Refresh table if present
+            if hasattr(self, 'load_tickets'):
+                self.load_tickets()
+        except Exception as e:
+            from tkinter import messagebox
+            messagebox.showerror("Error", f"Failed to create Service Request:\n{e}")
+
 
     def save_srf_changes(self, srf_no, modal):
         """Save edited SRF values to DB."""
@@ -9574,9 +9774,7 @@ Type: {values[11]}
                                       command=lambda: self.stop_automatic_loop_detection(modal), width=10)
         self.loop_stop_btn.pack(side='left', padx=(0, 5))
         
-        self.loop_export_btn = tb.Button(control_frame, text="📊 Export", bootstyle="info",
-                                        command=lambda: self.export_loop_detection_history(), width=8)
-        self.loop_export_btn.pack(side='left')
+        
 
         # Create notebook for tabs
         notebook = tb.Notebook(main_container)
@@ -10004,6 +10202,22 @@ Type: {values[11]}
             detail_modal.resizable(True, True)
             detail_modal.transient(self.root)
 
+            # Make it truly modal and focused to avoid going behind the parent
+            try:
+                detail_modal.grab_set()
+            except Exception:
+                pass
+            try:
+                detail_modal.focus_set()
+            except Exception:
+                pass
+            # Nudge window to front briefly; then release topmost so it behaves normally
+            try:
+                detail_modal.attributes('-topmost', True)
+                detail_modal.after(200, lambda: detail_modal.attributes('-topmost', False))
+            except Exception:
+                pass
+
             # Center modal (calculate before showing)
             x = self.root.winfo_x() + (self.root.winfo_width() // 2) - 350
             y = self.root.winfo_y() + (self.root.winfo_height() // 2) - 275
@@ -10077,52 +10291,90 @@ Type: {values[11]}
             tb.Label(basic_grid, text=str(record['offenders_count']),
                     font=("Segoe UI", 9)).grid(row=2, column=3, sticky='w', padx=(5, 0), pady=3)
 
-            # Offenders Information - compact
+            # Offenders Information - compact (async-loaded for responsiveness)
             offenders_frame = tb.LabelFrame(content, text="⚠️ Top Offenders", padding=8, bootstyle="warning")
             offenders_frame.pack(fill='both', expand=True, pady=(0, 8))
 
-            # Parse offenders data
-            import json
+            # Placeholder loading UI to keep modal responsive
+            loading_frame = tb.Frame(offenders_frame)
+            loading_frame.pack(fill='x', pady=(5, 5))
+            tb.Label(loading_frame, text="Loading details...", font=("Segoe UI", 10)).pack(side='left')
             try:
-                offenders_data = json.loads(record['offenders_data']) if record['offenders_data'] else {}
-                stats = offenders_data.get('stats', {})
+                pb = tb.Progressbar(loading_frame, mode='indeterminate', bootstyle='info-striped')
+                pb.pack(side='left', padx=(10, 0))
+                pb.start(10)
+            except Exception:
+                pb = None
 
-                if stats:
-                    # Create a treeview for offenders
-                    offenders_tree_frame = tb.Frame(offenders_frame)
-                    offenders_tree_frame.pack(fill='both', expand=True)
+            # Container where final widgets will be placed
+            details_container = tb.Frame(offenders_frame)
+            details_container.pack(fill='both', expand=True)
 
-                    offenders_scroll = tb.Scrollbar(offenders_tree_frame, orient="vertical")
-                    offenders_scroll.pack(side='right', fill='y')
+            # Also prepare a container for the analysis section
+            analysis_frame = tb.LabelFrame(content, text="🔍 Analysis", padding=8, bootstyle="danger")
+            analysis_frame.pack(fill='x', pady=(0, 8))
+            analysis_text = tb.Text(analysis_frame, height=6, wrap=tk.WORD, font=("Segoe UI", 8))
+            analysis_text.insert("1.0", "Preparing analysis...")
+            analysis_text.config(state='disabled')
+            analysis_text.pack(fill='both', expand=True)
 
-                    offenders_cols = ("MAC", "IP", "Packets", "ARP", "Broadcast", "Severity")
-                    offenders_tree = tb.Treeview(offenders_tree_frame, columns=offenders_cols,
-                                                show="headings", yscrollcommand=offenders_scroll.set,
-                                                height=4)
+            # Track closed state to abort background updates quickly
+            closed = {"v": False}
 
-                    offenders_scroll.config(command=offenders_tree.yview)
+            def _on_destroy():
+                closed["v"] = True
+                # Stop progress animation if running
+                try:
+                    if pb:
+                        pb.stop()
+                except Exception:
+                    pass
+                # Release grab if set
+                try:
+                    detail_modal.grab_release()
+                except Exception:
+                    pass
 
-                    offenders_tree.heading("MAC", text="MAC")
-                    offenders_tree.heading("IP", text="IP")
-                    offenders_tree.heading("Packets", text="Pkts")
-                    offenders_tree.heading("ARP", text="ARP")
-                    offenders_tree.heading("Broadcast", text="Bcast")
-                    offenders_tree.heading("Severity", text="Score")
+            def _on_close():
+                # Ensure resources stop before actual destroy
+                _on_destroy()
+                try:
+                    if detail_modal.winfo_exists():
+                        # Hide immediately for instant feedback
+                        try:
+                            detail_modal.withdraw()
+                        except Exception:
+                            pass
+                        # Destroy on next loop to avoid race with callbacks
+                        self.root.after(0, lambda: detail_modal.winfo_exists() and detail_modal.destroy())
+                except Exception:
+                    pass
 
-                    offenders_tree.column("MAC", width=130)
-                    offenders_tree.column("IP", width=120)
-                    offenders_tree.column("Packets", width=60, anchor='center')
-                    offenders_tree.column("ARP", width=50, anchor='center')
-                    offenders_tree.column("Broadcast", width=50, anchor='center')
-                    offenders_tree.column("Severity", width=60, anchor='center')
+            # Wire close handlers
+            try:
+                detail_modal.protocol("WM_DELETE_WINDOW", _on_close)
+            except Exception:
+                pass
+            # Also catch any destroy events
+            detail_modal.bind("<Destroy>", lambda e: _on_destroy(), add="+")
 
-                    # Sort by severity
+            # Heavy work: parse JSON and prepare data off the UI thread
+            def _load_details_worker():
+                import json
+                try:
+                    offenders_data = json.loads(record.get('offenders_data') or '{}')
+                    stats = offenders_data.get('stats', {}) or {}
+
+                    # Sort once in worker
                     sorted_stats = sorted(stats.items(), key=lambda x: x[1].get('severity', 0), reverse=True)
 
-                    for mac, mac_stats in sorted_stats[:10]:  # Show only top 10
-                        ips = ', '.join(mac_stats.get('ips', ['N/A']))[:20]  # Limit IP length
-                        offenders_tree.insert("", "end", values=(
-                            mac[-17:],  # Last 17 chars of MAC
+                    # Build rows for top N only to limit UI work
+                    top_n = 10
+                    rows = []
+                    for mac, mac_stats in sorted_stats[:top_n]:
+                        ips = ', '.join(mac_stats.get('ips', ['N/A']))[:20]
+                        rows.append((
+                            mac[-17:],
                             ips,
                             mac_stats.get('count', 0),
                             mac_stats.get('arp_count', 0),
@@ -10130,27 +10382,95 @@ Type: {values[11]}
                             f"{mac_stats.get('severity', 0):.1f}"
                         ))
 
-                    offenders_tree.pack(fill='both', expand=True)
+                    # Prepare analysis string
+                    analysis_str = self._analyze_loop_problem(record, stats, sorted_stats) if stats else "No offenders detected in this scan."
 
-                    # Problem Analysis - compact
-                    analysis_frame = tb.LabelFrame(content, text="🔍 Analysis", padding=8, bootstyle="danger")
-                    analysis_frame.pack(fill='x', pady=(0, 8))
+                    def _apply_details_to_ui():
+                        # Skip if closed or modal gone
+                        if closed["v"] or not detail_modal.winfo_exists():
+                            return
+                        # Skip if modal was closed
+                        try:
+                            # Stop and remove loading UI
+                            if pb:
+                                try:
+                                    pb.stop()
+                                except Exception:
+                                    pass
+                            if loading_frame and loading_frame.winfo_exists():
+                                loading_frame.destroy()
 
-                    analysis_text = tb.Text(analysis_frame, height=6, wrap=tk.WORD, font=("Segoe UI", 8))
-                    analysis_text.pack(fill='both', expand=True)
+                            # If no stats, show a simple label
+                            if not rows:
+                                tb.Label(details_container, text="No offenders detected in this scan.",
+                                         font=("Segoe UI", 10)).pack()
+                            else:
+                                offenders_tree_frame = tb.Frame(details_container)
+                                offenders_tree_frame.pack(fill='both', expand=True)
 
-                    # Analyze the problem
-                    analysis = self._analyze_loop_problem(record, stats, sorted_stats)
-                    analysis_text.insert("1.0", analysis)
-                    analysis_text.config(state="disabled")
+                                offenders_scroll = tb.Scrollbar(offenders_tree_frame, orient="vertical")
+                                offenders_scroll.pack(side='right', fill='y')
 
-                else:
-                    tb.Label(offenders_frame, text="No offenders detected in this scan.",
-                            font=("Segoe UI", 10)).pack()
+                                offenders_cols = ("MAC", "IP", "Packets", "ARP", "Broadcast", "Severity")
+                                offenders_tree = tb.Treeview(offenders_tree_frame, columns=offenders_cols,
+                                                            show="headings", yscrollcommand=offenders_scroll.set,
+                                                            height=4)
+                                offenders_scroll.config(command=offenders_tree.yview)
 
-            except json.JSONDecodeError:
-                tb.Label(offenders_frame, text="Error parsing offenders data.",
-                        font=("Segoe UI", 10), bootstyle="danger").pack()
+                                for col, text in zip(offenders_cols, ["MAC", "IP", "Pkts", "ARP", "Bcast", "Score"]):
+                                    offenders_tree.heading(col, text=text)
+                                offenders_tree.column("MAC", width=130)
+                                offenders_tree.column("IP", width=120)
+                                offenders_tree.column("Packets", width=60, anchor='center')
+                                offenders_tree.column("ARP", width=50, anchor='center')
+                                offenders_tree.column("Broadcast", width=50, anchor='center')
+                                offenders_tree.column("Severity", width=60, anchor='center')
+
+                                # Batch insert rows to minimize redraws
+                                for r in rows:
+                                    offenders_tree.insert("", "end", values=r)
+                                offenders_tree.pack(fill='both', expand=True)
+
+                            # Update analysis text
+                            analysis_text.config(state='normal')
+                            analysis_text.delete("1.0", tk.END)
+                            analysis_text.insert("1.0", analysis_str)
+                            analysis_text.config(state='disabled')
+                        except Exception as _ui_e:
+                            # As a last resort, show an inline error but don't crash
+                            try:
+                                analysis_text.config(state='normal')
+                                analysis_text.delete("1.0", tk.END)
+                                analysis_text.insert("1.0", f"Failed to render details: {_ui_e}")
+                                analysis_text.config(state='disabled')
+                            except Exception:
+                                pass
+
+                    # Apply on UI thread
+                    if not closed["v"]:
+                        self.root.after(0, _apply_details_to_ui)
+
+                except Exception as worker_e:
+                    def _apply_error():
+                        if closed["v"] or not detail_modal.winfo_exists():
+                            return
+                        try:
+                            if pb:
+                                try:
+                                    pb.stop()
+                                except Exception:
+                                    pass
+                            if loading_frame and loading_frame.winfo_exists():
+                                loading_frame.destroy()
+                            tb.Label(details_container, text=f"Error loading details: {worker_e}",
+                                     font=("Segoe UI", 10), bootstyle="danger").pack()
+                        except Exception:
+                            pass
+                    if not closed["v"]:
+                        self.root.after(0, _apply_error)
+
+            # Kick off worker thread
+            threading.Thread(target=_load_details_worker, daemon=True).start()
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load detection details: {e}")
@@ -10821,8 +11141,16 @@ Type: {values[11]}
 
     def start_client_scan(self):
         """Start scanning for network clients."""
-        self.scan_btn.config(state="disabled", text="🔄 Scanning...")
-        self.client_status_label.config(text="Scanning network for clients...", bootstyle="warning")
+        try:
+            if hasattr(self, 'scan_btn') and self.scan_btn.winfo_exists():
+                self.scan_btn.config(state="disabled", text="🔄 Scanning...")
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'client_status_label') and self.client_status_label.winfo_exists():
+                self.client_status_label.config(text="Scanning network for clients...", bootstyle="warning")
+        except Exception:
+            pass
         
         def scan_thread():
             try:
@@ -10965,11 +11293,12 @@ Type: {values[11]}
                 self.root.after(0, self.update_client_display)
                 
             except Exception as e:
-                self.root.after(0, lambda: self.client_status_label.config(
+                self.root.after(0, lambda e=e: self._safe_widget_config(
+                    getattr(self, 'client_status_label', None),
                     text=f"Scan failed: {str(e)}", bootstyle="danger"))
             finally:
-                self.root.after(0, lambda: self.scan_btn.config(
-                    state="normal", text="🔄 Scan Now"))
+                self.root.after(0, lambda: self._safe_widget_config(
+                    getattr(self, 'scan_btn', None), state="normal", text="🔄 Scan Now"))
 
         threading.Thread(target=scan_thread, daemon=True).start()
 
@@ -11014,11 +11343,28 @@ Type: {values[11]}
                 return vendor
         return "Unknown"
 
+    def _safe_widget_config(self, widget, **kwargs):
+        """Safely configure a widget if it still exists."""
+        try:
+            if widget is not None and widget.winfo_exists():
+                widget.config(**kwargs)
+        except Exception:
+            pass
+
     def update_client_display(self):
         """Update the client display with current data."""
-        # Clear existing items
-        for item in self.client_tree.get_children():
-            self.client_tree.delete(item)
+        tree = getattr(self, 'client_tree', None)
+        try:
+            if not tree or not tree.winfo_exists():
+                return
+        except Exception:
+            return
+        # Clear existing items safely
+        try:
+            for item in self.client_tree.get_children():
+                self.client_tree.delete(item)
+        except Exception:
+            return
         
         # Apply filters
         self.filtered_client_data = self.client_data.copy()
@@ -11063,8 +11409,8 @@ Type: {values[11]}
         offline_count = len([c for c in self.client_data if not c.get("is_online", True)])
         total_count = len(self.client_data)
         
-        self.client_stats_online.config(text=f"Online: {online_count}")
-        self.client_stats_total.config(text=f"Total: {total_count}")
+        self._safe_widget_config(getattr(self, 'client_stats_online', None), text=f"Online: {online_count}")
+        self._safe_widget_config(getattr(self, 'client_stats_total', None), text=f"Total: {total_count}")
         
         # Update status with more detailed information
         filtered_online = len([c for c in self.filtered_client_data if c.get("is_online", False)])
@@ -11078,8 +11424,8 @@ Type: {values[11]}
         else:
             status_text += f" ({filtered_online} online, {filtered_offline} offline)"
         
-        self.client_status_label.config(text=status_text, bootstyle="success")
-        self.client_last_update.config(text=f"Last updated: {datetime.now().strftime('%H:%M:%S')}")
+        self._safe_widget_config(getattr(self, 'client_status_label', None), text=status_text, bootstyle="success")
+        self._safe_widget_config(getattr(self, 'client_last_update', None), text=f"Last updated: {datetime.now().strftime('%H:%M:%S')}")
 
     def filter_clients(self):
         """Filter clients based on search and filter criteria."""
@@ -11125,8 +11471,12 @@ Type: {values[11]}
 
     def stop_auto_refresh(self):
         """Stop automatic refresh."""
-        self.auto_refresh_enabled = True
-        self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+        self.auto_refresh_enabled = False
+        try:
+            if hasattr(self, 'auto_refresh_btn') and self.auto_refresh_btn.winfo_exists():
+                self.auto_refresh_btn.config(text="▶️ Auto Refresh", bootstyle="warning")
+        except Exception:
+            pass
         if self.auto_refresh_job:
             self.root.after_cancel(self.auto_refresh_job)
             self.auto_refresh_job = None
@@ -11739,6 +12089,22 @@ Type: {values[11]}
             self.settings_window.lift()
             self.settings_window.focus_force()
     
+    def show_activity_log(self):
+        """Show the Activity Log viewer window (admin only)."""
+        # Ensure activity_logs table exists
+        try:
+            create_activity_logs_table()
+        except Exception as e:
+            print(f"Error creating activity_logs table: {e}")
+        
+        # Show the activity log viewer
+        try:
+            from activity_log_viewer import show_activity_log
+            show_activity_log(self.root, self.current_user)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open Activity Log:\n{str(e)}")
+            print(f"Error opening activity log: {e}")
+    
     def _create_router_notification(self, router_name, router_ip, is_online):
         """Create a router status change notification in the main thread."""
         try:
@@ -11746,16 +12112,25 @@ Type: {values[11]}
         except Exception as e:
             pass
 
-    def update_notification_count(self):
-        """Update the notification count badge."""
+    def update_notification_count(self, force_refresh=False):
+        """
+        Update the notification count badge with performance optimization.
+        
+        Args:
+            force_refresh: Force database query (ignores cache)
+        """
         try:
-            count = self.notification_system.get_notification_count()
-            self.notification_count = count
-            if count > 0:
-                self.notification_badge.config(text=str(count), background="#dc3545")
-                self.notification_badge.place(in_=self.notification_btn, x=180, y=5)
-            else:
-                self.notification_badge.place_forget()
+            # Use cached count to reduce database queries
+            count = self._cached_notification_count.get_count(force_refresh=force_refresh)
+            
+            # Only update UI if count changed
+            if count != self.notification_count:
+                self.notification_count = count
+                if count > 0:
+                    self.notification_badge.config(text=str(count), background="#dc3545")
+                    self.notification_badge.place(in_=self.notification_btn, x=180, y=5)
+                else:
+                    self.notification_badge.place_forget()
         except Exception as e:
             pass
     
@@ -12396,6 +12771,19 @@ Type: {values[11]}
         """Log out to the login screen without exiting the application."""
         if not messagebox.askyesno("Log Out", "Are you sure you want to log out?"):
             return
+
+        # Log logout activity
+        try:
+            from device_utils import get_device_info
+            device_info = get_device_info()
+            log_activity(
+                user_id=self.current_user.get('id'),
+                action='Logout',
+                target=None,
+                ip_address=device_info.get('ip_address')
+            )
+        except Exception as e:
+            print(f"Error logging logout activity: {e}")
 
         # Stop background tasks
         self.app_running = False

@@ -233,7 +233,7 @@ class ReportsTab:
                     self.root.after(0, lambda: finish(False, "Server timeout (60s). Try narrower date range."))
                     return
                 except Exception as e:
-                    self.root.after(0, lambda: finish(False, f"Connection error: {e}"))
+                    self.root.after(0, lambda e=e: finish(False, f"Connection error: {e}"))
                     return
                 if self._report_cancel_event.is_set():
                     self.root.after(0, lambda: finish(False, "Report cancelled."))
@@ -259,7 +259,7 @@ class ReportsTab:
                 self.root.after(0, lambda: self._update_report_phase("Updating UI..."))
                 self.root.after(0, lambda: finish(True, "Done", payload))
             except Exception as e:
-                self.root.after(0, lambda: finish(False, f"Unexpected: {e}"))
+                self.root.after(0, lambda e=e: finish(False, f"Unexpected: {e}"))
 
         threading.Thread(target=worker, daemon=True).start()
 

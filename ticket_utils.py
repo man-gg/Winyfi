@@ -1,5 +1,6 @@
 # ticket_utils.py
 from db import get_connection
+import mysql.connector
 from datetime import datetime
 
 # -----------------------------
@@ -50,6 +51,31 @@ def fetch_srfs():
     return data
 
 
+def fetch_tickets():
+    """Return normalized ticket records for export/consumers.
+
+    Maps ICT Service Requests (SRFs) to a generic ticket shape expected by the UI:
+    - id: ict_srf_no
+    - router_name: uses office_building or campus as a human-friendly context
+    - issue: services_requirements or fallback to remarks
+    - status: 'status' column if present, else defaults to 'open'
+    - created_by: username if available, else created_by id
+    - created_at / updated_at: pass-through datetime values
+    """
+    srfs = fetch_srfs() or []
+    tickets = []
+    for s in srfs:
+        tickets.append({
+            "id": s.get("ict_srf_no"),
+            "router_name": s.get("office_building") or s.get("campus") or None,
+            "issue": s.get("services_requirements") or s.get("remarks") or "",
+            "status": s.get("status") or "open",
+            "created_by": s.get("created_by_username") or s.get("created_by"),
+            "created_at": s.get("created_at"),
+            "updated_at": s.get("updated_at"),
+        })
+    return tickets
+
 def update_srf(ict_srf_no, update_data: dict):
     """Update an existing SRF by its number."""
     conn = get_connection()
@@ -64,14 +90,39 @@ def update_srf(ict_srf_no, update_data: dict):
 
 
 def update_ticket_status(ict_srf_no, status):
-    """Update the status of a specific ticket."""
+    """Update the status of a specific ticket.
+
+    If the 'status' column is missing (MySQL error 1054), the function will
+    attempt to add it automatically and retry the update once.
+    """
     conn = get_connection()
     cursor = conn.cursor()
     sql = "UPDATE ict_service_requests SET status=%s, updated_at=NOW() WHERE ict_srf_no=%s"
-    cursor.execute(sql, (status, ict_srf_no))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute(sql, (status, ict_srf_no))
+        conn.commit()
+    except mysql.connector.Error as e:
+        # Error 1054: Unknown column 'status' in 'field list'
+        if getattr(e, "errno", None) == 1054 or "Unknown column 'status'" in str(e):
+            try:
+                # Create the missing column with a sensible default
+                cursor.execute(
+                    """
+                    ALTER TABLE ict_service_requests
+                    ADD COLUMN status VARCHAR(50) DEFAULT 'open' AFTER remarks
+                    """
+                )
+                # Retry the update
+                cursor.execute(sql, (status, ict_srf_no))
+                conn.commit()
+            except Exception as inner_e:
+                conn.rollback()
+                raise inner_e
+        else:
+            raise
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def get_srf_by_id(ict_srf_no):

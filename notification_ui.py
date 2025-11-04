@@ -394,15 +394,6 @@ class NotificationPanel:
         actions_frame = tb.Frame(header_frame)
         actions_frame.pack(side="right")
         
-        # Mark all as read button
-        mark_read_btn = tb.Button(
-            actions_frame,
-            text="Mark All Read",
-            style="info.TButton",
-            command=self.mark_all_read
-        )
-        mark_read_btn.pack(side="left", padx=(0, 5))
-        
         # Clear all button
         clear_btn = tb.Button(
             actions_frame,
@@ -583,30 +574,52 @@ class NotificationPanel:
         notification_manager.mark_as_read(notification_id)
         self._load_notifications()
         if self.refresh_callback:
-            self.refresh_callback()
+            # Use throttled refresh to prevent excessive updates
+            from notification_performance import get_throttler
+            get_throttler().throttle("badge_refresh", self.refresh_callback, 0.5)
     
     def dismiss_notification(self, notification_id: int):
         """Dismiss a notification."""
         notification_manager.dismiss_notification(notification_id)
         self._load_notifications()
         if self.refresh_callback:
-            self.refresh_callback()
+            # Use throttled refresh to prevent excessive updates
+            from notification_performance import get_throttler
+            get_throttler().throttle("badge_refresh", self.refresh_callback, 0.5)
     
     def mark_all_read(self):
-        """Mark all notifications as read."""
-        for notification in self.notifications:
-            notification_manager.mark_as_read(notification["id"])
+        """Mark all notifications as read (batch operation)."""
+        # Use DB-level batch operation to cover all (not just loaded page)
+        try:
+            notification_manager.mark_all_unread_as_read()
+        except Exception as e:
+            # Fallback to per-item if needed
+            for notification in self.notifications:
+                try:
+                    notification_manager.mark_as_read(notification["id"])
+                except Exception:
+                    pass
         self._load_notifications()
         if self.refresh_callback:
-            self.refresh_callback()
+            # Force refresh after batch operation
+            self.refresh_callback(force_refresh=True)
     
     def clear_all(self):
-        """Clear all notifications."""
-        for notification in self.notifications:
-            notification_manager.dismiss_notification(notification["id"])
+        """Clear all notifications (batch operation)."""
+        # Use DB-level batch operation to cover all (not just loaded page)
+        try:
+            notification_manager.dismiss_all_notifications()
+        except Exception:
+            # Fallback to per-item
+            for notification in self.notifications:
+                try:
+                    notification_manager.dismiss_notification(notification["id"])
+                except Exception:
+                    pass
         self._load_notifications()
         if self.refresh_callback:
-            self.refresh_callback()
+            # Force refresh after batch operation
+            self.refresh_callback(force_refresh=True)
     
     def refresh(self):
         """Refresh the notification panel."""
@@ -774,11 +787,21 @@ class NotificationSystem:
         self.show_toast(notification_id, title, message, priority)
     
     def show_toast(self, notification_id: int, title: str, message: str, priority: NotificationPriority):
-        """Show a toast notification."""
+        """Show a toast notification with performance limits."""
         
         from notification_utils import notification_manager
+        from notification_performance import can_show_toast, register_toast
         
         try:
+            # Check if we can show another toast (performance limit)
+            if not can_show_toast():
+                # Too many toasts, skip this one to prevent performance issues
+                print(f"⚠️ Skipping toast notification (too many active): {title}")
+                return
+            
+            # Register this toast
+            register_toast()
+            
             toast = ToastNotification(
                 self.parent,
                 title,
