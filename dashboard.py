@@ -10805,8 +10805,8 @@ Type: {values[11]}
             # Run multi-interface detection across all network interfaces
             total_packets, offenders, stats, status, severity_score, efficiency_metrics = detect_loops_multi_interface(
                 timeout=5,  # 5 seconds per interface for thorough manual scan
-                threshold=15,  # LOWERED threshold for better sensitivity (matches automatic detection)
-                use_sampling=False  # DISABLED sampling to capture all packets (matches automatic detection)
+                threshold=100,  # RAISED threshold to reduce false positives
+                use_sampling=False  # DISABLED sampling to capture all packets for manual scan
             )
 
             modal.after(0, self._finish_loop_scan_lightweight, total_packets, offenders, stats, status, severity_score, efficiency_metrics)
@@ -11091,6 +11091,7 @@ Type: {values[11]}
                 except:
                     # Modal might have been destroyed, reset flag
                     self.client_modal_is_open = False
+                    self.client_modal = None
                     print("⚠️ Modal was destroyed, resetting flag")
             return
         
@@ -11101,19 +11102,23 @@ Type: {values[11]}
         modal = tb.Toplevel(self.root)
         self.client_modal = modal  # Store reference
         modal.title("🌐 Network Clients Monitor")
-        modal.geometry("1000x700")
         modal.resizable(True, True)
         modal.configure(bg='#f8f9fa')
         
         # Make it a proper modal window
         modal.transient(self.root)
+        
+        # Set size and center BEFORE grab_set to avoid positioning issues
+        modal_width = 1100
+        modal_height = 700
+        screen_width = modal.winfo_screenwidth()
+        screen_height = modal.winfo_screenheight()
+        x = (screen_width - modal_width) // 2
+        y = (screen_height - modal_height) // 2
+        modal.geometry(f"{modal_width}x{modal_height}+{x}+{y}")
+        
+        # Grab set after positioning
         modal.grab_set()
-
-        # Center modal
-        modal.update_idletasks()
-        x = (modal.winfo_screenwidth() - modal.winfo_width()) // 2
-        y = (modal.winfo_screenheight() - modal.winfo_height()) // 2
-        modal.geometry(f"+{x}+{y}")
 
         # Main container
         main_container = tb.Frame(modal, bootstyle="light")
@@ -11130,9 +11135,13 @@ Type: {values[11]}
         tb.Label(title_frame, text="🌐 Network Clients Monitor", 
                 font=("Segoe UI", 16, "bold"), bootstyle="inverse-info").pack(side="left")
 
-        # Close button
+        # Close button with immediate response
+        def close_now():
+            close_btn.config(state="disabled", text="⏳")
+            self.close_client_modal(modal)
+        
         close_btn = tb.Button(title_frame, text="✕", bootstyle="danger-outline", 
-                            command=lambda: self.close_client_modal(modal), width=3)
+                            command=close_now, width=3)
         close_btn.pack(side="right", padx=(10, 0))
 
         # Stats frame
@@ -11244,29 +11253,60 @@ Type: {values[11]}
         self.auto_refresh_job = None
         self.double_click_pending = False  # Flag to prevent single click on double click
 
+        # Bind row click events
+        self.client_tree.bind("<ButtonRelease-1>", self.on_client_row_click)
+        self.client_tree.bind("<Double-Button-1>", self.on_client_row_double_click)
+
         # Context menu for right-click actions
         self.setup_client_context_menu()
 
-        # Load existing clients from database first
-        self.load_existing_clients()
+        # Show modal immediately, then load data in background
+        modal.update_idletasks()
         
-        # Start initial scan and auto-refresh
-        self.start_client_scan()
-        self.start_auto_refresh()
+        # Load existing clients from database first (lightweight)
+        self.root.after(50, self.load_existing_clients)
+        
+        # Start initial scan and auto-refresh with slight delay for smooth opening
+        self.root.after(200, self.start_client_scan)
+        self.root.after(300, self.start_auto_refresh)
 
-        # Handle window close
-        modal.protocol("WM_DELETE_WINDOW", lambda: self.close_client_modal(modal))
+        # Handle window close with immediate response
+        def close_immediately():
+            # Set flag immediately
+            self.client_modal_is_open = False
+            self.auto_refresh_enabled = False
+            # Cancel any pending jobs
+            if hasattr(self, 'auto_refresh_job') and self.auto_refresh_job:
+                try:
+                    self.root.after_cancel(self.auto_refresh_job)
+                except:
+                    pass
+            # Close modal
+            self.close_client_modal(modal)
+        
+        modal.protocol("WM_DELETE_WINDOW", close_immediately)
         
         # Bind destroy event to reset flag as fallback
         def on_modal_destroy(event):
             if event.widget == modal:
                 self.client_modal_is_open = False
                 self.client_modal = None
+                self.auto_refresh_enabled = False
                 print("🗑️ Client modal destroyed, flag reset")
         modal.bind("<Destroy>", on_modal_destroy)
+        
+        # Bind ESC key for quick close
+        modal.bind("<Escape>", lambda e: close_immediately())
+        
+        # Make modal responsive to focus
+        modal.focus_force()
 
     def load_existing_clients(self):
-        """Load existing clients from database."""
+        """Load existing clients from database - quick load for initial display."""
+        # Check if modal is still open
+        if not self.client_modal_is_open:
+            return
+        
         try:
             from db import get_network_clients, create_network_clients_table, create_connection_history_table
             
@@ -11274,8 +11314,8 @@ Type: {values[11]}
             create_network_clients_table()
             create_connection_history_table()
             
-            # Get existing clients
-            existing_clients = get_network_clients(online_only=False, limit=1000)
+            # Get existing clients (limited for faster load)
+            existing_clients = get_network_clients(online_only=False, limit=500)
             
             self.client_data = []
             current_time = datetime.now()
@@ -11342,6 +11382,9 @@ Type: {values[11]}
     def _delayed_show_connection_history(self):
         """Delayed connection history display to prevent double-click conflicts."""
         if not self.double_click_pending:
+            # Check if modal is already open to prevent double-showing
+            if hasattr(self, 'connection_history_modal') and self.connection_history_modal and self.connection_history_modal.winfo_exists():
+                return
             self.show_connection_history()
 
     def on_client_row_double_click(self, event):
@@ -11371,7 +11414,11 @@ Type: {values[11]}
             pass
 
     def start_client_scan(self):
-        """Start scanning for network clients."""
+        """Start scanning for network clients with cancellation support."""
+        # Check if modal is still open
+        if not self.client_modal_is_open:
+            return
+        
         try:
             if hasattr(self, 'scan_btn') and self.scan_btn.winfo_exists():
                 self.scan_btn.config(state="disabled", text="🔄 Scanning...")
@@ -11385,6 +11432,9 @@ Type: {values[11]}
         
         def scan_thread():
             try:
+                # Check if modal is still open before starting heavy operations
+                if not self.client_modal_is_open:
+                    return
                 from network_utils import scan_subnet, get_default_iface, ping_latency
                 from db import (save_network_client, create_network_clients_table, create_connection_history_table, 
                               get_network_clients, update_client_offline_status, log_connection_event, get_connection_history)
@@ -11405,13 +11455,26 @@ Type: {values[11]}
                     update_client_offline_status(client['mac_address'])
                 
                 iface = get_default_iface()
+                
+                # Check again before heavy scan operation
+                if not self.client_modal_is_open:
+                    return
+                
                 scanned_clients = scan_subnet(iface=iface, timeout=3)
+                
+                # Check if modal was closed during scan
+                if not self.client_modal_is_open:
+                    return
                 
                 # Process and save clients
                 self.client_data = []
                 current_time = datetime.now()
                 
                 for mac, info in scanned_clients.items():
+                    # Check periodically if modal is still open
+                    if not self.client_modal_is_open:
+                        return
+                    
                     # Get ping latency
                     ping_lat = None
                     if info.get("ip"):
@@ -11583,17 +11646,24 @@ Type: {values[11]}
             pass
 
     def update_client_display(self):
-        """Update the client display with current data."""
+        """Update the client display with current data - optimized for speed."""
+        # Quick exit if modal closed
+        if not self.client_modal_is_open:
+            return
+        
         tree = getattr(self, 'client_tree', None)
         try:
             if not tree or not tree.winfo_exists():
                 return
         except Exception:
             return
-        # Clear existing items safely
+        
+        # Clear existing items safely and quickly
         try:
-            for item in self.client_tree.get_children():
-                self.client_tree.delete(item)
+            # Delete all items at once (faster than loop)
+            children = self.client_tree.get_children()
+            if children:
+                self.client_tree.delete(*children)
         except Exception:
             return
         
@@ -11714,11 +11784,17 @@ Type: {values[11]}
 
     def schedule_auto_refresh(self):
         """Schedule the next auto refresh."""
-        if self.auto_refresh_enabled:
+        # Only schedule if modal is still open and auto-refresh is enabled
+        if self.auto_refresh_enabled and self.client_modal_is_open:
             self.auto_refresh_job = self.root.after(self.auto_refresh_interval, self.auto_refresh_clients)
 
     def auto_refresh_clients(self):
         """Perform automatic client refresh."""
+        # Check if modal is still open
+        if not self.client_modal_is_open or not hasattr(self, 'client_modal'):
+            self.stop_auto_refresh()
+            return
+        
         if self.auto_refresh_enabled:
             self.start_client_scan()
             self.schedule_auto_refresh()
@@ -11757,7 +11833,7 @@ Type: {values[11]}
             messagebox.showerror("Export Error", f"Failed to export data: {str(e)}")
 
     def view_client_details(self):
-        """View detailed information about selected client."""
+        """View detailed information about selected client - optimized for responsiveness."""
         try:
             selection = self.client_tree.selection()[0]
             item = self.client_tree.item(selection)
@@ -11766,14 +11842,40 @@ Type: {values[11]}
             # Create details window
             details_window = tb.Toplevel(self.root)
             details_window.title("Client Details")
-            details_window.geometry("500x400")
             details_window.resizable(False, False)
+            details_window.transient(self.root)
             
-            # Center window
-            details_window.update_idletasks()
-            x = (details_window.winfo_screenwidth() - details_window.winfo_width()) // 2
-            y = (details_window.winfo_screenheight() - details_window.winfo_height()) // 2
-            details_window.geometry(f"+{x}+{y}")
+            # Set size and center BEFORE showing
+            window_width = 500
+            window_height = 400
+            screen_width = details_window.winfo_screenwidth()
+            screen_height = details_window.winfo_screenheight()
+            x = (screen_width - window_width) // 2
+            y = (screen_height - window_height) // 2
+            details_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+            
+            # Flag for instant close response
+            details_window.closing = False
+            
+            def close_details_modal():
+                """Instantly close the details modal with immediate response."""
+                if not hasattr(details_window, 'closing') or details_window.closing:
+                    return
+                
+                # Set flag immediately for instant UI response
+                details_window.closing = True
+                
+                # Destroy immediately - no complex cleanup needed
+                try:
+                    details_window.destroy()
+                except:
+                    pass
+            
+            # Bind ESC key for quick close
+            details_window.bind('<Escape>', lambda e: close_details_modal())
+            
+            # Handle window close button (X)
+            details_window.protocol("WM_DELETE_WINDOW", close_details_modal)
             
             # Details content
             frame = tb.Frame(details_window, padding=20)
@@ -11801,9 +11903,14 @@ Type: {values[11]}
                         width=15, anchor="w").pack(side="left")
                 tb.Label(row_frame, text=value, font=("Segoe UI", 10)).pack(side="left", padx=(10, 0))
             
-            # Close button
-            tb.Button(frame, text="Close", bootstyle="secondary", 
-                     command=details_window.destroy).pack(pady=(20, 0))
+            # Close button with instant response
+            close_btn = tb.Button(frame, text="Close", bootstyle="secondary", 
+                     command=close_details_modal)
+            close_btn.pack(pady=(20, 0))
+            
+            # Visual feedback on hover
+            close_btn.bind('<Enter>', lambda e: close_btn.config(cursor='hand2'))
+            close_btn.bind('<Leave>', lambda e: close_btn.config(cursor=''))
             
         except IndexError:
             messagebox.showwarning("No Selection", "Please select a client to view details.")
@@ -11935,18 +12042,87 @@ Type: {values[11]}
             history = get_connection_history(mac_address=mac_address, limit=50)
             stats = get_client_connection_stats(mac_address)
             
-            # Create history modal
-            history_modal = tb.Toplevel(self.root)
+            # Prevent double-showing if already open
+            if hasattr(self, 'connection_history_modal') and self.connection_history_modal and self.connection_history_modal.winfo_exists():
+                self.connection_history_modal.lift()
+                self.connection_history_modal.focus_force()
+                return
+            
+            # Create history modal - transient to client modal for proper interaction
+            history_modal = tb.Toplevel(self.client_modal if hasattr(self, 'client_modal') else self.root)
             history_modal.title(f"📊 Connection History - {hostname}")
-            history_modal.geometry("900x600")
             history_modal.resizable(True, True)
             history_modal.configure(bg='#f8f9fa')
             
-            # Center modal
-            history_modal.update_idletasks()
-            x = (history_modal.winfo_screenwidth() - history_modal.winfo_width()) // 2
-            y = (history_modal.winfo_screenheight() - history_modal.winfo_height()) // 2
-            history_modal.geometry(f"+{x}+{y}")
+            # Make it transient to client modal so it works properly
+            if hasattr(self, 'client_modal') and self.client_modal:
+                history_modal.transient(self.client_modal)
+            
+            # Set size and center BEFORE showing
+            window_width = 900
+            window_height = 600
+            screen_width = history_modal.winfo_screenwidth()
+            screen_height = history_modal.winfo_screenheight()
+            x = (screen_width - window_width) // 2
+            y = (screen_height - window_height) // 2
+            history_modal.geometry(f"{window_width}x{window_height}+{x}+{y}")
+            
+            # Grab focus and bring to front immediately
+            history_modal.grab_set()  # Take control from parent
+            history_modal.lift()
+            history_modal.focus_force()
+            
+            # Store reference to prevent double-showing
+            self.connection_history_modal = history_modal
+            
+            # Flag for instant close response
+            history_modal.closing = False
+            history_modal.history_tree = None  # Will be set later
+            
+            def close_history_modal():
+                """Instantly close the history modal with immediate response."""
+                if not hasattr(history_modal, 'closing') or history_modal.closing:
+                    return
+                
+                # Set flag immediately for instant UI response
+                history_modal.closing = True
+                
+                # Release grab before closing
+                try:
+                    history_modal.grab_release()
+                except:
+                    pass
+                
+                # Return grab to client modal if it exists
+                try:
+                    if hasattr(self, 'client_modal') and self.client_modal and self.client_modal.winfo_exists():
+                        self.client_modal.grab_set()
+                except:
+                    pass
+                
+                # Clear tree to prevent any lingering operations
+                try:
+                    if history_modal.history_tree and hasattr(history_modal.history_tree, 'get_children'):
+                        for item in history_modal.history_tree.get_children():
+                            history_modal.history_tree.delete(item)
+                except:
+                    pass
+                
+                # Clear reference
+                if hasattr(self, 'connection_history_modal'):
+                    self.connection_history_modal = None
+                
+                # Destroy immediately
+                try:
+                    history_modal.destroy()
+                except:
+                    pass
+            
+            # Bind ESC key for quick close
+            history_modal.bind('<Escape>', lambda e: close_history_modal())
+            
+            # Handle window close button (X)
+            history_modal.protocol("WM_DELETE_WINDOW", close_history_modal)
             
             # Main container
             main_container = tb.Frame(history_modal, bootstyle="light")
@@ -11963,8 +12139,12 @@ Type: {values[11]}
                     font=("Segoe UI", 14, "bold"), bootstyle="inverse-info").pack(side="left")
             
             close_btn = tb.Button(title_frame, text="✕", bootstyle="danger-outline", 
-                                command=history_modal.destroy, width=3)
+                                command=close_history_modal, width=3)
             close_btn.pack(side="right", padx=(10, 0))
+            
+            # Visual feedback on close button hover
+            close_btn.bind('<Enter>', lambda e: close_btn.config(cursor='hand2'))
+            close_btn.bind('<Leave>', lambda e: close_btn.config(cursor=''))
             
             # Stats frame
             stats_frame = tb.Frame(main_container)
@@ -11992,6 +12172,9 @@ Type: {values[11]}
             # Create Treeview
             history_tree = tb.Treeview(tree_frame, columns=cols, show="headings", 
                                      height=15, bootstyle="info")
+            
+            # Store reference for cleanup
+            history_modal.history_tree = history_tree
             
             # Configure columns
             column_widths = [100, 120, 120, 80, 150, 120]
@@ -12052,24 +12235,47 @@ Type: {values[11]}
             messagebox.showerror("Error", f"Failed to load connection history: {str(e)}")
 
     def close_client_modal(self, modal=None):
-        """Handle closing the client modal."""
-        self.stop_auto_refresh()
+        """Handle closing the client modal with immediate response and proper cleanup."""
+        # Set flags immediately for instant response
+        self.client_modal_is_open = False
+        self.auto_refresh_enabled = False
+        
+        # Cancel auto-refresh job immediately
+        if hasattr(self, 'auto_refresh_job') and self.auto_refresh_job:
+            try:
+                self.root.after_cancel(self.auto_refresh_job)
+                self.auto_refresh_job = None
+            except:
+                pass
         
         # Use stored modal reference if no modal parameter provided
         if modal is None:
             modal = self.client_modal
-            
-        if modal and modal.winfo_exists():
+        
+        # Release grab and destroy modal immediately
+        if modal:
             try:
-                modal.grab_release()
+                if modal.winfo_exists():
+                    modal.grab_release()
+                    modal.destroy()
             except:
                 pass
-            modal.destroy()
         
-        # Reset flag and reference
-        self.client_modal_is_open = False
+        # Clear references
         self.client_modal = None
-        print("✅ Client modal closed, flag reset")
+        
+        # Clear data in background to not block UI
+        self.root.after(100, self._cleanup_client_data)
+        
+        print("✅ Client modal closed instantly")
+    
+    def _cleanup_client_data(self):
+        """Background cleanup of client data."""
+        try:
+            self.client_data = []
+            self.filtered_client_data = []
+        except:
+            pass
 
     #auto update 
     def schedule_update(self):

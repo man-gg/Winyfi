@@ -664,8 +664,9 @@ class LoopDetectionEngine:
         # Known legitimate traffic patterns (whitelist)
         self.legitimate_patterns = {
             "dhcp_servers": set(),  # Known DHCP server MACs
-            "routers": {"3c:91:80:80:ac:97"},  # Known router MACs + your laptop
+            "routers": set(),  # Known router MACs (will auto-populate)
             "mdns_devices": set(),  # Devices with consistent mDNS
+            "broadcast_servers": set(),  # Devices that legitimately broadcast (printers, DNS, etc.)
         }
         
         # Traffic baselines for anomaly detection
@@ -737,6 +738,8 @@ class LoopDetectionEngine:
         Determine if traffic pattern is likely legitimate.
         Returns (is_legitimate, reason).
         """
+        total_packets = stats.get("count", 0)
+        
         # Check whitelist
         if mac in self.legitimate_patterns["dhcp_servers"]:
             if stats.get("dhcp_count", 0) > stats.get("arp_count", 0):
@@ -746,24 +749,50 @@ class LoopDetectionEngine:
             return True, "Known router"
         
         if mac in self.legitimate_patterns["mdns_devices"]:
-            if stats.get("mdns_count", 0) > 0 and stats.get("arp_count", 0) < 10:
+            if stats.get("mdns_count", 0) > 0 and stats.get("arp_count", 0) < 50:
                 return True, "Legitimate mDNS device"
         
+        if mac in self.legitimate_patterns["broadcast_servers"]:
+            return True, "Known broadcast server"
+        
         # Check for DHCP server behavior (controlled broadcast)
-        dhcp_ratio = stats.get("dhcp_count", 0) / max(1, stats.get("count", 1))
-        if dhcp_ratio > 0.8 and stats.get("count", 0) < 100:
+        dhcp_ratio = stats.get("dhcp_count", 0) / max(1, total_packets)
+        if dhcp_ratio > 0.7 and total_packets < 150:
             self.legitimate_patterns["dhcp_servers"].add(mac)
             return True, "DHCP server behavior"
         
         # Check for normal mDNS pattern (periodic, low volume)
         mdns_count = stats.get("mdns_count", 0)
-        if mdns_count > 0 and stats.get("count", 0) < 20:
+        if mdns_count > 0 and total_packets < 50:
             packet_times = self.mac_history[mac]["packet_times"]
             if len(packet_times) > 0:
                 freq = self._calculate_packet_frequency(packet_times)
-                if freq < 2:  # Less than 2 packets/sec
+                if freq < 5:  # Less than 5 packets/sec is normal
                     self.legitimate_patterns["mdns_devices"].add(mac)
                     return True, "Normal mDNS traffic"
+        
+        # Check for router/gateway behavior (moderate ARP, low burst rate)
+        arp_count = stats.get("arp_count", 0)
+        if arp_count > 0 and total_packets < 100:
+            packet_times = self.mac_history[mac]["packet_times"]
+            if len(packet_times) > 0:
+                freq = self._calculate_packet_frequency(packet_times)
+                bursts = self._detect_packet_bursts(packet_times, burst_threshold=30)
+                # Routers do periodic ARP but not in massive bursts
+                if freq < 10 and bursts < 2:
+                    self.legitimate_patterns["routers"].add(mac)
+                    return True, "Router/gateway behavior"
+        
+        # Check for normal broadcast behavior (printers, network services)
+        broadcast_count = stats.get("broadcast_count", 0)
+        if broadcast_count > 0 and total_packets < 80:
+            packet_times = self.mac_history[mac]["packet_times"]
+            if len(packet_times) > 0:
+                freq = self._calculate_packet_frequency(packet_times)
+                # Normal services broadcast periodically, not in storms
+                if freq < 8:
+                    self.legitimate_patterns["broadcast_servers"].add(mac)
+                    return True, "Normal broadcast service"
         
         return False, None
     
@@ -1071,14 +1100,14 @@ def detect_loops(timeout=10, threshold=100, iface=None, enable_advanced=True):
     return total_count, list(set(offenders)), stats, advanced_metrics
 
 
-def detect_loops_lightweight(timeout=5, threshold=50, iface=None, use_sampling=True):
+def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=True):
     """
     Optimized lightweight loop detection for automatic monitoring.
     Uses shorter timeout, reduced packet analysis, simplified scoring, and intelligent sampling.
     
     Args:
         timeout: Capture duration in seconds
-        threshold: Severity threshold for flagging offenders (LOWERED for better sensitivity)
+        threshold: Severity threshold for flagging offenders (INCREASED to reduce false positives)
         iface: Network interface to monitor
         use_sampling: Enable intelligent packet sampling for efficiency
     
@@ -1101,8 +1130,9 @@ def detect_loops_lightweight(timeout=5, threshold=50, iface=None, use_sampling=T
     sampled_count = 0
     start_time = time.time()
     
-    # Bloom filter for duplicate detection (memory efficient)
-    seen_packets = set()  # For lightweight, use set (could use bloom filter library for scale)
+    # Duplicate packet detection to filter out normal retransmissions
+    seen_packets = {}  # {packet_signature: timestamp}
+    duplicate_window = 2.0  # seconds - only filter duplicates within 2 seconds
     
     # Sampling strategy: sample every Nth packet when traffic is high
     sample_rate = 1
@@ -1140,17 +1170,29 @@ def detect_loops_lightweight(timeout=5, threshold=50, iface=None, use_sampling=T
                 
             if pkt.haslayer(Ether):
                 src = pkt[Ether].src
+                current_time = time.time()
                 
-                # DISABLED duplicate detection for better capture
-                # This was filtering out legitimate loop packets
-                # pkt_hash = hash(pkt.summary())
-                # if pkt_hash in seen_packets:
-                #     return  # Skip duplicate
-                # seen_packets.add(pkt_hash)
+                # Re-enabled duplicate detection to filter normal retransmissions
+                # Create signature from source MAC, destination, and packet type
+                pkt_sig = f"{src}:{pkt[Ether].dst}"
+                if pkt.haslayer(ARP):
+                    pkt_sig += f":ARP:{pkt[ARP].psrc if pkt[ARP].psrc else 'none'}"
+                elif pkt.haslayer(IP):
+                    pkt_sig += f":IP:{pkt[IP].src}"
                 
-                # Limit seen_packets size for memory efficiency
-                # if len(seen_packets) > 5000:
-                #     seen_packets.clear()
+                # Check if we've seen this exact packet recently (within duplicate_window)
+                if pkt_sig in seen_packets:
+                    last_time = seen_packets[pkt_sig]
+                    if current_time - last_time < duplicate_window:
+                        return  # Skip recent duplicate
+                
+                # Update packet signature timestamp
+                seen_packets[pkt_sig] = current_time
+                
+                # Clean old entries from seen_packets to limit memory usage
+                if len(seen_packets) > 1000:
+                    # Remove entries older than duplicate_window
+                    seen_packets.clear()
 
                 # Broadcast traffic detection (most relevant for loops)
                 if pkt[Ether].dst == "ff:ff:ff:ff:ff:ff":
@@ -1220,31 +1262,36 @@ def detect_loops_lightweight(timeout=5, threshold=50, iface=None, use_sampling=T
         if len(subnet_list) > 1:
             cross_subnet_detected = True
         
-        # LOWERED MULTIPLIERS for better sensitivity
-        subnet_penalty = len(subnet_list) * 3 if len(subnet_list) > 1 else 0
+        # ADJUSTED MULTIPLIERS to reduce false positives
+        # Only penalize if crossing multiple subnets (>2)
+        subnet_penalty = (len(subnet_list) - 1) * 5 if len(subnet_list) > 2 else 0
         
-        # Adjusted scoring - more aggressive detection
+        # Normalized scoring - less aggressive to avoid false positives
+        # Normal network operation: routers do ARP (~10-20/scan), broadcasts are common
+        # Real loops: hundreds/thousands of packets in seconds
         info["severity"] = (
-            info["arp_count"] * 4 +  # Increased from 3 to 4
-            info["broadcast_count"] * 2.5 +  # Increased from 1.5 to 2.5
-            info["stp_count"] * 8 +  # Increased from 6 to 8
+            info["arp_count"] * 1.5 +  # Reduced - ARP is normal
+            info["broadcast_count"] * 1.0 +  # Reduced - broadcasts are common
+            info["stp_count"] * 10 +  # High - STP storms indicate real loops
             subnet_penalty +
-            info["count"] * 0.5  # Added general packet count bonus
+            info["count"] * 0.2  # Reduced general packet weight
         ) / max(1, timeout)
         
-        # Log severity calculation
-        if info["severity"] > 10:
-            logging.info(f"  {mac}: severity={info['severity']:.1f} (ARP:{info['arp_count']}, BC:{info['broadcast_count']}, total:{info['count']})")
+        # Log severity calculation for high values only
+        if info["severity"] > 20:
+            logging.info(f"  {mac}: severity={info['severity']:.1f} (ARP:{info['arp_count']}, BC:{info['broadcast_count']}, STP:{info['stp_count']}, total:{info['count']})")
 
     total_count = sum(info["count"] for info in stats.values())
     max_severity = max((info["severity"] for info in stats.values()), default=0.0)
     
     logging.info(f"Max severity: {max_severity:.1f} (threshold: {threshold})")
     
-    # LOWERED THRESHOLDS - More sensitive detection
-    if max_severity > threshold * 1.5 or (cross_subnet_detected and max_severity > threshold * 0.7):
+    # RAISED THRESHOLDS - Reduce false positives
+    # Real loops typically have severity scores > 200-500
+    # Normal network traffic usually < 50
+    if max_severity > threshold * 2.5 or (cross_subnet_detected and max_severity > threshold * 2.0):
         status = "loop_detected"
-    elif max_severity > threshold * 0.5:  # Lowered from threshold to threshold * 0.5
+    elif max_severity > threshold * 1.0:  # Only flag as suspicious if clearly above threshold
         status = "suspicious"
     else:
         status = "clean"
@@ -1294,7 +1341,7 @@ def auto_loop_detection(iface=None, save_to_db=True, api_base_url="http://localh
             # Advanced detection with full analysis
             total_packets, offenders, stats, advanced_metrics = detect_loops(
                 timeout=5,
-                threshold=40,
+                threshold=150,  # Raised from 40 to reduce false positives
                 iface=iface,
                 enable_advanced=True
             )
@@ -1309,10 +1356,10 @@ def auto_loop_detection(iface=None, save_to_db=True, api_base_url="http://localh
             
             max_severity = max(severity_scores) if severity_scores else 0.0
             
-            # Determine status
-            if max_severity > 80 or advanced_metrics.get("cross_subnet_activity", False):
+            # Determine status with higher thresholds
+            if max_severity > 300 or (advanced_metrics.get("cross_subnet_activity", False) and max_severity > 200):
                 status = "loop_detected"
-            elif max_severity > 40:
+            elif max_severity > 150:
                 status = "suspicious"
             else:
                 status = "clean"
@@ -1328,7 +1375,7 @@ def auto_loop_detection(iface=None, save_to_db=True, api_base_url="http://localh
             # Lightweight detection with sampling
             total_packets, offenders, stats, status, max_severity, efficiency_metrics = detect_loops_lightweight(
                 timeout=3,
-                threshold=30,
+                threshold=100,  # Raised from 30 to reduce false positives
                 iface=iface,
                 use_sampling=True
             )
@@ -1575,7 +1622,7 @@ def get_all_active_interfaces():
     return active_interfaces
 
 
-def detect_loops_multi_interface(timeout=5, threshold=15, use_sampling=False):
+def detect_loops_multi_interface(timeout=5, threshold=100, use_sampling=False):
     """
     Enhanced loop detection that monitors ALL active network interfaces simultaneously.
     Perfect for environments where:
@@ -1585,7 +1632,7 @@ def detect_loops_multi_interface(timeout=5, threshold=15, use_sampling=False):
     
     Args:
         timeout: Packet capture duration per interface (seconds)
-        threshold: Minimum severity score to consider as potential loop (LOWERED for sensitivity)
+        threshold: Minimum severity score to consider as potential loop (RAISED to reduce false positives)
         use_sampling: Use intelligent sampling for better performance (DISABLED by default for full capture)
     
     Returns:
