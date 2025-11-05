@@ -3788,10 +3788,14 @@ class Dashboard:
                 is_online = r.get('is_online_unifi')
                 if is_online is None:
                     is_online = self.status_history.get(r['id'], {}).get('current') is True
+                # Persist computed status for UI styling
+                r['is_online_display'] = bool(is_online)
                 unifi_group = unifi_online if is_online else unifi_offline
                 unifi_group.append(r)
             else:
                 is_online = self.status_history.get(r['id'], {}).get('current') is True
+                # Persist computed status for UI styling
+                r['is_online_display'] = bool(is_online)
                 nonunifi_group = nonunifi_online if is_online else nonunifi_offline
                 nonunifi_group.append(r)
 
@@ -3844,7 +3848,22 @@ class Dashboard:
                     w.destroy()
                 for i, router in enumerate(routers):
                     row, col = divmod(i, max_cols)
-                    card_style = "primary" if router.get('is_unifi') else "info"
+                    # Determine current online flag at render time for accurate border coloring
+                    if router.get('is_unifi'):
+                        _of = router.get('is_online_unifi')
+                        if _of is None:
+                            _of = self.status_history.get(router['id'], {}).get('current') is True
+                        online_flag = bool(_of)
+                    else:
+                        online_flag = self.status_history.get(router['id'], {}).get('current') is True
+                    # Desired border colors:
+                    # - Online non-UniFi: green (success)
+                    # - Online UniFi AP: blue (primary)
+                    # - Offline (all): red (danger)
+                    if online_flag:
+                        card_style = "primary" if router.get('is_unifi') else "success"
+                    else:
+                        card_style = "danger"
                     card = tb.LabelFrame(sec, text=router['name'], bootstyle=card_style, padding=0)
                     card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                     
@@ -3866,7 +3885,8 @@ class Dashboard:
                     tb.Label(inner, text=router['ip_address'], font=("Segoe UI", 10)).pack(pady=(5, 0))
                     # Status handling
                     if router.get('is_unifi'):
-                        status_text, status_style = ("🟢 Online", "success")
+                        # Use computed online_flag for UniFi as well
+                        status_text, status_style = (("🟢 Online", "success") if online_flag else ("🔴 Offline", "danger"))
                     else:
                         cur = self.status_history.get(router['id'], {}).get('current')
                         status_text, status_style = (
@@ -3917,12 +3937,9 @@ class Dashboard:
                     bind_card_click(inner, router)
                     for child in inner.winfo_children():
                         bind_card_click(child, router)
-                    if router.get('is_unifi'):
-                        def on_enter(e, c=card): c.configure(bootstyle="success")
-                        def on_leave(e, c=card): c.configure(bootstyle="primary")
-                    else:
-                        def on_enter(e, c=card): c.configure(bootstyle="primary")
-                        def on_leave(e, c=card): c.configure(bootstyle="info")
+                    # Keep border color stable on hover based on status/unifi
+                    def on_enter(e, c=card, bs=card_style): c.configure(bootstyle=bs)
+                    def on_leave(e, c=card, bs=card_style): c.configure(bootstyle=bs)
                     card.bind("<Enter>", on_enter)
                     card.bind("<Leave>", on_leave)
             def on_resize(event):
@@ -4151,6 +4168,20 @@ class Dashboard:
                 text="🟢 Online" if online else "🔴 Offline",
                 bootstyle="success" if online else "danger"
             )
+
+        # Update card border color based on status and UniFi flag
+        card = w.get('card')
+        router_data = w.get('data', {})
+        if card and card.winfo_exists():
+            is_unifi = router_data.get('is_unifi', False)
+            if online:
+                new_style = "primary" if is_unifi else "success"
+            else:
+                new_style = "danger"
+            try:
+                card.configure(bootstyle=new_style)
+            except Exception:
+                pass
 
         # Update bandwidth/latency label
         bw_lbl = w.get('bandwidth_label')
@@ -10331,7 +10362,10 @@ Type: {values[11]}
                     analysis.append(f"  • {mac} ({ips})\n")
                     analysis.append(f"    - Total: {mac_stats.get('count', 0)} packets\n")
                     analysis.append(f"    - ARP: {mac_stats.get('arp_count', 0)}, Broadcast: {mac_stats.get('broadcast_count', 0)}\n")
-                    analysis.append(f"    - Severity: {mac_stats.get('severity', 0):.2f}\n\n")
+                    sev = mac_stats.get('severity', 0)
+                    if isinstance(sev, dict):
+                        sev = sev.get('total', 0)
+                    analysis.append(f"    - Severity: {sev:.2f}\n\n")
 
         elif record['status'] == 'suspicious':
             analysis.append("🟡 NETWORK STATUS: SUSPICIOUS ACTIVITY\n")
@@ -10349,7 +10383,10 @@ Type: {values[11]}
                 analysis.append("🔍 TOP SUSPICIOUS DEVICE:\n")
                 analysis.append(f"  MAC: {mac}\n")
                 analysis.append(f"  IP: {ips}\n")
-                analysis.append(f"  Severity: {mac_stats.get('severity', 0):.2f}\n")
+                sev = mac_stats.get('severity', 0)
+                if isinstance(sev, dict):
+                    sev = sev.get('total', 0)
+                analysis.append(f"  Severity: {sev:.2f}\n")
                 analysis.append(f"  Total Packets: {mac_stats.get('count', 0)}\n")
                 analysis.append(f"  ARP Count: {mac_stats.get('arp_count', 0)}\n")
                 analysis.append(f"  Broadcast: {mac_stats.get('broadcast_count', 0)}\n\n")
@@ -10377,7 +10414,10 @@ Type: {values[11]}
                 for i, (mac, mac_stats) in enumerate(sorted_stats[:5], 1):
                     ips = ', '.join(mac_stats.get('ips', ['N/A']))
                     analysis.append(f"\n{i}. {mac} ({ips})\n")
-                    analysis.append(f"   Severity: {mac_stats.get('severity', 0):.2f}\n")
+                    sev = mac_stats.get('severity', 0)
+                    if isinstance(sev, dict):
+                        sev = sev.get('total', 0)
+                    analysis.append(f"   Severity: {sev:.2f}\n")
                     analysis.append(f"   Packets: {mac_stats.get('count', 0)}\n")
                     analysis.append(f"   ARP: {mac_stats.get('arp_count', 0)}, ")
                     analysis.append(f"Broadcast: {mac_stats.get('broadcast_count', 0)}, ")
@@ -10618,21 +10658,27 @@ Type: {values[11]}
                     offenders_data = json.loads(record.get('offenders_data') or '{}')
                     stats = offenders_data.get('stats', {}) or {}
 
-                    # Sort once in worker
-                    sorted_stats = sorted(stats.items(), key=lambda x: x[1].get('severity', 0), reverse=True)
+                    # Normalize severity to numeric for sorting/display
+                    def _sev_num(mac_stats):
+                        s = mac_stats.get('severity', 0)
+                        return s.get('total', 0) if isinstance(s, dict) else s
+
+                    # Sort once in worker by numeric severity
+                    sorted_stats = sorted(stats.items(), key=lambda x: _sev_num(x[1]), reverse=True)
 
                     # Build rows for top N only to limit UI work
                     top_n = 10
                     rows = []
                     for mac, mac_stats in sorted_stats[:top_n]:
                         ips = ', '.join(mac_stats.get('ips', ['N/A']))[:20]
+                        sev_val = _sev_num(mac_stats)
                         rows.append((
                             mac[-17:],
                             ips,
                             mac_stats.get('count', 0),
                             mac_stats.get('arp_count', 0),
                             mac_stats.get('broadcast_count', 0),
-                            f"{mac_stats.get('severity', 0):.1f}"
+                            f"{sev_val:.1f}"
                         ))
 
                     # Prepare analysis string
@@ -10751,7 +10797,10 @@ Type: {values[11]}
                     analysis.append(f"  • {mac} ({ips})\n")
                     analysis.append(f"    - Total: {mac_stats.get('count', 0)} packets\n")
                     analysis.append(f"    - ARP: {mac_stats.get('arp_count', 0)}, Broadcast: {mac_stats.get('broadcast_count', 0)}\n")
-                    analysis.append(f"    - Severity: {mac_stats.get('severity', 0):.2f}\n\n")
+                    sev = mac_stats.get('severity', 0)
+                    if isinstance(sev, dict):
+                        sev = sev.get('total', 0)
+                    analysis.append(f"    - Severity: {sev:.2f}\n\n")
 
         elif record['status'] == 'suspicious':
             analysis.append("🟡 NETWORK STATUS: SUSPICIOUS ACTIVITY\n")
@@ -10769,7 +10818,10 @@ Type: {values[11]}
                 analysis.append("🔍 TOP SUSPICIOUS DEVICE:\n")
                 analysis.append(f"  MAC: {mac}\n")
                 analysis.append(f"  IP: {ips}\n")
-                analysis.append(f"  Severity: {mac_stats.get('severity', 0):.2f}\n")
+                sev = mac_stats.get('severity', 0)
+                if isinstance(sev, dict):
+                    sev = sev.get('total', 0)
+                analysis.append(f"  Severity: {sev:.2f}\n")
                 analysis.append(f"  Total Packets: {mac_stats.get('count', 0)}\n")
                 analysis.append(f"  ARP Count: {mac_stats.get('arp_count', 0)}\n")
                 analysis.append(f"  Broadcast: {mac_stats.get('broadcast_count', 0)}\n\n")
@@ -10797,7 +10849,10 @@ Type: {values[11]}
                 for i, (mac, mac_stats) in enumerate(sorted_stats[:5], 1):
                     ips = ', '.join(mac_stats.get('ips', ['N/A']))
                     analysis.append(f"\n{i}. {mac} ({ips})\n")
-                    analysis.append(f"   Severity: {mac_stats.get('severity', 0):.2f}\n")
+                    sev = mac_stats.get('severity', 0)
+                    if isinstance(sev, dict):
+                        sev = sev.get('total', 0)
+                    analysis.append(f"   Severity: {sev:.2f}\n")
                     analysis.append(f"   Packets: {mac_stats.get('count', 0)}\n")
                     analysis.append(f"   ARP: {mac_stats.get('arp_count', 0)}, ")
                     analysis.append(f"Broadcast: {mac_stats.get('broadcast_count', 0)}, ")
@@ -10853,19 +10908,68 @@ Type: {values[11]}
 
     def _run_loop_scan_thread(self, modal):
         try:
-            # Use multi-interface detection to scan entire network
-            from network_utils import detect_loops_multi_interface
+            # LOOP DETECTION FIX: Use default interface first, then multi-interface if needed
+            from network_utils import detect_loops, get_default_iface
             
-            # Run multi-interface detection across all network interfaces
-            total_packets, offenders, stats, status, severity_score, efficiency_metrics = detect_loops_multi_interface(
-                timeout=5,  # 5 seconds per interface for thorough manual scan
-                threshold=100,  # RAISED threshold to reduce false positives
-                use_sampling=False  # DISABLED sampling to capture all packets for manual scan
+            # Get the primary network interface (same as test script)
+            iface = get_default_iface()
+            print(f"🔍 Dashboard scanning primary interface: {iface}")
+            
+            # Run detection on primary interface with advanced engine
+            total_packets, offenders, stats, advanced_metrics = detect_loops(
+                timeout=5,  # 5 seconds for thorough manual scan
+                threshold=100,  # Threshold for severity
+                iface=iface,  # Use same interface as test script
+                enable_advanced=True  # Use advanced detection like test script
             )
+            
+            # Extract status from advanced detection
+            max_severity = 0
+            for mac, info in stats.items():
+                if isinstance(info.get("severity"), dict):
+                    severity_value = info["severity"]["total"]
+                else:
+                    severity_value = info.get("severity", 0)
+                max_severity = max(max_severity, severity_value)
+            
+            # Determine status
+            if advanced_metrics.get("arp_storm_detected") or advanced_metrics.get("broadcast_flood_detected"):
+                status = "loop_detected"
+            elif max_severity > 250:
+                status = "loop_detected"
+            elif max_severity > 100:
+                status = "suspicious"
+            else:
+                status = "clean"
+            
+            # Build efficiency metrics compatible with dashboard
+            efficiency_metrics = {
+                "detection_method": "ADVANCED",
+                "interfaces_scanned": [iface],
+                "total_interfaces": 1,
+                "detection_duration": advanced_metrics.get("duration", 5),
+                "packets_per_second": total_packets / max(1, advanced_metrics.get("duration", 5)),
+                "unique_macs": advanced_metrics.get("total_unique_macs", 0),
+                "arp_storm_detected": advanced_metrics.get("arp_storm_detected", False),
+                "broadcast_flood_detected": advanced_metrics.get("broadcast_flood_detected", False),
+                "storm_rate": advanced_metrics.get("storm_rate", 0),
+                "early_exit": advanced_metrics.get("early_exit", False),
+                "early_exit_reason": advanced_metrics.get("early_exit_reason", None),
+                "actual_duration": advanced_metrics.get("duration", 5),
+                "interface_results": [{
+                    "interface": iface,
+                    "packets": total_packets,
+                    "offenders": offenders,
+                    "status": status
+                }]
+            }
 
-            modal.after(0, self._finish_loop_scan_lightweight, total_packets, offenders, stats, status, severity_score, efficiency_metrics)
+            modal.after(0, self._finish_loop_scan_lightweight, total_packets, offenders, stats, status, max_severity, efficiency_metrics)
 
         except Exception as e:
+            import traceback
+            print(f"❌ Loop detection error: {e}")
+            traceback.print_exc()
             modal.after(0, self._finish_loop_scan_lightweight, None, None, None, None, None, None, str(e))
 
 
@@ -10921,23 +11025,56 @@ Type: {values[11]}
             except:
                 pass  # Modal might not be open
             
+            # LOOP DETECTION UPDATE: Check for early exit
+            early_exit_info = ""
+            if efficiency_metrics and efficiency_metrics.get('early_exit', False):
+                early_exit_info = f"\n⚡ EARLY EXIT: {efficiency_metrics.get('early_exit_reason', 'Severe loop detected')}\n"
+                early_exit_info += f"   Duration: {efficiency_metrics.get('actual_duration', 0):.2f}s (stopped early)\n"
+                early_exit_info += f"   Storm Rate: {efficiency_metrics.get('storm_rate', 0):.0f} packets/sec\n\n"
+            
             # Display results based on status
             if status == "loop_detected":
                 self.loop_status_lbl.config(text="⚠️ Loop Detected!", bootstyle="danger")
                 self.loop_results.insert(tk.END, f"⚠️ LOOP DETECTED!\n")
+                if early_exit_info:
+                    self.loop_results.insert(tk.END, early_exit_info)
                 self.loop_results.insert(tk.END, f"Severity Score: {severity_score:.2f}\n")
                 self.loop_results.insert(tk.END, f"Total Packets: {total_packets}\n")
                 self.loop_results.insert(tk.END, f"Offenders: {len(offenders)}\n\n")
+                
+                # LOOP DETECTION UPDATE: Show ARP storm/broadcast flood flags
+                if efficiency_metrics:
+                    if efficiency_metrics.get('arp_storm_detected', False):
+                        self.loop_results.insert(tk.END, f"🚨 ARP STORM DETECTED! Rate: {efficiency_metrics.get('storm_rate', 0):.0f} ARP/sec\n")
+                    if efficiency_metrics.get('broadcast_flood_detected', False):
+                        self.loop_results.insert(tk.END, f"🚨 BROADCAST FLOOD DETECTED! Rate: {efficiency_metrics.get('storm_rate', 0):.0f} PPS\n")
+                    if efficiency_metrics.get('arp_storm_detected') or efficiency_metrics.get('broadcast_flood_detected'):
+                        self.loop_results.insert(tk.END, "\n")
                 
                 # Show offender details
                 for mac in offenders:
                     info = stats.get(mac, {})
                     ips = ", ".join(info.get("ips", [])) if info.get("ips") else "Unknown"
-                    self.loop_results.insert(tk.END, f"• {mac} → {ips} (Severity: {info.get('severity', 0):.2f})\n")
+                    
+                    # Handle severity as dict or number
+                    if isinstance(info.get("severity"), dict):
+                        severity_value = info["severity"]["total"]
+                    else:
+                        severity_value = info.get("severity", 0)
+                    
+                    self.loop_results.insert(tk.END, f"• {mac} → {ips} (Severity: {severity_value:.2f})\n")
+                    
+                    # LOOP DETECTION UPDATE: Show single-router loop info
+                    if info.get('loop_on_single_router', False):
+                        self.loop_results.insert(tk.END, f"  ⚠️  SINGLE-ROUTER LOOP DETECTED!\n")
+                        self.loop_results.insert(tk.END, f"  📌 Reason: {info.get('loop_reason', 'Unknown')}\n")
+                        self.loop_results.insert(tk.END, f"  🔧 Action: {info.get('suggested_action', 'Investigate')}\n")
                     
             elif status == "suspicious":
                 self.loop_status_lbl.config(text="🔍 Suspicious Activity", bootstyle="warning")
                 self.loop_results.insert(tk.END, f"🔍 Suspicious activity detected\n")
+                if early_exit_info:
+                    self.loop_results.insert(tk.END, early_exit_info)
                 self.loop_results.insert(tk.END, f"Severity Score: {severity_score:.2f}\n")
                 self.loop_results.insert(tk.END, f"Total Packets: {total_packets}\n")
                 self.loop_results.insert(tk.END, f"Offenders: {len(offenders)}\n\n")
@@ -10946,7 +11083,17 @@ Type: {values[11]}
                 for mac in offenders:
                     info = stats.get(mac, {})
                     ips = ", ".join(info.get("ips", [])) if info.get("ips") else "Unknown"
-                    self.loop_results.insert(tk.END, f"• {mac} → {ips} (Severity: {info.get('severity', 0):.2f})\n")
+                    # Handle severity as dict or number
+                    sev = info.get("severity", 0)
+                    if isinstance(sev, dict):
+                        sev = sev.get("total", 0)
+                    self.loop_results.insert(tk.END, f"• {mac} → {ips} (Severity: {sev:.2f})\n")
+                    
+                    # LOOP DETECTION UPDATE: Show single-router loop info for suspicious too
+                    if info.get('loop_on_single_router', False):
+                        self.loop_results.insert(tk.END, f"  ⚠️  Possible single-router loop\n")
+                        self.loop_results.insert(tk.END, f"  📌 Reason: {info.get('loop_reason', 'Unknown')}\n")
+                        self.loop_results.insert(tk.END, f"  🔧 Action: {info.get('suggested_action', 'Investigate')}\n")
                     
             else:  # status == "clean"
                 self.loop_status_lbl.config(text="✅ Network Clean", bootstyle="success")
@@ -10984,10 +11131,21 @@ Type: {values[11]}
                 for mac, info in stats.items():
                     ips = ", ".join(info.get("ips", [])) if info.get("ips") else "Unknown"
                     self.loop_results.insert(tk.END, f"• {mac}:\n")
+                    self.loop_results.insert(tk.END, f"  - IPs: {ips}\n")
                     self.loop_results.insert(tk.END, f"  - Total packets: {info.get('count', 0)}\n")
                     self.loop_results.insert(tk.END, f"  - ARP packets: {info.get('arp_count', 0)}\n")
                     self.loop_results.insert(tk.END, f"  - Broadcast packets: {info.get('broadcast_count', 0)}\n")
-                    self.loop_results.insert(tk.END, f"  - Severity: {info.get('severity', 0):.2f}\n")
+                    # Handle severity as dict or number
+                    sev_detail = info.get('severity', 0)
+                    if isinstance(sev_detail, dict):
+                        sev_detail = sev_detail.get('total', 0)
+                    self.loop_results.insert(tk.END, f"  - Severity: {sev_detail:.2f}\n")
+                    
+                    # LOOP DETECTION UPDATE: Show loop details in stats
+                    if info.get('loop_on_single_router', False):
+                        self.loop_results.insert(tk.END, f"  - ⚠️ Loop Type: Single-Router Cable Loop\n")
+                        self.loop_results.insert(tk.END, f"  - Reason: {info.get('loop_reason', 'Unknown')}\n")
+                        self.loop_results.insert(tk.END, f"  - Action: {info.get('suggested_action', 'Investigate')}\n")
                     self.loop_results.insert(tk.END, f"  - IPs: {ips}\n\n")
 
         self.loop_results.config(state="disabled")

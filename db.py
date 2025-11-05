@@ -402,35 +402,56 @@ def save_loop_detection(total_packets, offenders, stats, status, severity_score,
             "stats": stats
         }
         
-        insert_sql = """
-        INSERT INTO loop_detections 
-        (total_packets, offenders_count, offenders_data, severity_score, network_interface, detection_duration, status,
-         cross_subnet_detected, unique_subnets, unique_macs, packets_analyzed, sample_rate, efficiency_score, severity_breakdown)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
+        insert_sql_extended = (
+            "INSERT INTO loop_detections "
+            "(total_packets, offenders_count, offenders_data, severity_score, network_interface, detection_duration, status, "
+            " cross_subnet_detected, unique_subnets, unique_macs, packets_analyzed, sample_rate, efficiency_score, severity_breakdown) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        )
+        insert_sql_legacy = (
+            "INSERT INTO loop_detections "
+            "(total_packets, offenders_count, offenders_data, severity_score, network_interface, detection_duration, status) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        )
         
         offenders_count = len(offenders) if isinstance(offenders, list) else offenders
         severity_json = json.dumps(severity_breakdown) if severity_breakdown else None
         
-        cursor.execute(insert_sql, (
-            total_packets,
-            offenders_count,
-            json.dumps(offenders_data),
-            actual_severity,
-            interface,
-            duration,
-            status,
-            cross_subnet,
-            unique_subnets,
-            unique_macs,
-            packets_analyzed,
-            sample_rate,
-            efficiency_score,
-            severity_json
-        ))
-        
-        conn.commit()
-        detection_id = cursor.lastrowid
+        try:
+            cursor.execute(insert_sql_extended, (
+                total_packets,
+                offenders_count,
+                json.dumps(offenders_data),
+                actual_severity,
+                interface,
+                duration,
+                status,
+                cross_subnet,
+                unique_subnets,
+                unique_macs,
+                packets_analyzed,
+                sample_rate,
+                efficiency_score,
+                severity_json
+            ))
+            conn.commit()
+            detection_id = cursor.lastrowid
+        except mysql.connector.Error as e:
+            # Fallback to legacy schema if extended columns are missing
+            if getattr(e, 'errno', None) in (1054, 1136, 1146):
+                cursor.execute(insert_sql_legacy, (
+                    total_packets,
+                    offenders_count,
+                    json.dumps(offenders_data),
+                    actual_severity,
+                    interface,
+                    duration,
+                    status
+                ))
+                conn.commit()
+                detection_id = cursor.lastrowid
+            else:
+                raise
         cursor.close()
         conn.close()
         

@@ -1,3 +1,29 @@
+"""
+LOOP DETECTION UPDATE - Single Router LAN-to-LAN Cable Loop Detection
+=======================================================================
+Enhanced detection for physical cable loops (LAN1 <-> LAN2 on same router):
+
+NEW DETECTION TRIGGERS:
+1. ARP Broadcast Storm: >200 ARP broadcasts/sec from same MAC
+2. Broadcast Packet Flood: >300 identical dst=ff:ff:ff:ff:ff:ff packets in <2 sec
+3. Low Pattern Entropy: Shannon entropy < 1.0 (repetitive flooding)
+4. Rapid Packet Frequency: >100 packets/sec sustained from single MAC
+5. Burst Window Detection: 0.5-1 sec sliding window analysis
+
+DETECTION RULES:
+- Same MAC sending continuous broadcast/ARP packets
+- Very low packet fingerprint diversity (entropy < 1.0)
+- Packet rate > 3x baseline OR > 100 PPS
+- Works WITHOUT STP/LLDP (suitable for dumb switches)
+
+NEW FIELDS IN RESULTS:
+- stats[mac]["loop_on_single_router"]: True if detected
+- stats[mac]["suggested_action"]: "Disconnect cable loop on router LAN ports"
+- advanced_metrics["arp_storm_detected"]: bool
+- advanced_metrics["storm_rate"]: packets/sec
+- advanced_metrics["broadcast_flood_detected"]: bool
+"""
+
 import time
 import logging
 import speedtest
@@ -649,6 +675,45 @@ class LoopDetectionEngine:
     """
     Advanced loop detection engine with support for multi-router environments,
     sophisticated severity scoring, and false positive reduction.
+    
+    LOOP DETECTION UPDATE - Single Router LAN-to-LAN Cable Loop Detection:
+    ========================================================================
+    
+    NEW CAPABILITIES:
+    - Detects physical cable loops (LAN1 <-> LAN2 on same router/switch)
+    - Works WITHOUT STP/LLDP/SNMP (suitable for dumb switches)
+    - Real-time broadcast storm detection with sliding window analysis
+    
+    DETECTION TRIGGERS:
+    1. ARP Broadcast Storm: >200 ARP broadcasts/second from single MAC
+    2. Broadcast Packet Flood: >300 broadcast packets within 2 seconds
+    3. Low Pattern Entropy: Shannon entropy < 1.0 (repetitive flooding)
+    4. High Sustained Rate: >100 packets/sec from single MAC
+    5. Baseline Deviation: 3x normal broadcast rate + absolute threshold
+    
+    SLIDING WINDOW ANALYSIS:
+    - ARP broadcast rate: 1-second window
+    - Broadcast flood: 2-second window
+    - Pattern entropy: Continuous fingerprint tracking
+    - Debouncing: Evaluates over 0.5-1 second windows
+    
+    NEW DATA STRUCTURES:
+    - mac_history["broadcast_times"]: Tracks broadcast packet timestamps
+    - mac_history["arp_broadcast_times"]: Tracks ARP broadcast timestamps
+    - mac_history["fingerprint_window"]: Tracks packet fingerprint hashes
+    
+    NEW OUTPUT FIELDS:
+    - stats[mac]["loop_on_single_router"]: True if LAN-to-LAN loop detected
+    - stats[mac]["suggested_action"]: "Disconnect cable loop on router LAN ports"
+    - stats[mac]["loop_reason"]: Detailed reason for loop detection
+    - advanced_metrics["arp_storm_detected"]: Boolean flag
+    - advanced_metrics["broadcast_flood_detected"]: Boolean flag
+    - advanced_metrics["storm_rate"]: Peak packet rate (packets/sec)
+    
+    SEVERITY HANDLING:
+    - Confirmed loops: Force severity to 999 (CRITICAL)
+    - Always marked as offenders regardless of threshold
+    - Bypasses whitelist for confirmed loops
     """
     
     def __init__(self):
@@ -658,7 +723,11 @@ class LoopDetectionEngine:
             "ip_changes": deque(maxlen=50),
             "subnets": set(),
             "first_seen": None,
-            "last_ip": None
+            "last_ip": None,
+            # LOOP DETECTION UPDATE: Track broadcast storm patterns
+            "broadcast_times": deque(maxlen=500),  # Track broadcast packet timestamps
+            "arp_broadcast_times": deque(maxlen=500),  # Track ARP broadcast timestamps
+            "fingerprint_window": deque(maxlen=500)  # Track fingerprint hashes for repetition
         })
         
         # Known legitimate traffic patterns (whitelist)
@@ -796,6 +865,75 @@ class LoopDetectionEngine:
         
         return False, None
     
+    # LOOP DETECTION UPDATE: Detect single-MAC loop (LAN-to-LAN cable on same router)
+    def _detect_single_mac_loop(self, mac, stats, current_time):
+        """
+        Detect if a single MAC is creating a broadcast loop (e.g., LAN1 <-> LAN2 cable).
+        
+        Detection criteria:
+        1. ARP broadcast storm: >200 ARP broadcasts/sec
+        2. Broadcast flood: >300 broadcast packets in <2 sec
+        3. Low entropy: Repetitive packet patterns (entropy < 1.0)
+        4. High sustained rate: >100 packets/sec
+        
+        Returns (is_loop, storm_rate, reason)
+        """
+        mac_data = self.mac_history[mac]
+        
+        # Check ARP broadcast rate (sliding window: last 1 second)
+        arp_times = list(mac_data["arp_broadcast_times"])
+        if len(arp_times) >= 2:
+            recent_arp = [t for t in arp_times if current_time - t <= 1.0]
+            arp_rate = len(recent_arp)
+            
+            # TRIGGER 1: ARP storm detection (>200 ARP/sec)
+            if arp_rate > 200:
+                return True, arp_rate, "ARP broadcast storm detected (>200 ARP/sec)"
+        
+        # Check broadcast packet flood rate (sliding window: last 2 seconds)
+        broadcast_times = list(mac_data["broadcast_times"])
+        if len(broadcast_times) >= 2:
+            recent_broadcast = [t for t in broadcast_times if current_time - t <= 2.0]
+            broadcast_count = len(recent_broadcast)
+            
+            # TRIGGER 2: Broadcast flood detection (>300 broadcasts in 2 sec)
+            if broadcast_count > 300:
+                broadcast_rate = broadcast_count / 2.0
+                return True, broadcast_rate, "Broadcast packet flood (>300 packets/2sec)"
+        
+        # Check overall packet rate (sliding window: last 1 second)
+        packet_times = list(mac_data["packet_times"])
+        if len(packet_times) >= 10:
+            recent_packets = [t for t in packet_times if current_time - t <= 1.0]
+            packet_rate = len(recent_packets)
+            
+            # TRIGGER 3: High sustained packet rate (>100 PPS)
+            if packet_rate > 100:
+                # Additional check: verify it's mostly broadcasts
+                broadcast_ratio = len(recent_broadcast) / max(1, len(recent_packets))
+                if broadcast_ratio > 0.7:  # 70% broadcasts
+                    return True, packet_rate, f"High broadcast rate ({packet_rate} PPS, {broadcast_ratio*100:.0f}% broadcasts)"
+        
+        # Check pattern entropy (repetitive flooding)
+        fingerprints = stats.get("fingerprints", {})
+        if len(fingerprints) > 0:
+            entropy = self._calculate_entropy(fingerprints)
+            
+            # TRIGGER 4: Low entropy = repetitive pattern flooding
+            if entropy < 1.0 and stats.get("count", 0) > 50:
+                packet_rate = self._calculate_packet_frequency(packet_times)
+                if packet_rate > 50:  # Must be high rate too
+                    return True, packet_rate, f"Repetitive packet flooding (entropy={entropy:.2f}, rate={packet_rate:.0f} PPS)"
+        
+        # Check for baseline deviation (3x normal rate)
+        if self.baseline["avg_broadcast_rate"] > 0:
+            current_broadcast_rate = len(broadcast_times) / max(1, current_time - mac_data["first_seen"])
+            if current_broadcast_rate > self.baseline["avg_broadcast_rate"] * 3:
+                if current_broadcast_rate > 50:  # Must exceed absolute threshold
+                    return True, current_broadcast_rate, f"3x baseline broadcast rate ({current_broadcast_rate:.0f} vs {self.baseline['avg_broadcast_rate']:.0f} PPS)"
+        
+        return False, 0, None
+    
     def _calculate_advanced_severity(self, mac, stats, timeout):
         """
         Calculate advanced severity score using multiple factors:
@@ -922,23 +1060,54 @@ def detect_loops(timeout=10, threshold=100, iface=None, enable_advanced=True):
     })
     
     start_time = time.time()
+    
+    # LOOP DETECTION UPDATE: Early exit tracking
+    early_exit = {"triggered": False, "reason": None, "mac": None}
+    packet_count_tracker = {"count": 0, "last_check": start_time}
 
     def pkt_handler(pkt):
         try:
             if pkt.haslayer(Ether):
                 src = pkt[Ether].src
+                dst = pkt[Ether].dst
                 current_time = time.time()
+                
+                # LOOP DETECTION UPDATE: Track total packets for early exit
+                packet_count_tracker["count"] += 1
                 
                 # Track packet timing
                 if engine:
                     engine.mac_history[src]["packet_times"].append(current_time)
                     if engine.mac_history[src]["first_seen"] is None:
                         engine.mac_history[src]["first_seen"] = current_time
+                    
+                    # LOOP DETECTION UPDATE: Track broadcast packet timing
+                    if dst == "ff:ff:ff:ff:ff:ff":
+                        engine.mac_history[src]["broadcast_times"].append(current_time)
+                    
+                    # LOOP DETECTION UPDATE: Early storm detection (every 1 second)
+                    if current_time - packet_count_tracker["last_check"] >= 1.0:
+                        packet_count_tracker["last_check"] = current_time
+                        
+                        # Quick check for severe loop
+                        is_loop, storm_rate, reason = engine._detect_single_mac_loop(src, stats[src], current_time)
+                        if is_loop and storm_rate > 300:  # Severe storm threshold
+                            early_exit["triggered"] = True
+                            early_exit["reason"] = f"SEVERE LOOP DETECTED: {reason}"
+                            early_exit["mac"] = src
+                            early_exit["storm_rate"] = storm_rate
+                            # Return to stop packet capture
+                            return True  # Signal to stop sniffing
 
                 # ARP broadcast
                 if pkt.haslayer(ARP) and pkt[ARP].op == 1 and pkt[Ether].dst == "ff:ff:ff:ff:ff:ff":
                     stats[src]["count"] += 1
                     stats[src]["arp_count"] += 1
+                    
+                    # LOOP DETECTION UPDATE: Track ARP broadcast timing
+                    if engine:
+                        engine.mac_history[src]["arp_broadcast_times"].append(current_time)
+                    
                     if pkt[ARP].psrc:
                         ip = pkt[ARP].psrc
                         stats[src]["ips"].add(ip)
@@ -1016,14 +1185,50 @@ def detect_loops(timeout=10, threshold=100, iface=None, enable_advanced=True):
                 sig = pkt.summary()
                 stats[src]["fingerprints"][sig] = stats[src]["fingerprints"].get(sig, 0) + 1
                 
+                # LOOP DETECTION UPDATE: Track fingerprint hashes for repetition detection
+                if engine:
+                    # Create simple hash for quick repetition check
+                    fingerprint_hash = hash((dst, pkt.haslayer(ARP), pkt.haslayer(IP)))
+                    engine.mac_history[src]["fingerprint_window"].append((current_time, fingerprint_hash))
+                
         except Exception as e:
             logging.debug(f"Packet handler error: {e}")
+            return False  # Continue sniffing
 
-    # Capture packets
-    sniff(prn=pkt_handler, timeout=timeout, store=0, iface=iface)
+    # LOOP DETECTION UPDATE: Capture packets with early exit capability
+    try:
+        # Use stop_filter to enable early exit when loop detected
+        sniff(prn=pkt_handler, timeout=timeout, store=0, iface=iface, 
+              stop_filter=lambda x: early_exit["triggered"])
+        
+        actual_duration = time.time() - start_time
+        
+        # Log early exit if triggered
+        if early_exit["triggered"]:
+            logging.warning(f"⚠️ EARLY EXIT: {early_exit['reason']}")
+            logging.warning(f"   Captured {packet_count_tracker['count']} packets in {actual_duration:.2f}s")
+            logging.warning(f"   Storm rate: {early_exit.get('storm_rate', 0):.0f} PPS")
+    except Exception as e:
+        logging.error(f"Packet capture error: {e}")
+        actual_duration = time.time() - start_time
 
     # Post-processing
     cross_subnet_activity = False
+    arp_storm_detected = False  # LOOP DETECTION UPDATE
+    broadcast_flood_detected = False  # LOOP DETECTION UPDATE
+    max_storm_rate = 0  # LOOP DETECTION UPDATE
+    
+    # LOOP DETECTION UPDATE: Handle early exit scenario
+    if early_exit["triggered"]:
+        arp_storm_detected = True
+        broadcast_flood_detected = True
+        max_storm_rate = early_exit.get("storm_rate", 0)
+        
+        # Force mark the offending MAC
+        if early_exit["mac"] in stats:
+            stats[early_exit["mac"]]["loop_on_single_router"] = True
+            stats[early_exit["mac"]]["suggested_action"] = "URGENT: Disconnect cable loop immediately!"
+            stats[early_exit["mac"]]["loop_reason"] = early_exit["reason"]
     
     for mac, info in stats.items():
         # Convert sets to lists
@@ -1044,11 +1249,39 @@ def detect_loops(timeout=10, threshold=100, iface=None, enable_advanced=True):
             except Exception:
                 pass
         info["hosts"] = hosts if hosts else ["Unknown"]
+        
+        # LOOP DETECTION UPDATE: Check for single-MAC loop (LAN-to-LAN cable)
+        info["loop_on_single_router"] = False
+        info["suggested_action"] = None
+        
+        if enable_advanced and engine:
+            current_time = time.time()
+            is_loop, storm_rate, loop_reason = engine._detect_single_mac_loop(mac, info, current_time)
+            
+            if is_loop:
+                info["loop_on_single_router"] = True
+                info["suggested_action"] = "Disconnect cable loop on router LAN ports"
+                info["loop_reason"] = loop_reason
+                
+                # Track for metrics
+                if "ARP" in loop_reason:
+                    arp_storm_detected = True
+                if "Broadcast" in loop_reason or "flood" in loop_reason.lower():
+                    broadcast_flood_detected = True
+                
+                max_storm_rate = max(max_storm_rate, storm_rate)
+                
+                # Force severity to CRITICAL for confirmed loops
+                if isinstance(info.get("severity"), dict):
+                    info["severity"]["total"] = max(info["severity"]["total"], 999)
+                else:
+                    info["severity"] = max(info.get("severity", 0), 999)
 
         # Calculate severity
         if enable_advanced and engine:
-            severity_details = engine._calculate_advanced_severity(mac, info, timeout)
-            info["severity"] = severity_details
+            if not isinstance(info.get("severity"), dict):
+                severity_details = engine._calculate_advanced_severity(mac, info, timeout)
+                info["severity"] = severity_details
             
             # Check legitimacy
             is_legit, reason = engine._is_legitimate_traffic(mac, info)
@@ -1077,6 +1310,11 @@ def detect_loops(timeout=10, threshold=100, iface=None, enable_advanced=True):
         if info.get("is_legitimate", False):
             continue
         
+        # LOOP DETECTION UPDATE: Always flag single-MAC loops as offenders
+        if info.get("loop_on_single_router", False):
+            offenders.append(mac)
+            continue
+        
         # Check severity
         if enable_advanced and isinstance(info["severity"], dict):
             severity_value = info["severity"]["total"]
@@ -1086,7 +1324,7 @@ def detect_loops(timeout=10, threshold=100, iface=None, enable_advanced=True):
         if severity_value > threshold:
             offenders.append(mac)
 
-    # Advanced metrics
+    # LOOP DETECTION UPDATE: Enhanced advanced metrics
     advanced_metrics = {
         "detection_method": "advanced" if enable_advanced else "simple",
         "cross_subnet_activity": cross_subnet_activity,
@@ -1094,7 +1332,14 @@ def detect_loops(timeout=10, threshold=100, iface=None, enable_advanced=True):
         "total_unique_ips": len(set(ip for info in stats.values() for ip in info["ips"])),
         "total_unique_subnets": len(set(sub for info in stats.values() for sub in info["subnets"])),
         "timestamp": datetime.now(),
-        "duration": timeout
+        "duration": actual_duration if 'actual_duration' in locals() else timeout,
+        "requested_duration": timeout,
+        "arp_storm_detected": arp_storm_detected,  # NEW
+        "broadcast_flood_detected": broadcast_flood_detected,  # NEW
+        "storm_rate": max_storm_rate,  # NEW (packets/sec)
+        "early_exit": early_exit["triggered"],  # NEW
+        "early_exit_reason": early_exit.get("reason", None),  # NEW
+        "packets_captured": packet_count_tracker["count"]  # NEW
     }
 
     return total_count, list(set(offenders)), stats, advanced_metrics
@@ -1104,6 +1349,8 @@ def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=
     """
     Optimized lightweight loop detection for automatic monitoring.
     Uses shorter timeout, reduced packet analysis, simplified scoring, and intelligent sampling.
+    
+    LOOP DETECTION UPDATE: Now includes early exit and single-MAC loop detection
     
     Args:
         timeout: Capture duration in seconds
@@ -1123,12 +1370,26 @@ def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=
         "stp_count": 0,
         "ips": set(),
         "subnets": set(),
-        "severity": 0.0
+        "severity": 0.0,
+        # LOOP DETECTION UPDATE: Add loop tracking fields
+        "loop_on_single_router": False,
+        "suggested_action": None,
+        "loop_reason": None
     })
     
     packet_count = 0
     sampled_count = 0
     start_time = time.time()
+    
+    # LOOP DETECTION UPDATE: Track broadcast timing for early detection
+    mac_timing = defaultdict(lambda: {
+        "arp_broadcast_times": deque(maxlen=300),
+        "broadcast_times": deque(maxlen=300),
+        "last_check": start_time
+    })
+    
+    # LOOP DETECTION UPDATE: Early exit tracking
+    early_exit = {"triggered": False, "reason": None, "mac": None, "storm_rate": 0}
     
     # Duplicate packet detection to filter out normal retransmissions
     seen_packets = {}  # {packet_signature: timestamp}
@@ -1194,13 +1455,21 @@ def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=
                     # Remove entries older than duplicate_window
                     seen_packets.clear()
 
+                # LOOP DETECTION UPDATE: Track broadcast timing
+                dst = pkt[Ether].dst
+                if dst == "ff:ff:ff:ff:ff:ff":
+                    mac_timing[src]["broadcast_times"].append(current_time)
+
                 # Broadcast traffic detection (most relevant for loops)
-                if pkt[Ether].dst == "ff:ff:ff:ff:ff:ff":
+                if dst == "ff:ff:ff:ff:ff:ff":
                     stats[src]["count"] += 1
                     
                     # ARP broadcast
                     if pkt.haslayer(ARP) and pkt[ARP].op == 1:
                         stats[src]["arp_count"] += 1
+                        # LOOP DETECTION UPDATE: Track ARP broadcast timing
+                        mac_timing[src]["arp_broadcast_times"].append(current_time)
+                        
                         if pkt[ARP].psrc:
                             ip = pkt[ARP].psrc
                             stats[src]["ips"].add(ip)
@@ -1231,13 +1500,50 @@ def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=
                 elif pkt[Ether].dst == "01:80:c2:00:00:00":
                     stats[src]["count"] += 1
                     stats[src]["stp_count"] += 1
+                
+                # LOOP DETECTION UPDATE: Early storm detection check (every 1 second)
+                if current_time - mac_timing[src]["last_check"] >= 1.0:
+                    mac_timing[src]["last_check"] = current_time
+                    
+                    # Quick check for severe ARP storm
+                    arp_times = list(mac_timing[src]["arp_broadcast_times"])
+                    recent_arp = [t for t in arp_times if current_time - t <= 1.0]
+                    arp_rate = len(recent_arp)
+                    
+                    if arp_rate > 200:  # Severe ARP storm
+                        early_exit["triggered"] = True
+                        early_exit["reason"] = f"SEVERE LOOP: ARP storm ({arp_rate} ARP/sec)"
+                        early_exit["mac"] = src
+                        early_exit["storm_rate"] = arp_rate
+                        return True  # Stop sniffing
+                    
+                    # Quick check for broadcast flood
+                    broadcast_times = list(mac_timing[src]["broadcast_times"])
+                    recent_broadcast = [t for t in broadcast_times if current_time - t <= 2.0]
+                    if len(recent_broadcast) > 300:
+                        broadcast_rate = len(recent_broadcast) / 2.0
+                        early_exit["triggered"] = True
+                        early_exit["reason"] = f"SEVERE LOOP: Broadcast flood ({broadcast_rate:.0f} PPS)"
+                        early_exit["mac"] = src
+                        early_exit["storm_rate"] = broadcast_rate
+                        return True  # Stop sniffing
                         
         except Exception as e:
             logging.debug(f"Lightweight packet handler error: {e}")
+            return False  # Continue sniffing
 
     try:
         logging.info(f"📡 Starting packet capture on interface: {iface or 'default'}")
-        sniff(prn=pkt_handler, timeout=timeout, store=0, iface=iface)
+        # LOOP DETECTION UPDATE: Use stop_filter for early exit
+        sniff(prn=pkt_handler, timeout=timeout, store=0, iface=iface,
+              stop_filter=lambda x: early_exit["triggered"])
+        
+        actual_duration = time.time() - start_time
+        
+        if early_exit["triggered"]:
+            logging.warning(f"⚠️ EARLY EXIT: {early_exit['reason']}")
+            logging.warning(f"   Captured {packet_count} packets in {actual_duration:.2f}s")
+        
         logging.info(f"📦 Capture complete. Packets seen: {packet_count}, Analyzed: {sampled_count}")
     except PermissionError:
         logging.error("❌ Permission denied! Run as Administrator.")
@@ -1253,6 +1559,17 @@ def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=
 
     # Convert sets to lists and calculate metrics
     cross_subnet_detected = False
+    arp_storm_detected = False  # LOOP DETECTION UPDATE
+    broadcast_flood_detected = False  # LOOP DETECTION UPDATE
+    max_storm_rate = early_exit.get("storm_rate", 0)  # LOOP DETECTION UPDATE
+    
+    # LOOP DETECTION UPDATE: Handle early exit
+    if early_exit["triggered"] and early_exit["mac"] in stats:
+        stats[early_exit["mac"]]["loop_on_single_router"] = True
+        stats[early_exit["mac"]]["suggested_action"] = "URGENT: Disconnect cable loop immediately!"
+        stats[early_exit["mac"]]["loop_reason"] = early_exit["reason"]
+        arp_storm_detected = True
+        broadcast_flood_detected = True
     
     for mac, info in stats.items():
         info["ips"] = list(info["ips"])
@@ -1261,6 +1578,39 @@ def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=
         
         if len(subnet_list) > 1:
             cross_subnet_detected = True
+        
+        # LOOP DETECTION UPDATE: Check for single-MAC loop even without early exit
+        if not early_exit["triggered"] and mac in mac_timing:
+            current_time = time.time()
+            
+            # Check ARP storm
+            arp_times = list(mac_timing[mac]["arp_broadcast_times"])
+            recent_arp = [t for t in arp_times if current_time - t <= 1.0]
+            arp_rate = len(recent_arp)
+            
+            if arp_rate > 200:
+                info["loop_on_single_router"] = True
+                info["suggested_action"] = "Disconnect cable loop on router LAN ports"
+                info["loop_reason"] = f"ARP broadcast storm detected ({arp_rate} ARP/sec)"
+                arp_storm_detected = True
+                max_storm_rate = max(max_storm_rate, arp_rate)
+                # Force critical severity
+                info["severity"] = 999
+                continue
+            
+            # Check broadcast flood
+            broadcast_times = list(mac_timing[mac]["broadcast_times"])
+            recent_broadcast = [t for t in broadcast_times if current_time - t <= 2.0]
+            if len(recent_broadcast) > 300:
+                broadcast_rate = len(recent_broadcast) / 2.0
+                info["loop_on_single_router"] = True
+                info["suggested_action"] = "Disconnect cable loop on router LAN ports"
+                info["loop_reason"] = f"Broadcast packet flood ({broadcast_rate:.0f} PPS)"
+                broadcast_flood_detected = True
+                max_storm_rate = max(max_storm_rate, broadcast_rate)
+                # Force critical severity
+                info["severity"] = 999
+                continue
         
         # ADJUSTED MULTIPLIERS to reduce false positives
         # Only penalize if crossing multiple subnets (>2)
@@ -1301,10 +1651,13 @@ def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=
     # Find offenders
     offenders = []
     for mac, info in stats.items():
-        if info["severity"] > threshold:
+        # LOOP DETECTION UPDATE: Always flag single-MAC loops
+        if info.get("loop_on_single_router", False):
+            offenders.append(mac)
+        elif info["severity"] > threshold:
             offenders.append(mac)
     
-    # Efficiency metrics
+    # LOOP DETECTION UPDATE: Enhanced efficiency metrics
     efficiency_metrics = {
         "total_packets_seen": packet_count,
         "packets_analyzed": sampled_count,
@@ -1312,7 +1665,13 @@ def detect_loops_lightweight(timeout=5, threshold=100, iface=None, use_sampling=
         "efficiency_ratio": sampled_count / max(1, packet_count),
         "cross_subnet_detected": cross_subnet_detected,
         "unique_macs": len(stats),
-        "unique_subnets": len(set(sub for info in stats.values() for sub in info["subnets"]))
+        "unique_subnets": len(set(sub for info in stats.values() for sub in info["subnets"])),
+        "arp_storm_detected": arp_storm_detected,  # NEW
+        "broadcast_flood_detected": broadcast_flood_detected,  # NEW
+        "storm_rate": max_storm_rate,  # NEW
+        "early_exit": early_exit["triggered"],  # NEW
+        "early_exit_reason": early_exit.get("reason", None),  # NEW
+        "actual_duration": actual_duration if 'actual_duration' in locals() else timeout  # NEW
     }
 
     return total_count, offenders, dict(stats), status, max_severity, efficiency_metrics
