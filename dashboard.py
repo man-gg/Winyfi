@@ -171,6 +171,45 @@ class Dashboard:
             try:
                 devices = self._fetch_unifi_devices()
                 # Already logs to DB in _fetch_unifi_devices
+                # Live-update router cards if the Routers tab is rendered
+                try:
+                    # Build mac->(down,up) map from API payload
+                    mac_to_speeds = {}
+                    for d in devices or []:
+                        mac = d.get('mac_address') or d.get('mac')
+                        if mac:
+                            mac_to_speeds[mac] = (
+                                float(d.get('download_speed') or 0.0),
+                                float(d.get('upload_speed') or 0.0)
+                            )
+                    # Update existing cards without full reload
+                    if hasattr(self, 'router_widgets') and self.router_widgets:
+                        for rid, widgets in list(self.router_widgets.items()):
+                            try:
+                                router = widgets.get('data') or {}
+                                if not router.get('is_unifi'):
+                                    continue
+                                mac = router.get('mac_address')
+                                if not mac or mac not in mac_to_speeds:
+                                    continue
+                                down, up = mac_to_speeds[mac]
+                                # Persist into stored data for future refreshes
+                                router['download_speed'] = down
+                                router['upload_speed'] = up
+                                lbl = widgets.get('bandwidth_label')
+                                latency = router.get('latency')
+                                # Compose display string (show speeds even if latency unknown)
+                                speed_text = (
+                                    f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps" if (down > 0 or up > 0)
+                                    else "📶 Bandwidth: --"
+                                )
+                                latency_text = f"   ⚡ {latency:.1f} ms" if isinstance(latency, (int, float)) else "   ⚡ --"
+                                if lbl and hasattr(lbl, 'winfo_exists') and lbl.winfo_exists():
+                                    lbl.config(text=speed_text + latency_text, bootstyle=("info" if (down > 0 or up > 0) else "secondary"))
+                            except Exception:
+                                continue
+                except Exception:
+                    pass
             except Exception:
                 pass
             # Schedule next poll
@@ -2953,10 +2992,10 @@ class Dashboard:
                 messagebox.showerror("Error", "MAC address not found for this device.")
                 return
             
-            # Use short timeout to prevent UI freeze
+            # Use reasonable timeout to prevent UI freeze but allow slow controllers
             response = requests.get(
                 f"{self.unifi_api_url}/api/unifi/devices/{mac}/clients", 
-                timeout=(1, 3)  # 1s connection, 3s read timeout
+                timeout=(2, 5)  # 2s connection, 5s read timeout
             )
             
             if response.status_code != 200:
@@ -2966,7 +3005,7 @@ class Dashboard:
                                    f"Please check if the UniFi API server is running.")
                 return
             
-            clients = response.json()
+            clients = response.json() or []
             
             # Create modal window
             modal = Toplevel(self.root)
@@ -3371,55 +3410,68 @@ class Dashboard:
             is_unifi = router.get('is_unifi', False)
             
             if is_unifi:
-                # For UniFi devices, fetch fresh data from API
+                # For UniFi devices, fetch fresh data from API with graceful fallbacks
                 try:
                     import requests
                     from requests.exceptions import ConnectionError, Timeout, RequestException
-                    response = requests.get(f"{self.unifi_api_url}/api/unifi/devices", timeout=(1, 2))
+                    mac = router.get('mac_address', '')
+                    # Allow a bit more time for slow controllers
+                    response = requests.get(f"{self.unifi_api_url}/api/unifi/devices", timeout=(2, 5))
+                    down = None
+                    up = None
                     if response.status_code == 200:
-                        devices = response.json()
+                        devices = response.json() or []
                         # Find matching device by MAC address
-                        mac = router.get('mac_address', '')
                         matching_device = next((d for d in devices if d.get('mac') == mac), None)
-                        
                         if matching_device:
-                            # Update status (UniFi devices are always online if fetched)
+                            down = matching_device.get('xput_down')
+                            up = matching_device.get('xput_up')
+                            # Update status based on availability
                             self.detail_status_lbl.config(text="🟢 Online", bootstyle="success")
                             self.status_circle.config(text="●", bootstyle="success")
-                            
-                            # Update bandwidth from UniFi API
-                            down = matching_device.get('xput_down', 0)
-                            up = matching_device.get('xput_up', 0)
-                            self.detail_download_lbl.config(text=f"{down:.2f} Mbps")
-                            self.detail_upload_lbl.config(text=f"{up:.2f} Mbps")
-                            
-                            # UniFi devices don't have latency in the same way
-                            self.detail_latency_lbl.config(text="N/A (UniFi)", bootstyle="info")
-                            
-                            # Update last seen
-                            if self.detail_last_seen_lbl:
-                                self.detail_last_seen_lbl.config(text=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                    # Fallback to router cached speeds if API yielded nothing
+                    if not isinstance(down, (int, float)):
+                        down = float(router.get('download_speed') or 0.0)
+                    if not isinstance(up, (int, float)):
+                        up = float(router.get('upload_speed') or 0.0)
+
+                    # Update bandwidth labels with whatever we have
+                    self.detail_download_lbl.config(text=(f"{down:.2f} Mbps" if isinstance(down, (int, float)) else "N/A"))
+                    self.detail_upload_lbl.config(text=(f"{up:.2f} Mbps" if isinstance(up, (int, float)) else "N/A"))
+
+                    # Try ping latency via UniFi API helper
+                    try:
+                        ping_resp = requests.get(f"{self.unifi_api_url}/api/unifi/ping/{mac}", timeout=(1, 3))
+                        if ping_resp.status_code == 200:
+                            pdata = ping_resp.json()
+                            lat = pdata.get('latency_ms')
+                            if isinstance(lat, (int, float)):
+                                self.detail_latency_lbl.config(text=f"{lat:.0f} ms", bootstyle="success")
+                            else:
+                                self.detail_latency_lbl.config(text="--", bootstyle="secondary")
                         else:
-                            # Device not found in API response
-                            self.detail_status_lbl.config(text="🔴 Not Found", bootstyle="danger")
-                            self.status_circle.config(text="●", bootstyle="danger")
-                            self.detail_download_lbl.config(text="N/A")
-                            self.detail_upload_lbl.config(text="N/A")
-                            self.detail_latency_lbl.config(text="N/A", bootstyle="danger")
+                            self.detail_latency_lbl.config(text="--", bootstyle="secondary")
+                    except Exception:
+                        self.detail_latency_lbl.config(text="--", bootstyle="secondary")
+
+                    # Update last seen
+                    if self.detail_last_seen_lbl:
+                        self.detail_last_seen_lbl.config(text=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
                 except (ConnectionError, Timeout):
-                    # Connection or timeout error - show warning without blocking UI
+                    # API not reachable; still show cached speeds if available
+                    down = float(router.get('download_speed') or 0.0)
+                    up = float(router.get('upload_speed') or 0.0)
                     self.detail_status_lbl.config(text="⚠️ API Unavailable", bootstyle="warning")
                     self.status_circle.config(text="●", bootstyle="warning")
-                    self.detail_download_lbl.config(text="N/A")
-                    self.detail_upload_lbl.config(text="N/A")
-                    self.detail_latency_lbl.config(text="N/A")
+                    self.detail_download_lbl.config(text=(f"{down:.2f} Mbps" if down else "N/A"))
+                    self.detail_upload_lbl.config(text=(f"{up:.2f} Mbps" if up else "N/A"))
+                    self.detail_latency_lbl.config(text="--")
                 except RequestException as e:
-                    # Other request errors
                     self.detail_status_lbl.config(text="⚠️ API Error", bootstyle="warning")
                     self.status_circle.config(text="●", bootstyle="warning")
                     print(f"⚠️ UniFi API request error in refresh_details: {str(e)}")
                 except Exception as e:
-                    # Unexpected errors
                     self.detail_status_lbl.config(text="⚠️ Error", bootstyle="danger")
                     self.status_circle.config(text="●", bootstyle="danger")
                     print(f"⚠️ Unexpected error in refresh_details (UniFi): {str(e)}")
@@ -3824,15 +3876,17 @@ class Dashboard:
                         )
                     status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
                     status_label.pack(pady=5)
-                    # Bandwidth and Latency label - UNIFIED FORMAT FOR ALL DEVICES - ALL BLUE
+                    # Bandwidth and Latency label - Show speeds even if latency unknown
                     if router.get('is_unifi'):
-                        down = router.get('download_speed') or 0
-                        up = router.get('upload_speed') or 0
+                        down = float(router.get('download_speed') or 0.0)
+                        up = float(router.get('upload_speed') or 0.0)
                         latency = router.get('latency')
-                        if latency is not None and down > 0:
-                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps   ⚡ {latency:.1f} ms", bootstyle="info")
-                        else:
-                            lbl_bandwidth = tb.Label(inner, text="📶 Bandwidth: Not available   |   ⚡ --", bootstyle="secondary")
+                        speed_text = (
+                            f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps" if (down > 0 or up > 0)
+                            else "📶 Bandwidth: --"
+                        )
+                        latency_text = f"   ⚡ {latency:.1f} ms" if isinstance(latency, (int, float)) else "   ⚡ --"
+                        lbl_bandwidth = tb.Label(inner, text=speed_text + latency_text, bootstyle=("info" if (down > 0 or up > 0) else "secondary"))
                         lbl_bandwidth.pack(pady=2)
                         if not hasattr(self, '_pending_unifi_updates'):
                             self._pending_unifi_updates = []

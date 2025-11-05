@@ -313,15 +313,31 @@ def api_devices():
             # Check stat aggregates
             stat = d.get('stat', {})
             
+            # Normalize throughput units to Mbps and ensure numeric defaults
+            def _to_mbps(val: Any) -> float:
+                try:
+                    v = float(val)
+                except Exception:
+                    return 0.0
+                # Heuristics: if value is huge it's likely bps; medium -> Kbps; else already Mbps
+                if v > 1_000_000:
+                    return v / 1_000_000.0
+                if v > 1_000:
+                    return v / 1_000.0
+                return v
+
+            down_mbps = _to_mbps(xput_down) if xput_down is not None else 0.0
+            up_mbps = _to_mbps(xput_up) if xput_up is not None else 0.0
+            
             mapped.append({
                 'model': d.get('model'),
                 'name': d.get('name') or d.get('hostname') or d.get('device_id') or d.get('mac'),
                 'mac': d.get('mac'),
                 'ip': d.get('ip'),
-                'xput_down': xput_down,
-                'xput_up': xput_up,
-                'rx_bytes': d.get('rx_bytes') or stat.get('rx_bytes'),
-                'tx_bytes': d.get('tx_bytes') or stat.get('tx_bytes'),
+                'xput_down': down_mbps,
+                'xput_up': up_mbps,
+                'rx_bytes': d.get('rx_bytes') or stat.get('rx_bytes') or 0,
+                'tx_bytes': d.get('tx_bytes') or stat.get('tx_bytes') or 0,
                 'state': d.get('state'),
                 'connected': True if d.get('state') == 1 else False,
             })
@@ -337,12 +353,57 @@ def api_clients():
     if MOCK_MODE['clients']:
         return jsonify(MOCK_CLIENTS)
     try:
-        clients = get_session().get_clients(SITE)
-        if clients and len(clients) > 0:
-            print(f"[UniFi API] Found {len(clients)} clients")
-            print(f"[UniFi API] Sample client keys: {list(clients[0].keys())}")
+        raw_clients = get_session().get_clients(SITE)
+        if raw_clients and len(raw_clients) > 0:
+            print(f"[UniFi API] Found {len(raw_clients)} clients")
+            print(f"[UniFi API] Sample client keys: {list(raw_clients[0].keys())}")
         else:
             print("[UniFi API] No clients found")
+
+        def map_client(c: Dict[str, Any]) -> Dict[str, Any]:
+            """Map UniFi raw client to simplified structure expected by dashboard."""
+            hostname = (
+                c.get('hostname')
+                or c.get('name')
+                or c.get('device_name')
+                or c.get('oui')
+                or c.get('mac')
+            )
+            ip = c.get('ip') or c.get('ip_address') or c.get('ipaddr')
+            ap_mac = c.get('ap_mac') or c.get('apMac') or c.get('bssid')
+            # Prefer 'signal' if present, else 'rssi'
+            signal = c.get('signal')
+            if signal is None:
+                signal = c.get('rssi')
+            # rx/tx rate may be in bps; preserve value and let UI scale as it already does
+            rx_rate = c.get('rx_rate') or c.get('rx_rate_kbps')
+            if rx_rate is not None and 'rx_rate_kbps' in c:
+                try:
+                    rx_rate = float(c.get('rx_rate_kbps')) * 1000.0
+                except Exception:
+                    pass
+            tx_rate = c.get('tx_rate') or c.get('tx_rate_kbps')
+            if tx_rate is not None and 'tx_rate_kbps' in c:
+                try:
+                    tx_rate = float(c.get('tx_rate_kbps')) * 1000.0
+                except Exception:
+                    pass
+
+            return {
+                'hostname': hostname or 'Unknown',
+                'mac': c.get('mac'),
+                'ip': ip,
+                'ap_mac': ap_mac,
+                'rx_bytes': c.get('rx_bytes'),
+                'tx_bytes': c.get('tx_bytes'),
+                'rx_rate': rx_rate,
+                'tx_rate': tx_rate,
+                'signal': signal,
+                'channel': c.get('channel') or c.get('radio'),
+                'uptime': c.get('uptime')
+            }
+
+        clients = [map_client(c) for c in raw_clients]
         return jsonify(clients)
     except Exception as e:
         print(f"[UniFi API] /api/unifi/clients error: {e}")
@@ -391,8 +452,53 @@ def api_device_clients(mac):
         device_clients = [c for c in MOCK_CLIENTS if c.get('ap_mac', '').upper() == mac.upper()]
         return jsonify(device_clients)
     try:
-        clients = get_session().get_clients(SITE)
-        device_clients = [c for c in clients if (c.get('ap_mac') or '').upper() == mac.upper()]
+        raw_clients = get_session().get_clients(SITE)
+        # Filter by AP MAC using common fields
+        filtered = []
+        for c in raw_clients:
+            ap_mac = (c.get('ap_mac') or c.get('apMac') or c.get('bssid') or '').upper()
+            if ap_mac == mac.upper():
+                filtered.append(c)
+
+        # Map to simplified structure
+        def map_client(c: Dict[str, Any]) -> Dict[str, Any]:
+            hostname = (
+                c.get('hostname')
+                or c.get('name')
+                or c.get('device_name')
+                or c.get('oui')
+                or c.get('mac')
+            )
+            ip = c.get('ip') or c.get('ip_address') or c.get('ipaddr')
+            ap_mac_val = c.get('ap_mac') or c.get('apMac') or c.get('bssid')
+            signal = c.get('signal') if c.get('signal') is not None else c.get('rssi')
+            rx_rate = c.get('rx_rate') or c.get('rx_rate_kbps')
+            if rx_rate is not None and 'rx_rate_kbps' in c:
+                try:
+                    rx_rate = float(c.get('rx_rate_kbps')) * 1000.0
+                except Exception:
+                    pass
+            tx_rate = c.get('tx_rate') or c.get('tx_rate_kbps')
+            if tx_rate is not None and 'tx_rate_kbps' in c:
+                try:
+                    tx_rate = float(c.get('tx_rate_kbps')) * 1000.0
+                except Exception:
+                    pass
+            return {
+                'hostname': hostname or 'Unknown',
+                'mac': c.get('mac'),
+                'ip': ip,
+                'ap_mac': ap_mac_val,
+                'rx_bytes': c.get('rx_bytes'),
+                'tx_bytes': c.get('tx_bytes'),
+                'rx_rate': rx_rate,
+                'tx_rate': tx_rate,
+                'signal': signal,
+                'channel': c.get('channel') or c.get('radio'),
+                'uptime': c.get('uptime')
+            }
+
+        device_clients = [map_client(c) for c in filtered]
         return jsonify(device_clients)
     except Exception as e:
         return jsonify({'error': str(e)}), 502
