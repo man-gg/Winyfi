@@ -13178,3 +13178,21 @@ TypeError: unsupported format string passed to dict.__format__
 2025-11-06 00:36:04,037 INFO [root] Detection status: CLEAN
 2025-11-06 00:36:04,038 INFO [root] Overall status: CLEAN, max_severity=0.3
 2025-11-06 00:36:04,096 INFO [db] Loop detection saved to database (ID: 373, severity: 0.34, cross-subnet: False)
+2025-11-06 00:47:23,264 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 00:47:23,291 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 00:47:29,873 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 00:47:29,907 INFO [root] Interfaces to scan: ['Ethernet 5', 'Loopback Pseudo-Interface 1']
+2025-11-06 00:47:29,951 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Ethernet 5)
+2025-11-06 00:47:29,957 INFO [root] 📡 Starting packet capture on interface: Ethernet 5
+2025-11-06 00:47:29,958 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 00:47:29,959 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 00:47:34,967 INFO [root] 📦 Capture complete. Packets seen: 4607, Analyzed: 4607
+2025-11-06 00:47:34,967 INFO [root] Unique MACs detected: 0
+2025-11-06 00:47:34,968 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 00:47:34,968 INFO [root] Detection status: CLEAN
+2025-11-06 00:47:34,972 INFO [root] 📦 Capture complete. Packets seen: 77, Analyzed: 77
+2025-11-06 00:47:34,974 INFO [root] Unique MACs detected: 1
+2025-11-06 00:47:34,974 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 00:47:34,974 INFO [root] Detection status: CLEAN
+2025-11-06 00:47:34,976 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 00:47:34,999 INFO [db] Loop detection saved to database (ID: 374, severity: 0.34, cross-subnet: False)

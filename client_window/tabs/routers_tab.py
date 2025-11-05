@@ -290,7 +290,12 @@ class RoutersTab:
                 for i, router in enumerate(items):
                     row, col = divmod(i, max_cols)
                     is_unifi = router.get('brand', '').lower() == 'unifi' or router.get('is_unifi')
-                    card_style = "primary" if is_unifi else "info"
+                    # Determine current status for border color
+                    is_in_online_list = router in online_list
+                    if is_in_online_list:
+                        card_style = "primary" if is_unifi else "success"
+                    else:
+                        card_style = "danger"
                     card = tb.LabelFrame(sec, text=router.get('name', 'Unknown'), bootstyle=card_style, padding=0)
                     card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                     
@@ -373,13 +378,9 @@ class RoutersTab:
                     bind_card_click(inner, router)
                     for child in inner.winfo_children():
                         bind_card_click(child, router)
-                    # Hover effect
-                    if is_unifi:
-                        def on_enter(e, c=card): c.configure(bootstyle="success")
-                        def on_leave(e, c=card): c.configure(bootstyle="primary")
-                    else:
-                        def on_enter(e, c=card): c.configure(bootstyle="primary")
-                        def on_leave(e, c=card): c.configure(bootstyle="info")
+                    # Keep border color stable on hover based on status/type
+                    def on_enter(e, c=card, bs=card_style): c.configure(bootstyle=bs)
+                    def on_leave(e, c=card, bs=card_style): c.configure(bootstyle=bs)
                     card.bind("<Enter>", on_enter)
                     card.bind("<Leave>", on_leave)
             def on_resize(event):

@@ -145,6 +145,12 @@ class Dashboard:
         
         self._build_ui()
         self.reload_routers(force_reload=True)
+        # Refresh dashboard stats now that routers list has been populated
+        try:
+            if hasattr(self, 'update_statistics'):
+                self.update_statistics()
+        except Exception:
+            pass
 
         # 🟩 Place this BEFORE any looping tasks like background threads or after()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -1715,7 +1721,13 @@ class Dashboard:
         # Fetch routers and calculate online/offline counts
         routers = self.router_list or get_routers()
         total = len(routers)
-        online = sum(1 for r in routers if self.status_history.get(r['id'], {}).get('current') is True)
+        # Prefer computed display status (from routers tab) and fall back to status_history
+        online = sum(
+            1
+            for r in routers
+            if (r.get('is_online_display') is True)
+            or (self.status_history.get(r['id'], {}).get('current') is True)
+        )
         offline = total - online
         
         # Calculate average uptime
@@ -1810,7 +1822,13 @@ class Dashboard:
         # Calculate base health score once
         routers = self.router_list or get_routers()
         total = len(routers)
-        online = sum(1 for r in routers if self.status_history.get(r['id'], {}).get('current') is True)
+        # Prefer computed display status (from routers tab) and fall back to status_history
+        online = sum(
+            1
+            for r in routers
+            if (r.get('is_online_display') is True)
+            or (self.status_history.get(r['id'], {}).get('current') is True)
+        )
         base_score = (online / total * 100) if total > 0 else 0
         
         # Generate stable data points with minimal, consistent variation
@@ -1870,7 +1888,12 @@ class Dashboard:
         for i, router in enumerate(routers[:3]):
             router_id = router.get('id', 0)
             router_name = router.get('name', f'Router {router_id}')
-            is_online = self.status_history.get(router_id, {}).get('current', False)
+            # Prefer computed display status (from routers tab) and fall back to status_history
+            is_online = (
+                router.get('is_online_display') is True
+            ) or (
+                self.status_history.get(router_id, {}).get('current') is True
+            )
             
             # Check if we have stored data for this router
             if router_name not in self.bandwidth_data:
