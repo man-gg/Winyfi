@@ -13196,3 +13196,198 @@ TypeError: unsupported format string passed to dict.__format__
 2025-11-06 00:47:34,974 INFO [root] Detection status: CLEAN
 2025-11-06 00:47:34,976 INFO [root] Overall status: CLEAN, max_severity=0.3
 2025-11-06 00:47:34,999 INFO [db] Loop detection saved to database (ID: 374, severity: 0.34, cross-subnet: False)
+2025-11-06 11:27:49,771 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 11:27:49,793 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 11:27:57,295 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 11:27:57,329 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 11:27:57,332 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 11:27:57,332 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 11:27:57,332 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 11:27:57,334 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 11:28:02,343 INFO [root] 📦 Capture complete. Packets seen: 4830, Analyzed: 4830
+2025-11-06 11:28:02,344 INFO [root] Unique MACs detected: 0
+2025-11-06 11:28:02,344 INFO [root] 📦 Capture complete. Packets seen: 254, Analyzed: 254
+2025-11-06 11:28:02,344 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 11:28:02,344 INFO [root] Unique MACs detected: 1
+2025-11-06 11:28:02,346 INFO [root] Detection status: CLEAN
+2025-11-06 11:28:02,346 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 11:28:02,346 INFO [root] Detection status: CLEAN
+2025-11-06 11:28:02,347 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 11:28:02,354 INFO [db] Loop detection saved to database (ID: 354, severity: 0.34, cross-subnet: False)
+2025-11-06 11:30:41,653 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 11:30:41,689 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 11:30:48,801 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 11:30:48,828 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 11:30:48,829 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 11:30:48,830 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 11:30:48,830 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 11:30:48,830 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 11:30:53,826 INFO [root] 📦 Capture complete. Packets seen: 182, Analyzed: 182
+2025-11-06 11:30:53,828 INFO [root] Unique MACs detected: 1
+2025-11-06 11:30:53,830 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 11:30:53,831 INFO [root] Detection status: CLEAN
+2025-11-06 11:30:53,844 INFO [root] 📦 Capture complete. Packets seen: 5412, Analyzed: 5412
+2025-11-06 11:30:53,845 INFO [root] Unique MACs detected: 0
+2025-11-06 11:30:53,845 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 11:30:53,846 INFO [root] Detection status: CLEAN
+2025-11-06 11:30:53,846 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 11:30:53,876 INFO [db] Loop detection saved to database (ID: 355, severity: 0.34, cross-subnet: False)
+2025-11-06 11:32:31,006 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 861, in callit
+    func(*args)
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\dashboard.py", line 12517, in schedule_update
+    self.update_statistics()
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\dashboard.py", line 1782, in update_statistics
+    self._update_network_health_chart()
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\dashboard.py", line 1813, in _update_network_health_chart
+    self.health_ax.clear()
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axes\_base.py", line 1395, in clear
+    self.__clear()
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axes\_base.py", line 1281, in __clear
+    spine.clear()
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\spines.py", line 225, in clear
+    self.axis.clear()
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 891, in clear
+    self.reset_ticks()
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 914, in reset_ticks
+    self.set_clip_path(self.axes.patch)
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 1084, in set_clip_path
+    for child in self.majorTicks + self.minorTicks:
+                 ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 594, in __get__
+    tick = instance._get_tick(major=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 1551, in _get_tick
+    return self._tick_class(self.axes, 0, major=major, **tick_kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 423, in __init__
+    data=([0], [1]), transform=ax.get_xaxis_transform("tick2"))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axes\_base.py", line 941, in get_xaxis_transform
+    return self.spines.top.get_spine_transform()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\spines.py", line 334, in get_spine_transform
+    self._ensure_position_is_set()
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\spines.py", line 206, in _ensure_position_is_set
+    self.set_position(self._position)
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\spines.py", line 324, in set_position
+    self.axis.reset_ticks()
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 914, in reset_ticks
+    self.set_clip_path(self.axes.patch)
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 1084, in set_clip_path
+    for child in self.majorTicks + self.minorTicks:
+                 ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 594, in __get__
+    tick = instance._get_tick(major=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 1551, in _get_tick
+    return self._tick_class(self.axes, 0, major=major, **tick_kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\axis.py", line 422, in __init__
+    self.tick2line.set(
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\artist.py", line 147, in <lambda>
+    cls.set = lambda self, **kwargs: Artist.set(self, **kwargs)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\artist.py", line 1231, in set
+    return self._internal_update(cbook.normalize_kwargs(kwargs, self))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\artist.py", line 1223, in _internal_update
+    return self._update_props(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\matplotlib\artist.py", line 1196, in _update_props
+    if not callable(func):
+           ^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+2025-11-06 11:33:08,881 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 11:33:08,903 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 11:33:16,946 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 11:33:16,979 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 11:33:16,980 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 11:33:16,981 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 11:33:16,982 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 11:33:16,982 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 11:33:22,006 INFO [root] 📦 Capture complete. Packets seen: 102, Analyzed: 102
+2025-11-06 11:33:22,007 INFO [root] Unique MACs detected: 1
+2025-11-06 11:33:22,007 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 11:33:22,007 INFO [root] Detection status: CLEAN
+2025-11-06 11:33:22,043 INFO [root] 📦 Capture complete. Packets seen: 3976, Analyzed: 3976
+2025-11-06 11:33:22,044 INFO [root] Unique MACs detected: 0
+2025-11-06 11:33:22,044 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 11:33:22,044 INFO [root] Detection status: CLEAN
+2025-11-06 11:33:22,046 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 11:33:22,069 INFO [db] Loop detection saved to database (ID: 356, severity: 0.34, cross-subnet: False)
+2025-11-06 11:36:54,764 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 11:36:54,780 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 11:37:02,006 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 11:37:02,045 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 11:37:02,048 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 11:37:02,050 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 11:37:02,050 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 11:37:02,051 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 11:37:07,059 INFO [root] 📦 Capture complete. Packets seen: 140, Analyzed: 140
+2025-11-06 11:37:07,060 INFO [root] Unique MACs detected: 1
+2025-11-06 11:37:07,061 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 11:37:07,061 INFO [root] Detection status: CLEAN
+2025-11-06 11:37:07,063 INFO [root] 📦 Capture complete. Packets seen: 4357, Analyzed: 4357
+2025-11-06 11:37:07,063 INFO [root] Unique MACs detected: 0
+2025-11-06 11:37:07,064 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 11:37:07,064 INFO [root] Detection status: CLEAN
+2025-11-06 11:37:07,064 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 11:37:07,095 INFO [db] Loop detection saved to database (ID: 357, severity: 0.34, cross-subnet: False)
+2025-11-06 11:42:07,173 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 11:42:07,202 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 11:42:07,237 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 11:42:07,238 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 11:42:07,240 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 11:42:07,240 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 11:42:12,317 INFO [root] 📦 Capture complete. Packets seen: 1072, Analyzed: 1072
+2025-11-06 11:42:12,324 INFO [root] Unique MACs detected: 0
+2025-11-06 11:42:12,324 INFO [root] 📦 Capture complete. Packets seen: 258, Analyzed: 258
+2025-11-06 11:42:12,330 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 11:42:12,334 INFO [root] Unique MACs detected: 1
+2025-11-06 11:42:12,348 INFO [root] Detection status: CLEAN
+2025-11-06 11:42:12,354 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 11:42:12,359 INFO [root] Detection status: CLEAN
+2025-11-06 11:42:12,378 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 11:42:12,409 INFO [db] Loop detection saved to database (ID: 358, severity: 0.68, cross-subnet: False)
+2025-11-06 11:43:39,810 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 11:43:39,857 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 11:43:47,945 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 11:43:47,969 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 11:43:47,972 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 11:43:47,972 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 11:43:47,973 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 11:43:47,974 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 11:43:52,980 INFO [root] 📦 Capture complete. Packets seen: 126, Analyzed: 126
+2025-11-06 11:43:52,981 INFO [root] Unique MACs detected: 1
+2025-11-06 11:43:52,981 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 11:43:52,982 INFO [root] Detection status: CLEAN
+2025-11-06 11:43:52,984 INFO [root] 📦 Capture complete. Packets seen: 2803, Analyzed: 2803
+2025-11-06 11:43:52,985 INFO [root] Unique MACs detected: 0
+2025-11-06 11:43:52,986 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 11:43:52,986 INFO [root] Detection status: CLEAN
+2025-11-06 11:43:52,987 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 11:43:52,998 INFO [db] Loop detection saved to database (ID: 359, severity: 0.34, cross-subnet: False)
+2025-11-06 11:47:03,432 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 11:47:03,446 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 11:47:10,622 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 11:47:10,658 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 11:47:10,659 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 11:47:10,660 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 11:47:10,660 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 11:47:10,661 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 11:47:15,761 INFO [root] 📦 Capture complete. Packets seen: 105, Analyzed: 105
+2025-11-06 11:47:15,763 INFO [root] 📦 Capture complete. Packets seen: 3564, Analyzed: 3564
+2025-11-06 11:47:15,763 INFO [root] Unique MACs detected: 1
+2025-11-06 11:47:15,763 INFO [root] Unique MACs detected: 0
+2025-11-06 11:47:15,763 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 11:47:15,764 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 11:47:15,764 INFO [root] Detection status: CLEAN
+2025-11-06 11:47:15,764 INFO [root] Detection status: CLEAN
+2025-11-06 11:47:15,764 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 11:47:15,772 INFO [db] Loop detection saved to database (ID: 360, severity: 0.34, cross-subnet: False)

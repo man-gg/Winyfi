@@ -134,17 +134,23 @@ class DashboardTab:
                                         font=("Segoe UI", 12), bootstyle="secondary")
         self.last_update_label.pack()
         
-        # Charts section
+        # Charts section - use grid for responsive layout
         charts_frame = tb.Frame(main_container)
         charts_frame.pack(fill="both", expand=True)
         
+        # Configure grid for responsive layout (children use grid, so parent can use pack)
         # Left charts column
         left_charts = tb.Frame(charts_frame)
         left_charts.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        left_charts.grid_rowconfigure(0, weight=1)
+        left_charts.grid_rowconfigure(1, weight=1)
+        left_charts.grid_columnconfigure(0, weight=1)
         
         # Right charts column
         right_charts = tb.Frame(charts_frame)
         right_charts.pack(side="right", fill="both", expand=True, padx=(10, 0))
+        right_charts.grid_rowconfigure(0, weight=1)
+        right_charts.grid_columnconfigure(0, weight=1)
         
         # Router Status Pie Chart
         self._create_pie_chart(left_charts, "Router Status Distribution", 0)
@@ -191,17 +197,15 @@ class DashboardTab:
         return card
 
     def _create_pie_chart(self, parent, title, row):
-        """Create a modern pie chart for router status"""
+        """Create a modern responsive pie chart for router status"""
         chart_frame = tb.LabelFrame(parent, text=title, bootstyle="info", padding=15)
         chart_frame.grid(row=row, column=0, padx=5, pady=5, sticky="nsew")
         
-        # Create pie chart with optimized size and settings
-        self.pie_fig, self.pie_ax = plt.subplots(figsize=(4.5, 3.5), dpi=100)
+        # Create pie chart with responsive sizing
+        # Use a base size that will scale with the container
+        self.pie_fig, self.pie_ax = plt.subplots(figsize=(5, 4), dpi=100)
         self.pie_fig.patch.set_facecolor('#ffffff')
         self.pie_ax.set_facecolor('#ffffff')
-        
-        # Optimize figure settings
-        self.pie_fig.tight_layout(pad=1.0)
         
         # Remove spines for cleaner look
         self.pie_ax.spines['top'].set_visible(False)
@@ -210,9 +214,52 @@ class DashboardTab:
         self.pie_ax.spines['left'].set_visible(False)
         
         self.pie_canvas = FigureCanvasTkAgg(self.pie_fig, master=chart_frame)
-        self.pie_canvas.get_tk_widget().pack(fill="both", expand=True)
+        self.pie_canvas_widget = self.pie_canvas.get_tk_widget()
+        self.pie_canvas_widget.pack(fill="both", expand=True)
         
-        # Configure grid
+        # Bind resize event to update chart size
+        self._pie_resize_id = None
+        def on_chart_resize(event=None):
+            if hasattr(self, 'pie_fig') and self.pie_fig and hasattr(self, 'pie_canvas_widget'):
+                try:
+                    # Cancel any pending resize to avoid multiple updates
+                    if self._pie_resize_id:
+                        self.root.after_cancel(self._pie_resize_id)
+                    
+                    # Schedule resize update after a short delay to avoid too frequent updates
+                    def update_size():
+                        try:
+                            # Get the current widget size (wait for actual size)
+                            self.pie_canvas_widget.update_idletasks()
+                            width = max(100, self.pie_canvas_widget.winfo_width())
+                            height = max(100, self.pie_canvas_widget.winfo_height())
+                            
+                            # Convert pixels to inches (assuming 100 DPI)
+                            width_inches = max(3.0, width / 100.0)
+                            height_inches = max(2.5, height / 100.0)
+                            
+                            # Maintain a reasonable aspect ratio (4:3)
+                            aspect_ratio = 4.0 / 3.0
+                            if width_inches / height_inches > aspect_ratio:
+                                width_inches = height_inches * aspect_ratio
+                            else:
+                                height_inches = width_inches / aspect_ratio
+                            
+                            # Update figure size
+                            self.pie_fig.set_size_inches(width_inches, height_inches)
+                            self.pie_fig.tight_layout(pad=1.0)
+                            self.pie_canvas.draw_idle()
+                        except Exception:
+                            pass  # Ignore resize errors
+                    
+                    self._pie_resize_id = self.root.after(100, update_size)
+                except Exception:
+                    pass  # Ignore resize errors during window destruction
+        
+        # Bind resize event with debouncing
+        self.pie_canvas_widget.bind('<Configure>', on_chart_resize)
+        
+        # Configure grid for responsive layout
         parent.grid_rowconfigure(row, weight=1)
         parent.grid_columnconfigure(0, weight=1)
 

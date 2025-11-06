@@ -361,28 +361,156 @@ def get_speedtest_results(manual=False):
     }
 
 
-def get_throughput(interval=1):
+def get_throughput(interval=1, samples=3, filter_loopback=True):
     """
-    Lightweight network-wide throughput measurement using psutil.
-    Measures total network interface traffic (no data consumption).
+    Enhanced accurate network-wide throughput measurement using psutil.
+    Measures total network interface traffic with improved accuracy.
     
     Args:
-        interval (float): Measurement window in seconds
+        interval (float): Measurement window in seconds per sample (default: 1)
+        samples (int): Number of samples to average for accuracy (default: 3)
+        filter_loopback (bool): Filter out loopback interface traffic (default: True)
     
     Returns:
-        tuple: (download_mbps, upload_mbps)
+        tuple: (download_mbps, upload_mbps) - averaged across samples
+    
+    Improvements:
+    - Multiple samples for better accuracy
+    - Filters loopback traffic
+    - Statistical averaging to reduce noise
+    - Better timing accuracy
     """
-    counters1 = psutil.net_io_counters()
-    time.sleep(interval)
-    counters2 = psutil.net_io_counters()
-
-    bytes_sent = counters2.bytes_sent - counters1.bytes_sent
-    bytes_recv = counters2.bytes_recv - counters1.bytes_recv
-
-    upload_mbps = (bytes_sent * 8) / (interval * 1_000_000)
-    download_mbps = (bytes_recv * 8) / (interval * 1_000_000)
-
-    return round(download_mbps, 2), round(upload_mbps, 2)
+    download_samples = []
+    upload_samples = []
+    actual_intervals = []
+    
+    # Get active interfaces to filter out loopback
+    active_interfaces = set()
+    if filter_loopback:
+        try:
+            addrs = psutil.net_if_addrs()
+            stats = psutil.net_if_stats()
+            for iface, snic_list in addrs.items():
+                if iface in stats and stats[iface].isup:
+                    if iface != "lo" and iface != "Loopback":
+                        # Check if it's not loopback by checking for non-127.x.x.x addresses
+                        for snic in snic_list:
+                            if snic.family.name == "AF_INET":
+                                addr = snic.address
+                                if addr and not addr.startswith("127."):
+                                    active_interfaces.add(iface)
+                                    break
+        except Exception as e:
+            logging.debug(f"Interface filtering error: {e}")
+            filter_loopback = False
+    
+    # Take multiple samples for better accuracy
+    for sample in range(samples):
+        try:
+            # Get initial counters
+            if filter_loopback and active_interfaces:
+                # Get counters for specific active interfaces
+                counters1 = {}
+                for iface in active_interfaces:
+                    try:
+                        iface_stats = psutil.net_io_counters(pernic=True)
+                        if iface in iface_stats:
+                            counters1[iface] = iface_stats[iface]
+                    except Exception:
+                        pass
+                
+                start_time = time.time()
+                time.sleep(interval)
+                actual_interval = time.time() - start_time
+                
+                # Get final counters
+                counters2 = {}
+                for iface in active_interfaces:
+                    try:
+                        iface_stats = psutil.net_io_counters(pernic=True)
+                        if iface in iface_stats:
+                            counters2[iface] = iface_stats[iface]
+                    except Exception:
+                        pass
+                
+                # Sum up bytes from all active interfaces
+                bytes_sent = 0
+                bytes_recv = 0
+                for iface in active_interfaces:
+                    if iface in counters1 and iface in counters2:
+                        bytes_sent += max(0, counters2[iface].bytes_sent - counters1[iface].bytes_sent)
+                        bytes_recv += max(0, counters2[iface].bytes_recv - counters1[iface].bytes_recv)
+            else:
+                # Use global counters (fallback)
+                counters1 = psutil.net_io_counters()
+                start_time = time.time()
+                time.sleep(interval)
+                actual_interval = time.time() - start_time
+                counters2 = psutil.net_io_counters()
+                
+                bytes_sent = max(0, counters2.bytes_sent - counters1.bytes_sent)
+                bytes_recv = max(0, counters2.bytes_recv - counters1.bytes_recv)
+            
+            # Calculate Mbps for this sample
+            if actual_interval > 0:
+                upload_mbps = (bytes_sent * 8) / (actual_interval * 1_000_000)
+                download_mbps = (bytes_recv * 8) / (actual_interval * 1_000_000)
+                
+                # Only add valid samples (non-negative, reasonable values)
+                if download_mbps >= 0 and upload_mbps >= 0:
+                    download_samples.append(download_mbps)
+                    upload_samples.append(upload_mbps)
+                    actual_intervals.append(actual_interval)
+        except Exception as e:
+            logging.debug(f"Throughput sample error: {e}")
+            continue
+    
+    # Calculate averages
+    if download_samples and upload_samples:
+        # Use median for more accurate results (less affected by outliers)
+        download_samples.sort()
+        upload_samples.sort()
+        n = len(download_samples)
+        
+        if n == 1:
+            download_mbps = download_samples[0]
+            upload_mbps = upload_samples[0]
+        elif n % 2 == 0:
+            # Even number of samples - average middle two
+            mid = n // 2
+            download_mbps = (download_samples[mid-1] + download_samples[mid]) / 2
+            upload_mbps = (upload_samples[mid-1] + upload_samples[mid]) / 2
+        else:
+            # Odd number - use middle value
+            mid = n // 2
+            download_mbps = download_samples[mid]
+            upload_mbps = upload_samples[mid]
+        
+        # Also calculate mean for validation
+        mean_download = sum(download_samples) / len(download_samples)
+        mean_upload = sum(upload_samples) / len(upload_samples)
+        
+        # Use median if it's significantly different from mean (indicates outliers)
+        # Otherwise use mean (more accurate for normal distributions)
+        download_std = sum(abs(x - mean_download) for x in download_samples) / len(download_samples)
+        upload_std = sum(abs(x - mean_upload) for x in upload_samples) / len(upload_samples)
+        
+        # If there's significant variation, prefer median; otherwise use mean
+        if download_std > mean_download * 0.3:  # More than 30% variation
+            download_result = download_mbps
+        else:
+            download_result = mean_download
+        
+        if upload_std > mean_upload * 0.3:
+            upload_result = upload_mbps
+        else:
+            upload_result = mean_upload
+        
+        return round(download_result, 2), round(upload_result, 2)
+    else:
+        # Fallback: return 0 if no valid samples
+        logging.warning("No valid throughput samples collected")
+        return 0.0, 0.0
 
 
 def get_per_device_bandwidth(timeout=5, iface=None):
@@ -471,7 +599,8 @@ def get_per_device_bandwidth(timeout=5, iface=None):
         except Exception as e:
             logging.debug(f"Per-device bandwidth packet error: {e}")
     
-    # Capture packets
+    # Capture packets with accurate timing
+    start_time = time.time()
     try:
         logging.info(f"Starting per-device bandwidth capture for {timeout}s on {iface}...")
         sniff(prn=pkt_handler, timeout=timeout, store=0, iface=iface)
@@ -479,16 +608,31 @@ def get_per_device_bandwidth(timeout=5, iface=None):
         logging.error(f"Per-device capture failed: {e}")
         return {}
     
-    # Calculate Mbps for each device
+    # Calculate actual capture duration for accurate measurements
+    actual_duration = time.time() - start_time
+    # Ensure minimum duration for accuracy
+    actual_duration = max(actual_duration, timeout * 0.9)  # Allow 10% tolerance
+    
+    # Calculate Mbps for each device with improved accuracy
     results = {}
     for ip, stats in device_stats.items():
         # Skip localhost and broadcast
         if ip in ("127.0.0.1", "0.0.0.0", "255.255.255.255"):
             continue
         
-        # Calculate Mbps
-        download_mbps = (stats["bytes_sent"] * 8) / (timeout * 1_000_000)
-        upload_mbps = (stats["bytes_recv"] * 8) / (timeout * 1_000_000)
+        # Calculate Mbps using actual duration for better accuracy
+        # Note: bytes_sent = data sent TO the device (download from device perspective)
+        #       bytes_recv = data received FROM the device (upload from device perspective)
+        if actual_duration > 0:
+            download_mbps = (stats["bytes_sent"] * 8) / (actual_duration * 1_000_000)
+            upload_mbps = (stats["bytes_recv"] * 8) / (actual_duration * 1_000_000)
+        else:
+            download_mbps = 0.0
+            upload_mbps = 0.0
+        
+        # Calculate packet rates for additional metrics
+        packet_rate_sent = stats["packets_sent"] / actual_duration if actual_duration > 0 else 0
+        packet_rate_recv = stats["packets_recv"] / actual_duration if actual_duration > 0 else 0
         
         results[ip] = {
             "bytes_sent": stats["bytes_sent"],
@@ -497,7 +641,10 @@ def get_per_device_bandwidth(timeout=5, iface=None):
             "upload_mbps": round(upload_mbps, 3),
             "packets_sent": stats["packets_sent"],
             "packets_recv": stats["packets_recv"],
-            "mac": stats["mac"]
+            "packet_rate_sent": round(packet_rate_sent, 2),  # NEW: packets per second
+            "packet_rate_recv": round(packet_rate_recv, 2),  # NEW: packets per second
+            "mac": stats["mac"],
+            "capture_duration": round(actual_duration, 2)  # NEW: actual measurement duration
         }
     
     logging.info(f"Per-device bandwidth capture complete: {len(results)} devices detected")
@@ -563,14 +710,16 @@ def manual_speedtest(full=False):
         return get_mini_speedtest(manual=True)
 
 
-def get_bandwidth(ip, interval=None):
+def get_bandwidth(ip, interval=None, samples=3, filter_loopback=True):
     """
-    Lightweight bandwidth measurement using psutil (NO DATA CONSUMPTION).
-    Measures actual network throughput passively.
+    Enhanced accurate bandwidth measurement using psutil (NO DATA CONSUMPTION).
+    Measures actual network throughput passively with improved accuracy.
     
     Args:
         ip (str): Target IP address (for status check and future per-device tracking)
-        interval (float): Measurement window in seconds (default: BANDWIDTH_INTERVAL)
+        interval (float): Measurement window in seconds per sample (default: BANDWIDTH_INTERVAL)
+        samples (int): Number of samples to average for accuracy (default: 3)
+        filter_loopback (bool): Filter out loopback interface traffic (default: True)
     
     Returns:
         dict: {
@@ -578,7 +727,8 @@ def get_bandwidth(ip, interval=None):
             "download": float (Mbps),
             "upload": float (Mbps),
             "quality": {"latency": str, "download": str, "upload": str},
-            "method": "psutil" or "offline"
+            "method": "psutil" or "offline",
+            "accuracy": "high" or "medium" or "low"  # NEW: indicates measurement quality
         }
     
     Note: For ISP speed tests, use get_speedtest_results(manual=True) or get_mini_speedtest(manual=True).
@@ -600,7 +750,8 @@ def get_bandwidth(ip, interval=None):
                 "download": "None",
                 "upload": "None"
             },
-            "method": "offline"
+            "method": "offline",
+            "accuracy": "low"
         }
 
     latency_history.append(latency)
@@ -615,12 +766,30 @@ def get_bandwidth(ip, interval=None):
                 "download": "Disabled",
                 "upload": "Disabled"
             },
-            "method": "disabled"
+            "method": "disabled",
+            "accuracy": "low"
         }
 
-    # Use lightweight psutil-based throughput measurement
+    # Use enhanced accurate psutil-based throughput measurement
     try:
-        dl, ul = get_throughput(interval=interval)
+        # Use longer interval per sample for better accuracy, but reduce samples if interval is large
+        if interval >= 2:
+            # For longer intervals, fewer samples needed
+            actual_samples = max(2, min(samples, 3))
+        else:
+            # For shorter intervals, use more samples
+            actual_samples = samples
+        
+        dl, ul = get_throughput(interval=interval, samples=actual_samples, filter_loopback=filter_loopback)
+        
+        # Determine accuracy based on samples and interval
+        if actual_samples >= 3 and interval >= 1:
+            accuracy = "high"
+        elif actual_samples >= 2 and interval >= 0.5:
+            accuracy = "medium"
+        else:
+            accuracy = "low"
+        
         return {
             "latency": latency,
             "download": dl,
@@ -630,7 +799,8 @@ def get_bandwidth(ip, interval=None):
                 "download": _rate_bandwidth(dl),
                 "upload": _rate_bandwidth(ul)
             },
-            "method": "psutil"
+            "method": "psutil",
+            "accuracy": accuracy
         }
     except Exception as e:
         logging.error(f"Bandwidth measurement failed: {e}")
@@ -643,7 +813,8 @@ def get_bandwidth(ip, interval=None):
                 "download": "Error",
                 "upload": "Error"
             },
-            "method": "error"
+            "method": "error",
+            "accuracy": "low"
         }
 
 
