@@ -207,6 +207,9 @@ class DashboardTab:
         self.pie_fig.patch.set_facecolor('#ffffff')
         self.pie_ax.set_facecolor('#ffffff')
         
+        # Use subplots_adjust instead of tight_layout for better stability
+        self.pie_fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+        
         # Remove spines for cleaner look
         self.pie_ax.spines['top'].set_visible(False)
         self.pie_ax.spines['right'].set_visible(False)
@@ -216,48 +219,6 @@ class DashboardTab:
         self.pie_canvas = FigureCanvasTkAgg(self.pie_fig, master=chart_frame)
         self.pie_canvas_widget = self.pie_canvas.get_tk_widget()
         self.pie_canvas_widget.pack(fill="both", expand=True)
-        
-        # Bind resize event to update chart size
-        self._pie_resize_id = None
-        def on_chart_resize(event=None):
-            if hasattr(self, 'pie_fig') and self.pie_fig and hasattr(self, 'pie_canvas_widget'):
-                try:
-                    # Cancel any pending resize to avoid multiple updates
-                    if self._pie_resize_id:
-                        self.root.after_cancel(self._pie_resize_id)
-                    
-                    # Schedule resize update after a short delay to avoid too frequent updates
-                    def update_size():
-                        try:
-                            # Get the current widget size (wait for actual size)
-                            self.pie_canvas_widget.update_idletasks()
-                            width = max(100, self.pie_canvas_widget.winfo_width())
-                            height = max(100, self.pie_canvas_widget.winfo_height())
-                            
-                            # Convert pixels to inches (assuming 100 DPI)
-                            width_inches = max(3.0, width / 100.0)
-                            height_inches = max(2.5, height / 100.0)
-                            
-                            # Maintain a reasonable aspect ratio (4:3)
-                            aspect_ratio = 4.0 / 3.0
-                            if width_inches / height_inches > aspect_ratio:
-                                width_inches = height_inches * aspect_ratio
-                            else:
-                                height_inches = width_inches / aspect_ratio
-                            
-                            # Update figure size
-                            self.pie_fig.set_size_inches(width_inches, height_inches)
-                            self.pie_fig.tight_layout(pad=1.0)
-                            self.pie_canvas.draw_idle()
-                        except Exception:
-                            pass  # Ignore resize errors
-                    
-                    self._pie_resize_id = self.root.after(100, update_size)
-                except Exception:
-                    pass  # Ignore resize errors during window destruction
-        
-        # Bind resize event with debouncing
-        self.pie_canvas_widget.bind('<Configure>', on_chart_resize)
         
         # Configure grid for responsive layout
         parent.grid_rowconfigure(row, weight=1)
@@ -269,12 +230,12 @@ class DashboardTab:
         chart_frame.grid(row=row, column=0, padx=5, pady=5, sticky="nsew")
         
         # Create line chart with optimized size and settings
-        self.health_fig, self.health_ax = plt.subplots(figsize=(4.5, 3.5), dpi=100)
+        self.health_fig, self.health_ax = plt.subplots(figsize=(5, 3.5), dpi=100)
         self.health_fig.patch.set_facecolor('#ffffff')
         self.health_ax.set_facecolor('#ffffff')
         
-        # Optimize figure settings
-        self.health_fig.tight_layout(pad=1.0)
+        # Use subplots_adjust instead of tight_layout for better stability
+        self.health_fig.subplots_adjust(left=0.15, right=0.95, top=0.9, bottom=0.15)
         
         # Style the chart
         self.health_ax.spines['top'].set_visible(False)
@@ -294,12 +255,12 @@ class DashboardTab:
         chart_frame.grid(row=row, column=0, padx=5, pady=5, sticky="nsew")
         
         # Create bar chart with optimized size and settings
-        self.bandwidth_fig, self.bandwidth_ax = plt.subplots(figsize=(4.5, 3.5), dpi=100)
+        self.bandwidth_fig, self.bandwidth_ax = plt.subplots(figsize=(5, 3.5), dpi=100)
         self.bandwidth_fig.patch.set_facecolor('#ffffff')
         self.bandwidth_ax.set_facecolor('#ffffff')
         
-        # Optimize figure settings
-        self.bandwidth_fig.tight_layout(pad=1.0)
+        # Use subplots_adjust instead of tight_layout for better stability
+        self.bandwidth_fig.subplots_adjust(left=0.15, right=0.95, top=0.9, bottom=0.15)
         
         # Style the chart
         self.bandwidth_ax.spines['top'].set_visible(False)
@@ -379,167 +340,193 @@ class DashboardTab:
         """Update the pie chart with stable data"""
         if not hasattr(self, 'pie_ax') or not self.pie_ax:
             return
+        
+        try:
+            self.pie_ax.clear()
+            if online + offline > 0:
+                # Optimized pie chart with better performance
+                wedges, texts, autotexts = self.pie_ax.pie(
+                    [online, offline],
+                    labels=['Online', 'Offline'],
+                    colors=['#28a745', '#dc3545'],
+                    autopct='%1.0f%%',  # Simplified percentage format
+                    startangle=90,
+                    textprops={'fontsize': 9},
+                    pctdistance=0.85  # Move percentage text closer to center
+                )
+                
+                # Optimize text rendering
+                for text in texts:
+                    text.set_fontsize(9)
+                for autotext in autotexts:
+                    autotext.set_fontsize(9)
+                    autotext.set_fontweight('bold')
+            else:
+                self.pie_ax.text(0.5, 0.5, 'No Data', ha='center', va='center', 
+                               transform=self.pie_ax.transAxes, fontsize=11)
             
-        self.pie_ax.clear()
-        if online + offline > 0:
-            # Optimized pie chart with better performance
-            wedges, texts, autotexts = self.pie_ax.pie(
-                [online, offline],
-                labels=['Online', 'Offline'],
-                colors=['#28a745', '#dc3545'],
-                autopct='%1.0f%%',  # Simplified percentage format
-                startangle=90,
-                textprops={'fontsize': 9},
-                pctdistance=0.85  # Move percentage text closer to center
-            )
+            self.pie_ax.axis('equal')
             
-            # Optimize text rendering
-            for text in texts:
-                text.set_fontsize(9)
-            for autotext in autotexts:
-                autotext.set_fontsize(9)
-                autotext.set_fontweight('bold')
-        else:
-            self.pie_ax.text(0.5, 0.5, 'No Data', ha='center', va='center', 
-                           transform=self.pie_ax.transAxes, fontsize=11)
-        self.pie_ax.axis('equal')
-        self.pie_canvas.draw_idle()  # Use draw_idle for better performance
+            # Force canvas to draw
+            self.pie_canvas.draw_idle()
+            self.pie_canvas.flush_events()
+        except Exception as e:
+            print(f"Error updating pie chart: {e}")
 
     def _update_network_health_chart(self):
         """Update the network health trend chart with stable data"""
         if not hasattr(self, 'health_ax') or not self.health_ax:
             return
-            
-        self.health_ax.clear()
         
-        # Generate stable health data - only show last 8 hours with 4 data points
-        hours = [0, 2, 4, 6]  # 0, 2, 4, 6 hours ago
-        health_scores = []
-        
-        # Calculate base health score from current data
         try:
-            response = requests.get(f"{self.api_base_url}/api/dashboard/stats", timeout=5)
-            if response.ok:
-                data = response.json()
-                total = int(data.get('total', 0))
-                online = int(data.get('online', 0))
-                base_score = (online / total * 100) if total > 0 else 0
-            else:
+            self.health_ax.clear()
+            
+            # Generate stable health data - only show last 6 hours with 4 data points
+            hours = [6, 4, 2, 0]  # 6, 4, 2, 0 hours ago (reversed for proper plotting)
+            health_scores = []
+            
+            # Calculate base health score from current data
+            try:
+                response = requests.get(f"{self.api_base_url}/api/dashboard/stats", timeout=5)
+                if response.ok:
+                    data = response.json()
+                    total = int(data.get('total', 0))
+                    online = int(data.get('online', 0))
+                    base_score = (online / total * 100) if total > 0 else 0
+                else:
+                    base_score = 0
+            except:
                 base_score = 0
-        except:
-            base_score = 0
-        
-        # Generate stable data points with minimal, consistent variation
-        for i in range(4):
-            hour = hours[i]
             
-            # Check if we have stored data for this hour
-            if hour not in self.health_data:
-                # Use a deterministic variation based on hour and base score
-                hour_factor = (6 - hour) / 6  # Decrease over time
-                variation = (base_score * 0.05 * hour_factor)  # 5% variation max
-                score = max(0, min(100, base_score + variation))
-                self.health_data[hour] = score
+            # Generate stable data points with minimal, consistent variation
+            for i, hour in enumerate(hours):
+                # Check if we have stored data for this hour
+                if hour not in self.health_data:
+                    # Use a deterministic variation based on hour and base score
+                    if hour == 0:
+                        # Current hour uses exact base score
+                        score = base_score
+                    else:
+                        # Past hours have slight variation
+                        hour_factor = (hour / 6)  # 0.17 to 1.0
+                        variation = (base_score * 0.03 * hour_factor)  # 3% variation max
+                        score = max(0, min(100, base_score - variation))
+                    self.health_data[hour] = score
+                
+                # Use stored health score
+                health_scores.append(self.health_data[hour])
             
-            # Use stored health score
-            health_scores.append(self.health_data[hour])
-        
-        # Plot with optimized styling
-        self.health_ax.plot(hours, health_scores, color='#28a745', linewidth=2.5, marker='o', markersize=5)
-        self.health_ax.fill_between(hours, health_scores, alpha=0.15, color='#28a745')
-        
-        # Optimized styling
-        self.health_ax.set_xlabel('Hours Ago', fontsize=10)
-        self.health_ax.set_ylabel('Health Score (%)', fontsize=10)
-        self.health_ax.set_title('Network Health (Last 8 Hours)', fontsize=12, fontweight='bold', pad=10)
-        self.health_ax.grid(True, alpha=0.15)
-        self.health_ax.set_ylim(0, 100)
-        
-        # Set x-axis labels
-        self.health_ax.set_xticks(hours)
-        self.health_ax.set_xticklabels([f'{h}h' for h in hours])
-        self.health_ax.margins(x=0.1, y=0.05)
-        
-        # Optimize drawing
-        self.health_canvas.draw_idle()
+            # Plot with optimized styling
+            self.health_ax.plot(hours, health_scores, color='#28a745', linewidth=2.5, marker='o', markersize=6)
+            self.health_ax.fill_between(hours, health_scores, alpha=0.2, color='#28a745')
+            
+            # Optimized styling
+            self.health_ax.set_xlabel('Hours Ago', fontsize=10)
+            self.health_ax.set_ylabel('Health Score (%)', fontsize=10)
+            self.health_ax.set_title('Network Health (Last 6 Hours)', fontsize=11, fontweight='bold', pad=8)
+            self.health_ax.grid(True, alpha=0.2, linestyle='--')
+            self.health_ax.set_ylim(0, 105)
+            
+            # Set x-axis labels - reverse order for proper display
+            self.health_ax.set_xticks(hours)
+            self.health_ax.set_xticklabels([f'{h}h' for h in hours])
+            self.health_ax.invert_xaxis()  # Show time progressing left to right
+            self.health_ax.margins(x=0.05, y=0.05)
+            
+            # Force canvas to draw
+            self.health_canvas.draw_idle()
+            self.health_canvas.flush_events()
+        except Exception as e:
+            print(f"Error updating health chart: {e}")
 
     def _update_bandwidth_chart(self):
         """Update the bandwidth usage chart with stable data"""
         if not hasattr(self, 'bandwidth_ax') or not self.bandwidth_ax:
             return
-            
-        self.bandwidth_ax.clear()
         
-        # Get router data for bandwidth visualization
         try:
-            response = requests.get(f"{self.api_base_url}/api/routers", timeout=5)
-            if response.ok:
-                routers = response.json() or []
-            else:
+            self.bandwidth_ax.clear()
+            
+            # Get router data for bandwidth visualization
+            try:
+                response = requests.get(f"{self.api_base_url}/api/routers", timeout=5)
+                if response.ok:
+                    routers = response.json() or []
+                else:
+                    routers = []
+            except:
                 routers = []
-        except:
-            routers = []
-        
-        if not routers:
-            self.bandwidth_ax.text(0.5, 0.5, 'No Router Data', ha='center', va='center', 
-                                 transform=self.bandwidth_ax.transAxes, fontsize=12)
+            
+            if not routers:
+                self.bandwidth_ax.text(0.5, 0.5, 'No Router Data', ha='center', va='center', 
+                                     transform=self.bandwidth_ax.transAxes, fontsize=12)
+                self.bandwidth_canvas.draw_idle()
+                self.bandwidth_canvas.flush_events()
+                return
+            
+            # Get top 5 routers for bandwidth visualization
+            top_routers = routers[:5] if len(routers) >= 5 else routers
+            router_names = []
+            bandwidth_usage = []
+            
+            # Generate stable bandwidth data based on router characteristics
+            for i, router in enumerate(top_routers):
+                router_id = router.get('id', 0)
+                router_name = router.get('name', f'Router {router_id}')
+                
+                # Truncate long names
+                display_name = router_name[:12] + '...' if len(router_name) > 12 else router_name
+                router_names.append(display_name)
+                
+                # Check router status - look for status field
+                router_status = router.get('status', 'unknown')
+                is_online = router_status not in ['offline', 'down', 'disconnected']
+                
+                # Check if we have stored data for this router
+                router_key = f"{router_id}_{router_name}"
+                if router_key not in self.bandwidth_data or not is_online:
+                    if is_online:
+                        # Initialize stable bandwidth based on router characteristics
+                        # Use router_id and name hash for deterministic but varied values
+                        name_hash = sum(ord(c) for c in router_name)
+                        base_bandwidth = ((router_id * 17 + name_hash) % 50) + 30  # Range: 30-80%
+                        self.bandwidth_data[router_key] = base_bandwidth
+                    else:
+                        # Offline routers show 0% bandwidth
+                        self.bandwidth_data[router_key] = 0
+                
+                # Get stored bandwidth
+                bandwidth = self.bandwidth_data[router_key]
+                bandwidth_usage.append(bandwidth)
+            
+            # Create optimized bar chart with gradient colors
+            colors = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6610f2']
+            bars = self.bandwidth_ax.bar(range(len(router_names)), bandwidth_usage, 
+                                       color=colors[:len(router_names)], alpha=0.85, width=0.65)
+            
+            # Add value labels on bars - optimized
+            for i, (bar, value) in enumerate(zip(bars, bandwidth_usage)):
+                height = bar.get_height()
+                if height > 0:
+                    self.bandwidth_ax.text(bar.get_x() + bar.get_width()/2., height + 2,
+                                         f'{value:.0f}%', ha='center', va='bottom', 
+                                         fontsize=9, fontweight='bold')
+            
+            # Optimized styling
+            self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
+            self.bandwidth_ax.set_ylabel('Usage (%)', fontsize=10)
+            self.bandwidth_ax.set_title(f'Top {len(top_routers)} Routers by Bandwidth', fontsize=11, fontweight='bold', pad=8)
+            self.bandwidth_ax.set_xticks(range(len(router_names)))
+            self.bandwidth_ax.set_xticklabels(router_names, rotation=15, ha='right', fontsize=8)
+            self.bandwidth_ax.grid(True, alpha=0.2, axis='y', linestyle='--')
+            self.bandwidth_ax.set_ylim(0, 105)
+            self.bandwidth_ax.margins(x=0.1, y=0.05)
+            
+            # Force canvas to draw
             self.bandwidth_canvas.draw_idle()
-            return
-        
-        # Get top 3 routers by bandwidth with stable data
-        router_names = [r.get('name', f'Router {r.get("id", "Unknown")}')[:10] for r in routers[:3]]
-        
-        # Generate stable bandwidth data based on router characteristics
-        bandwidth_usage = []
-        for i, router in enumerate(routers[:3]):
-            router_id = router.get('id', 0)
-            router_name = router.get('name', f'Router {router_id}')
-            
-            # Check if router is online (simplified check)
-            is_online = True  # Assume online for client view
-            
-            # Check if we have stored data for this router
-            if router_name not in self.bandwidth_data:
-                # Initialize stable bandwidth based on router ID for consistency
-                base_bandwidth = (router_id * 15) % 60 + 20  # Range: 20-80%
-                self.bandwidth_data[router_name] = base_bandwidth
-            
-            # Get stored bandwidth and adjust based on online status
-            stored_bandwidth = self.bandwidth_data[router_name]
-            
-            if is_online:
-                # Online routers show their stored bandwidth (stable)
-                bandwidth = stored_bandwidth
-            else:
-                # Offline routers show 0% bandwidth
-                bandwidth = 0
-            
-            bandwidth_usage.append(bandwidth)
-        
-        # Create optimized bar chart
-        colors = ['#007bff', '#28a745', '#ffc107']
-        bars = self.bandwidth_ax.bar(range(len(router_names)), bandwidth_usage, 
-                                   color=colors, alpha=0.85, width=0.7)
-        
-        # Add value labels on bars - optimized
-        for i, (bar, value) in enumerate(zip(bars, bandwidth_usage)):
-            height = bar.get_height()
-            self.bandwidth_ax.text(bar.get_x() + bar.get_width()/2., height + 1.5,
-                                 f'{value:.0f}%', ha='center', va='bottom', 
-                                 fontsize=9, fontweight='bold')
-        
-        # Optimized styling
-        self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
-        self.bandwidth_ax.set_ylabel('Bandwidth Usage (%)', fontsize=10)
-        self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
-        self.bandwidth_ax.set_xticks(range(len(router_names)))
-        self.bandwidth_ax.set_xticklabels(router_names, fontsize=9)
-        self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
-        self.bandwidth_ax.set_ylim(0, 100)
-        self.bandwidth_ax.margins(x=0.15, y=0.05)
-        
-        # Optimize drawing
-        self.bandwidth_canvas.draw_idle()
+            self.bandwidth_canvas.flush_events()
+        except Exception as e:
+            print(f"Error updating bandwidth chart: {e}")
 
     def start_auto_update(self):
         """Start the automatic update timer"""
@@ -569,3 +556,25 @@ class DashboardTab:
     def cleanup(self):
         """Clean up resources when tab is destroyed"""
         self.stop_auto_update()
+        
+        # Clean up matplotlib figures to prevent memory leaks
+        try:
+            if hasattr(self, 'pie_fig') and self.pie_fig:
+                plt.close(self.pie_fig)
+                self.pie_fig = None
+        except Exception:
+            pass
+        
+        try:
+            if hasattr(self, 'health_fig') and self.health_fig:
+                plt.close(self.health_fig)
+                self.health_fig = None
+        except Exception:
+            pass
+        
+        try:
+            if hasattr(self, 'bandwidth_fig') and self.bandwidth_fig:
+                plt.close(self.bandwidth_fig)
+                self.bandwidth_fig = None
+        except Exception:
+            pass

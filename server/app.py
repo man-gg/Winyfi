@@ -119,6 +119,44 @@ def create_app():
         except Exception as exc:
             return jsonify({"error": str(exc)}), 500
 
+    @app.get("/api/routers/with-bandwidth")
+    def routers_with_bandwidth():
+        """Get all routers with their latest bandwidth data from database"""
+        try:
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Query to get routers with their latest bandwidth data
+            query = """
+                SELECT 
+                    r.*,
+                    bl.download_mbps,
+                    bl.upload_mbps,
+                    bl.latency_ms,
+                    bl.timestamp as bandwidth_timestamp
+                FROM routers r
+                LEFT JOIN (
+                    SELECT 
+                        router_id,
+                        download_mbps,
+                        upload_mbps,
+                        latency_ms,
+                        timestamp,
+                        ROW_NUMBER() OVER (PARTITION BY router_id ORDER BY timestamp DESC) as rn
+                    FROM bandwidth_logs
+                ) bl ON r.id = bl.router_id AND bl.rn = 1
+                ORDER BY r.id
+            """
+            
+            cursor.execute(query)
+            routers = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            
+            return jsonify(routers)
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
     @app.get("/api/routers/<int:router_id>/status")
     def router_status(router_id):
         try:

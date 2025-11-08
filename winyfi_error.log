@@ -12418,6 +12418,7 @@ UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f50d' in posit
 2025-11-05 14:40:48,081 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
 2025-11-05 14:40:48,081 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
 2025-11-05 14:40:48,083 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+<<<<<<< Updated upstream
 2025-11-05 22:09:06,567 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
 2025-11-05 22:09:06,585 INFO [db] Activity logged: User 2 - Login - None
 2025-11-05 22:09:12,813 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
@@ -13391,3 +13392,1410 @@ KeyboardInterrupt
 2025-11-06 11:47:15,764 INFO [root] Detection status: CLEAN
 2025-11-06 11:47:15,764 INFO [root] Overall status: CLEAN, max_severity=0.3
 2025-11-06 11:47:15,772 INFO [db] Loop detection saved to database (ID: 360, severity: 0.34, cross-subnet: False)
+=======
+2025-11-05 20:22:12,490 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-05 20:22:12,524 INFO [db] Activity logged: User 2 - Login - None
+2025-11-05 20:22:21,613 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 20:22:21,701 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:22:21,705 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 20:22:21,709 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:22:21,713 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:22:21,716 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:22:26,726 INFO [root] 📦 Capture complete. Packets seen: 37, Analyzed: 37
+2025-11-05 20:22:26,738 INFO [root] Unique MACs detected: 1
+2025-11-05 20:22:26,740 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 20:22:26,741 INFO [root] Detection status: CLEAN
+2025-11-05 20:22:26,745 INFO [root] 📦 Capture complete. Packets seen: 1815, Analyzed: 1815
+2025-11-05 20:22:26,746 INFO [root] Unique MACs detected: 0
+2025-11-05 20:22:26,750 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 20:22:26,750 INFO [root] Detection status: CLEAN
+2025-11-05 20:22:26,751 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 20:22:26,765 INFO [db] Loop detection saved to database (ID: 460, severity: 0.68, cross-subnet: False)
+2025-11-05 20:25:44,532 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=100, sampling=False)
+2025-11-05 20:25:44,608 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:25:44,609 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Wi-Fi)
+2025-11-05 20:25:44,610 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:25:44,610 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:25:44,610 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:25:49,613 INFO [root] 📦 Capture complete. Packets seen: 48, Analyzed: 48
+2025-11-05 20:25:49,614 INFO [root] Unique MACs detected: 1
+2025-11-05 20:25:49,615 INFO [root] Max severity: 0.7 (threshold: 100)
+2025-11-05 20:25:49,616 INFO [root] Detection status: CLEAN
+2025-11-05 20:25:49,637 INFO [root] 📦 Capture complete. Packets seen: 195, Analyzed: 195
+2025-11-05 20:25:49,638 INFO [root] Unique MACs detected: 0
+2025-11-05 20:25:49,639 INFO [root] Max severity: 0.0 (threshold: 100)
+2025-11-05 20:25:49,640 INFO [root] Detection status: CLEAN
+2025-11-05 20:25:49,643 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 20:25:49,667 INFO [db] Loop detection saved to database (ID: 461, severity: 0.68, cross-subnet: False)
+2025-11-05 20:27:26,793 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 20:27:26,873 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:27:26,875 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 20:27:26,875 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:27:26,876 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:27:26,876 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:27:31,887 INFO [root] 📦 Capture complete. Packets seen: 45, Analyzed: 45
+2025-11-05 20:27:31,895 INFO [root] Unique MACs detected: 1
+2025-11-05 20:27:31,897 INFO [root] 📦 Capture complete. Packets seen: 175, Analyzed: 175
+2025-11-05 20:27:31,897 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 20:27:31,901 INFO [root] Unique MACs detected: 0
+2025-11-05 20:27:31,905 INFO [root] Detection status: CLEAN
+2025-11-05 20:27:31,919 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 20:27:31,922 INFO [root] Detection status: CLEAN
+2025-11-05 20:27:31,939 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 20:27:32,005 INFO [db] Loop detection saved to database (ID: 462, severity: 0.68, cross-subnet: False)
+2025-11-05 20:32:32,076 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 20:32:32,155 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:32:32,157 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 20:32:32,157 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:32:32,158 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:32:32,158 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:32:37,170 INFO [root] 📦 Capture complete. Packets seen: 60, Analyzed: 60
+2025-11-05 20:32:37,171 INFO [root] Unique MACs detected: 1
+2025-11-05 20:32:37,172 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 20:32:37,173 INFO [root] Detection status: CLEAN
+2025-11-05 20:32:37,210 INFO [root] 📦 Capture complete. Packets seen: 231, Analyzed: 231
+2025-11-05 20:32:37,211 INFO [root] Unique MACs detected: 0
+2025-11-05 20:32:37,212 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 20:32:37,213 INFO [root] Detection status: CLEAN
+2025-11-05 20:32:37,215 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 20:32:37,238 INFO [db] Loop detection saved to database (ID: 463, severity: 0.68, cross-subnet: False)
+2025-11-05 20:37:37,272 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 20:37:37,348 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:37:37,352 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 20:37:37,353 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:37:37,354 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:37:37,355 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:37:42,372 INFO [root] 📦 Capture complete. Packets seen: 7264, Analyzed: 7264
+2025-11-05 20:37:42,372 INFO [root] Unique MACs detected: 0
+2025-11-05 20:37:42,373 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 20:37:42,373 INFO [root] 📦 Capture complete. Packets seen: 62, Analyzed: 62
+2025-11-05 20:37:42,374 INFO [root] Detection status: CLEAN
+2025-11-05 20:37:42,374 INFO [root] Unique MACs detected: 1
+2025-11-05 20:37:42,375 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 20:37:42,376 INFO [root] Detection status: CLEAN
+2025-11-05 20:37:42,377 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 20:37:42,388 INFO [db] Loop detection saved to database (ID: 464, severity: 0.68, cross-subnet: False)
+2025-11-05 20:42:16,081 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 640, in _update_reports_phase
+    self.reports_loading_label.update_idletasks()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1473, in update_idletasks
+    self.tk.call('update', 'idletasks')
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+2025-11-05 20:42:19,022 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 640, in _update_reports_phase
+    self.reports_loading_label.update_idletasks()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1473, in update_idletasks
+    self.tk.call('update', 'idletasks')
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+TimeoutError: timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 3426, in refresh_details
+    response = requests.get(f"{self.unifi_api_url}/api/unifi/devices", timeout=(2, 5))
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connectionpool.py", line 493, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connection.py", line 494, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1331, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1091, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1035, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connection.py", line 325, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\util\connection.py", line 81, in create_connection
+    sock.close()
+    ~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 501, in close
+    def close(self):
+    
+KeyboardInterrupt
+
+2025-11-05 20:42:46,151 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 20:42:46,211 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:42:46,214 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 20:42:46,216 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:42:46,217 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:42:46,219 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:42:51,227 INFO [root] 📦 Capture complete. Packets seen: 136, Analyzed: 136
+2025-11-05 20:42:51,230 INFO [root] Unique MACs detected: 1
+2025-11-05 20:42:51,230 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-05 20:42:51,231 INFO [root] Detection status: CLEAN
+2025-11-05 20:42:51,234 INFO [root] 📦 Capture complete. Packets seen: 5730, Analyzed: 5730
+2025-11-05 20:42:51,235 INFO [root] Unique MACs detected: 0
+2025-11-05 20:42:51,235 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 20:42:51,237 INFO [root] Detection status: CLEAN
+2025-11-05 20:42:51,240 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-05 20:42:51,261 INFO [db] Loop detection saved to database (ID: 465, severity: 0.34, cross-subnet: False)
+2025-11-05 20:47:57,052 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-05 20:47:57,089 INFO [db] Activity logged: User 2 - Login - None
+2025-11-05 20:48:05,973 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 20:48:06,044 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:48:06,046 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 20:48:06,047 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:48:06,048 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:48:06,050 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:48:11,079 INFO [root] 📦 Capture complete. Packets seen: 2923, Analyzed: 2923
+2025-11-05 20:48:11,082 INFO [root] Unique MACs detected: 0
+2025-11-05 20:48:11,083 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 20:48:11,083 INFO [root] Detection status: CLEAN
+2025-11-05 20:48:11,161 INFO [root] 📦 Capture complete. Packets seen: 93, Analyzed: 93
+2025-11-05 20:48:11,161 INFO [root] Unique MACs detected: 3
+2025-11-05 20:48:11,162 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 20:48:11,162 INFO [root] Detection status: CLEAN
+2025-11-05 20:48:11,166 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 20:48:11,179 INFO [db] Loop detection saved to database (ID: 466, severity: 0.68, cross-subnet: False)
+2025-11-05 20:53:11,222 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 20:53:11,304 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:53:11,305 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 20:53:11,306 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:53:11,306 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:53:11,306 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:53:16,316 INFO [root] 📦 Capture complete. Packets seen: 224, Analyzed: 224
+2025-11-05 20:53:16,319 INFO [root] Unique MACs detected: 2
+2025-11-05 20:53:16,321 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 20:53:16,322 INFO [root] Detection status: CLEAN
+2025-11-05 20:53:16,324 INFO [root] 📦 Capture complete. Packets seen: 156, Analyzed: 156
+2025-11-05 20:53:16,325 INFO [root] Unique MACs detected: 0
+2025-11-05 20:53:16,327 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 20:53:16,336 INFO [root] Detection status: CLEAN
+2025-11-05 20:53:16,337 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 20:53:16,395 INFO [db] Loop detection saved to database (ID: 467, severity: 0.68, cross-subnet: False)
+2025-11-05 20:58:16,808 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 20:58:16,886 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 20:58:16,887 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 20:58:16,888 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 20:58:16,888 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 20:58:16,889 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 20:58:21,892 INFO [root] 📦 Capture complete. Packets seen: 156, Analyzed: 156
+2025-11-05 20:58:21,897 INFO [root] Unique MACs detected: 2
+2025-11-05 20:58:21,898 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 20:58:21,899 INFO [root] Detection status: CLEAN
+2025-11-05 20:58:21,990 INFO [root] 📦 Capture complete. Packets seen: 93, Analyzed: 93
+2025-11-05 20:58:21,990 INFO [root] Unique MACs detected: 0
+2025-11-05 20:58:21,991 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 20:58:21,992 INFO [root] Detection status: CLEAN
+2025-11-05 20:58:21,994 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 20:58:22,015 INFO [db] Loop detection saved to database (ID: 468, severity: 0.68, cross-subnet: False)
+2025-11-05 21:03:22,058 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 21:03:22,155 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 21:03:22,157 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 21:03:22,158 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 21:03:22,158 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 21:03:22,158 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 21:03:27,249 INFO [root] 📦 Capture complete. Packets seen: 88, Analyzed: 88
+2025-11-05 21:03:27,250 INFO [root] Unique MACs detected: 2
+2025-11-05 21:03:27,251 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-05 21:03:27,252 INFO [root] Detection status: CLEAN
+2025-11-05 21:03:27,257 INFO [root] 📦 Capture complete. Packets seen: 190, Analyzed: 190
+2025-11-05 21:03:27,258 INFO [root] Unique MACs detected: 0
+2025-11-05 21:03:27,259 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 21:03:27,260 INFO [root] Detection status: CLEAN
+2025-11-05 21:03:27,263 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-05 21:03:27,289 INFO [db] Loop detection saved to database (ID: 469, severity: 0.34, cross-subnet: False)
+2025-11-05 21:08:27,465 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 21:08:27,512 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 21:08:27,513 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 21:08:27,514 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 21:08:27,514 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 21:08:27,517 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 21:08:32,529 INFO [root] 📦 Capture complete. Packets seen: 116, Analyzed: 116
+2025-11-05 21:08:32,530 INFO [root] Unique MACs detected: 0
+2025-11-05 21:08:32,530 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 21:08:32,531 INFO [root] Detection status: CLEAN
+2025-11-05 21:08:32,566 INFO [root] 📦 Capture complete. Packets seen: 113, Analyzed: 113
+2025-11-05 21:08:32,567 INFO [root] Unique MACs detected: 2
+2025-11-05 21:08:32,567 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 21:08:32,567 INFO [root] Detection status: CLEAN
+2025-11-05 21:08:32,569 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 21:08:32,598 INFO [db] Loop detection saved to database (ID: 470, severity: 0.72, cross-subnet: False)
+2025-11-05 21:13:32,656 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 21:13:32,750 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 21:13:32,753 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 21:13:32,754 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 21:13:32,754 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 21:13:32,755 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 21:13:37,766 INFO [root] 📦 Capture complete. Packets seen: 93, Analyzed: 93
+2025-11-05 21:13:37,767 INFO [root] Unique MACs detected: 2
+2025-11-05 21:13:37,767 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-05 21:13:37,769 INFO [root] Detection status: CLEAN
+2025-11-05 21:13:37,770 INFO [root] 📦 Capture complete. Packets seen: 5928, Analyzed: 5928
+2025-11-05 21:13:37,771 INFO [root] Unique MACs detected: 0
+2025-11-05 21:13:37,771 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 21:13:37,771 INFO [root] Detection status: CLEAN
+2025-11-05 21:13:37,774 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-05 21:13:37,816 INFO [db] Loop detection saved to database (ID: 471, severity: 0.34, cross-subnet: False)
+2025-11-05 21:18:37,848 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 21:18:37,941 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 21:18:37,943 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 21:18:37,946 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 21:18:37,947 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 21:18:37,948 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 21:18:42,959 INFO [root] 📦 Capture complete. Packets seen: 100, Analyzed: 100
+2025-11-05 21:18:42,961 INFO [root] Unique MACs detected: 2
+2025-11-05 21:18:42,962 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 21:18:42,962 INFO [root] Detection status: CLEAN
+2025-11-05 21:18:42,963 INFO [root] 📦 Capture complete. Packets seen: 6657, Analyzed: 6657
+2025-11-05 21:18:42,964 INFO [root] Unique MACs detected: 0
+2025-11-05 21:18:42,964 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 21:18:42,965 INFO [root] Detection status: CLEAN
+2025-11-05 21:18:42,966 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 21:18:42,981 INFO [db] Loop detection saved to database (ID: 472, severity: 0.68, cross-subnet: False)
+2025-11-05 21:23:43,015 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 21:23:43,111 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 21:23:43,114 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 21:23:43,117 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 21:23:43,121 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 21:23:43,125 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 21:23:48,132 INFO [root] 📦 Capture complete. Packets seen: 103, Analyzed: 103
+2025-11-05 21:23:48,135 INFO [root] Unique MACs detected: 2
+2025-11-05 21:23:48,136 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 21:23:48,136 INFO [root] Detection status: CLEAN
+2025-11-05 21:23:48,139 INFO [root] 📦 Capture complete. Packets seen: 2288, Analyzed: 2288
+2025-11-05 21:23:48,140 INFO [root] Unique MACs detected: 0
+2025-11-05 21:23:48,141 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 21:23:48,142 INFO [root] Detection status: CLEAN
+2025-11-05 21:23:48,145 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 21:23:48,164 INFO [db] Loop detection saved to database (ID: 473, severity: 0.68, cross-subnet: False)
+2025-11-05 22:30:08,412 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-05 22:30:08,446 INFO [db] Activity logged: User 2 - Login - None
+2025-11-05 22:30:17,549 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 22:30:17,640 INFO [root] Interfaces to scan: ['Ethernet', 'Loopback Pseudo-Interface 1']
+2025-11-05 22:30:17,642 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Ethernet)
+2025-11-05 22:30:17,642 INFO [root] 📡 Starting packet capture on interface: Ethernet
+2025-11-05 22:30:17,643 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 22:30:17,645 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 22:30:22,685 INFO [root] 📦 Capture complete. Packets seen: 1890, Analyzed: 1890
+2025-11-05 22:30:22,686 INFO [root] Unique MACs detected: 0
+2025-11-05 22:30:22,686 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:30:22,687 INFO [root] Detection status: CLEAN
+2025-11-05 22:30:22,752 INFO [root] 📦 Capture complete. Packets seen: 29, Analyzed: 29
+2025-11-05 22:30:22,753 INFO [root] Unique MACs detected: 0
+2025-11-05 22:30:22,754 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:30:22,755 INFO [root] Detection status: CLEAN
+2025-11-05 22:30:22,756 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 22:30:22,797 INFO [db] Loop detection saved to database (ID: 474, severity: 0.00, cross-subnet: False)
+2025-11-05 22:31:14,301 INFO [db] Activity logged: User 2 - Edit Router - Samsung1
+2025-11-05 22:35:22,808 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 22:35:22,871 INFO [root] Interfaces to scan: ['Ethernet', 'Loopback Pseudo-Interface 1']
+2025-11-05 22:35:22,876 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Ethernet)
+2025-11-05 22:35:22,877 INFO [root] 📡 Starting packet capture on interface: Ethernet
+2025-11-05 22:35:22,877 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 22:35:22,878 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 22:35:27,880 INFO [root] 📦 Capture complete. Packets seen: 27, Analyzed: 27
+2025-11-05 22:35:27,882 INFO [root] Unique MACs detected: 0
+2025-11-05 22:35:27,882 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:35:27,886 INFO [root] Detection status: CLEAN
+2025-11-05 22:35:27,902 INFO [root] 📦 Capture complete. Packets seen: 285, Analyzed: 285
+2025-11-05 22:35:27,904 INFO [root] Unique MACs detected: 0
+2025-11-05 22:35:27,905 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:35:27,906 INFO [root] Detection status: CLEAN
+2025-11-05 22:35:27,907 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 22:35:27,933 INFO [db] Loop detection saved to database (ID: 475, severity: 0.00, cross-subnet: False)
+2025-11-05 22:40:29,283 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 22:40:29,357 INFO [root] Interfaces to scan: ['Ethernet', 'Loopback Pseudo-Interface 1']
+2025-11-05 22:40:29,359 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Ethernet)
+2025-11-05 22:40:29,359 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 22:40:29,359 INFO [root] 📡 Starting packet capture on interface: Ethernet
+2025-11-05 22:40:29,360 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 22:40:34,371 INFO [root] 📦 Capture complete. Packets seen: 17, Analyzed: 17
+2025-11-05 22:40:34,372 INFO [root] Unique MACs detected: 0
+2025-11-05 22:40:34,372 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:40:34,373 INFO [root] Detection status: CLEAN
+2025-11-05 22:40:34,375 INFO [root] 📦 Capture complete. Packets seen: 287, Analyzed: 287
+2025-11-05 22:40:34,376 INFO [root] Unique MACs detected: 0
+2025-11-05 22:40:34,376 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:40:34,376 INFO [root] Detection status: CLEAN
+2025-11-05 22:40:34,377 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 22:40:34,388 INFO [db] Loop detection saved to database (ID: 476, severity: 0.00, cross-subnet: False)
+2025-11-05 22:45:34,380 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 22:45:34,431 INFO [root] Interfaces to scan: ['Loopback Pseudo-Interface 1']
+2025-11-05 22:45:34,432 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 22:45:34,433 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 22:45:39,500 INFO [root] 📦 Capture complete. Packets seen: 253, Analyzed: 253
+2025-11-05 22:45:39,501 INFO [root] Unique MACs detected: 0
+2025-11-05 22:45:39,502 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:45:39,503 INFO [root] Detection status: CLEAN
+2025-11-05 22:45:39,505 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 22:45:39,526 INFO [db] Loop detection saved to database (ID: 477, severity: 0.00, cross-subnet: False)
+2025-11-05 22:50:39,546 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 22:50:39,670 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 22:50:39,674 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 22:50:39,675 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 22:50:39,675 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 22:50:39,676 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 22:50:44,696 INFO [root] 📦 Capture complete. Packets seen: 65, Analyzed: 65
+2025-11-05 22:50:44,697 INFO [root] Unique MACs detected: 2
+2025-11-05 22:50:44,698 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 22:50:44,699 INFO [root] Detection status: CLEAN
+2025-11-05 22:50:44,759 INFO [root] 📦 Capture complete. Packets seen: 348, Analyzed: 348
+2025-11-05 22:50:44,762 INFO [root] Unique MACs detected: 0
+2025-11-05 22:50:44,763 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:50:44,764 INFO [root] Detection status: CLEAN
+2025-11-05 22:50:44,766 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 22:50:44,783 INFO [db] Loop detection saved to database (ID: 478, severity: 0.68, cross-subnet: False)
+2025-11-05 22:55:44,805 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 22:55:44,855 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 22:55:44,857 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 22:55:44,858 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 22:55:44,860 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 22:55:44,865 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 22:55:49,913 INFO [root] 📦 Capture complete. Packets seen: 75, Analyzed: 75
+2025-11-05 22:55:49,914 INFO [root] 📦 Capture complete. Packets seen: 7040, Analyzed: 7040
+2025-11-05 22:55:49,915 INFO [root] Unique MACs detected: 3
+2025-11-05 22:55:49,917 INFO [root] Unique MACs detected: 0
+2025-11-05 22:55:49,918 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 22:55:49,919 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 22:55:49,920 INFO [root] Detection status: CLEAN
+2025-11-05 22:55:49,920 INFO [root] Detection status: CLEAN
+2025-11-05 22:55:49,924 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 22:55:49,943 INFO [db] Loop detection saved to database (ID: 479, severity: 0.68, cross-subnet: False)
+2025-11-05 23:00:49,966 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 23:00:50,011 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 23:00:50,013 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 23:00:50,013 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:00:50,014 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 23:00:50,016 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:00:55,026 INFO [root] 📦 Capture complete. Packets seen: 65, Analyzed: 65
+2025-11-05 23:00:55,027 INFO [root] Unique MACs detected: 3
+2025-11-05 23:00:55,029 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-05 23:00:55,042 INFO [root] 📦 Capture complete. Packets seen: 423, Analyzed: 423
+2025-11-05 23:00:55,053 INFO [root] Detection status: CLEAN
+2025-11-05 23:00:55,070 INFO [root] Unique MACs detected: 0
+2025-11-05 23:00:55,071 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:00:55,071 INFO [root] Detection status: CLEAN
+2025-11-05 23:00:55,074 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 23:00:55,114 INFO [db] Loop detection saved to database (ID: 480, severity: 0.68, cross-subnet: False)
+2025-11-05 23:05:55,278 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 23:05:55,328 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-05 23:05:55,329 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-05 23:05:55,330 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-05 23:05:55,330 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:05:55,331 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:06:00,368 INFO [root] 📦 Capture complete. Packets seen: 1018, Analyzed: 1018
+2025-11-05 23:06:00,368 INFO [root] Unique MACs detected: 3
+2025-11-05 23:06:00,369 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-05 23:06:00,369 INFO [root] Detection status: CLEAN
+2025-11-05 23:06:00,409 INFO [root] 📦 Capture complete. Packets seen: 263, Analyzed: 263
+2025-11-05 23:06:00,410 INFO [root] Unique MACs detected: 0
+2025-11-05 23:06:00,410 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:06:00,410 INFO [root] Detection status: CLEAN
+2025-11-05 23:06:00,411 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-05 23:06:00,421 INFO [db] Loop detection saved to database (ID: 481, severity: 0.34, cross-subnet: False)
+2025-11-05 23:08:19,525 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=100, sampling=False)
+2025-11-05 23:08:19,570 INFO [root] Interfaces to scan: ['Ethernet', 'Loopback Pseudo-Interface 1']
+2025-11-05 23:08:19,572 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Ethernet)
+2025-11-05 23:08:19,573 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:08:19,573 INFO [root] 📡 Starting packet capture on interface: Ethernet
+2025-11-05 23:08:19,575 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:08:21,829 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=100, sampling=False)
+2025-11-05 23:08:21,875 INFO [root] Interfaces to scan: ['Ethernet', 'Loopback Pseudo-Interface 1']
+2025-11-05 23:08:21,877 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Ethernet)
+2025-11-05 23:08:21,877 INFO [root] 📡 Starting packet capture on interface: Ethernet
+2025-11-05 23:08:21,878 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:08:21,878 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:08:24,582 INFO [root] 📦 Capture complete. Packets seen: 45, Analyzed: 45
+2025-11-05 23:08:24,582 INFO [root] Unique MACs detected: 1
+2025-11-05 23:08:24,583 INFO [root] Max severity: 0.7 (threshold: 100)
+2025-11-05 23:08:24,583 INFO [root] Detection status: CLEAN
+2025-11-05 23:08:24,598 INFO [root] 📦 Capture complete. Packets seen: 430, Analyzed: 430
+2025-11-05 23:08:24,599 INFO [root] Unique MACs detected: 0
+2025-11-05 23:08:24,600 INFO [root] Max severity: 0.0 (threshold: 100)
+2025-11-05 23:08:24,601 INFO [root] Detection status: CLEAN
+2025-11-05 23:08:24,602 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 23:08:24,624 INFO [db] Loop detection saved to database (ID: 482, severity: 0.68, cross-subnet: False)
+2025-11-05 23:08:26,879 INFO [root] 📦 Capture complete. Packets seen: 50, Analyzed: 50
+2025-11-05 23:08:26,880 INFO [root] Unique MACs detected: 1
+2025-11-05 23:08:26,880 INFO [root] Max severity: 0.7 (threshold: 100)
+2025-11-05 23:08:26,881 INFO [root] Detection status: CLEAN
+2025-11-05 23:08:26,903 INFO [root] 📦 Capture complete. Packets seen: 642, Analyzed: 642
+2025-11-05 23:08:26,904 INFO [root] Unique MACs detected: 0
+2025-11-05 23:08:26,905 INFO [root] Max severity: 0.0 (threshold: 100)
+2025-11-05 23:08:26,905 INFO [root] Detection status: CLEAN
+2025-11-05 23:08:26,909 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-05 23:08:27,758 INFO [db] Loop detection saved to database (ID: 483, severity: 0.68, cross-subnet: False)
+2025-11-05 23:08:37,468 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=100, sampling=False)
+2025-11-05 23:08:37,513 INFO [root] Interfaces to scan: ['Ethernet', 'Loopback Pseudo-Interface 1']
+2025-11-05 23:08:37,514 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Ethernet)
+2025-11-05 23:08:37,515 INFO [root] 📡 Starting packet capture on interface: Ethernet
+2025-11-05 23:08:37,515 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:08:37,516 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:08:42,531 INFO [root] 📦 Capture complete. Packets seen: 1321, Analyzed: 1321
+2025-11-05 23:08:42,532 INFO [root] Unique MACs detected: 1
+2025-11-05 23:08:42,533 INFO [root] Max severity: 0.3 (threshold: 100)
+2025-11-05 23:08:42,533 INFO [root] Detection status: CLEAN
+2025-11-05 23:08:42,535 INFO [root] 📦 Capture complete. Packets seen: 245, Analyzed: 245
+2025-11-05 23:08:42,535 INFO [root] Unique MACs detected: 0
+2025-11-05 23:08:42,536 INFO [root] Max severity: 0.0 (threshold: 100)
+2025-11-05 23:08:42,536 INFO [root] Detection status: CLEAN
+2025-11-05 23:08:42,537 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-05 23:08:43,491 INFO [db] Loop detection saved to database (ID: 484, severity: 0.34, cross-subnet: False)
+2025-11-05 23:08:46,564 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=100, sampling=False)
+2025-11-05 23:08:46,608 INFO [root] Interfaces to scan: ['Ethernet', 'Loopback Pseudo-Interface 1']
+2025-11-05 23:08:46,610 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Ethernet)
+2025-11-05 23:08:46,615 INFO [root] 📡 Starting packet capture on interface: Ethernet
+2025-11-05 23:08:46,616 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=100, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:08:46,618 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:08:51,651 INFO [root] 📦 Capture complete. Packets seen: 1461, Analyzed: 1461
+2025-11-05 23:08:51,652 INFO [root] Unique MACs detected: 0
+2025-11-05 23:08:51,655 INFO [root] Max severity: 0.0 (threshold: 100)
+2025-11-05 23:08:51,673 INFO [root] Detection status: CLEAN
+2025-11-05 23:08:51,684 INFO [root] 📦 Capture complete. Packets seen: 1223, Analyzed: 1223
+2025-11-05 23:08:51,687 INFO [root] Unique MACs detected: 0
+2025-11-05 23:08:51,688 INFO [root] Max severity: 0.0 (threshold: 100)
+2025-11-05 23:08:51,691 INFO [root] Detection status: CLEAN
+2025-11-05 23:08:51,699 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 23:08:51,893 INFO [db] Loop detection saved to database (ID: 485, severity: 0.00, cross-subnet: False)
+2025-11-05 23:11:00,432 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 23:11:00,474 INFO [root] Interfaces to scan: ['Ethernet', 'Loopback Pseudo-Interface 1']
+2025-11-05 23:11:00,476 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Ethernet)
+2025-11-05 23:11:00,478 INFO [root] 📡 Starting packet capture on interface: Ethernet
+2025-11-05 23:11:00,479 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:11:00,482 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:11:05,498 INFO [root] 📦 Capture complete. Packets seen: 12, Analyzed: 12
+2025-11-05 23:11:05,498 INFO [root] Unique MACs detected: 0
+2025-11-05 23:11:05,499 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:11:05,499 INFO [root] Detection status: CLEAN
+2025-11-05 23:11:05,533 INFO [root] 📦 Capture complete. Packets seen: 203, Analyzed: 203
+2025-11-05 23:11:05,534 INFO [root] Unique MACs detected: 0
+2025-11-05 23:11:05,534 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:11:05,534 INFO [root] Detection status: CLEAN
+2025-11-05 23:11:05,536 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 23:11:05,547 INFO [db] Loop detection saved to database (ID: 486, severity: 0.00, cross-subnet: False)
+2025-11-05 23:16:05,563 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 23:16:05,609 INFO [root] Interfaces to scan: ['Loopback Pseudo-Interface 1']
+2025-11-05 23:16:05,610 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:16:05,610 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:16:10,630 INFO [root] 📦 Capture complete. Packets seen: 358, Analyzed: 358
+2025-11-05 23:16:10,631 INFO [root] Unique MACs detected: 0
+2025-11-05 23:16:10,631 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:16:10,632 INFO [root] Detection status: CLEAN
+2025-11-05 23:16:10,633 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 23:16:10,648 INFO [db] Loop detection saved to database (ID: 487, severity: 0.00, cross-subnet: False)
+2025-11-05 23:21:10,661 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 23:21:10,706 INFO [root] Interfaces to scan: ['Loopback Pseudo-Interface 1']
+2025-11-05 23:21:10,708 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:21:10,709 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:21:15,740 INFO [root] 📦 Capture complete. Packets seen: 7597, Analyzed: 7597
+2025-11-05 23:21:15,741 INFO [root] Unique MACs detected: 0
+2025-11-05 23:21:15,742 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:21:15,742 INFO [root] Detection status: CLEAN
+2025-11-05 23:21:15,744 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 23:21:15,772 INFO [db] Loop detection saved to database (ID: 488, severity: 0.00, cross-subnet: False)
+2025-11-05 23:26:19,041 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 23:26:19,088 INFO [root] Interfaces to scan: ['Loopback Pseudo-Interface 1']
+2025-11-05 23:26:19,098 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:26:19,116 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:26:24,187 INFO [root] 📦 Capture complete. Packets seen: 8041, Analyzed: 8041
+2025-11-05 23:26:24,188 INFO [root] Unique MACs detected: 0
+2025-11-05 23:26:24,189 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:26:24,190 INFO [root] Detection status: CLEAN
+2025-11-05 23:26:24,192 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 23:26:24,219 INFO [db] Loop detection saved to database (ID: 489, severity: 0.00, cross-subnet: False)
+2025-11-05 23:31:24,411 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 23:31:24,456 INFO [root] Interfaces to scan: ['Loopback Pseudo-Interface 1']
+2025-11-05 23:31:24,457 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:31:24,458 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:31:29,571 INFO [root] 📦 Capture complete. Packets seen: 273, Analyzed: 273
+2025-11-05 23:31:29,572 INFO [root] Unique MACs detected: 0
+2025-11-05 23:31:29,572 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:31:29,572 INFO [root] Detection status: CLEAN
+2025-11-05 23:31:29,576 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 23:31:29,606 INFO [db] Loop detection saved to database (ID: 490, severity: 0.00, cross-subnet: False)
+2025-11-05 23:36:29,640 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-05 23:36:29,685 INFO [root] Interfaces to scan: ['Loopback Pseudo-Interface 1']
+2025-11-05 23:36:29,687 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-05 23:36:29,687 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-05 23:36:34,710 INFO [root] 📦 Capture complete. Packets seen: 168, Analyzed: 168
+2025-11-05 23:36:34,711 INFO [root] Unique MACs detected: 0
+2025-11-05 23:36:34,712 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-05 23:36:34,712 INFO [root] Detection status: CLEAN
+2025-11-05 23:36:34,714 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-05 23:36:34,731 INFO [db] Loop detection saved to database (ID: 491, severity: 0.00, cross-subnet: False)
+>>>>>>> Stashed changes
+2025-11-06 12:40:57,362 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 12:40:57,418 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 12:41:06,843 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 12:41:06,956 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 12:41:06,959 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 12:41:06,960 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 12:41:06,961 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 12:41:06,967 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 12:41:11,989 INFO [root] 📦 Capture complete. Packets seen: 60, Analyzed: 60
+2025-11-06 12:41:11,996 INFO [root] Unique MACs detected: 1
+2025-11-06 12:41:11,997 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 12:41:11,998 INFO [root] Detection status: CLEAN
+2025-11-06 12:41:12,002 INFO [root] 📦 Capture complete. Packets seen: 1432, Analyzed: 1432
+2025-11-06 12:41:12,003 INFO [root] Unique MACs detected: 0
+2025-11-06 12:41:12,004 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 12:41:12,004 INFO [root] Detection status: CLEAN
+2025-11-06 12:41:12,005 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 12:41:12,022 INFO [db] Loop detection saved to database (ID: 354, severity: 0.68, cross-subnet: False)
+2025-11-06 12:42:53,409 INFO [db] Activity logged: User 2 - Delete Router - cjay 
+2025-11-06 12:46:12,069 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 12:46:12,112 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 12:46:12,114 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 12:46:12,115 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 12:46:12,116 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 12:46:12,118 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 12:46:17,136 INFO [root] 📦 Capture complete. Packets seen: 22, Analyzed: 22
+2025-11-06 12:46:17,137 INFO [root] Unique MACs detected: 3
+2025-11-06 12:46:17,138 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 12:46:17,139 INFO [root] Detection status: CLEAN
+2025-11-06 12:46:17,143 INFO [root] 📦 Capture complete. Packets seen: 56, Analyzed: 56
+2025-11-06 12:46:17,144 INFO [root] Unique MACs detected: 0
+2025-11-06 12:46:17,145 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 12:46:17,147 INFO [root] Detection status: CLEAN
+2025-11-06 12:46:17,152 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 12:46:17,183 INFO [db] Loop detection saved to database (ID: 355, severity: 0.34, cross-subnet: False)
+2025-11-06 12:51:17,731 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 12:51:17,832 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 12:51:17,834 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 12:51:17,835 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 12:51:17,835 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 12:51:17,836 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 12:51:22,839 INFO [root] 📦 Capture complete. Packets seen: 279, Analyzed: 279
+2025-11-06 12:51:22,850 INFO [root] Unique MACs detected: 1
+2025-11-06 12:51:22,851 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 12:51:22,853 INFO [root] Detection status: CLEAN
+2025-11-06 12:51:22,855 INFO [root] 📦 Capture complete. Packets seen: 165, Analyzed: 165
+2025-11-06 12:51:22,856 INFO [root] Unique MACs detected: 0
+2025-11-06 12:51:22,860 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 12:51:22,862 INFO [root] Detection status: CLEAN
+2025-11-06 12:51:22,871 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 12:51:22,883 INFO [db] Loop detection saved to database (ID: 356, severity: 0.68, cross-subnet: False)
+2025-11-06 12:56:22,909 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 12:56:22,977 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 12:56:22,979 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 12:56:22,980 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 12:56:22,980 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 12:56:22,981 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 12:56:27,991 INFO [root] 📦 Capture complete. Packets seen: 191, Analyzed: 191
+2025-11-06 12:56:27,992 INFO [root] Unique MACs detected: 0
+2025-11-06 12:56:27,993 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 12:56:27,993 INFO [root] Detection status: CLEAN
+2025-11-06 12:56:28,018 INFO [root] 📦 Capture complete. Packets seen: 34, Analyzed: 34
+2025-11-06 12:56:28,018 INFO [root] Unique MACs detected: 1
+2025-11-06 12:56:28,019 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 12:56:28,020 INFO [root] Detection status: CLEAN
+2025-11-06 12:56:28,022 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 12:56:28,091 INFO [db] Loop detection saved to database (ID: 357, severity: 0.68, cross-subnet: False)
+2025-11-06 13:01:28,129 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:01:28,209 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:01:28,210 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:01:28,211 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:01:28,211 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:01:28,211 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:01:33,222 INFO [root] 📦 Capture complete. Packets seen: 60, Analyzed: 60
+2025-11-06 13:01:33,223 INFO [root] Unique MACs detected: 3
+2025-11-06 13:01:33,223 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 13:01:33,226 INFO [root] Detection status: CLEAN
+2025-11-06 13:01:33,228 INFO [root] 📦 Capture complete. Packets seen: 1674, Analyzed: 1674
+2025-11-06 13:01:33,229 INFO [root] Unique MACs detected: 0
+2025-11-06 13:01:33,229 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:01:33,230 INFO [root] Detection status: CLEAN
+2025-11-06 13:01:33,231 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 13:01:33,259 INFO [db] Loop detection saved to database (ID: 358, severity: 0.68, cross-subnet: False)
+2025-11-06 13:06:33,313 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:06:33,360 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:06:33,364 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:06:33,366 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:06:33,367 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:06:33,369 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:06:38,404 INFO [root] 📦 Capture complete. Packets seen: 37, Analyzed: 37
+2025-11-06 13:06:38,405 INFO [root] Unique MACs detected: 1
+2025-11-06 13:06:38,405 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 13:06:38,406 INFO [root] Detection status: CLEAN
+2025-11-06 13:06:38,406 INFO [root] 📦 Capture complete. Packets seen: 4951, Analyzed: 4951
+2025-11-06 13:06:38,407 INFO [root] Unique MACs detected: 0
+2025-11-06 13:06:38,407 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:06:38,407 INFO [root] Detection status: CLEAN
+2025-11-06 13:06:38,408 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 13:06:38,418 INFO [db] Loop detection saved to database (ID: 359, severity: 0.68, cross-subnet: False)
+2025-11-06 13:11:38,439 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:11:38,487 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:11:38,494 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:11:38,496 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:11:38,504 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:11:38,506 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:11:43,525 INFO [root] 📦 Capture complete. Packets seen: 41, Analyzed: 41
+2025-11-06 13:11:43,527 INFO [root] Unique MACs detected: 2
+2025-11-06 13:11:43,542 INFO [root] 📦 Capture complete. Packets seen: 4858, Analyzed: 4858
+2025-11-06 13:11:43,542 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 13:11:43,565 INFO [root] Unique MACs detected: 0
+2025-11-06 13:11:43,573 INFO [root] Detection status: CLEAN
+2025-11-06 13:11:43,575 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:11:43,576 INFO [root] Detection status: CLEAN
+2025-11-06 13:11:43,604 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 13:11:43,616 INFO [db] Loop detection saved to database (ID: 360, severity: 0.68, cross-subnet: False)
+2025-11-06 13:18:10,609 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:18:10,652 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:18:10,654 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:18:10,655 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:18:10,655 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:18:10,656 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:18:15,665 INFO [root] 📦 Capture complete. Packets seen: 74, Analyzed: 74
+2025-11-06 13:18:15,666 INFO [root] Unique MACs detected: 1
+2025-11-06 13:18:15,666 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 13:18:15,666 INFO [root] Detection status: CLEAN
+2025-11-06 13:18:15,669 INFO [root] 📦 Capture complete. Packets seen: 154, Analyzed: 154
+2025-11-06 13:18:15,669 INFO [root] Unique MACs detected: 0
+2025-11-06 13:18:15,670 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:18:15,670 INFO [root] Detection status: CLEAN
+2025-11-06 13:18:15,671 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 13:18:15,705 INFO [db] Loop detection saved to database (ID: 361, severity: 0.68, cross-subnet: False)
+2025-11-06 13:23:15,726 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:23:15,795 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:23:15,801 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:23:15,803 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:23:15,803 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:23:15,804 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:23:20,853 INFO [root] 📦 Capture complete. Packets seen: 312, Analyzed: 312
+2025-11-06 13:23:20,853 INFO [root] 📦 Capture complete. Packets seen: 198, Analyzed: 198
+2025-11-06 13:23:20,853 INFO [root] Unique MACs detected: 1
+2025-11-06 13:23:20,854 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 13:23:20,854 INFO [root] Unique MACs detected: 0
+2025-11-06 13:23:20,855 INFO [root] Detection status: CLEAN
+2025-11-06 13:23:20,855 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:23:20,856 INFO [root] Detection status: CLEAN
+2025-11-06 13:23:20,858 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 13:23:20,872 INFO [db] Loop detection saved to database (ID: 362, severity: 0.68, cross-subnet: False)
+2025-11-06 13:37:45,312 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 13:37:45,345 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 13:37:54,189 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:37:54,242 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:37:54,244 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:37:54,245 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:37:54,245 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:37:54,249 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:37:59,265 INFO [root] 📦 Capture complete. Packets seen: 133, Analyzed: 133
+2025-11-06 13:37:59,266 INFO [root] Unique MACs detected: 2
+2025-11-06 13:37:59,266 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 13:37:59,267 INFO [root] Detection status: CLEAN
+2025-11-06 13:37:59,283 INFO [root] 📦 Capture complete. Packets seen: 1934, Analyzed: 1934
+2025-11-06 13:37:59,287 INFO [root] Unique MACs detected: 0
+2025-11-06 13:37:59,287 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:37:59,289 INFO [root] Detection status: CLEAN
+2025-11-06 13:37:59,291 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 13:37:59,305 INFO [db] Loop detection saved to database (ID: 363, severity: 0.68, cross-subnet: False)
+2025-11-06 13:42:59,328 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:42:59,374 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:42:59,375 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:42:59,376 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:42:59,376 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:42:59,377 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:43:04,454 INFO [root] 📦 Capture complete. Packets seen: 103, Analyzed: 103
+2025-11-06 13:43:04,457 INFO [root] Unique MACs detected: 3
+2025-11-06 13:43:04,473 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 13:43:04,473 INFO [root] Detection status: CLEAN
+2025-11-06 13:43:04,485 INFO [root] 📦 Capture complete. Packets seen: 193, Analyzed: 193
+2025-11-06 13:43:04,486 INFO [root] Unique MACs detected: 0
+2025-11-06 13:43:04,486 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:43:04,487 INFO [root] Detection status: CLEAN
+2025-11-06 13:43:04,495 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 13:43:04,526 INFO [db] Loop detection saved to database (ID: 364, severity: 0.68, cross-subnet: False)
+2025-11-06 13:48:04,758 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:48:04,933 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:48:04,996 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:48:05,011 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:48:05,013 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:48:05,027 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:48:10,130 INFO [root] 📦 Capture complete. Packets seen: 166, Analyzed: 166
+2025-11-06 13:48:10,131 INFO [root] Unique MACs detected: 0
+2025-11-06 13:48:10,131 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:48:10,131 INFO [root] Detection status: CLEAN
+2025-11-06 13:48:10,160 INFO [root] 📦 Capture complete. Packets seen: 261, Analyzed: 261
+2025-11-06 13:48:10,163 INFO [root] Unique MACs detected: 1
+2025-11-06 13:48:10,166 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 13:48:10,166 INFO [root] Detection status: CLEAN
+2025-11-06 13:48:10,168 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 13:48:10,217 INFO [db] Loop detection saved to database (ID: 365, severity: 0.34, cross-subnet: False)
+2025-11-06 13:53:10,252 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:53:10,508 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:53:10,525 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:53:10,547 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:53:10,610 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:53:10,628 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:53:15,642 INFO [root] 📦 Capture complete. Packets seen: 3214, Analyzed: 3214
+2025-11-06 13:53:15,643 INFO [root] Unique MACs detected: 0
+2025-11-06 13:53:15,643 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:53:15,644 INFO [root] Detection status: CLEAN
+2025-11-06 13:53:15,749 INFO [root] 📦 Capture complete. Packets seen: 120, Analyzed: 120
+2025-11-06 13:53:15,751 INFO [root] Unique MACs detected: 0
+2025-11-06 13:53:15,778 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:53:15,789 INFO [root] Detection status: CLEAN
+2025-11-06 13:53:15,800 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-06 13:53:15,827 INFO [db] Loop detection saved to database (ID: 366, severity: 0.00, cross-subnet: False)
+2025-11-06 13:58:15,879 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 13:58:15,925 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 13:58:15,926 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 13:58:15,927 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 13:58:15,927 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 13:58:15,928 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 13:58:20,938 INFO [root] 📦 Capture complete. Packets seen: 6442, Analyzed: 6442
+2025-11-06 13:58:20,955 INFO [root] Unique MACs detected: 2
+2025-11-06 13:58:20,955 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 13:58:20,955 INFO [root] Detection status: CLEAN
+2025-11-06 13:58:21,023 INFO [root] 📦 Capture complete. Packets seen: 200, Analyzed: 200
+2025-11-06 13:58:21,028 INFO [root] Unique MACs detected: 0
+2025-11-06 13:58:21,031 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 13:58:21,032 INFO [root] Detection status: CLEAN
+2025-11-06 13:58:21,035 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 13:58:21,055 INFO [db] Loop detection saved to database (ID: 367, severity: 0.34, cross-subnet: False)
+2025-11-06 14:03:21,215 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:03:21,276 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:03:21,278 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:03:21,278 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:03:21,279 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:03:21,279 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:03:26,287 INFO [root] 📦 Capture complete. Packets seen: 126, Analyzed: 126
+2025-11-06 14:03:26,288 INFO [root] Unique MACs detected: 1
+2025-11-06 14:03:26,289 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 14:03:26,289 INFO [root] Detection status: CLEAN
+2025-11-06 14:03:26,415 INFO [root] 📦 Capture complete. Packets seen: 4563, Analyzed: 4563
+2025-11-06 14:03:26,416 INFO [root] Unique MACs detected: 0
+2025-11-06 14:03:26,416 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:03:26,416 INFO [root] Detection status: CLEAN
+2025-11-06 14:03:26,417 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 14:03:26,432 INFO [db] Loop detection saved to database (ID: 368, severity: 0.68, cross-subnet: False)
+2025-11-06 14:08:26,471 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:08:26,526 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:08:26,529 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:08:26,533 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:08:26,536 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:08:26,536 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:08:31,549 INFO [root] 📦 Capture complete. Packets seen: 4138, Analyzed: 4138
+2025-11-06 14:08:31,550 INFO [root] 📦 Capture complete. Packets seen: 93, Analyzed: 93
+2025-11-06 14:08:31,551 INFO [root] Unique MACs detected: 0
+2025-11-06 14:08:31,552 INFO [root] Unique MACs detected: 1
+2025-11-06 14:08:31,552 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:08:31,553 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 14:08:31,553 INFO [root] Detection status: CLEAN
+2025-11-06 14:08:31,553 INFO [root] Detection status: CLEAN
+2025-11-06 14:08:31,555 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 14:08:31,566 INFO [db] Loop detection saved to database (ID: 369, severity: 0.34, cross-subnet: False)
+2025-11-06 14:13:31,603 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:13:31,651 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:13:31,652 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:13:31,652 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:13:31,653 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:13:31,653 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:13:36,664 INFO [root] 📦 Capture complete. Packets seen: 1616, Analyzed: 1616
+2025-11-06 14:13:36,666 INFO [root] Unique MACs detected: 0
+2025-11-06 14:13:36,666 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:13:36,667 INFO [root] Detection status: CLEAN
+2025-11-06 14:13:36,675 INFO [root] 📦 Capture complete. Packets seen: 205, Analyzed: 205
+2025-11-06 14:13:36,678 INFO [root] Unique MACs detected: 2
+2025-11-06 14:13:36,681 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 14:13:36,690 INFO [root] Detection status: CLEAN
+2025-11-06 14:13:36,692 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 14:13:36,715 INFO [db] Loop detection saved to database (ID: 370, severity: 1.02, cross-subnet: False)
+2025-11-06 14:18:36,751 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:18:36,829 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:18:36,860 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:18:36,875 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:18:36,886 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:18:36,890 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:18:41,917 INFO [root] 📦 Capture complete. Packets seen: 144, Analyzed: 144
+2025-11-06 14:18:41,927 INFO [root] Unique MACs detected: 0
+2025-11-06 14:18:41,937 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:18:41,939 INFO [root] 📦 Capture complete. Packets seen: 409, Analyzed: 409
+2025-11-06 14:18:41,944 INFO [root] Detection status: CLEAN
+2025-11-06 14:18:41,967 INFO [root] Unique MACs detected: 3
+2025-11-06 14:18:41,972 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 14:18:41,978 INFO [root] Detection status: CLEAN
+2025-11-06 14:18:41,999 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 14:18:42,040 INFO [db] Loop detection saved to database (ID: 371, severity: 0.68, cross-subnet: False)
+2025-11-06 14:23:42,122 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:23:42,204 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:23:42,207 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:23:42,209 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:23:42,210 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:23:42,224 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:23:47,226 INFO [root] 📦 Capture complete. Packets seen: 109, Analyzed: 109
+2025-11-06 14:23:47,226 INFO [root] Unique MACs detected: 3
+2025-11-06 14:23:47,227 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 14:23:47,227 INFO [root] Detection status: CLEAN
+2025-11-06 14:23:47,246 INFO [root] 📦 Capture complete. Packets seen: 168, Analyzed: 168
+2025-11-06 14:23:47,246 INFO [root] Unique MACs detected: 0
+2025-11-06 14:23:47,248 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:23:47,249 INFO [root] Detection status: CLEAN
+2025-11-06 14:23:47,252 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 14:23:47,262 INFO [db] Loop detection saved to database (ID: 372, severity: 0.68, cross-subnet: False)
+2025-11-06 14:28:47,432 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:28:47,863 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:28:47,867 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:28:47,880 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:28:47,886 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:28:47,887 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:28:52,896 INFO [root] 📦 Capture complete. Packets seen: 73, Analyzed: 73
+2025-11-06 14:28:52,897 INFO [root] Unique MACs detected: 3
+2025-11-06 14:28:52,897 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 14:28:52,898 INFO [root] Detection status: CLEAN
+2025-11-06 14:28:52,907 INFO [root] 📦 Capture complete. Packets seen: 2881, Analyzed: 2881
+2025-11-06 14:28:52,907 INFO [root] Unique MACs detected: 0
+2025-11-06 14:28:52,908 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:28:52,913 INFO [root] Detection status: CLEAN
+2025-11-06 14:28:52,917 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 14:28:52,928 INFO [db] Loop detection saved to database (ID: 373, severity: 0.68, cross-subnet: False)
+2025-11-06 14:33:52,973 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:33:53,021 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:33:53,023 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:33:53,024 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:33:53,024 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:33:53,025 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:33:58,026 INFO [root] 📦 Capture complete. Packets seen: 137, Analyzed: 137
+2025-11-06 14:33:58,026 INFO [root] Unique MACs detected: 2
+2025-11-06 14:33:58,027 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 14:33:58,028 INFO [root] Detection status: CLEAN
+2025-11-06 14:33:58,050 INFO [root] 📦 Capture complete. Packets seen: 4835, Analyzed: 4835
+2025-11-06 14:33:58,050 INFO [root] Unique MACs detected: 0
+2025-11-06 14:33:58,051 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:33:58,052 INFO [root] Detection status: CLEAN
+2025-11-06 14:33:58,053 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 14:33:58,081 INFO [db] Loop detection saved to database (ID: 374, severity: 0.68, cross-subnet: False)
+2025-11-06 14:38:30,462 INFO [db] Activity logged: User 2 - Edit Router - Iskol
+2025-11-06 14:38:58,113 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:38:58,160 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:38:58,162 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:38:58,162 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:38:58,166 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:38:58,167 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:39:03,180 INFO [root] 📦 Capture complete. Packets seen: 5268, Analyzed: 5268
+2025-11-06 14:39:03,181 INFO [root] Unique MACs detected: 0
+2025-11-06 14:39:03,182 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:39:03,183 INFO [root] Detection status: CLEAN
+2025-11-06 14:39:03,242 INFO [root] 📦 Capture complete. Packets seen: 90, Analyzed: 90
+2025-11-06 14:39:03,247 INFO [root] Unique MACs detected: 3
+2025-11-06 14:39:03,248 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 14:39:03,248 INFO [root] Detection status: CLEAN
+2025-11-06 14:39:03,250 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 14:39:03,268 INFO [db] Loop detection saved to database (ID: 375, severity: 1.02, cross-subnet: False)
+2025-11-06 14:39:22,844 INFO [db] Activity logged: User 2 - Edit Router - Room 101
+2025-11-06 14:44:03,333 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:44:03,378 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:44:03,380 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:44:03,381 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:44:03,381 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:44:03,382 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:44:08,408 INFO [root] 📦 Capture complete. Packets seen: 125, Analyzed: 125
+2025-11-06 14:44:08,431 INFO [root] Unique MACs detected: 3
+2025-11-06 14:44:08,472 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 14:44:08,492 INFO [root] Detection status: CLEAN
+2025-11-06 14:44:08,587 INFO [root] 📦 Capture complete. Packets seen: 2378, Analyzed: 2378
+2025-11-06 14:44:08,589 INFO [root] Unique MACs detected: 0
+2025-11-06 14:44:08,599 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:44:08,606 INFO [root] Detection status: CLEAN
+2025-11-06 14:44:08,621 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 14:44:08,670 INFO [db] Loop detection saved to database (ID: 376, severity: 1.02, cross-subnet: False)
+2025-11-06 14:49:08,740 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:49:08,851 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:49:08,880 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:49:08,893 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:49:08,899 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:49:08,910 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:49:13,977 INFO [root] 📦 Capture complete. Packets seen: 110, Analyzed: 110
+2025-11-06 14:49:13,978 INFO [root] Unique MACs detected: 0
+2025-11-06 14:49:13,978 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:49:13,979 INFO [root] Detection status: CLEAN
+2025-11-06 14:49:13,990 INFO [root] 📦 Capture complete. Packets seen: 66, Analyzed: 66
+2025-11-06 14:49:13,991 INFO [root] Unique MACs detected: 4
+2025-11-06 14:49:13,992 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 14:49:13,992 INFO [root] Detection status: CLEAN
+2025-11-06 14:49:13,993 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 14:49:14,006 INFO [db] Loop detection saved to database (ID: 377, severity: 0.68, cross-subnet: False)
+2025-11-06 14:54:14,032 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:54:14,085 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:54:14,088 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:54:14,088 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:54:14,089 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:54:14,089 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:54:19,106 INFO [root] 📦 Capture complete. Packets seen: 135, Analyzed: 135
+2025-11-06 14:54:19,107 INFO [root] Unique MACs detected: 2
+2025-11-06 14:54:19,108 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 14:54:19,108 INFO [root] Detection status: CLEAN
+2025-11-06 14:54:19,111 INFO [root] 📦 Capture complete. Packets seen: 212, Analyzed: 212
+2025-11-06 14:54:19,111 INFO [root] Unique MACs detected: 0
+2025-11-06 14:54:19,111 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:54:19,112 INFO [root] Detection status: CLEAN
+2025-11-06 14:54:19,114 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 14:54:19,126 INFO [db] Loop detection saved to database (ID: 378, severity: 0.68, cross-subnet: False)
+2025-11-06 14:55:16,983 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 14:59:19,161 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 14:59:19,230 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 14:59:19,233 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 14:59:19,236 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 14:59:19,239 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 14:59:19,240 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 14:59:24,263 INFO [root] 📦 Capture complete. Packets seen: 1266, Analyzed: 1266
+2025-11-06 14:59:24,271 INFO [root] Unique MACs detected: 0
+2025-11-06 14:59:24,295 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 14:59:24,304 INFO [root] 📦 Capture complete. Packets seen: 147, Analyzed: 147
+2025-11-06 14:59:24,304 INFO [root] Detection status: CLEAN
+2025-11-06 14:59:24,323 INFO [root] Unique MACs detected: 4
+2025-11-06 14:59:24,334 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 14:59:24,348 INFO [root] Detection status: CLEAN
+2025-11-06 14:59:24,369 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 14:59:24,442 INFO [db] Loop detection saved to database (ID: 379, severity: 1.02, cross-subnet: False)
+2025-11-06 15:04:24,555 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 15:04:24,610 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 15:04:24,613 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 15:04:24,614 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 15:04:24,615 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 15:04:24,616 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 15:04:29,622 INFO [root] 📦 Capture complete. Packets seen: 211, Analyzed: 211
+2025-11-06 15:04:29,625 INFO [root] Unique MACs detected: 2
+2025-11-06 15:04:29,626 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 15:04:29,629 INFO [root] Detection status: CLEAN
+2025-11-06 15:04:29,646 INFO [root] 📦 Capture complete. Packets seen: 2135, Analyzed: 2135
+2025-11-06 15:04:29,646 INFO [root] Unique MACs detected: 0
+2025-11-06 15:04:29,647 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 15:04:29,648 INFO [root] Detection status: CLEAN
+2025-11-06 15:04:29,650 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 15:04:29,662 INFO [db] Loop detection saved to database (ID: 380, severity: 0.68, cross-subnet: False)
+2025-11-06 15:09:29,687 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 15:09:29,736 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 15:09:29,737 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 15:09:29,738 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 15:09:29,738 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 15:09:29,740 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 15:09:34,758 INFO [root] 📦 Capture complete. Packets seen: 3577, Analyzed: 3577
+2025-11-06 15:09:34,763 INFO [root] Unique MACs detected: 0
+2025-11-06 15:09:34,764 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 15:09:34,766 INFO [root] Detection status: CLEAN
+2025-11-06 15:09:34,828 INFO [root] 📦 Capture complete. Packets seen: 324, Analyzed: 324
+2025-11-06 15:09:34,830 INFO [root] Unique MACs detected: 2
+2025-11-06 15:09:34,838 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 15:09:34,858 INFO [root] Detection status: CLEAN
+2025-11-06 15:09:34,868 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 15:09:34,901 INFO [db] Loop detection saved to database (ID: 381, severity: 0.68, cross-subnet: False)
+2025-11-06 15:14:35,018 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 15:14:35,063 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 15:14:35,065 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 15:14:35,065 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 15:14:35,065 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 15:14:35,066 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 15:14:40,071 INFO [root] 📦 Capture complete. Packets seen: 129, Analyzed: 129
+2025-11-06 15:14:40,072 INFO [root] Unique MACs detected: 2
+2025-11-06 15:14:40,072 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 15:14:40,072 INFO [root] Detection status: CLEAN
+2025-11-06 15:14:40,099 INFO [root] 📦 Capture complete. Packets seen: 4903, Analyzed: 4903
+2025-11-06 15:14:40,100 INFO [root] Unique MACs detected: 0
+2025-11-06 15:14:40,100 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 15:14:40,100 INFO [root] Detection status: CLEAN
+2025-11-06 15:14:40,102 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 15:14:40,113 INFO [db] Loop detection saved to database (ID: 382, severity: 1.02, cross-subnet: False)
+2025-11-06 15:40:41,416 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-06 15:40:41,449 INFO [db] Activity logged: User 2 - Login - None
+2025-11-06 15:40:50,354 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 15:40:50,443 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 15:40:50,445 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 15:40:50,446 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 15:40:50,447 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 15:40:50,449 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 15:40:55,462 INFO [root] 📦 Capture complete. Packets seen: 84, Analyzed: 84
+2025-11-06 15:40:55,462 INFO [root] Unique MACs detected: 3
+2025-11-06 15:40:55,463 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 15:40:55,463 INFO [root] Detection status: CLEAN
+2025-11-06 15:40:55,472 INFO [root] 📦 Capture complete. Packets seen: 1776, Analyzed: 1776
+2025-11-06 15:40:55,473 INFO [root] Unique MACs detected: 0
+2025-11-06 15:40:55,473 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 15:40:55,474 INFO [root] Detection status: CLEAN
+2025-11-06 15:40:55,476 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 15:40:55,493 INFO [db] Loop detection saved to database (ID: 383, severity: 0.68, cross-subnet: False)
+2025-11-06 15:42:07,635 INFO [db] Loop detection saved to database (ID: 384, severity: 35.11, cross-subnet: False)
+2025-11-06 15:45:55,569 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 15:45:55,656 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 15:45:55,658 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 15:45:55,659 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 15:45:55,660 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 15:45:55,679 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 15:46:00,707 INFO [root] 📦 Capture complete. Packets seen: 96, Analyzed: 96
+2025-11-06 15:46:00,717 INFO [root] Unique MACs detected: 2
+2025-11-06 15:46:00,724 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 15:46:00,730 INFO [root] Detection status: CLEAN
+2025-11-06 15:46:00,744 INFO [root] 📦 Capture complete. Packets seen: 208, Analyzed: 208
+2025-11-06 15:46:00,749 INFO [root] Unique MACs detected: 0
+2025-11-06 15:46:00,753 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 15:46:00,753 INFO [root] Detection status: CLEAN
+2025-11-06 15:46:00,754 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 15:46:00,805 INFO [db] Loop detection saved to database (ID: 385, severity: 0.68, cross-subnet: False)
+2025-11-06 15:51:02,101 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 15:51:02,155 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 15:51:02,158 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 15:51:02,160 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 15:51:02,161 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 15:51:02,165 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 15:51:07,173 INFO [root] 📦 Capture complete. Packets seen: 264, Analyzed: 264
+2025-11-06 15:51:07,188 INFO [root] Unique MACs detected: 4
+2025-11-06 15:51:07,191 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 15:51:07,192 INFO [root] Detection status: CLEAN
+2025-11-06 15:51:07,234 INFO [root] 📦 Capture complete. Packets seen: 124, Analyzed: 124
+2025-11-06 15:51:07,235 INFO [root] Unique MACs detected: 0
+2025-11-06 15:51:07,235 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 15:51:07,235 INFO [root] Detection status: CLEAN
+2025-11-06 15:51:07,237 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 15:51:07,319 INFO [db] Loop detection saved to database (ID: 386, severity: 1.02, cross-subnet: False)
+2025-11-06 15:56:07,576 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 15:56:07,625 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 15:56:07,627 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 15:56:07,627 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 15:56:07,628 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 15:56:07,628 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 15:56:12,639 INFO [root] 📦 Capture complete. Packets seen: 213, Analyzed: 213
+2025-11-06 15:56:12,640 INFO [root] Unique MACs detected: 0
+2025-11-06 15:56:12,640 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 15:56:12,641 INFO [root] Detection status: CLEAN
+2025-11-06 15:56:12,674 INFO [root] 📦 Capture complete. Packets seen: 130, Analyzed: 130
+2025-11-06 15:56:12,675 INFO [root] Unique MACs detected: 4
+2025-11-06 15:56:12,676 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 15:56:12,676 INFO [root] Detection status: CLEAN
+2025-11-06 15:56:12,677 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 15:56:12,712 INFO [db] Loop detection saved to database (ID: 387, severity: 1.02, cross-subnet: False)
+2025-11-06 16:01:12,811 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:01:12,905 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:01:12,916 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:01:12,918 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:01:12,918 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:01:12,920 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:01:17,937 INFO [root] 📦 Capture complete. Packets seen: 115, Analyzed: 115
+2025-11-06 16:01:17,938 INFO [root] Unique MACs detected: 3
+2025-11-06 16:01:17,939 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 16:01:17,940 INFO [root] Detection status: CLEAN
+2025-11-06 16:01:18,009 INFO [root] 📦 Capture complete. Packets seen: 2404, Analyzed: 2404
+2025-11-06 16:01:18,010 INFO [root] Unique MACs detected: 0
+2025-11-06 16:01:18,010 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:01:18,011 INFO [root] Detection status: CLEAN
+2025-11-06 16:01:18,013 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 16:01:18,036 INFO [db] Loop detection saved to database (ID: 388, severity: 0.34, cross-subnet: False)
+2025-11-06 16:06:18,139 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:06:18,254 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:06:18,269 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:06:18,270 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:06:18,272 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:06:18,273 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:06:23,295 INFO [root] 📦 Capture complete. Packets seen: 284, Analyzed: 284
+2025-11-06 16:06:23,305 INFO [root] Unique MACs detected: 2
+2025-11-06 16:06:23,306 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 16:06:23,338 INFO [root] Detection status: CLEAN
+2025-11-06 16:06:23,346 INFO [root] 📦 Capture complete. Packets seen: 1915, Analyzed: 1915
+2025-11-06 16:06:23,348 INFO [root] Unique MACs detected: 0
+2025-11-06 16:06:23,358 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:06:23,359 INFO [root] Detection status: CLEAN
+2025-11-06 16:06:23,362 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 16:06:23,691 INFO [db] Loop detection saved to database (ID: 389, severity: 1.02, cross-subnet: False)
+2025-11-06 16:11:23,761 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:11:23,806 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:11:23,808 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:11:23,808 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:11:23,809 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:11:23,810 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:11:28,821 INFO [root] 📦 Capture complete. Packets seen: 120, Analyzed: 120
+2025-11-06 16:11:28,829 INFO [root] Unique MACs detected: 2
+2025-11-06 16:11:28,830 INFO [root] 📦 Capture complete. Packets seen: 5029, Analyzed: 5029
+2025-11-06 16:11:28,830 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 16:11:28,833 INFO [root] Unique MACs detected: 0
+2025-11-06 16:11:28,839 INFO [root] Detection status: CLEAN
+2025-11-06 16:11:28,841 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:11:28,843 INFO [root] Detection status: CLEAN
+2025-11-06 16:11:28,845 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 16:11:28,894 INFO [db] Loop detection saved to database (ID: 390, severity: 0.68, cross-subnet: False)
+2025-11-06 16:16:28,994 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:16:29,039 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:16:29,040 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:16:29,041 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:16:29,041 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:16:29,042 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:16:34,052 INFO [root] 📦 Capture complete. Packets seen: 3661, Analyzed: 3661
+2025-11-06 16:16:34,054 INFO [root] Unique MACs detected: 0
+2025-11-06 16:16:34,054 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:16:34,055 INFO [root] Detection status: CLEAN
+2025-11-06 16:16:34,116 INFO [root] 📦 Capture complete. Packets seen: 62, Analyzed: 62
+2025-11-06 16:16:34,117 INFO [root] Unique MACs detected: 3
+2025-11-06 16:16:34,117 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 16:16:34,118 INFO [root] Detection status: CLEAN
+2025-11-06 16:16:34,120 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 16:16:34,133 INFO [db] Loop detection saved to database (ID: 391, severity: 1.02, cross-subnet: False)
+2025-11-06 16:21:34,173 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:21:34,220 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:21:34,221 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:21:34,222 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:21:34,222 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:21:34,222 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:21:39,236 INFO [root] 📦 Capture complete. Packets seen: 86, Analyzed: 86
+2025-11-06 16:21:39,237 INFO [root] Unique MACs detected: 2
+2025-11-06 16:21:39,237 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 16:21:39,238 INFO [root] Detection status: CLEAN
+2025-11-06 16:21:39,240 INFO [root] 📦 Capture complete. Packets seen: 110, Analyzed: 110
+2025-11-06 16:21:39,241 INFO [root] Unique MACs detected: 0
+2025-11-06 16:21:39,241 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:21:39,242 INFO [root] Detection status: CLEAN
+2025-11-06 16:21:39,243 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 16:21:39,254 INFO [db] Loop detection saved to database (ID: 392, severity: 0.68, cross-subnet: False)
+2025-11-06 16:26:39,279 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:26:39,332 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:26:39,334 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:26:39,334 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:26:39,335 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:26:39,336 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:26:44,340 INFO [root] 📦 Capture complete. Packets seen: 4273, Analyzed: 4273
+2025-11-06 16:26:44,341 INFO [root] Unique MACs detected: 1
+2025-11-06 16:26:44,342 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-06 16:26:44,343 INFO [root] Detection status: CLEAN
+2025-11-06 16:26:44,381 INFO [root] 📦 Capture complete. Packets seen: 169, Analyzed: 169
+2025-11-06 16:26:44,383 INFO [root] Unique MACs detected: 0
+2025-11-06 16:26:44,384 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:26:44,387 INFO [root] Detection status: CLEAN
+2025-11-06 16:26:44,396 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-06 16:26:44,420 INFO [db] Loop detection saved to database (ID: 393, severity: 0.34, cross-subnet: False)
+2025-11-06 16:31:44,543 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:31:44,590 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:31:44,592 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:31:44,593 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:31:44,593 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:31:44,594 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:31:49,599 INFO [root] 📦 Capture complete. Packets seen: 4275, Analyzed: 4275
+2025-11-06 16:31:49,600 INFO [root] Unique MACs detected: 0
+2025-11-06 16:31:49,600 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:31:49,600 INFO [root] Detection status: CLEAN
+2025-11-06 16:31:49,642 INFO [root] 📦 Capture complete. Packets seen: 593, Analyzed: 593
+2025-11-06 16:31:49,643 INFO [root] Unique MACs detected: 0
+2025-11-06 16:31:49,643 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:31:49,644 INFO [root] Detection status: CLEAN
+2025-11-06 16:31:49,646 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-06 16:31:50,453 INFO [db] Loop detection saved to database (ID: 394, severity: 0.00, cross-subnet: False)
+2025-11-06 16:36:50,896 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:36:50,963 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:36:50,989 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:36:50,992 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:36:51,015 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:36:51,061 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:36:56,099 INFO [root] 📦 Capture complete. Packets seen: 68, Analyzed: 68
+2025-11-06 16:36:56,099 INFO [root] Unique MACs detected: 3
+2025-11-06 16:36:56,100 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 16:36:56,100 INFO [root] Detection status: CLEAN
+2025-11-06 16:36:56,104 INFO [root] 📦 Capture complete. Packets seen: 1187, Analyzed: 1187
+2025-11-06 16:36:56,105 INFO [root] Unique MACs detected: 0
+2025-11-06 16:36:56,106 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:36:56,107 INFO [root] Detection status: CLEAN
+2025-11-06 16:36:56,109 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 16:36:56,193 INFO [db] Loop detection saved to database (ID: 395, severity: 0.68, cross-subnet: False)
+2025-11-06 16:41:56,280 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:41:56,334 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:41:56,341 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:41:56,343 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:41:56,344 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:41:56,345 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:42:01,373 INFO [root] 📦 Capture complete. Packets seen: 4743, Analyzed: 4743
+2025-11-06 16:42:01,374 INFO [root] Unique MACs detected: 0
+2025-11-06 16:42:01,374 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:42:01,374 INFO [root] Detection status: CLEAN
+2025-11-06 16:42:01,386 INFO [root] 📦 Capture complete. Packets seen: 64, Analyzed: 64
+2025-11-06 16:42:01,386 INFO [root] Unique MACs detected: 2
+2025-11-06 16:42:01,387 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 16:42:01,388 INFO [root] Detection status: CLEAN
+2025-11-06 16:42:01,390 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 16:42:01,423 INFO [db] Loop detection saved to database (ID: 396, severity: 1.02, cross-subnet: False)
+2025-11-06 16:47:01,764 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:47:01,862 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:47:01,896 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:47:01,901 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:47:01,918 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:47:01,935 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:47:06,982 INFO [root] 📦 Capture complete. Packets seen: 132, Analyzed: 132
+2025-11-06 16:47:06,982 INFO [root] Unique MACs detected: 2
+2025-11-06 16:47:06,983 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 16:47:06,984 INFO [root] Detection status: CLEAN
+2025-11-06 16:47:07,015 INFO [root] 📦 Capture complete. Packets seen: 4583, Analyzed: 4583
+2025-11-06 16:47:07,015 INFO [root] Unique MACs detected: 0
+2025-11-06 16:47:07,016 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:47:07,016 INFO [root] Detection status: CLEAN
+2025-11-06 16:47:07,017 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 16:47:07,030 INFO [db] Loop detection saved to database (ID: 397, severity: 0.68, cross-subnet: False)
+2025-11-06 16:52:07,060 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:52:07,106 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:52:07,107 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:52:07,108 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:52:07,108 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:52:07,108 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:52:12,120 INFO [root] 📦 Capture complete. Packets seen: 78, Analyzed: 78
+2025-11-06 16:52:12,121 INFO [root] Unique MACs detected: 2
+2025-11-06 16:52:12,121 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-06 16:52:12,121 INFO [root] Detection status: CLEAN
+2025-11-06 16:52:12,205 INFO [root] 📦 Capture complete. Packets seen: 409, Analyzed: 409
+2025-11-06 16:52:12,205 INFO [root] Unique MACs detected: 0
+2025-11-06 16:52:12,206 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:52:12,206 INFO [root] Detection status: CLEAN
+2025-11-06 16:52:12,208 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-06 16:52:12,235 INFO [db] Loop detection saved to database (ID: 398, severity: 0.72, cross-subnet: False)
+2025-11-06 16:57:12,263 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 16:57:12,330 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 16:57:12,349 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 16:57:12,354 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 16:57:12,363 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 16:57:12,367 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 16:57:17,386 INFO [root] 📦 Capture complete. Packets seen: 97, Analyzed: 97
+2025-11-06 16:57:17,390 INFO [root] Unique MACs detected: 3
+2025-11-06 16:57:17,391 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 16:57:17,392 INFO [root] Detection status: CLEAN
+2025-11-06 16:57:17,420 INFO [root] 📦 Capture complete. Packets seen: 199, Analyzed: 199
+2025-11-06 16:57:17,421 INFO [root] Unique MACs detected: 0
+2025-11-06 16:57:17,421 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 16:57:17,422 INFO [root] Detection status: CLEAN
+2025-11-06 16:57:17,423 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 16:57:17,454 INFO [db] Loop detection saved to database (ID: 399, severity: 1.02, cross-subnet: False)
+2025-11-06 17:02:17,515 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-06 17:02:17,562 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-06 17:02:17,563 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-06 17:02:17,564 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-06 17:02:17,564 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-06 17:02:17,564 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-06 17:02:22,567 INFO [root] 📦 Capture complete. Packets seen: 45, Analyzed: 45
+2025-11-06 17:02:22,567 INFO [root] Unique MACs detected: 2
+2025-11-06 17:02:22,568 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-06 17:02:22,568 INFO [root] Detection status: CLEAN
+2025-11-06 17:02:22,588 INFO [root] 📦 Capture complete. Packets seen: 255, Analyzed: 255
+2025-11-06 17:02:22,588 INFO [root] Unique MACs detected: 0
+2025-11-06 17:02:22,589 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-06 17:02:22,590 INFO [root] Detection status: CLEAN
+2025-11-06 17:02:22,591 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-06 17:02:22,603 INFO [db] Loop detection saved to database (ID: 400, severity: 1.02, cross-subnet: False)
+2025-11-07 19:25:24,418 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-07 19:25:24,439 INFO [db] Activity logged: User 2 - Login - None
+2025-11-07 19:25:34,113 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-07 19:25:34,196 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-07 19:25:34,210 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-07 19:25:34,225 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-07 19:25:34,226 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-07 19:25:34,245 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-07 19:25:39,361 INFO [root] 📦 Capture complete. Packets seen: 71, Analyzed: 71
+2025-11-07 19:25:39,361 INFO [root] 📦 Capture complete. Packets seen: 2306, Analyzed: 2306
+2025-11-07 19:25:39,364 INFO [root] Unique MACs detected: 0
+2025-11-07 19:25:39,366 INFO [root] Unique MACs detected: 0
+2025-11-07 19:25:39,367 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-07 19:25:39,372 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-07 19:25:39,379 INFO [root] Detection status: CLEAN
+2025-11-07 19:25:39,381 INFO [root] Detection status: CLEAN
+2025-11-07 19:25:39,388 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-07 19:25:39,410 INFO [db] Loop detection saved to database (ID: 401, severity: 0.00, cross-subnet: False)
+2025-11-07 19:35:31,945 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-07 19:35:31,970 INFO [db] Activity logged: User 2 - Login - None
+2025-11-07 19:35:40,918 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-07 19:35:40,967 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-07 19:35:40,969 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-07 19:35:40,970 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-07 19:35:40,970 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-07 19:35:40,978 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-07 19:35:46,007 INFO [root] 📦 Capture complete. Packets seen: 1601, Analyzed: 1601
+2025-11-07 19:35:46,014 INFO [root] Unique MACs detected: 0
+2025-11-07 19:35:46,015 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-07 19:35:46,029 INFO [root] Detection status: CLEAN
+2025-11-07 19:35:46,041 INFO [root] 📦 Capture complete. Packets seen: 30, Analyzed: 30
+2025-11-07 19:35:46,049 INFO [root] Unique MACs detected: 0
+2025-11-07 19:35:46,049 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-07 19:35:46,055 INFO [root] Detection status: CLEAN
+2025-11-07 19:35:46,057 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-07 19:35:46,085 INFO [db] Loop detection saved to database (ID: 402, severity: 0.00, cross-subnet: False)
+2025-11-07 19:43:20,741 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-07 19:43:20,775 INFO [db] Activity logged: User 2 - Login - None
+2025-11-07 19:43:29,550 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-07 19:43:29,646 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-07 19:43:29,648 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-07 19:43:29,649 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-07 19:43:29,650 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-07 19:43:29,657 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-07 19:43:34,669 INFO [root] 📦 Capture complete. Packets seen: 46, Analyzed: 46
+2025-11-07 19:43:34,670 INFO [root] Unique MACs detected: 0
+2025-11-07 19:43:34,670 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-07 19:43:34,671 INFO [root] Detection status: CLEAN
+2025-11-07 19:43:34,701 INFO [root] 📦 Capture complete. Packets seen: 1900, Analyzed: 1900
+2025-11-07 19:43:34,702 INFO [root] Unique MACs detected: 0
+2025-11-07 19:43:34,703 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-07 19:43:34,704 INFO [root] Detection status: CLEAN
+2025-11-07 19:43:34,706 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-07 19:43:34,724 INFO [db] Loop detection saved to database (ID: 403, severity: 0.00, cross-subnet: False)
+2025-11-07 19:45:09,971 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\notification_ui.py", line 622, in clear_all
+    self.refresh_callback(force_refresh=True)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: ClientDashboard.update_notification_count() got an unexpected keyword argument 'force_refresh'
+

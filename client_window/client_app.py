@@ -961,8 +961,12 @@ class ClientDashboard:
             self.settings_window.lift()
             self.settings_window.focus_force()
     
-    def update_notification_count(self):
-        """Update the notification count badge."""
+    def update_notification_count(self, force_refresh=False):
+        """Update the notification count badge.
+        
+        Args:
+            force_refresh: If True, forces a refresh (unused but accepted for compatibility)
+        """
         try:
             count = self.notification_system.get_notification_count()
             self.notification_count = count

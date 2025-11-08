@@ -174,26 +174,17 @@ class RoutersTab:
             # Show updating indicator
             self.router_status_var.set("Updating routers...")
             self.root.update_idletasks()
-            r = requests.get(f"{self.api_base_url}/api/routers", timeout=8)
+            
+            # Use optimized endpoint that fetches routers with bandwidth data in single query
+            r = requests.get(f"{self.api_base_url}/api/routers/with-bandwidth", timeout=8)
             if not r.ok:
-                self.router_status_var.set(f"Failed to load routers: {r.status_code}")
-                return
+                # Fallback to regular endpoint if new endpoint not available
+                r = requests.get(f"{self.api_base_url}/api/routers", timeout=8)
+                if not r.ok:
+                    self.router_status_var.set(f"Failed to load routers: {r.status_code}")
+                    return
+                
             routers_raw = r.json() or []
-            # Ensure bandwidth and latency fields are present for each router
-            for router in routers_raw:
-                # Try to fetch latest bandwidth log for each router
-                try:
-                    rid = router.get('id')
-                    br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params={"router_id": rid, "limit": 1}, timeout=3)
-                    if br.ok:
-                        arr = br.json() or []
-                        if arr:
-                            row = arr[0]
-                            router['download_speed'] = row.get('download_mbps')
-                            router['upload_speed'] = row.get('upload_mbps')
-                            router['latency'] = row.get('latency_ms')
-                except Exception:
-                    pass
             self.router_list = routers_raw
             self.router_status_var.set(f"Loaded {len(self.router_list)} routers")
             self.last_update_time = datetime.now()
@@ -324,44 +315,51 @@ class RoutersTab:
                         status_text, status_style = ("🔴 Offline", "danger")
                     status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
                     status_label.pack(pady=5)
-                    # Bandwidth/latency - unified display for both UniFi and non-UniFi
+                    # Bandwidth/latency - unified display matching admin design
+                    # Format: 📊 ↓0.0 Mbps ↑0.0 Mbps ⚡ 131.0 ms
                     if is_in_online_list:
                         # Online - fetch latest bandwidth and latency from backend
                         try:
                             rid = router.get('id')
-                            br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params={"router_id": rid, "limit": 1}, timeout=3)
+                            # Fetch from bandwidth logs API (database-backed)
+                            br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", 
+                                            params={"router_id": rid, "limit": 1}, timeout=3)
+                            
+                            dl = 0.0
+                            ul = 0.0
+                            lat = None
+                            
                             if br.ok:
                                 arr = br.json() or []
                                 if arr:
                                     row = arr[0]
-                                    dl = row.get('download_mbps') or router.get('download_speed') or 0
-                                    ul = row.get('upload_mbps') or router.get('upload_speed') or 0
+                                    dl = float(row.get('download_mbps', 0) or 0)
+                                    ul = float(row.get('upload_mbps', 0) or 0)
                                     lat = row.get('latency_ms')
-                                    if lat is None:
-                                        lat = router.get('latency')
-                                    if lat is not None:
-                                        lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{dl:.2f} Mbps ↑{ul:.2f} Mbps   ⚡ {lat:.0f} ms", bootstyle="success")
-                                    else:
-                                        lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{dl:.2f} Mbps ↑{ul:.2f} Mbps   ⚡ N/A", bootstyle="success")
-                                else:
-                                    # Fallback to router fields if API returns no data
-                                    dl = router.get('download_speed')
-                                    ul = router.get('upload_speed')
-                                    lat = router.get('latency')
-                                    if dl is not None and ul is not None:
-                                        if lat is not None:
-                                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{dl:.2f} Mbps ↑{ul:.2f} Mbps   ⚡ {lat:.0f} ms", bootstyle="success")
-                                        else:
-                                            lbl_bandwidth = tb.Label(inner, text=f"📶 ↓{dl:.2f} Mbps ↑{ul:.2f} Mbps   ⚡ N/A", bootstyle="success")
-                                    else:
-                                        lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
+                            
+                            # Build display text matching admin format exactly
+                            if lat is not None:
+                                try:
+                                    lat_val = float(lat)
+                                    display_text = f"� ↓{dl:.1f} Mbps ↑{ul:.1f} Mbps  ⚡ {lat_val:.1f} ms"
+                                    lbl_bandwidth = tb.Label(inner, text=display_text, 
+                                                           bootstyle="info", font=("Segoe UI", 8))
+                                except (ValueError, TypeError):
+                                    display_text = f"📊 ↓{dl:.1f} Mbps ↑{ul:.1f} Mbps  ⚡ -- ms"
+                                    lbl_bandwidth = tb.Label(inner, text=display_text, 
+                                                           bootstyle="secondary", font=("Segoe UI", 8))
                             else:
-                                lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
-                        except Exception:
-                            lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
+                                display_text = f"� ↓{dl:.1f} Mbps ↑{ul:.1f} Mbps  ⚡ -- ms"
+                                lbl_bandwidth = tb.Label(inner, text=display_text, 
+                                                       bootstyle="secondary", font=("Segoe UI", 8))
+                        except Exception as e:
+                            print(f"Error fetching bandwidth for router {rid}: {e}")
+                            lbl_bandwidth = tb.Label(inner, text="� ↓0.0 Mbps ↑0.0 Mbps  ⚡ -- ms", 
+                                                   bootstyle="secondary", font=("Segoe UI", 8))
                     else:
-                        # Offline - same display for both UniFi and non-UniFi
-                        lbl_bandwidth = tb.Label(inner, text="⏳ Bandwidth: N/A", bootstyle="secondary")
+                        # Offline - show zeros with indicator
+                        lbl_bandwidth = tb.Label(inner, text="� ↓0.0 Mbps ↑0.0 Mbps  ⚡ -- ms", 
+                                               bootstyle="secondary", font=("Segoe UI", 8))
                     lbl_bandwidth.pack(pady=2)
                     # Store widgets for later update
                     rid = router.get('id')

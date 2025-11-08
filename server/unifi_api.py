@@ -24,15 +24,24 @@ Configuration:
 Environment variables can override these: UNIFI_URL, UNIFI_USER, UNIFI_PASS, UNIFI_SITE.
 """
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, g
 import random
 import time
 import platform
 import subprocess
 import os
 from typing import Any, Dict, List, Optional, Tuple
+import re
+import hmac
+from functools import wraps
 
 import requests
+from requests.adapters import HTTPAdapter
+try:
+    # urllib3 location differs across versions; this import covers common cases
+    from urllib3.util.retry import Retry  # type: ignore
+except Exception:  # pragma: no cover
+    Retry = None  # Fallback to no retries if urllib3 Retry unavailable
 
 app = Flask(__name__)
 
@@ -44,11 +53,36 @@ PASSWORD = os.getenv("UNIFI_PASS", "admin123")
 SITE = os.getenv("UNIFI_SITE", "default")
 REFRESH_INTERVAL = 5000  # Auto-refresh every 5000 ms (5 sec)
 
+# --- Security & behavior configuration ---
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+# In dev we allow skipping auth for convenience; in prod default is strict
+ALLOW_NO_AUTH = os.getenv("ALLOW_NO_AUTH", "true" if FLASK_DEBUG else "false").lower() == "true"
+
+# API Keys (comma separated). If empty and ALLOW_NO_AUTH is False, all requests will be rejected.
+API_KEYS = {k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()}
+ADMIN_API_KEYS = {k.strip() for k in os.getenv("ADMIN_API_KEYS", "").split(",") if k.strip()}
+
+# Limit which sites are accessible via /api/s/<site>/...
+ALLOWED_SITES = {s.strip() for s in os.getenv("ALLOWED_SITES", SITE).split(",") if s.strip()}
+
+# Mock controls
+ENABLE_MOCK = os.getenv("ENABLE_MOCK", "true" if FLASK_DEBUG else "false").lower() == "true"
+
+# CORS and headers
+ALLOWED_ORIGINS = {o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()}
+ENABLE_HSTS = os.getenv("ENABLE_HSTS", "false").lower() == "true"
+
+# Simple in-memory rate-limiter storage { key: [timestamps] }
+_RATE_STORE: Dict[str, List[float]] = {}
+
 # Debug logging
 print(f"[UniFi API] Starting with config:")
 print(f"  Controller URL: {CONTROLLER_URL}")
-print(f"  Username: {USERNAME}")
 print(f"  Site: {SITE}")
+print(f"  Debug: {FLASK_DEBUG}")
+print(f"  Auth: {'disabled' if ALLOW_NO_AUTH else 'required'} | API keys loaded: {len(API_KEYS)} | Admin keys: {len(ADMIN_API_KEYS)}")
+print(f"  Allowed sites: {sorted(ALLOWED_SITES)}")
+print(f"  Mock enabled: {ENABLE_MOCK}")
 
 
 # --- Real UniFi session helper ---
@@ -65,8 +99,27 @@ class UniFiSession:
         self.s = requests.Session()
         # Disable redirects on login calls to better detect auth issues
         self.s.max_redirects = 3
-        # Some controllers use self-signed certs (mostly on https); the user provided http.
-        self.verify = True if self.base_url.startswith("http://") else False
+        # TLS verification: only relevant on HTTPS. Default to verify True on HTTPS.
+        # Allow override UNIFI_VERIFY=true/false or UNIFI_CA_BUNDLE=/path/to/ca.pem
+        if self.base_url.startswith("https://"):
+            ca_bundle = os.getenv("UNIFI_CA_BUNDLE")
+            if ca_bundle and os.path.exists(ca_bundle):
+                self.verify = ca_bundle
+            else:
+                self.verify = os.getenv("UNIFI_VERIFY", "true").lower() == "true"
+        else:
+            self.verify = False  # verify parameter ignored for http
+        # Install simple retry strategy for transient errors if available
+        if Retry is not None:
+            retries = Retry(
+                total=int(os.getenv("HTTP_RETRY_TOTAL", "2")),
+                backoff_factor=float(os.getenv("HTTP_RETRY_BACKOFF", "0.3")),
+                status_forcelist=(500, 502, 503, 504),
+                allowed_methods=frozenset(["GET", "POST"])  # type: ignore[arg-type]
+            )
+            adapter = HTTPAdapter(max_retries=retries)
+            self.s.mount("http://", adapter)
+            self.s.mount("https://", adapter)
         self._csrf_header = None  # type: Optional[str]
 
     def _set_csrf_from_response(self, resp: requests.Response):
@@ -118,6 +171,8 @@ class UniFiSession:
         url = f"{self.base_url}{path}"
         headers = kwargs.pop("headers", {})
         merged_headers = {**self._auth_headers(), **headers}
+        # Default timeout to avoid hanging workers
+        kwargs.setdefault("timeout", float(os.getenv("HTTP_TIMEOUT", "8")))
         resp = self.s.request(method, url, headers=merged_headers, verify=self.verify, **kwargs)
         # If unauthorized, try a re-login once
         if resp.status_code in (401, 403):
@@ -147,6 +202,86 @@ def get_session() -> UniFiSession:
         _unifi_session = UniFiSession(CONTROLLER_URL, USERNAME, PASSWORD)
         _unifi_session.login()
     return _unifi_session
+
+
+# --- Helpers: Auth, Rate limiting, Validation, Headers ---
+
+def _constant_time_in(member: str, choices: set) -> bool:
+    for c in choices:
+        if hmac.compare_digest(member, c):
+            return True
+    return False
+
+
+def require_api_key(admin: bool = False):
+    """Decorator enforcing API key auth. Allows bypass when ALLOW_NO_AUTH is True."""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if ALLOW_NO_AUTH:
+                return f(*args, **kwargs)
+            key = request.headers.get("X-API-Key") or request.args.get("api_key")
+            if not key:
+                return jsonify({"error": "unauthorized"}), 401
+            if admin:
+                if ADMIN_API_KEYS and _constant_time_in(key, ADMIN_API_KEYS):
+                    return f(*args, **kwargs)
+                return jsonify({"error": "forbidden"}), 403
+            if API_KEYS and _constant_time_in(key, API_KEYS):
+                return f(*args, **kwargs)
+            return jsonify({"error": "unauthorized"}), 401
+        return wrapper
+    return decorator
+
+
+def rate_limit(limit: int, window_seconds: int = 60):
+    """Very small in-memory fixed-window rate limiter per IP+endpoint."""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            now = time.time()
+            ip = request.headers.get("X-Forwarded-For", request.remote_addr or "?").split(",")[0].strip()
+            key = f"{ip}:{request.path}:{window_seconds}"
+            bucket = _RATE_STORE.get(key, [])
+            # prune
+            threshold = now - window_seconds
+            bucket = [t for t in bucket if t > threshold]
+            if len(bucket) >= limit:
+                return jsonify({"error": "rate_limit_exceeded"}), 429
+            bucket.append(now)
+            _RATE_STORE[key] = bucket
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+MAC_REGEX = re.compile(r"^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$")
+
+
+def validate_site(site: str) -> Optional[Tuple[Dict[str, str], int]]:
+    if site not in ALLOWED_SITES:
+        return {"error": "forbidden_site"}, 403
+    return None
+
+
+@app.after_request
+def add_security_headers(resp):
+    # Security headers suitable for an API
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "no-referrer")
+    # Very strict CSP for APIs
+    resp.headers.setdefault("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'")
+    if ENABLE_HSTS and request.scheme == "https":
+        resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    # CORS allowlist (simple)
+    origin = request.headers.get("Origin")
+    if ALLOWED_ORIGINS and origin in ALLOWED_ORIGINS:
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Vary"] = "Origin"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-API-Key"
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return resp
 
 # --- Mock Data ---
 MOCK_MODE = {
@@ -251,38 +386,50 @@ MOCK_CLIENTS = [
 
 # --- Root login endpoints for compatibility with test client ---
 @app.route('/api/auth/login', methods=['POST'])
+@require_api_key()
 def compat_auth_login_root():
-    return jsonify({'result': 'success', 'version': 'mock'}), 200
+    # Compatibility endpoint preserved but protected by API key
+    return jsonify({'result': 'success', 'version': 'compat'}), 200
 
 @app.route('/api/login', methods=['POST'])
+@require_api_key()
 def compat_login_root():
-    return jsonify({'result': 'success', 'version': 'mock'}), 200
+    return jsonify({'result': 'success', 'version': 'compat'}), 200
 
 
 # --- Compatibility endpoints for UniFi test client ---
 @app.route('/api/s/<site>/stat/device')
+@require_api_key()
 def compat_stat_device(site):
+    forbidden = validate_site(site)
+    if forbidden:
+        return jsonify(forbidden[0]), forbidden[1]
     if MOCK_MODE['routers']:
         return jsonify({'data': MOCK_APS})
     try:
         devices = get_session().get_devices(site)
         return jsonify({'data': devices})
     except Exception as e:
-        return jsonify({'data': [], 'error': str(e)}), 502
+        return jsonify({'data': [], 'error': 'upstream_error'}), 502
 
 @app.route('/api/s/<site>/stat/sta')
+@require_api_key()
 def compat_stat_sta(site):
+    forbidden = validate_site(site)
+    if forbidden:
+        return jsonify(forbidden[0]), forbidden[1]
     if MOCK_MODE['clients']:
         return jsonify({'data': MOCK_CLIENTS})
     try:
         clients = get_session().get_clients(site)
         return jsonify({'data': clients})
     except Exception as e:
-        return jsonify({'data': [], 'error': str(e)}), 502
+        return jsonify({'data': [], 'error': 'upstream_error'}), 502
 
 
 # --- Additional endpoints for dashboard integration ---
 @app.route('/api/unifi/devices')
+@require_api_key()
 def api_devices():
     if MOCK_MODE['routers']:
         return jsonify(MOCK_APS)
@@ -346,9 +493,10 @@ def api_devices():
         print(f"[UniFi API] /api/unifi/devices error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 502
+        return jsonify({'error': 'upstream_error'}), 502
 
 @app.route('/api/unifi/clients')
+@require_api_key()
 def api_clients():
     if MOCK_MODE['clients']:
         return jsonify(MOCK_CLIENTS)
@@ -407,17 +555,30 @@ def api_clients():
         return jsonify(clients)
     except Exception as e:
         print(f"[UniFi API] /api/unifi/clients error: {e}")
-        return jsonify({'error': str(e)}), 502
+        return jsonify({'error': 'upstream_error'}), 502
 
 @app.route('/api/unifi/mock', methods=['POST'])
+@require_api_key(admin=True)
 def api_mock_toggle():
-    data = request.get_json(force=True)
+    if not ENABLE_MOCK:
+        return jsonify({'error': 'mock_disabled'}), 403
+    data = request.get_json(force=True) or {}
+    # Strict boolean enforcement
     for key in ['routers', 'bandwidth', 'clients']:
         if key in data:
-            MOCK_MODE[key] = bool(data[key])
+            val = data[key]
+            if isinstance(val, bool):
+                MOCK_MODE[key] = val
+            elif isinstance(val, (int, float)):
+                MOCK_MODE[key] = bool(val)
+            elif isinstance(val, str):
+                MOCK_MODE[key] = val.strip().lower() in ("1", "true", "yes", "on")
+            else:
+                return jsonify({'error': f'invalid_type_for_{key}'}), 400
     return jsonify({'mock': MOCK_MODE})
 
 @app.route('/api/unifi/bandwidth/total')
+@require_api_key()
 def api_bandwidth_total():
     if MOCK_MODE['bandwidth']:
         total_down = sum(ap.get('xput_down') or 0 for ap in MOCK_APS)
@@ -433,9 +594,10 @@ def api_bandwidth_total():
             total_up += float(st.get('xput_up') or 0)
         return jsonify({'total_down': total_down, 'total_up': total_up})
     except Exception as e:
-        return jsonify({'total_down': 0, 'total_up': 0, 'error': str(e)}), 502
+        return jsonify({'total_down': 0, 'total_up': 0, 'error': 'upstream_error'}), 502
 
 @app.route('/api/unifi/clients/count')
+@require_api_key()
 def api_clients_count():
     if MOCK_MODE['clients']:
         return jsonify({'count': len(MOCK_CLIENTS)})
@@ -443,11 +605,14 @@ def api_clients_count():
         clients = get_session().get_clients(SITE)
         return jsonify({'count': len(clients)})
     except Exception as e:
-        return jsonify({'count': 0, 'error': str(e)}), 502
+        return jsonify({'count': 0, 'error': 'upstream_error'}), 502
 
 @app.route('/api/unifi/devices/<mac>/clients')
+@require_api_key()
 def api_device_clients(mac):
     """Get all clients connected to a specific AP by MAC address"""
+    if not MAC_REGEX.match(mac):
+        return jsonify({'error': 'invalid_mac'}), 400
     if MOCK_MODE['clients']:
         device_clients = [c for c in MOCK_CLIENTS if c.get('ap_mac', '').upper() == mac.upper()]
         return jsonify(device_clients)
@@ -501,12 +666,16 @@ def api_device_clients(mac):
         device_clients = [map_client(c) for c in filtered]
         return jsonify(device_clients)
     except Exception as e:
-        return jsonify({'error': str(e)}), 502
+        return jsonify({'error': 'upstream_error'}), 502
 
 
 # --- NEW: Simulated Ping Endpoint ---
 @app.route('/api/unifi/ping/<mac>')
+@require_api_key()
+@rate_limit(limit=int(os.getenv('PING_RATE_LIMIT', '20')), window_seconds=int(os.getenv('PING_RATE_WINDOW', '60')))
 def api_ping_device(mac):
+    if not MAC_REGEX.match(mac):
+        return jsonify({'error': 'invalid_mac'}), 400
     # Try real devices first
     ip = None
     try:
@@ -608,4 +777,5 @@ def ping_with_latency(ip: str) -> Tuple[Optional[bool], Optional[float]]:
 
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=True)
+    # Never enable debug=True by default
+    app.run(port=5001, debug=FLASK_DEBUG)
