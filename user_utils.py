@@ -150,3 +150,30 @@ def update_user(user_id, username, password, first_name, last_name):
             conn.close()
     
     return execute_with_error_handling("update_user", _update_user)
+
+def get_user_last_login(user_id):
+    """
+    Get the last login timestamp for a user.
+    Returns a datetime object or None if no login history exists.
+    """
+    def _get_last_login():
+        conn = get_connection()
+        try:
+            cur = conn.cursor(dictionary=True)
+            cur.execute(
+                """
+                SELECT login_timestamp 
+                FROM login_sessions 
+                WHERE user_id = %s 
+                ORDER BY login_timestamp DESC 
+                LIMIT 1
+                """,
+                (user_id,)
+            )
+            result = cur.fetchone()
+            return result['login_timestamp'] if result else None
+        finally:
+            cur.close()
+            conn.close()
+    
+    return execute_with_error_handling("get_user_last_login", _get_last_login)

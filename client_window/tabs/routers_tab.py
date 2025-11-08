@@ -1,4 +1,5 @@
 import os
+import time
 import ttkbootstrap as tb
 import tkinter as tk
 import requests
@@ -14,6 +15,7 @@ class RoutersTab:
         self.api_base_url = api_base_url
         self.root = root_window
         self.auto_update_interval = 30000  # 30 seconds in milliseconds
+        self.metrics_refresh_interval_ms = 3000  # refresh latency/bandwidth every ~3s
         self.is_updating = False
         self.auto_update_job = None
         self.last_update_time = None
@@ -68,7 +70,10 @@ class RoutersTab:
         self.router_search_var = tb.StringVar()
         search_entry = tb.Entry(filter_frame, textvariable=self.router_search_var, width=30)
         search_entry.pack(side="left")
-        self.router_search_var.trace_add("write", lambda *_: self.apply_router_filter())
+        # Ensure filter is applied live for every letter typed
+        def on_search_var_change(*_):
+            self.apply_router_filter()
+        self.router_search_var.trace_add("write", on_search_var_change)
         tb.Label(filter_frame, text="Type:", bootstyle="info").pack(side="left", padx=(20, 5))
         self.router_type_var = tb.StringVar(value="All")
         type_combo = tb.Combobox(filter_frame, textvariable=self.router_type_var,
@@ -108,40 +113,46 @@ class RoutersTab:
         self.load_routers()
         # Start auto-update
         self.start_auto_update()
-
-        self.router_status_var = tb.StringVar(value="Loading routers…")
-        tb.Label(self.parent_frame, textvariable=self.router_status_var, bootstyle='secondary').pack(padx=10, pady=(0,10), anchor='w')
-
-        # Data state
-        self.router_list = []
-        self.filtered_router_list = []
-        # Load initial
-        self.load_routers()
-        # Start auto-update
-        self.start_auto_update()
+        # Start lightweight metrics loop (after initial load)
+        self._metrics_loop_job = None
+        self._start_metrics_loop()
 
     def _is_router_online(self, router):
         """
-        Check if router is online based on router_status_log table.
-        Router is considered online if there's an 'online' status entry 
-        within the last 5 seconds.
+        Check if router is online - simplified for fast, accurate results.
+        Priority: bandwidth_timestamp > status API > last_seen
         """
+        # 1. Fast path: recent bandwidth log means actively monitored and online
+        ts = router.get('bandwidth_timestamp')
+        if ts:
+            try:
+                parsed = None
+                if isinstance(ts, str):
+                    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"):
+                        try:
+                            parsed = datetime.strptime(ts.replace('Z',''), fmt)
+                            break
+                        except Exception:
+                            pass
+                elif isinstance(ts, datetime):
+                    parsed = ts
+                
+                if parsed and (datetime.now() - parsed) <= timedelta(seconds=120):  # 2 min window
+                    return True
+            except Exception:
+                pass
+
+        # 2. Status API check (quick timeout)
         try:
-            # Use the API endpoint to get status-based online detection
-            r = requests.get(f"{self.api_base_url}/api/routers/{router['id']}/status", timeout=3)
+            r = requests.get(f"{self.api_base_url}/api/routers/{router['id']}/status", timeout=1)
             if r.ok:
-                status_data = r.json()
-                # If last update is older than 30 seconds, treat as offline (for UniFi APs)
-                age = status_data.get('seconds_since_last_update')
-                if age is not None and age > 30:
-                    return False
+                status_data = r.json() or {}
                 return status_data.get('is_online', False)
-            else:
-                # Fallback to old method if API fails
-                return self._is_router_online_fallback(router)
         except Exception:
-            # Fallback to old method if API fails
-            return self._is_router_online_fallback(router)
+            pass
+
+        # 3. Legacy fallback: last_seen field
+        return self._is_router_online_fallback(router)
     
     def _is_router_online_fallback(self, router):
         """Fallback method using last_seen field"""
@@ -198,12 +209,12 @@ class RoutersTab:
 
     def apply_router_filter(self):
         self._show_routers_loading()
-        text = (self.router_search_var.get() or "").strip().lower()
+        raw = (self.router_search_var.get() or "").strip().lower()
         type_filter = self.router_type_var.get()
         flt = []
         for r in self.router_list:
-            blob = " ".join(str(r.get(k, "")) for k in ("name","ip_address","brand","location")).lower()
-            if text and text not in blob:
+            fields = [str(r.get(k, "") or "").lower() for k in ("name","ip_address","brand","location")]
+            if raw and not any(raw in field for field in fields):
                 continue
             if type_filter == "UniFi" and not (r.get("brand", "").lower() == "unifi" or r.get("is_unifi")):
                 continue
@@ -220,182 +231,439 @@ class RoutersTab:
         self._hide_routers_loading()
 
     def render_router_cards(self, routers):
-        # Clear previous cards
-        for child in list(self.scrollable_frame.winfo_children()):
-            child.destroy()
-
+        # Diff-based rendering for smooth updates.
+        self._ensure_router_sections()
         if not routers:
-            tb.Label(self.scrollable_frame, text="No routers to display", font=("Segoe UI", 11)).pack(pady=20)
+            # Empty state
+            self._clear_router_section(self.online_section_frame)
+            self._clear_router_section(self.offline_section_frame)
+            if not hasattr(self, '_empty_label'):
+                self._empty_label = tb.Label(self.online_section_frame, text="No routers to display", font=("Segoe UI", 11))
+            self._empty_label.pack(pady=20)
             return
+        else:
+            if hasattr(self, '_empty_label') and self._empty_label.winfo_exists():
+                self._empty_label.pack_forget()
 
-        online_list = []
-        offline_list = []
+        online_list, offline_list = [], []
         for r in routers:
-            online = self._is_router_online(r)
-            # For UniFi APs, check last update age and treat as offline if stale
+            is_on = self._is_router_online(r)
             if (r.get('brand', '').lower() == 'unifi' or r.get('is_unifi')):
                 try:
-                    r_status = requests.get(f"{self.api_base_url}/api/routers/{r['id']}/status", timeout=3)
+                    r_status = requests.get(f"{self.api_base_url}/api/routers/{r['id']}/status", timeout=2)
                     if r_status.ok:
                         status_data = r_status.json()
                         age = status_data.get('seconds_since_last_update')
                         if age is not None and age > 30:
-                            online = False
+                            is_on = False
                 except Exception:
-                    online = False
-            if online:
-                online_list.append(r)
+                    pass
+            (online_list if is_on else offline_list).append(r)
+
+        sort_mode = self.router_sort_var.get()
+        # Determine which lists are used for layout
+        if sort_mode == 'online':
+            display_online = online_list
+            display_offline = offline_list
+        else:
+            display_online = online_list + offline_list
+            display_offline = []
+
+        # Build desired id sets
+        desired_ids = [r.get('id') for r in (display_online + display_offline) if r.get('id') is not None]
+        existing_ids = set(self.router_widgets.keys()) if hasattr(self, 'router_widgets') else set()
+        if not hasattr(self, 'router_widgets'):
+            self.router_widgets = {}
+        desired_set = set(desired_ids)
+
+        # Remove obsolete cards
+        for rid in list(existing_ids - desired_set):
+            w = self.router_widgets.pop(rid, None)
+            if w and w.get('card') and w['card'].winfo_exists():
+                try: w['card'].destroy()
+                except Exception: pass
+
+        # Add or update cards
+        for r in (display_online + display_offline):
+            rid = r.get('id')
+            if rid is None: 
+                continue
+            parent = self.online_section_frame if (sort_mode != 'online' or rid in [x.get('id') for x in online_list]) else self.offline_section_frame
+            if rid not in self.router_widgets:
+                self._create_router_card(parent, r, rid in [x.get('id') for x in online_list])
             else:
-                offline_list.append(r)
-
-        self.router_widgets = {}  # Store widgets for later updates
-
-        def section(title, items):
-            if not items:
-                return
-            tb.Label(
-                self.scrollable_frame, text=title,
-                font=("Segoe UI", 12, "bold"), bootstyle="secondary"
-            ).pack(anchor="w", padx=10, pady=(15, 5))
-
-            sec = tb.Frame(self.scrollable_frame)
-            sec.pack(fill="x", padx=10, pady=5)
-            sec._resize_job = None
-            sec._last_cols = None
-
-            def render_cards():
-                width = sec.winfo_width() or self.root.winfo_width()
-                if width <= 400:
-                    max_cols = 1
-                elif width <= 800:
-                    max_cols = 2
-                elif width <= 1200:
-                    max_cols = 3
-                else:
-                    max_cols = 4
-                if sec._last_cols == max_cols:
-                    return
-                sec._last_cols = max_cols
-                for w in sec.winfo_children():
-                    w.destroy()
-                for i, router in enumerate(items):
-                    row, col = divmod(i, max_cols)
-                    is_unifi = router.get('brand', '').lower() == 'unifi' or router.get('is_unifi')
-                    # Determine current status for border color
-                    is_in_online_list = router in online_list
-                    if is_in_online_list:
-                        card_style = "primary" if is_unifi else "success"
-                    else:
-                        card_style = "danger"
-                    card = tb.LabelFrame(sec, text=router.get('name', 'Unknown'), bootstyle=card_style, padding=0)
-                    card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
-                    
-                    # Configure uniform card sizing
-                    card.grid_propagate(False)  # Prevent content from affecting card size
-                    card.config(width=280, height=200)  # Fixed dimensions for uniformity
-                    
-                    sec.grid_columnconfigure(col, weight=1, uniform="router_cards")  # Equal column sizing
-                    sec.grid_rowconfigure(row, weight=0)  # Fixed row height
-                    
-                    inner = tb.Frame(card, padding=10)
-                    inner.pack(fill="both", expand=True)
-                    # UniFi badge and icon
-                    if is_unifi:
-                        tb.Label(inner, text="📡", font=("Segoe UI Emoji", 30)).pack()
-                        tb.Label(inner, text="UniFi Device", font=("Segoe UI", 8, "italic"), bootstyle="primary").pack()
-                    else:
-                        tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
-                    ip = router.get('ip_address') or router.get('ip') or '—'
-                    tb.Label(inner, text=ip, font=("Segoe UI", 10)).pack(pady=(5, 0))
-                    # Status - check if router is in online_list or offline_list
-                    is_in_online_list = router in online_list
-                    if is_in_online_list:
-                        status_text, status_style = ("🟢 Online", "success")
-                    else:
-                        status_text, status_style = ("🔴 Offline", "danger")
-                    status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
-                    status_label.pack(pady=5)
-                    # Bandwidth/latency - unified display matching admin design
-                    # Format: 📊 ↓0.0 Mbps ↑0.0 Mbps ⚡ 131.0 ms
-                    if is_in_online_list:
-                        # Online - fetch latest bandwidth and latency from backend
-                        try:
-                            rid = router.get('id')
-                            # Fetch from bandwidth logs API (database-backed)
-                            br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", 
-                                            params={"router_id": rid, "limit": 1}, timeout=3)
-                            
-                            dl = 0.0
-                            ul = 0.0
-                            lat = None
-                            
-                            if br.ok:
-                                arr = br.json() or []
-                                if arr:
-                                    row = arr[0]
-                                    dl = float(row.get('download_mbps', 0) or 0)
-                                    ul = float(row.get('upload_mbps', 0) or 0)
-                                    lat = row.get('latency_ms')
-                            
-                            # Build display text matching admin format exactly
-                            if lat is not None:
-                                try:
-                                    lat_val = float(lat)
-                                    display_text = f"� ↓{dl:.1f} Mbps ↑{ul:.1f} Mbps  ⚡ {lat_val:.1f} ms"
-                                    lbl_bandwidth = tb.Label(inner, text=display_text, 
-                                                           bootstyle="info", font=("Segoe UI", 8))
-                                except (ValueError, TypeError):
-                                    display_text = f"📊 ↓{dl:.1f} Mbps ↑{ul:.1f} Mbps  ⚡ -- ms"
-                                    lbl_bandwidth = tb.Label(inner, text=display_text, 
-                                                           bootstyle="secondary", font=("Segoe UI", 8))
-                            else:
-                                display_text = f"� ↓{dl:.1f} Mbps ↑{ul:.1f} Mbps  ⚡ -- ms"
-                                lbl_bandwidth = tb.Label(inner, text=display_text, 
-                                                       bootstyle="secondary", font=("Segoe UI", 8))
-                        except Exception as e:
-                            print(f"Error fetching bandwidth for router {rid}: {e}")
-                            lbl_bandwidth = tb.Label(inner, text="� ↓0.0 Mbps ↑0.0 Mbps  ⚡ -- ms", 
-                                                   bootstyle="secondary", font=("Segoe UI", 8))
-                    else:
-                        # Offline - show zeros with indicator
-                        lbl_bandwidth = tb.Label(inner, text="� ↓0.0 Mbps ↑0.0 Mbps  ⚡ -- ms", 
-                                               bootstyle="secondary", font=("Segoe UI", 8))
-                    lbl_bandwidth.pack(pady=2)
-                    # Store widgets for later update
-                    rid = router.get('id')
-                    if rid:
-                        self.router_widgets[rid] = {
-                            'card': card,
-                            'status_label': status_label,
-                            'bandwidth_label': lbl_bandwidth,
-                            'data': router
-                        }
-                    # Bind click to open details
-                    def bind_card_click(widget, router_obj):
-                        widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
-                    bind_card_click(inner, router)
-                    for child in inner.winfo_children():
-                        bind_card_click(child, router)
-                    # Keep border color stable on hover based on status/type
-                    def on_enter(e, c=card, bs=card_style): c.configure(bootstyle=bs)
-                    def on_leave(e, c=card, bs=card_style): c.configure(bootstyle=bs)
-                    card.bind("<Enter>", on_enter)
-                    card.bind("<Leave>", on_leave)
-            def on_resize(event):
-                if hasattr(sec, '_resize_job') and sec._resize_job is not None:
+                self.router_widgets[rid]['data'] = r
+                self._update_router_card(self.router_widgets[rid], r, rid in [x.get('id') for x in online_list])
+                # Ensure card is in correct parent (recreate if needed)
+                current_parent = self.router_widgets[rid].get('parent')
+                if current_parent is not parent:
                     try:
-                        sec.after_cancel(sec._resize_job)
+                        old = self.router_widgets.pop(rid)
+                        if old.get('card') and old['card'].winfo_exists():
+                            old['card'].destroy()
+                        self._create_router_card(parent, r, rid in [x.get('id') for x in online_list])
                     except Exception:
                         pass
-                sec._resize_job = sec.after(300, render_cards)
-            sec.bind("<Configure>", on_resize)
-            render_cards()
-        # Respect sort toggle: online first vs default
-        if self.router_sort_var.get() == "online":
-            section("🟢 Online Routers", online_list)
-            section("🔴 Offline Routers", offline_list)
+
+        # Layout cards responsively (force one early layout pass to avoid initial 1-col)
+        self._layout_router_cards(self.online_section_frame, [r.get('id') for r in display_online])
+        # Force a second layout after idle so container width is settled
+        self.root.after_idle(lambda: self._layout_router_cards(self.online_section_frame, [r.get('id') for r in display_online]))
+        if sort_mode == 'online':
+            self._layout_router_cards(self.offline_section_frame, [r.get('id') for r in display_offline])
+            self.root.after_idle(lambda: self._layout_router_cards(self.offline_section_frame, [r.get('id') for r in display_offline]))
+            self.offline_header_label.pack(anchor='w', padx=10, pady=(15,5))
+            self.offline_section_frame.pack(fill='x', padx=10, pady=5)
         else:
-            section("🟢 Online Routers", online_list + offline_list)
+            self.offline_header_label.pack_forget()
+            self.offline_section_frame.pack_forget()
+
+    # === Helper methods for diff rendering ===
+    def _ensure_router_sections(self):
+        if hasattr(self, 'online_section_frame') and hasattr(self, 'offline_section_frame'):
+            return
+        # Clean slate
+        for c in list(self.scrollable_frame.winfo_children()):
+            try: c.destroy()
+            except Exception: pass
+        self.online_header_label = tb.Label(self.scrollable_frame, text="🟢 Online Routers", font=("Segoe UI", 12, "bold"), bootstyle="secondary")
+        self.online_header_label.pack(anchor='w', padx=10, pady=(15,5))
+        self.online_section_frame = tb.Frame(self.scrollable_frame)
+        self.online_section_frame.pack(fill='x', padx=10, pady=5)
+        self.online_section_frame._resize_job = None
+        self.offline_header_label = tb.Label(self.scrollable_frame, text="🔴 Offline Routers", font=("Segoe UI", 12, "bold"), bootstyle="secondary")
+        self.offline_section_frame = tb.Frame(self.scrollable_frame)
+        # Initially hidden until needed
+        self.offline_section_frame._resize_job = None
+        # Responsive relayout on resize with debounce
+        def _debounced_relayout(container):
+            try:
+                if getattr(container, '_resize_job', None):
+                    container.after_cancel(container._resize_job)
+            except Exception:
+                pass
+            container._resize_job = container.after(200, lambda: self._layout_router_cards(container, None))
+        self.online_section_frame.bind('<Configure>', lambda e: _debounced_relayout(self.online_section_frame))
+        self.offline_section_frame.bind('<Configure>', lambda e: _debounced_relayout(self.offline_section_frame))
+
+    def _clear_router_section(self, section):
+        for w in list(section.winfo_children()):
+            try: w.destroy()
+            except Exception: pass
+
+    def _compute_max_cols(self, container):
+        width = container.winfo_width() or self.root.winfo_width() or 800
+        if width <= 400: return 1
+        if width <= 800: return 2
+        if width <= 1200: return 3
+        return 4
+
+    def _create_router_card(self, parent, router, is_online):
+        rid = router.get('id')
+        is_unifi = router.get('brand', '').lower() == 'unifi' or router.get('is_unifi')
+        card_style = ('primary' if is_unifi else 'success') if is_online else 'danger'
+        card = tb.LabelFrame(parent, text=router.get('name','Unknown'), bootstyle=card_style, padding=0)
+        card.grid_propagate(False)
+        card.config(width=280, height=200)
+        inner = tb.Frame(card, padding=10)
+        inner.pack(fill='both', expand=True)
+        if is_unifi:
+            tb.Label(inner, text='📡', font=("Segoe UI Emoji", 30)).pack()
+            tb.Label(inner, text='UniFi Device', font=("Segoe UI",8,'italic'), bootstyle='primary').pack()
+        else:
+            tb.Label(inner, text='⛀', font=("Segoe UI Emoji", 30)).pack()
+        ip = router.get('ip_address') or router.get('ip') or '—'
+        tb.Label(inner, text=ip, font=("Segoe UI",10)).pack(pady=(5,0))
+        status_text, status_style = (('🟢 Online','success') if is_online else ('🔴 Offline','danger'))
+        status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor='hand2')
+        status_label.pack(pady=5)
+        bw_label = tb.Label(inner, text='… Loading bandwidth', bootstyle='secondary', font=("Segoe UI",8))
+        bw_label.pack(pady=2)
+
+        def bind_card_click(widget, router_obj):
+            widget.bind('<Button-1>', lambda e: self.open_router_details(router_obj))
+        bind_card_click(inner, router)
+        for ch in inner.winfo_children():
+            bind_card_click(ch, router)
+
+        def on_enter(e, c=card, bs=card_style):
+            c.configure(bootstyle=bs)
+
+        def on_leave(e, c=card, bs=card_style):
+            c.configure(bootstyle=bs)
+
+        card.bind('<Enter>', on_enter)
+        card.bind('<Leave>', on_leave)
+        if not hasattr(self,'router_widgets'): self.router_widgets = {}
+        self.router_widgets[rid] = {
+            'card': card,
+            'status_label': status_label,
+            'bandwidth_label': bw_label,
+            'data': router,
+            'parent': parent,
+        }
+        # Async bandwidth fetch if online
+        if is_online:
+            threading.Thread(target=self._fetch_bandwidth_latency_safe, args=(rid,), daemon=True).start()
+        return card
+
+    def _update_router_card(self, w, router, is_online):
+        # Title
+        try:
+            if w['card'].cget('text') != router.get('name','Unknown'):
+                w['card'].configure(text=router.get('name','Unknown'))
+        except Exception: pass
+        # Status
+        desired_status = '🟢 Online' if is_online else '🔴 Offline'
+        desired_style = 'success' if is_online else 'danger'
+        try:
+            if w['status_label'].cget('text') != desired_status:
+                w['status_label'].configure(text=desired_status, bootstyle=desired_style)
+        except Exception:
+            pass
+        # Card style (force set; ttkbootstrap may not return bootstyle on cget reliably)
+        try:
+            is_unifi = router.get('brand', '').lower() == 'unifi' or router.get('is_unifi')
+            card_style = ('primary' if is_unifi else 'success') if is_online else 'danger'
+            w['card'].configure(bootstyle=card_style)
+        except Exception:
+            pass
+        # If online, (re)fetch bandwidth/latency if placeholder or stale
+        try:
+            bw_text = w['bandwidth_label'].cget('text')
+        except Exception:
+            bw_text = ''
+        stale = False
+        last = w.get('metrics_last_fetch')
+        if last is None:
+            stale = True
+        else:
+            try:
+                stale = (time.time() - last) > 3  # refresh every ~3s if online
+            except Exception:
+                stale = True
+        # Combined label contains latency, so detect placeholder via '--' or 'Loading'
+        needs_refresh = is_online and (("Loading" in bw_text) or ('--' in bw_text) or stale)
+        if needs_refresh:
+            w['metrics_last_fetch'] = time.time()
+            threading.Thread(target=self._fetch_bandwidth_latency_safe, args=(router.get('id'),), daemon=True).start()
+        else:
+            if not is_online:
+                # If offline, ensure latency shows unknown and neutral style
+                try:
+                    if w.get('bandwidth_label') and w['bandwidth_label'].winfo_exists():
+                        # Combined line
+                        w['bandwidth_label'].configure(text='📊 ↓0.0 Mbps ↑0.0 Mbps   ⚡ --', bootstyle='secondary')
+                except Exception:
+                    pass
+
+    def _layout_router_cards(self, container, ids):
+        # Responsive grid layout (ids optional). If ids None, infer from widgets in container.
+        if ids is None:
+            ids = [rid for rid, w in self.router_widgets.items() if w.get('parent') is container]
+        max_cols = self._compute_max_cols(container)
+        # Skip relayout if columns unchanged and children count same
+        prev_cols = getattr(container, '_last_cols', None)
+        prev_count = getattr(container, '_last_count', None)
+        if prev_cols == max_cols and prev_count == len(ids):
+            return
+        container._last_cols = max_cols
+        container._last_count = len(ids)
+        # Clear previous grid placements only (keep widgets)
+        for child in container.winfo_children():
+            child.grid_forget()
+        for idx, rid in enumerate(ids):
+            w = self.router_widgets.get(rid)
+            if not w: 
+                continue
+            row, col = divmod(idx, max_cols)
+            w['card'].grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+            container.grid_columnconfigure(col, weight=1, uniform='router_cards')
+            container.grid_rowconfigure(row, weight=0)
+
+    def _fetch_bandwidth_latency_safe(self, rid):
+        w = self.router_widgets.get(rid)
+        if not w: return
+        try:
+            # Single status endpoint first to get latency & online status quickly
+            status_r = requests.get(f"{self.api_base_url}/api/routers/{rid}/status", timeout=3)
+            lat = None
+            is_online = False
+            if status_r.ok:
+                sdata = status_r.json() or {}
+                lat = sdata.get('latency_ms') or sdata.get('avg_latency') or sdata.get('latency')
+                is_online = sdata.get('is_online', False)
+
+            br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params={"router_id": rid, "limit": 1}, timeout=4)
+            dl=ul=0.0
+            if br.ok:
+                arr = br.json() or []
+                if arr:
+                    row = arr[0]
+                    dl = float(row.get('download_mbps',0) or 0)
+                    ul = float(row.get('upload_mbps',0) or 0)
+                    if lat is None:
+                        lat = row.get('latency_ms')
+            # If still no latency and router considered online, attempt direct ping (non-blocking UI)
+            if lat is None and is_online:
+                # Spawn a quick ping thread to update latency once
+                threading.Thread(target=self._ping_and_update_latency, args=(rid, w), daemon=True).start()
+            # Compose combined line like admin (be tolerant to Decimal/str types)
+            speed_text = f"📊 ↓{dl:.1f} Mbps ↑{ul:.1f} Mbps" if (dl>0 or ul>0) else "📊 ↓0.0 Mbps ↑0.0 Mbps"
+            lat_val = None
+            if lat is not None:
+                try:
+                    lat_val = float(lat)
+                except Exception:
+                    lat_val = None
+            latency_text = f"   ⚡ {lat_val:.1f} ms" if isinstance(lat_val,(int,float)) else "   ⚡ --"
+            new_text = speed_text + latency_text
+            style = ("info" if (dl>0 or ul>0) else ("success" if is_online else "secondary")) if is_online else "secondary"
+            self.root.after(0, lambda: (w['bandwidth_label'].config(text=new_text, bootstyle=style) if w['bandwidth_label'].winfo_exists() else None))
+        except Exception:
+            self.root.after(0, lambda: (w and w.get('bandwidth_label') and w['bandwidth_label'].winfo_exists() and w['bandwidth_label'].config(text='📊 ↓0.0 Mbps ↑0.0 Mbps   ⚡ --', bootstyle='secondary')))
+
+    def _ping_and_update_latency(self, rid, widget_ref):
+        # Direct ping fallback to populate latency if missing
+        try:
+            data = widget_ref.get('data') if widget_ref else None
+            ip = None
+            if data:
+                ip = data.get('ip_address') or data.get('ip')
+            if not ip:
+                return
+            # Lightweight ping using network_utils endpoint? If no API, local ping util
+            try:
+                from network_utils import ping_latency
+                lat_val = ping_latency(ip, timeout=800, use_manager=False)
+            except Exception:
+                lat_val = None
+            if lat_val is None:
+                return
+            # Merge into existing label text
+            def apply():
+                if widget_ref and widget_ref.get('bandwidth_label') and widget_ref['bandwidth_label'].winfo_exists():
+                    current = widget_ref['bandwidth_label'].cget('text') or ''
+                    parts = current.split('⚡')
+                    if parts:
+                        # Rebuild preserving bandwidth portion
+                        bw_part = parts[0].strip()
+                        new_text = f"{bw_part}   ⚡ {lat_val:.1f} ms"
+                    else:
+                        new_text = f"📊 ↓0.0 Mbps ↑0.0 Mbps   ⚡ {lat_val:.1f} ms"
+                    widget_ref['bandwidth_label'].config(text=new_text)
+            self.root.after(0, apply)
+        except Exception:
+            pass
+
+    def _start_metrics_loop(self):
+        # Periodically refresh metrics without full router list reload
+        def loop():
+            try:
+                # Prefer batch refresh to avoid N requests per cycle
+                ok = self._refresh_metrics_batch()
+                if not ok:
+                    # Fallback: per-router selective refresh
+                    now = time.time()
+                    for rid, w in list(getattr(self, 'router_widgets', {}).items()):
+                        try:
+                            is_online = 'Online' in (w.get('status_label').cget('text') if w.get('status_label') else '')
+                        except Exception:
+                            is_online = False
+                        if not is_online:
+                            continue
+                        last = w.get('metrics_last_fetch') or 0
+                        if now - last >= 3:
+                            w['metrics_last_fetch'] = now
+                            threading.Thread(target=self._fetch_bandwidth_latency_safe, args=(rid,), daemon=True).start()
+            except Exception:
+                pass
+            finally:
+                self._metrics_loop_job = self.root.after(self.metrics_refresh_interval_ms, loop)
+        # Kick off
+        loop()
+
+    def _refresh_metrics_batch(self):
+        """Fetch latest metrics for all routers in one call and update cards. Returns True if successful."""
+        try:
+            r = requests.get(f"{self.api_base_url}/api/routers/with-bandwidth", timeout=2)
+            if not r.ok:
+                return False
+            arr = r.json() or []
+            # Map by id for quick lookup
+            by_id = {item.get('id') or item.get('router_id'): item for item in arr}
+            now = time.time()
+            
+            for rid, w in list(getattr(self, 'router_widgets', {}).items()):
+                data = by_id.get(rid)
+                if not data:
+                    continue
+                # Only update if widget exists
+                if not (w and w.get('bandwidth_label') and w['bandwidth_label'].winfo_exists()):
+                    continue
+                
+                # Determine online status from fresh data
+                is_online = self._is_router_online(data)
+                
+                # Update status label
+                try:
+                    if w.get('status_label') and w['status_label'].winfo_exists():
+                        desired_status = '🟢 Online' if is_online else '🔴 Offline'
+                        desired_style = 'success' if is_online else 'danger'
+                        current_text = w['status_label'].cget('text')
+                        if current_text != desired_status:
+                            w['status_label'].configure(text=desired_status, bootstyle=desired_style)
+                except Exception:
+                    pass
+                
+                # Update card border style
+                try:
+                    is_unifi = data.get('brand', '').lower() == 'unifi' or data.get('is_unifi')
+                    card_style = ('primary' if is_unifi else 'success') if is_online else 'danger'
+                    if w.get('card') and w['card'].winfo_exists():
+                        w['card'].configure(bootstyle=card_style)
+                except Exception:
+                    pass
+                
+                # Parse bandwidth values
+                try:
+                    dl = float(data.get('download_mbps') or 0)
+                except Exception:
+                    dl = 0.0
+                try:
+                    ul = float(data.get('upload_mbps') or 0)
+                except Exception:
+                    ul = 0.0
+                lat_raw = data.get('latency_ms')
+                try:
+                    lat_val = float(lat_raw) if lat_raw is not None else None
+                except Exception:
+                    lat_val = None
+                
+                # Compose combined line
+                speed_text = f"📊 ↓{dl:.1f} Mbps ↑{ul:.1f} Mbps" if (dl>0 or ul>0) else "📊 ↓0.0 Mbps ↑0.0 Mbps"
+                latency_text = f"   ⚡ {lat_val:.1f} ms" if isinstance(lat_val,(int,float)) else "   ⚡ --"
+                new_text = speed_text + latency_text
+                
+                # Style based on online state and traffic
+                style = ("info" if (dl>0 or ul>0) else "success") if is_online else "secondary"
+                
+                def apply(widget=w['bandwidth_label'], txt=new_text, st=style, wid=w):
+                    if widget and widget.winfo_exists():
+                        widget.config(text=txt, bootstyle=st)
+                        wid['metrics_last_fetch'] = now
+                        wid['data'] = data  # Update cached data
+                
+                self.root.after(0, apply)
+                
+                # If latency missing but online, opportunistic ping
+                if lat_val is None and is_online:
+                    threading.Thread(target=self._ping_and_update_latency, args=(rid, w), daemon=True).start()
+            
+            return True
+        except Exception as e:
+            print(f"Batch refresh error: {e}")
+            return False
     def _show_routers_loading(self):
         self.loading_frame.pack(fill="x", padx=10, pady=10)
         self.root.update_idletasks()
@@ -467,7 +735,7 @@ class RoutersTab:
         detail_status_lbl = None
         detail_download_lbl = None
         detail_upload_lbl = None
-        detail_last_seen_lbl = None
+    # Removed Last Seen label per request (was detail_last_seen_lbl)
         detail_latency_lbl = None
 
         # Basic Information Card
@@ -518,13 +786,7 @@ class RoutersTab:
             detail_status_lbl = tb.Label(status_row, text="🔴 Offline", font=("Segoe UI", 12, "bold"), bootstyle="danger")
         detail_status_lbl.pack(side="left", padx=(10, 0))
 
-        last_seen_row = tb.Frame(status_card)
-        last_seen_row.pack(fill="x")
-        tb.Label(last_seen_row, text="🕐 Last Seen:", font=("Segoe UI", 11, "bold"), bootstyle="secondary").pack(side="left")
-        last_seen = router.get('last_seen')
-        ls_text = last_seen if isinstance(last_seen, str) else (last_seen.strftime('%Y-%m-%d %H:%M:%S') if last_seen else 'Never')
-        detail_last_seen_lbl = tb.Label(last_seen_row, text=ls_text or 'Never', font=("Segoe UI", 11), bootstyle="dark")
-        detail_last_seen_lbl.pack(side="left", padx=(10, 0))
+    # Last Seen section removed
 
         # Performance Metrics Card
         performance_card = tb.LabelFrame(scroll_frame, text="📊 Performance Metrics", bootstyle="warning", padding=20)
@@ -571,51 +833,76 @@ class RoutersTab:
             if not d.winfo_exists():
                 return
             rid = router.get('id')
-            # Status via API
+            
+            # Use batch endpoint for fresh data
             try:
-                rs = requests.get(f"{self.api_base_url}/api/routers/{rid}/status", timeout=5)
-                if rs.ok:
-                    info = rs.json() or {}
-                    is_online = info.get('is_online', False)
-                    if is_online:
-                        detail_status_lbl.config(text="🟢 Online", bootstyle="success")
-                        status_circle.config(text="●", bootstyle="success")
+                batch_r = requests.get(f"{self.api_base_url}/api/routers/with-bandwidth", timeout=2)
+                if batch_r.ok:
+                    routers_data = batch_r.json() or []
+                    router_data = next((r for r in routers_data if r.get('id') == rid), None)
+                    
+                    if router_data:
+                        # Determine online status from fresh data
+                        is_online = self._is_router_online(router_data)
+                        
+                        # Update status
+                        if is_online:
+                            detail_status_lbl.config(text="🟢 Online", bootstyle="success")
+                            status_circle.config(text="●", bootstyle="success")
+                        else:
+                            detail_status_lbl.config(text="🔴 Offline", bootstyle="danger")
+                            status_circle.config(text="●", bootstyle="danger")
+                        
+                        # Update bandwidth & latency
+                        try:
+                            dl = float(router_data.get('download_mbps') or 0)
+                        except:
+                            dl = 0.0
+                        try:
+                            ul = float(router_data.get('upload_mbps') or 0)
+                        except:
+                            ul = 0.0
+                        try:
+                            lat = float(router_data.get('latency_ms') or 0)
+                        except:
+                            lat = 0.0
+                        
+                        detail_download_lbl.config(text=f"{dl:.2f} Mbps" if dl > 0 else "0.00 Mbps")
+                        detail_upload_lbl.config(text=f"{ul:.2f} Mbps" if ul > 0 else "0.00 Mbps")
+                        
+                        if lat > 0:
+                            detail_latency_lbl.config(text=f"{lat:.1f} ms", bootstyle="success")
+                        else:
+                            # Try quick ping if latency missing
+                            detail_latency_lbl.config(text="Probing...", bootstyle="warning")
+                            def _try_ping():
+                                try:
+                                    ip = router_data.get('ip_address') or router_data.get('ip')
+                                    if ip:
+                                        from network_utils import ping_latency
+                                        ping_lat = ping_latency(ip, timeout=500, use_manager=False)
+                                        if ping_lat:
+                                            d.after(0, lambda: detail_latency_lbl.config(text=f"{ping_lat:.1f} ms", bootstyle="success") if d.winfo_exists() else None)
+                                        else:
+                                            d.after(0, lambda: detail_latency_lbl.config(text="—", bootstyle="secondary") if d.winfo_exists() else None)
+                                except:
+                                    d.after(0, lambda: detail_latency_lbl.config(text="—", bootstyle="secondary") if d.winfo_exists() else None)
+                            threading.Thread(target=_try_ping, daemon=True).start()
+                        
+                        # Last Seen removed; skip timestamp processing
                     else:
-                        detail_status_lbl.config(text="🔴 Offline", bootstyle="danger")
-                        status_circle.config(text="●", bootstyle="danger")
+                        # Router not found in batch
+                        detail_status_lbl.config(text="❓ Unknown", bootstyle="secondary")
+                        status_circle.config(text="●", bootstyle="secondary")
                 else:
-                    detail_status_lbl.config(text="🔄 Checking...", bootstyle="warning")
-                    status_circle.config(text="●", bootstyle="warning")
-            except Exception:
-                detail_status_lbl.config(text="🔄 Checking...", bootstyle="warning")
-                status_circle.config(text="●", bootstyle="warning")
+                    # Batch fetch failed
+                    detail_status_lbl.config(text="⚠️ Server Error", bootstyle="warning")
+            except Exception as e:
+                # Network error
+                detail_status_lbl.config(text="⚠️ Connection Error", bootstyle="danger")
+                print(f"Router details refresh error: {e}")
 
-            # Latest bandwidth log
-            try:
-                br = requests.get(f"{self.api_base_url}/api/bandwidth/logs", params={"router_id": rid, "limit": 1}, timeout=5)
-                if br.ok:
-                    arr = br.json() or []
-                    if arr:
-                        row = arr[0]
-                        dl = row.get('download_mbps') or 0
-                        ul = row.get('upload_mbps') or 0
-                        lat = row.get('latency_ms') or 0
-                        detail_download_lbl.config(text=f"{dl:.2f} Mbps")
-                        detail_upload_lbl.config(text=f"{ul:.2f} Mbps")
-                        detail_latency_lbl.config(text=f"{lat:.0f} ms", bootstyle="success")
-                    else:
-                        detail_download_lbl.config(text="No data")
-                        detail_upload_lbl.config(text="No data")
-                        detail_latency_lbl.config(text="—")
-                else:
-                    detail_download_lbl.config(text="📶 Fetching...")
-                    detail_upload_lbl.config(text="📶 Fetching...")
-                    detail_latency_lbl.config(text="📡 Measuring...")
-            except Exception:
-                detail_download_lbl.config(text="📶 Fetching...")
-                detail_upload_lbl.config(text="📶 Fetching...")
-                detail_latency_lbl.config(text="📡 Measuring...")
-
+            # Schedule next refresh
             d.after(3000, refresh_details)
 
         refresh_details()
@@ -1607,10 +1894,7 @@ class RoutersTab:
         if search_term:
             self.filtered_client_data = [
                 client for client in self.filtered_client_data
-                if (search_term in client["ip"].lower() or 
-                    search_term in client["mac"].lower() or 
-                    search_term in client["hostname"].lower() or
-                    search_term in client["vendor"].lower())
+                if any(search_term in str(value).lower() for value in client.values())
             ]
         
         # Apply status filter

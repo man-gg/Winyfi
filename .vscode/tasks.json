@@ -27,6 +27,18 @@
 			"type": "shell",
 			"command": "py main.py",
 			"group": "build"
+		},
+		{
+			"label": "Run app quick smoke",
+			"type": "shell",
+			"command": "py main.py",
+			"group": "build"
+		},
+		{
+			"label": "Run app quick smoke",
+			"type": "shell",
+			"command": "py main.py",
+			"group": "build"
 		}
 	]
 }

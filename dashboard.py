@@ -35,7 +35,7 @@ from datetime import datetime, timedelta  # ensure timedelta is imported
 from ttkbootstrap.widgets import DateEntry
 from report_utils import get_uptime_percentage, get_status_logs, get_bandwidth_usage
 from router_utils import get_routers
-from user_utils import insert_user, get_all_users, delete_user, update_user
+from user_utils import insert_user, get_all_users, delete_user, update_user, get_user_last_login
 from network_utils import ping_latency,get_bandwidth, detect_loops, discover_clients, get_default_iface,scan_subnet, get_default_iface
 from bandwidth_logger import start_bandwidth_logging
 from db import get_connection 
@@ -1218,13 +1218,15 @@ class Dashboard:
         filter_frame = tb.Frame(self.routers_frame)
         filter_frame.pack(pady=5, padx=10, fill="x")
 
-        self.search_var = tb.StringVar()
-        self.search_var.trace_add("write", lambda *_: self.apply_filter())
+        # Use a unique var name for the Routers tab to avoid collisions with
+        # other pages (Clients, Reports) that also define search_var.
+        self.routers_search_var = tb.StringVar()
+        self.routers_search_var.trace_add("write", lambda *_: self.apply_filter())
         self.sort_var = tb.StringVar(value="default")
         self.router_type_filter = tb.StringVar(value="All")  # All, UniFi, Non-UniFi
 
         tb.Label(filter_frame, text="Filter:", bootstyle="info").pack(side="left", padx=(0, 5))
-        tb.Entry(filter_frame, textvariable=self.search_var, width=30).pack(side="left")
+        tb.Entry(filter_frame, textvariable=self.routers_search_var, width=30).pack(side="left")
         
         tb.Label(filter_frame, text="Type:", bootstyle="info").pack(side="left", padx=(20, 5))
         type_combo = tb.Combobox(filter_frame, textvariable=self.router_type_filter, 
@@ -1812,56 +1814,61 @@ class Dashboard:
             
         self.health_ax.clear()
         
-        # Generate stable health data - only show last 8 hours with 4 data points
-        import numpy as np
-        
         # Create last 8 hours of data (every 2 hours = 4 data points)
         hours = [0, 2, 4, 6]  # 0, 2, 4, 6 hours ago
-        health_scores = []
-        
-        # Calculate base health score once
+
+        # Calculate base health score from current router status
         routers = self.router_list or get_routers()
         total = len(routers)
-        # Prefer computed display status (from routers tab) and fall back to status_history
         online = sum(
             1
             for r in routers
             if (r.get('is_online_display') is True)
             or (self.status_history.get(r['id'], {}).get('current') is True)
         )
-        base_score = (online / total * 100) if total > 0 else 0
-        
-        # Generate stable data points with minimal, consistent variation
-        for i in range(4):
-            hour = hours[i]
-            
-            # Check if we have stored data for this hour
-            if hour not in self.health_data:
-                # Use a deterministic variation based on hour and base score
-                hour_factor = (6 - hour) / 6  # Decrease over time
-                variation = (base_score * 0.05 * hour_factor)  # 5% variation max
-                score = max(0, min(100, base_score + variation))
-                self.health_data[hour] = score
-            
-            # Use stored health score
-            health_scores.append(self.health_data[hour])
-        
+
+        if total == 0:
+            # No data yet — show placeholder text and return
+            self.health_ax.text(0.5, 0.5, 'No Data', ha='center', va='center',
+                                transform=self.health_ax.transAxes, fontsize=11)
+            self.health_ax.set_xlabel('Hours Ago', fontsize=10)
+            self.health_ax.set_ylabel('Health Score (%)', fontsize=10)
+            self.health_ax.set_title('Network Health (Last 8 Hours)', fontsize=12, fontweight='bold', pad=10)
+            self.health_ax.set_ylim(0, 100)
+            self.health_ax.set_xticks(hours)
+            self.health_ax.set_xticklabels([f'{h}h' for h in hours])
+            self.health_ax.grid(True, alpha=0.15)
+            self.health_canvas.draw_idle()
+            return
+
+        base_score = (online / total) * 100.0
+
+        # Recompute fresh values each update to avoid stale cached zeros
+        health_scores = []
+        for hour in hours:
+            # Decrease slightly as we go back in time; ensure small but visible variation
+            hour_factor = (6 - hour) / 6.0  # 1.0 at 0h -> 0.0 at 6h
+            # Use a minimal variation floor so flat 0 doesn't persist
+            variation = max(1.0, base_score * 0.03) * hour_factor
+            score = max(0.0, min(100.0, base_score - variation))
+            health_scores.append(score)
+
         # Plot with optimized styling
         self.health_ax.plot(hours, health_scores, color='#28a745', linewidth=2.5, marker='o', markersize=5)
         self.health_ax.fill_between(hours, health_scores, alpha=0.15, color='#28a745')
-        
+
         # Optimized styling
         self.health_ax.set_xlabel('Hours Ago', fontsize=10)
         self.health_ax.set_ylabel('Health Score (%)', fontsize=10)
         self.health_ax.set_title('Network Health (Last 8 Hours)', fontsize=12, fontweight='bold', pad=10)
         self.health_ax.grid(True, alpha=0.15)
         self.health_ax.set_ylim(0, 100)
-        
+
         # Set x-axis labels
         self.health_ax.set_xticks(hours)
         self.health_ax.set_xticklabels([f'{h}h' for h in hours])
         self.health_ax.margins(x=0.1, y=0.05)
-        
+
         # Optimize drawing
         self.health_canvas.draw_idle()  # Use draw_idle for better performance
 
@@ -1940,15 +1947,63 @@ class Dashboard:
 
 
     def apply_filter(self):
-        query = self.search_var.get().lower()
+        """Live, case-insensitive, substring-matching filter for router cards.
+        Matches any substring in any field (name, ip_address, location, brand) for every letter typed.
+        """
+        if not hasattr(self, 'router_widgets'):
+            return
+
+        src_var = getattr(self, 'routers_search_var', None)
+        raw_query = (src_var.get() if src_var else '').strip().lower()
+
+        # Determine which cards should be visible
+        visible_ids_online = []
+        visible_ids_offline = []
+        
         for rid, widgets in self.router_widgets.items():
-            data = widgets['data']
-            visible = (
-                query in data['name'].lower() or
-                query in data['ip_address'].lower() or
-                query in data['location'].lower()
-            )
-            widgets['card'].grid_remove() if not visible else widgets['card'].grid()
+            card = widgets.get('card')
+            if not card or not card.winfo_exists():
+                continue
+                
+            # If query is empty, show all
+            if raw_query == '':
+                visible = True
+            else:
+                # Check if query matches any field
+                data = widgets.get('data', {}) or {}
+                name = str(data.get('name', '') or '').lower()
+                ip = str(data.get('ip_address', '') or '').lower()
+                loc = str(data.get('location', '') or '').lower()
+                brand = str(data.get('brand', '') or '').lower()
+                visible = (
+                    raw_query in name or
+                    raw_query in ip or
+                    raw_query in loc or
+                    raw_query in brand
+                )
+            
+            if visible:
+                # Add to appropriate list based on parent
+                parent = widgets.get('parent')
+                if parent is getattr(self, 'online_section_frame', None):
+                    visible_ids_online.append(rid)
+                elif parent is getattr(self, 'offline_section_frame', None):
+                    visible_ids_offline.append(rid)
+        
+        # Hide all cards first
+        for rid, widgets in self.router_widgets.items():
+            card = widgets.get('card')
+            if card and card.winfo_exists():
+                card.grid_remove()
+        
+        # Re-layout only the visible cards
+        try:
+            if hasattr(self, 'online_section_frame') and visible_ids_online:
+                self._layout_router_cards(self.online_section_frame, visible_ids_online, self._compute_max_cols(self.online_section_frame))
+            if hasattr(self, 'offline_section_frame') and visible_ids_offline and self.sort_var.get() == 'online':
+                self._layout_router_cards(self.offline_section_frame, visible_ids_offline, self._compute_max_cols(self.offline_section_frame))
+        except Exception:
+            pass
 
     def export_to_csv(self, export_type="routers"):
         """Export routers, reports, or tickets to CSV."""
@@ -3287,7 +3342,7 @@ class Dashboard:
         self.detail_status_lbl = None
         self.detail_download_lbl = None
         self.detail_upload_lbl = None
-        self.detail_last_seen_lbl = None
+    # Removed Last Seen label per request (was self.detail_last_seen_lbl)
         self.detail_latency_lbl = None
 
         # --- Router Information Cards ---
@@ -3335,16 +3390,7 @@ class Dashboard:
                                          font=("Segoe UI", 12, "bold"), bootstyle="warning")
         self.detail_status_lbl.pack(side="left", padx=(10, 0))
 
-        # Last seen row
-        last_seen_row = tb.Frame(status_grid)
-        last_seen_row.pack(fill="x")
-
-        tb.Label(last_seen_row, text="🕐 Last Seen:", font=("Segoe UI", 11, "bold"), 
-                bootstyle="secondary").pack(side="left")
-        
-        self.detail_last_seen_lbl = tb.Label(last_seen_row, text="🕒 Checking...", 
-                                            font=("Segoe UI", 11), bootstyle="dark")
-        self.detail_last_seen_lbl.pack(side="left", padx=(10, 0))
+    # Last Seen section removed
 
         # Performance Metrics Card
         performance_card = tb.LabelFrame(scroll_frame, text="📊 Performance Metrics", 
@@ -3477,9 +3523,7 @@ class Dashboard:
                     except Exception:
                         self.detail_latency_lbl.config(text="--", bootstyle="secondary")
 
-                    # Update last seen
-                    if self.detail_last_seen_lbl:
-                        self.detail_last_seen_lbl.config(text=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                    # Last Seen removed
 
                 except (ConnectionError, Timeout):
                     # API not reachable; still show cached speeds if available
@@ -3501,7 +3545,8 @@ class Dashboard:
             else:
                 # Regular router - use existing logic
                 rid = router['id']
-                hist = self.status_history.get(rid, {})
+                # Ensure we update the stored history dict, not a temporary copy
+                hist = self.status_history.setdefault(rid, {"failures": 0, "current": None})
                 bw = self.bandwidth_data.get(rid, {})
 
                 # --- Update Status Circle and Label ---
@@ -3549,13 +3594,7 @@ class Dashboard:
                     self.detail_upload_lbl.config(text="📶 Checking...")
                     self.detail_latency_lbl.config(text="📡 Checking...")
 
-                # --- Last Seen ---
-                last_seen = hist.get("last_checked")
-                if self.detail_last_seen_lbl:
-                    if last_seen:
-                        self.detail_last_seen_lbl.config(text=last_seen.strftime("%Y-%m-%d %H:%M:%S"))
-                    else:
-                        self.detail_last_seen_lbl.config(text="Never")
+                # Last Seen removed
 
             # Schedule next refresh (3s for UniFi, 3s for regular)
             d.after(3000, refresh_details)
@@ -3714,49 +3753,41 @@ class Dashboard:
     # Reload routers list and create/update router cards
     # ------------------------
     def reload_routers(self, force_reload=False):
-        # Show loading animation
-        self._show_routers_loading()
-        
-        # Toggle: Set to True for UniFi first, False for non-UniFi first
+        # Use loading animation only on first build or explicit force
+        first_time = not hasattr(self, 'online_section_frame') or not hasattr(self, 'offline_section_frame')
+        if force_reload or first_time:
+            self._show_routers_loading()
+
+        # Order preference: UniFi first within each status group
         unifi_first = True
 
-        # --- OPTIMIZED ROUTERS TAB ---
-        # 1. Fetch UniFi devices first (this will add new devices to DB via upsert_unifi_router)
+        # 1) Fetch UniFi devices (may upsert to DB), then full router list
         unifi_devices = self._fetch_unifi_devices()
-        
-        # 2. Fetch router list from DB (now includes newly discovered UniFi devices)
         db_routers = get_routers()
 
-        # 2. Build a MAC->UniFi data map for fast lookup
+        # Build MAC->UniFi data map
         unifi_mac_to_data = {d.get('mac_address'): d for d in unifi_devices if d.get('mac_address')}
 
-        # 3. Merge DB routers and UniFi API data, mark is_unifi, and defer ping/bandwidth to threads
-        # Note: UniFi devices were already added/updated to DB by _fetch_unifi_devices()
+        # Merge UniFi API info into DB routers
         all_devices = []
         for router in db_routers:
             mac = router.get('mac_address')
             is_unifi = router.get('brand') == 'UniFi' or mac in unifi_mac_to_data
             router['is_unifi'] = is_unifi
             if is_unifi and mac in unifi_mac_to_data:
-                # Merge API data with fresh bandwidth/speed information
                 api_dev = unifi_mac_to_data[mac]
-                # Update controller-managed fields with latest API data
                 router['ip_address'] = api_dev.get('ip_address', router.get('ip_address'))
                 router['brand'] = api_dev.get('brand', router.get('brand'))
                 router['download_speed'] = api_dev.get('download_speed', 0)
                 router['upload_speed'] = api_dev.get('upload_speed', 0)
-                # Preserve user-editable fields from database
                 router['name'] = router.get('name', api_dev.get('name', ''))
                 router['location'] = router.get('location', api_dev.get('location', ''))
                 router['image_path'] = router.get('image_path', api_dev.get('image_path', None))
-                # --- Improved online status for UniFi routers ---
-                # 1. Ping result (set by update_unifi_latency thread, fallback to None)
+                # Compute online flag using ping (if present) and API status
                 ping_online = None
                 if 'latency' in router:
                     ping_online = router['latency'] is not None
-                # 2. UniFi API status (look for 'is_connected', 'status', or similar)
                 api_online = None
-                # Try common fields for online status
                 for key in ('is_connected', 'connected', 'status', 'state'):
                     if key in api_dev:
                         val = api_dev[key]
@@ -3765,70 +3796,58 @@ class Dashboard:
                         elif isinstance(val, str):
                             api_online = val.lower() in ('connected', 'online', 'up', 'true', '1')
                         break
-                # If not found, fallback to True (assume API doesn't provide status)
                 if api_online is None:
                     api_online = True
-                # Only online if both ping and API say online
                 router['is_online_unifi'] = bool(ping_online) and bool(api_online)
             all_devices.append(router)
 
-        # 4. Defer ping/latency for UniFi devices to background threads
+        # Helper: background latency update for UniFi
         def update_unifi_latency(router):
             try:
                 from network_utils import ping_latency
                 latency = ping_latency(router.get('ip_address'), is_unifi=False, use_manager=False)
                 router['latency'] = latency
                 from router_utils import update_router_status_in_db
-                is_online_status = latency is not None
-                update_router_status_in_db(router['id'], is_online_status)
-                # Update UI if card exists
-                if router['id'] in self.router_widgets:
-                    card = self.router_widgets[router['id']]['card']
-                    for child in card.winfo_children():
-                        if isinstance(child, tb.Label) and '⚡' in child.cget('text'):
-                            child.config(text=f"📶 ↓{router.get('download_speed',0):.1f} Mbps ↑{router.get('upload_speed',0):.1f} Mbps   ⚡ {latency:.1f} ms")
+                update_router_status_in_db(router['id'], latency is not None)
+                # Update label if exists
+                w = self.router_widgets.get(router['id'])
+                if w and w.get('bandwidth_label') and w['bandwidth_label'].winfo_exists():
+                    down = float(router.get('download_speed') or 0.0)
+                    up = float(router.get('upload_speed') or 0.0)
+                    latency_text = f"   ⚡ {latency:.1f} ms" if isinstance(latency, (int, float)) else "   ⚡ --"
+                    speed_text = (
+                        f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps" if (down > 0 or up > 0) else "📶 Bandwidth: --"
+                    )
+                    try:
+                        w['bandwidth_label'].config(text=speed_text + latency_text, bootstyle=("info" if (down > 0 or up > 0) else "secondary"))
+                    except Exception:
+                        pass
             except Exception:
                 router['latency'] = None
 
-        # 5. Partition and sort routers by UniFi/non-UniFi and online/offline status
-        unifi_online = []
-        unifi_offline = []
-        nonunifi_online = []
-        nonunifi_offline = []
-        
-        # Apply type filter
+        # 2) Partition by UniFi/non and online/offline
+        unifi_online, unifi_offline, nonunifi_online, nonunifi_offline = [], [], [], []
         type_filter = self.router_type_filter.get() if hasattr(self, 'router_type_filter') else "All"
-        
         for r in all_devices:
-            # Skip based on type filter
             if type_filter == "UniFi" and not r.get('is_unifi'):
                 continue
-            elif type_filter == "Non-UniFi" and r.get('is_unifi'):
+            if type_filter == "Non-UniFi" and r.get('is_unifi'):
                 continue
-            # --- Improved online/offline logic for UniFi routers ---
             if r.get('is_unifi'):
-                # Use new is_online_unifi field if present, else fallback to status_history
                 is_online = r.get('is_online_unifi')
                 if is_online is None:
                     is_online = self.status_history.get(r['id'], {}).get('current') is True
-                # Persist computed status for UI styling
                 r['is_online_display'] = bool(is_online)
-                unifi_group = unifi_online if is_online else unifi_offline
-                unifi_group.append(r)
+                (unifi_online if is_online else unifi_offline).append(r)
             else:
                 is_online = self.status_history.get(r['id'], {}).get('current') is True
-                # Persist computed status for UI styling
                 r['is_online_display'] = bool(is_online)
-                nonunifi_group = nonunifi_online if is_online else nonunifi_offline
-                nonunifi_group.append(r)
+                (nonunifi_online if is_online else nonunifi_offline).append(r)
 
-        # Sort each group alphabetically by name
-        unifi_online.sort(key=lambda x: x.get('name', '').lower())
-        unifi_offline.sort(key=lambda x: x.get('name', '').lower())
-        nonunifi_online.sort(key=lambda x: x.get('name', '').lower())
-        nonunifi_offline.sort(key=lambda x: x.get('name', '').lower())
-
-        # Combine for display based on toggle
+        # Sort by name then combine respecting UniFi-first toggle
+        key_name = lambda x: x.get('name', '').lower()
+        for grp in (unifi_online, unifi_offline, nonunifi_online, nonunifi_offline):
+            grp.sort(key=key_name)
         if unifi_first:
             online = unifi_online + nonunifi_online
             offline = unifi_offline + nonunifi_offline
@@ -3836,166 +3855,323 @@ class Dashboard:
             online = nonunifi_online + unifi_online
             offline = nonunifi_offline + unifi_offline
 
-        # 6. ALWAYS clear and rebuild UI for clean filtering (prevents duplicates)
-        # This ensures seamless filter switching without card duplication
-        for w in self.scrollable_frame.winfo_children():
-            w.destroy()
-        self.router_widgets.clear()
+        # 3) Ensure section containers exist (created once)
+        self._ensure_router_sections()
+        # Update header visibility/content
+        self.online_header_label.configure(text="🟢 Online Routers" if self.sort_var.get() == "online" else "Routers")
+        self.offline_header_label.pack_forget() if self.sort_var.get() != "online" else self.offline_header_label.pack(anchor="w", padx=10, pady=(15, 5))
+        self.offline_section_frame.pack_forget() if self.sort_var.get() != "online" else self.offline_section_frame.pack(fill="x", padx=10, pady=5)
 
-        # 7. Debounced card rendering - FIXED for filter
-        def section(title, routers):
-            if not routers:
-                return
-            tb.Label(
-                self.scrollable_frame, text=title,
-                font=("Segoe UI", 12, "bold"), bootstyle="secondary"
-            ).pack(anchor="w", padx=10, pady=(15, 5))
-            sec = tb.Frame(self.scrollable_frame)
-            sec.pack(fill="x", padx=10, pady=5)
-            sec._resize_job = None
-            sec._last_cols = None
-            def render_cards():
-                width = sec.winfo_width() or self.root.winfo_width()
-                if width <= 400:
-                    max_cols = 1
-                elif width <= 800:
-                    max_cols = 2
-                elif width <= 1200:
-                    max_cols = 3
-                else:
-                    max_cols = 4
-                if sec._last_cols == max_cols:
-                    return
-                sec._last_cols = max_cols
-                for w in sec.winfo_children():
-                    w.destroy()
-                for i, router in enumerate(routers):
-                    row, col = divmod(i, max_cols)
-                    # Determine current online flag at render time for accurate border coloring
-                    if router.get('is_unifi'):
-                        _of = router.get('is_online_unifi')
-                        if _of is None:
-                            _of = self.status_history.get(router['id'], {}).get('current') is True
-                        online_flag = bool(_of)
-                    else:
-                        online_flag = self.status_history.get(router['id'], {}).get('current') is True
-                    # Desired border colors:
-                    # - Online non-UniFi: green (success)
-                    # - Online UniFi AP: blue (primary)
-                    # - Offline (all): red (danger)
-                    if online_flag:
-                        card_style = "primary" if router.get('is_unifi') else "success"
-                    else:
-                        card_style = "danger"
-                    card = tb.LabelFrame(sec, text=router['name'], bootstyle=card_style, padding=0)
-                    card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
-                    
-                    # Configure uniform card sizing
-                    card.grid_propagate(False)  # Prevent content from affecting card size
-                    card.config(width=280, height=200)  # Fixed dimensions for uniformity
-                    
-                    sec.grid_columnconfigure(col, weight=1, uniform="router_cards")  # Equal column sizing
-                    sec.grid_rowconfigure(row, weight=0)  # Fixed row height
-                    
-                    inner = tb.Frame(card, padding=10)
-                    inner.pack(fill="both", expand=True)
-                    # Show UniFi badge for UniFi devices
-                    if router.get('is_unifi'):
-                        tb.Label(inner, text="📡", font=("Segoe UI Emoji", 30)).pack()
-                        tb.Label(inner, text="UniFi Device", font=("Segoe UI", 8, "italic"), bootstyle="primary").pack()
-                    else:
-                        tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
-                    tb.Label(inner, text=router['ip_address'], font=("Segoe UI", 10)).pack(pady=(5, 0))
-                    # Status handling
-                    if router.get('is_unifi'):
-                        # Use computed online_flag for UniFi as well
-                        status_text, status_style = (("🟢 Online", "success") if online_flag else ("🔴 Offline", "danger"))
-                    else:
-                        cur = self.status_history.get(router['id'], {}).get('current')
-                        status_text, status_style = (
-                            ("🟢 Online", "success") if cur is True
-                            else ("🔴 Offline", "danger") if cur is False
-                            else ("🕒 Checking...", "secondary")
-                        )
-                    status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
-                    status_label.pack(pady=5)
-                    # Bandwidth and Latency label - Show speeds even if latency unknown
-                    if router.get('is_unifi'):
-                        down = float(router.get('download_speed') or 0.0)
-                        up = float(router.get('upload_speed') or 0.0)
-                        latency = router.get('latency')
-                        speed_text = (
-                            f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps" if (down > 0 or up > 0)
-                            else "📶 Bandwidth: --"
-                        )
-                        latency_text = f"   ⚡ {latency:.1f} ms" if isinstance(latency, (int, float)) else "   ⚡ --"
-                        lbl_bandwidth = tb.Label(inner, text=speed_text + latency_text, bootstyle=("info" if (down > 0 or up > 0) else "secondary"))
-                        lbl_bandwidth.pack(pady=2)
-                        if not hasattr(self, '_pending_unifi_updates'):
-                            self._pending_unifi_updates = []
-                        self._pending_unifi_updates.append(router)
-                    else:
-                        # Non-UniFi devices - show initial state based on online status
-                        cur_status = self.status_history.get(router['id'], {}).get('current')
-                        if cur_status is True:
-                            # Online - show checking, bandwidth will be fetched by background updater
-                            lbl_bandwidth = tb.Label(inner, text="� Checking...", bootstyle="secondary")
-                        elif cur_status is False:
-                            # Offline
-                            lbl_bandwidth = tb.Label(inner, text="🔴 Device Offline", bootstyle="danger")
-                        else:
-                            # Unknown status - show checking
-                            lbl_bandwidth = tb.Label(inner, text="� Checking...", bootstyle="secondary")
-                        lbl_bandwidth.pack(pady=2)
-                    self.router_widgets[router['id']] = {
-                        'card': card,
-                        'status_label': status_label,
-                        'bandwidth_label': lbl_bandwidth,
-                        'data': router
-                    }
-                    def bind_card_click(widget, router_obj):
-                        widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
-                        if not router_obj.get('is_unifi'):
-                            widget.bind("<Button-3>", lambda e: self.show_context_menu(e, router_obj))
-                    bind_card_click(inner, router)
-                    for child in inner.winfo_children():
-                        bind_card_click(child, router)
-                    # Keep border color stable on hover based on status/unifi
-                    def on_enter(e, c=card, bs=card_style): c.configure(bootstyle=bs)
-                    def on_leave(e, c=card, bs=card_style): c.configure(bootstyle=bs)
-                    card.bind("<Enter>", on_enter)
-                    card.bind("<Leave>", on_leave)
-            def on_resize(event):
-                if sec._resize_job:
-                    sec.after_cancel(sec._resize_job)
-                sec._resize_job = sec.after(300, render_cards)
-            sec.bind("<Configure>", on_resize)
-            render_cards()
+        # 4) Diff sets: add, remove, update (always consider all routers)
+        desired_ids = [r['id'] for r in (online + offline)]
+        desired_set = set(desired_ids)
+        existing_set = set(self.router_widgets.keys())
 
-        # Only render filtered routers, never duplicate sections
-        if self.sort_var.get() == "online":
-            if online:
-                section("🟢 Online Routers", online)
-            if offline:
-                section("🔴 Offline Routers", offline)
+        # Remove cards that no longer exist or filtered out
+        for rid in list(existing_set - desired_set):
+            w = self.router_widgets.pop(rid, None)
+            if w and w.get('card') and w['card'].winfo_exists():
+                try:
+                    w['card'].destroy()
+                except Exception:
+                    pass
+
+        # Add missing cards
+        for r in (online + offline):
+            rid = r['id']
+            if rid not in self.router_widgets:
+                parent = self.online_section_frame if (self.sort_var.get() != 'online' or r.get('is_online_display')) else self.offline_section_frame
+                self._create_router_card(parent, r)
+            else:
+                # Update data reference for future comparisons
+                self.router_widgets[rid]['data'] = r
+
+        # Move cards between sections if grouping changed
+        if self.sort_var.get() == 'online':
+            # Online routers must be under online_section_frame; offline under offline_section_frame
+            for r in online:
+                rid = r['id']
+                w = self.router_widgets.get(rid)
+                if w and w.get('parent') is not self.online_section_frame:
+                    try:
+                        # recreate under new parent (tk doesn't support changing master)
+                        old = self.router_widgets.pop(rid)
+                        if old.get('card') and old['card'].winfo_exists():
+                            old['card'].destroy()
+                        self._create_router_card(self.online_section_frame, r)
+                    except Exception:
+                        pass
+            for r in offline:
+                rid = r['id']
+                w = self.router_widgets.get(rid)
+                if w and w.get('parent') is not self.offline_section_frame:
+                    try:
+                        old = self.router_widgets.pop(rid)
+                        if old.get('card') and old['card'].winfo_exists():
+                            old['card'].destroy()
+                        self._create_router_card(self.offline_section_frame, r)
+                    except Exception:
+                        pass
         else:
-            if online or offline:
-                section("🟢 Online Routers", online + offline)
+            # Default view: all routers should live in online_section_frame
+            for r in (online + offline):
+                rid = r['id']
+                w = self.router_widgets.get(rid)
+                if w and w.get('parent') is not self.online_section_frame:
+                    try:
+                        old = self.router_widgets.pop(rid)
+                        if old.get('card') and old['card'].winfo_exists():
+                            old['card'].destroy()
+                        self._create_router_card(self.online_section_frame, r)
+                    except Exception:
+                        pass
 
-        # Batch execute pending UniFi updates to reduce thread overhead
+        # Update existing card fields minimally
+        for r in (online + offline):
+            rid = r['id']
+            w = self.router_widgets.get(rid)
+            if w:
+                try:
+                    self._update_router_card(w, r)
+                except Exception:
+                    pass
+
+        # 5) Re-layout cards with responsive columns without destroying
+        def layout_container(container, ids):
+            max_cols = self._compute_max_cols(container)
+            self._layout_router_cards(container, ids, max_cols)
+        online_ids = [r['id'] for r in online] if self.sort_var.get() == 'online' else desired_ids
+        layout_container(self.online_section_frame, online_ids)
+        if self.sort_var.get() == 'online':
+            offline_ids = [r['id'] for r in offline]
+            layout_container(self.offline_section_frame, offline_ids)
+
+        # Batch any pending UniFi latency updates for freshly created routers
         import threading
-        if hasattr(self, '_pending_unifi_updates') and self._pending_unifi_updates:
-            for router in self._pending_unifi_updates:
-                threading.Thread(target=update_unifi_latency, args=(router,), daemon=True).start()
-            self._pending_unifi_updates = []
-        
-        # Note: Non-UniFi bandwidth fetching is now handled by background status updater
-        # only when devices are confirmed online, preventing "Checking..." for offline devices
-        
-        # Immediately ping all online APs and update their cards
+        for r in (online + offline):
+            if r.get('is_unifi'):
+                threading.Thread(target=update_unifi_latency, args=(r,), daemon=True).start()
+
+        # Trigger pings for online APs (non-blocking)
         self.ping_all_online_aps_once()
-        # Hide loading animation
-        self._hide_routers_loading()
+
+        # Hide loading if shown
+        if force_reload or first_time:
+            self._hide_routers_loading()
+        
+        # Re-apply filter if there's an active query
+        if hasattr(self, 'routers_search_var'):
+            query = self.routers_search_var.get().strip()
+            if query:
+                self.apply_filter()
+
+    def _ensure_router_sections(self):
+        """Create (once) the online/offline containers under the scrollable_frame.
+        This allows us to diff and re-layout without rebuilding everything."""
+        if hasattr(self, 'online_section_frame') and hasattr(self, 'offline_section_frame'):
+            return
+        # Clear any stray children from previous rebuild approach
+        for w in list(self.scrollable_frame.winfo_children()):
+            try:
+                w.destroy()
+            except Exception:
+                pass
+        # Online header + section
+        self.online_header_label = tb.Label(
+            self.scrollable_frame, text="🟢 Online Routers",
+            font=("Segoe UI", 12, "bold"), bootstyle="secondary"
+        )
+        self.online_header_label.pack(anchor="w", padx=10, pady=(15, 5))
+        self.online_section_frame = tb.Frame(self.scrollable_frame)
+        self.online_section_frame.pack(fill="x", padx=10, pady=5)
+        self.online_section_frame._last_cols = None
+        self.online_section_frame.bind("<Configure>", lambda e: self._layout_router_cards(self.online_section_frame, None, self._compute_max_cols(self.online_section_frame)))
+        # Offline header + section (may be hidden depending on sort)
+        self.offline_header_label = tb.Label(
+            self.scrollable_frame, text="🔴 Offline Routers",
+            font=("Segoe UI", 12, "bold"), bootstyle="secondary"
+        )
+        self.offline_header_label.pack(anchor="w", padx=10, pady=(15, 5))
+        self.offline_section_frame = tb.Frame(self.scrollable_frame)
+        self.offline_section_frame.pack(fill="x", padx=10, pady=5)
+        self.offline_section_frame._last_cols = None
+        self.offline_section_frame.bind("<Configure>", lambda e: self._layout_router_cards(self.offline_section_frame, None, self._compute_max_cols(self.offline_section_frame)))
+
+    def _compute_max_cols(self, container):
+        width = container.winfo_width() or self.root.winfo_width() or 800
+        if width <= 400:
+            return 1
+        if width <= 800:
+            return 2
+        if width <= 1200:
+            return 3
+        return 4
+
+    def _create_router_card(self, parent, router):
+        """Create a card for router and register it in self.router_widgets."""
+        # Determine style by status and type
+        online_flag = bool(router.get('is_online_display'))
+        card_style = "primary" if (online_flag and router.get('is_unifi')) else ("success" if online_flag else "danger")
+        card = tb.LabelFrame(parent, text=router.get('name') or '', bootstyle=card_style, padding=0)
+        # Uniform sizing
+        card.grid_propagate(False)
+        card.config(width=280, height=200)
+
+        inner = tb.Frame(card, padding=10)
+        inner.pack(fill="both", expand=True)
+        # Icon and meta
+        if router.get('is_unifi'):
+            tb.Label(inner, text="📡", font=("Segoe UI Emoji", 30)).pack()
+            tb.Label(inner, text="UniFi Device", font=("Segoe UI", 8, "italic"), bootstyle="primary").pack()
+        else:
+            tb.Label(inner, text="⛀", font=("Segoe UI Emoji", 30)).pack()
+        tb.Label(inner, text=router.get('ip_address') or '', font=("Segoe UI", 10)).pack(pady=(5, 0))
+
+        # Status label
+        if router.get('is_unifi'):
+            status_text, status_style = (("🟢 Online", "success") if online_flag else ("🔴 Offline", "danger"))
+        else:
+            cur = self.status_history.get(router['id'], {}).get('current')
+            status_text, status_style = (
+                ("🟢 Online", "success") if cur is True else ("🔴 Offline", "danger") if cur is False else ("🕒 Checking...", "secondary")
+            )
+        status_label = tb.Label(inner, text=status_text, bootstyle=status_style, cursor="hand2")
+        status_label.pack(pady=5)
+
+        # Bandwidth/latency label
+        if router.get('is_unifi'):
+            down = float(router.get('download_speed') or 0.0)
+            up = float(router.get('upload_speed') or 0.0)
+            latency = router.get('latency')
+            speed_text = (f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps" if (down > 0 or up > 0) else "📶 Bandwidth: --")
+            latency_text = f"   ⚡ {latency:.1f} ms" if isinstance(latency, (int, float)) else "   ⚡ --"
+            bw_label = tb.Label(inner, text=speed_text + latency_text, bootstyle=("info" if (down > 0 or up > 0) else "secondary"))
+            bw_label.pack(pady=2)
+        else:
+            cur_status = self.status_history.get(router['id'], {}).get('current')
+            if cur_status is True:
+                bw_label = tb.Label(inner, text="… Checking...", bootstyle="secondary")
+            elif cur_status is False:
+                bw_label = tb.Label(inner, text="🔴 Device Offline", bootstyle="danger")
+            else:
+                bw_label = tb.Label(inner, text="… Checking...", bootstyle="secondary")
+            bw_label.pack(pady=2)
+
+        # Click bindings
+        def bind_card_click(widget, router_obj):
+            widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
+            if not router_obj.get('is_unifi'):
+                widget.bind("<Button-3>", lambda e: self.show_context_menu(e, router_obj))
+        bind_card_click(inner, router)
+        for child in inner.winfo_children():
+            bind_card_click(child, router)
+
+        self.router_widgets[router['id']] = {
+            'card': card,
+            'status_label': status_label,
+            'bandwidth_label': bw_label,
+            'data': router,
+            'parent': parent,
+        }
+        return card
+
+    def _update_router_card(self, w, router):
+        """Update only changed bits of an existing router card."""
+        # Title changes
+        try:
+            if w['card'].cget('text') != (router.get('name') or ''):
+                w['card'].configure(text=(router.get('name') or ''))
+        except Exception:
+            pass
+        # Status text/style
+        online_flag = bool(router.get('is_online_display'))
+        if router.get('is_unifi'):
+            status_text, status_style = (("🟢 Online", "success") if online_flag else ("🔴 Offline", "danger"))
+            card_style = "primary" if online_flag else "danger"
+        else:
+            cur = self.status_history.get(router['id'], {}).get('current')
+            status_text, status_style = (
+                ("🟢 Online", "success") if cur is True else ("🔴 Offline", "danger") if cur is False else ("🕒 Checking...", "secondary")
+            )
+            card_style = "success" if cur is True else ("danger" if cur is False else w['card'].cget('bootstyle'))
+        try:
+            if w['status_label'].cget('text') != status_text:
+                w['status_label'].configure(text=status_text, bootstyle=status_style)
+        except Exception:
+            pass
+        try:
+            if w['card'].cget('bootstyle') != card_style:
+                w['card'].configure(bootstyle=card_style)
+        except Exception:
+            pass
+        # Bandwidth/latency text
+        try:
+            if router.get('is_unifi'):
+                down = float(router.get('download_speed') or 0.0)
+                up = float(router.get('upload_speed') or 0.0)
+                latency = router.get('latency')
+                latency_text = f"   ⚡ {latency:.1f} ms" if isinstance(latency, (int, float)) else "   ⚡ --"
+                speed_text = (f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps" if (down > 0 or up > 0) else "📶 Bandwidth: --")
+                new_text = speed_text + latency_text
+                if w['bandwidth_label'].cget('text') != new_text:
+                    w['bandwidth_label'].configure(text=new_text, bootstyle=("info" if (down > 0 or up > 0) else "secondary"))
+            else:
+                cur_status = self.status_history.get(router['id'], {}).get('current')
+                desired_text = "🔴 Device Offline" if cur_status is False else "… Checking..."
+                desired_style = "danger" if cur_status is False else "secondary"
+                if w['bandwidth_label'].cget('text') != desired_text:
+                    w['bandwidth_label'].configure(text=desired_text, bootstyle=desired_style)
+        except Exception:
+            pass
+
+    def _layout_router_cards(self, container, ids, max_cols):
+        """Grid existing card frames without recreating; compute row/col from order and max_cols.
+        If ids is None, infer from router_widgets that belong to container AND are currently visible (not filtered out)."""
+        try:
+            if ids is None:
+                # Build ids in current order, but only include cards that should be visible
+                # Check if there's an active filter
+                if hasattr(self, 'routers_search_var'):
+                    query = self.routers_search_var.get().strip().lower()
+                    if query:
+                        # Filter is active - only include matching cards
+                        ids = []
+                        for rid, w in self.router_widgets.items():
+                            if w.get('parent') is not container:
+                                continue
+                            # Check if this router matches the filter
+                            data = w.get('data', {}) or {}
+                            name = str(data.get('name', '') or '').lower()
+                            ip = str(data.get('ip_address', '') or '').lower()
+                            loc = str(data.get('location', '') or '').lower()
+                            brand = str(data.get('brand', '') or '').lower()
+                            if query in name or query in ip or query in loc or query in brand:
+                                ids.append(rid)
+                    else:
+                        # No filter - include all cards in this container
+                        ids = [rid for rid, w in self.router_widgets.items() if w.get('parent') is container]
+                else:
+                    # No filter var - include all cards in this container
+                    ids = [rid for rid, w in self.router_widgets.items() if w.get('parent') is container]
+            # Deduplicate and keep order
+            seen = set()
+            ordered = [rid for rid in ids if (rid not in seen and not seen.add(rid))]
+            # Reset grid ONLY for cards we're about to re-grid
+            for rid in ordered:
+                w = self.router_widgets.get(rid)
+                if w and w.get('card') and w['card'].winfo_exists():
+                    w['card'].grid_forget()
+            # Place cards
+            for idx, rid in enumerate(ordered):
+                w = self.router_widgets.get(rid)
+                if not w:
+                    continue
+                row, col = divmod(idx, max_cols)
+                w['card'].grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+                container.grid_columnconfigure(col, weight=1, uniform="router_cards")
+                container.grid_rowconfigure(row, weight=0)
+        except Exception:
+            pass
 
 
 
@@ -4944,8 +5120,17 @@ class Dashboard:
             # Determine status (simplified - you can enhance this with actual login tracking)
             status = "Active"  # You can implement actual status tracking
             
-            # Mock last login (you can implement actual last login tracking)
-            last_login = "Never"  # You can implement actual last login tracking
+            # Get actual last login from database
+            last_login_dt = get_user_last_login(user["id"])
+            if last_login_dt:
+                # Format the datetime nicely
+                from datetime import datetime
+                if isinstance(last_login_dt, datetime):
+                    last_login = last_login_dt.strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    last_login = str(last_login_dt)
+            else:
+                last_login = "Never"
             
             self.user_table.insert("", "end", values=(
                 user["id"],
@@ -4997,9 +5182,20 @@ class Dashboard:
                 if search_term not in searchable_text:
                     continue
             
-            # Determine status and last login (simplified)
+            # Determine status
             status = "Active"
-            last_login = "Never"
+            
+            # Get actual last login from database
+            last_login_dt = get_user_last_login(user["id"])
+            if last_login_dt:
+                # Format the datetime nicely
+                from datetime import datetime
+                if isinstance(last_login_dt, datetime):
+                    last_login = last_login_dt.strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    last_login = str(last_login_dt)
+            else:
+                last_login = "Never"
             
             self.user_table.insert("", "end", values=(
                 user["id"],
