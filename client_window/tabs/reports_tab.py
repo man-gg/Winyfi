@@ -362,6 +362,33 @@ class ReportsTab:
                     for row in self.report_data:
                         writer.writerow(row)
                 
+                # Log activity
+                try:
+                    import requests
+                    api_base_url = self.parent.api_base_url
+                    # Try to determine local IP for logging (optional)
+                    local_ip = None
+                    try:
+                        from device_utils import get_device_info
+                        info = get_device_info()
+                        local_ip = info.get('ip_address')
+                    except Exception:
+                        try:
+                            import socket
+                            local_ip = socket.gethostbyname(socket.gethostname())
+                        except Exception:
+                            pass
+                    payload = {
+                        "user_id": self.parent.current_user.get('id'),
+                        "action": "Export Report",
+                        "target": f"CSV Report ({len(self.report_data)} records)"
+                    }
+                    if local_ip and local_ip not in ("127.0.0.1", "::1"):
+                        payload["device_ip"] = local_ip
+                    requests.post(f"{api_base_url}/api/log-activity", json=payload, timeout=2)
+                except Exception:
+                    pass
+                
                 messagebox.showinfo("Export Successful", f"Report exported to {filename}")
             except Exception as e:
                 messagebox.showerror("Export Error", f"Failed to export CSV: {str(e)}")

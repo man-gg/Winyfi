@@ -11,7 +11,7 @@ if BASE_DIR not in sys.path:
 from user_utils import verify_user
 from ticket_utils import fetch_srfs, create_srf
 from router_utils import get_routers, is_router_online_by_status
-from db import get_connection, log_user_login, create_login_sessions_table, get_user_last_login_info, get_user_login_history, update_user_profile, change_user_password
+from db import get_connection, log_user_login, create_login_sessions_table, get_user_last_login_info, get_user_login_history, update_user_profile, change_user_password, log_activity, create_activity_logs_table
 from report_utils import get_uptime_percentage, get_bandwidth_usage
 
 def create_app():
@@ -20,6 +20,26 @@ def create_app():
     
     # Initialize database tables
     create_login_sessions_table()
+    create_activity_logs_table()
+
+    def _extract_client_ip(req, data=None):
+        """Best-effort client IP extraction supporting proxies and client-provided IP.
+        Priority: X-Forwarded-For → X-Real-IP → remote_addr → data['device_ip'] (if local).
+        """
+        try:
+            xff = (req.headers.get("X-Forwarded-For") or "").strip()
+            if xff:
+                ip = xff.split(",")[0].strip()
+            else:
+                ip = (req.headers.get("X-Real-IP") or req.remote_addr or "").strip()
+            # If running locally, prefer provided device_ip when available
+            if ip in ("127.0.0.1", "::1", "") and data and isinstance(data, dict):
+                ip_override = (data.get("device_ip") or data.get("client_ip") or "").strip()
+                if ip_override:
+                    ip = ip_override
+            return ip or "127.0.0.1"
+        except Exception:
+            return req.remote_addr or "127.0.0.1"
 
     @app.get("/api/health")
     def health():
@@ -36,7 +56,7 @@ def create_app():
             return jsonify({"error": "Invalid credentials"}), 401
         
         # Get device information from request
-        device_ip = request.remote_addr
+        device_ip = _extract_client_ip(request, data)
         device_mac = data.get("device_mac")
         device_hostname = data.get("device_hostname")
         device_platform = data.get("device_platform")
@@ -55,6 +75,18 @@ def create_app():
             login_type=login_type
         )
         
+        # Log activity for client login
+        if login_type == 'client':
+            try:
+                log_activity(
+                    user_id=user['id'],
+                    action='Login',
+                    target='Client Portal',
+                    ip_address=device_ip
+                )
+            except Exception:
+                pass
+        
         # minimal sessionless response (tokenization can be added later)
         return jsonify({
             "id": user["id"],
@@ -64,6 +96,26 @@ def create_app():
             "last_name": user.get("last_name"),
         })
 
+    @app.post("/api/logout")
+    def logout():
+        """Log user logout activity"""
+        try:
+            data = request.get_json(force=True, silent=True) or {}
+            user_id = data.get("user_id")
+            
+            if user_id:
+                device_ip = _extract_client_ip(request, data)
+                log_activity(
+                    user_id=user_id,
+                    action='Logout',
+                    target='Client Portal',
+                    ip_address=device_ip
+                )
+            
+            return jsonify({"success": True})
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
     # User profile routes
     @app.route("/api/user/<int:user_id>/edit-profile", methods=["PUT"])
     def edit_user_profile(user_id):
@@ -72,6 +124,19 @@ def create_app():
             ok, result = update_user_profile(user_id, payload)
             if not ok:
                 return jsonify({"error": result}), 400
+            
+            # Log activity
+            try:
+                device_ip = _extract_client_ip(request, payload)
+                log_activity(
+                    user_id=user_id,
+                    action='Edit Profile',
+                    target='User Profile',
+                    ip_address=device_ip
+                )
+            except Exception:
+                pass
+            
             return jsonify({"success": True, "user": result})
         except Exception as exc:
             return jsonify({"error": str(exc)}), 500
@@ -88,6 +153,19 @@ def create_app():
             if not success:
                 status = 403 if "incorrect" in message.lower() else 400
                 return jsonify({"error": message}), status
+            
+            # Log activity
+            try:
+                device_ip = _extract_client_ip(request, data)
+                log_activity(
+                    user_id=user_id,
+                    action='Change Password',
+                    target='User Account',
+                    ip_address=device_ip
+                )
+            except Exception:
+                pass
+            
             return jsonify({"success": True, "message": message})
         except Exception as exc:
             return jsonify({"error": str(exc)}), 500
@@ -107,9 +185,46 @@ def create_app():
             created_by = int(payload.get("created_by"))
             srf_data = payload.get("data", {})
             create_srf(srf_data, created_by)
+            
+            # Log activity for SRF creation
+            try:
+                device_ip = _extract_client_ip(request, payload)
+                ticket_type = srf_data.get('request_type', 'Unknown')
+                log_activity(
+                    user_id=created_by,
+                    action='Create Ticket',
+                    target=f"SRF - {ticket_type}",
+                    ip_address=device_ip
+                )
+            except Exception:
+                pass
+            
             return jsonify({"ok": True}), 201
         except Exception as exc:
             return jsonify({"error": str(exc)}), 400
+
+    @app.post("/api/log-activity")
+    def log_activity_endpoint():
+        """General endpoint for logging client activities"""
+        try:
+            data = request.get_json(force=True, silent=True) or {}
+            user_id = data.get("user_id")
+            action = data.get("action")
+            target = data.get("target")
+            
+            if user_id and action:
+                device_ip = _extract_client_ip(request, data)
+                log_activity(
+                    user_id=user_id,
+                    action=action,
+                    target=target,
+                    ip_address=device_ip
+                )
+                return jsonify({"success": True})
+            else:
+                return jsonify({"error": "Missing user_id or action"}), 400
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
 
     # Placeholders - to be wired to existing router utils later
     @app.get("/api/routers")

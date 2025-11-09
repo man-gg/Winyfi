@@ -174,6 +174,16 @@ class Dashboard:
     def _start_unifi_bandwidth_polling(self, interval_ms=60000):
         """Periodically fetch UniFi device bandwidth and log to DB."""
         def poll():
+            # Check if app is running and window still exists
+            if not self.app_running:
+                return
+            
+            try:
+                if not self.root.winfo_exists():
+                    return
+            except Exception:
+                return
+            
             try:
                 devices = self._fetch_unifi_devices()
                 # Already logs to DB in _fetch_unifi_devices
@@ -835,7 +845,14 @@ class Dashboard:
     
     def _auto_refresh_routers(self):
         """Auto-refresh routers tab - called by timer"""
+        # Check if app is running and window still exists
         if not self.app_running or not self.routers_auto_refresh_var.get():
+            return
+        
+        try:
+            if not self.root.winfo_exists():
+                return
+        except Exception:
             return
         
         # Prevent overlapping refreshes
@@ -1576,6 +1593,16 @@ class Dashboard:
 
     def _auto_refresh_dashboard(self):
         """Auto-refresh dashboard data"""
+        # Check if app is running and window still exists
+        if not self.app_running:
+            return
+        
+        try:
+            if not self.root.winfo_exists():
+                return
+        except Exception:
+            return
+        
         if self.auto_refresh_var.get():
             self.update_statistics()
             self.start_dashboard_auto_refresh()
@@ -6575,6 +6602,16 @@ Type: {values[11]}
 
     def auto_update_reports(self):
         """Auto-update reports data"""
+        # Check if app is running and window still exists
+        if not self.app_running:
+            return
+        
+        try:
+            if not self.root.winfo_exists():
+                return
+        except Exception:
+            return
+        
         if self.report_auto_update_var.get():
             self.generate_report_table(filter_mode=self.report_mode.get().lower())
             self.update_report_last_update_display()
@@ -6636,6 +6673,16 @@ Type: {values[11]}
 
     def auto_update_bandwidth(self):
         """Auto-update bandwidth data"""
+        # Check if app is running and window still exists
+        if not self.app_running:
+            return
+        
+        try:
+            if not self.root.winfo_exists():
+                return
+        except Exception:
+            return
+        
         if self.bandwidth_auto_update_var.get():
             self.refresh_total_bandwidth_chart()
             self.update_bandwidth_last_update_display()
@@ -7770,6 +7817,9 @@ Type: {values[11]}
                 # Phase 6: rendering chart
                 self.root.after(0, self._update_reports_phase, "Rendering chart...")
                 def draw_chart():
+                    # Check if the reports_charts_frame still exists
+                    if not hasattr(self, 'reports_charts_frame') or not self.reports_charts_frame.winfo_exists():
+                        return
                     for widget in self.reports_charts_frame.winfo_children():
                         widget.destroy()
                     # Close any previously open figure to avoid accumulating pyplot figures
@@ -7811,6 +7861,9 @@ Type: {values[11]}
                     canvas.get_tk_widget().pack(fill="both", expand=True)
                     self.current_fig = fig
                 def finish():
+                    # Check if the reports_charts_frame still exists before proceeding
+                    if not hasattr(self, 'reports_charts_frame') or not self.reports_charts_frame.winfo_exists():
+                        return
                     if not hasattr(self, 'chart_visible'):
                         self.chart_visible = True
                     if not hasattr(self, 'toggle_btn'):
@@ -13018,17 +13071,34 @@ Type: {values[11]}
 
         # Stop background activities
         self.app_running = False
+        
+        # Cancel all scheduled after() jobs
+        jobs_to_cancel = [
+            'update_task',
+            'unifi_refresh_job',
+            'routers_refresh_job',
+            'dashboard_refresh_job',
+            'report_auto_update_job',
+            'bandwidth_auto_update_job',
+            '_unifi_bandwidth_job',
+            '_bandwidth_hide_after_job',
+            '_reports_hide_after_job',
+        ]
+        
+        for job_name in jobs_to_cancel:
+            try:
+                job = getattr(self, job_name, None)
+                if job:
+                    self.root.after_cancel(job)
+            except Exception:
+                pass
+        
         try:
             self.stop_loop_detection()
         except Exception:
             pass
         try:
             self.stop_routers_auto_refresh()
-        except Exception:
-            pass
-        try:
-            if getattr(self, 'update_task', None):
-                self.root.after_cancel(self.update_task)
         except Exception:
             pass
 
@@ -13663,13 +13733,30 @@ Type: {values[11]}
 
         # Stop background tasks
         self.app_running = False
+        
+        # Cancel all scheduled after() jobs
+        jobs_to_cancel = [
+            'update_task',
+            'unifi_refresh_job',
+            'routers_refresh_job',
+            'dashboard_refresh_job',
+            'report_auto_update_job',
+            'bandwidth_auto_update_job',
+            '_unifi_bandwidth_job',
+            '_bandwidth_hide_after_job',
+            '_reports_hide_after_job',
+        ]
+        
+        for job_name in jobs_to_cancel:
+            try:
+                job = getattr(self, job_name, None)
+                if job:
+                    self.root.after_cancel(job)
+            except Exception:
+                pass
+        
         try:
             self.stop_loop_detection()
-        except Exception:
-            pass
-        try:
-            if getattr(self, 'update_task', None):
-                self.root.after_cancel(self.update_task)
         except Exception:
             pass
         

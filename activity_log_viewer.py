@@ -88,10 +88,20 @@ class ActivityLogViewer:
         self.action_filter_var = tb.StringVar(value="All")
         action_combo = tb.Combobox(filter_row, textvariable=self.action_filter_var,
                                   values=["All", "Login", "Logout", "Add Router", "Edit Router", 
-                                         "Delete Router", "Add User", "Edit User", "Delete User"],
+                                         "Delete Router", "Add User", "Edit User", "Delete User",
+                                         "Create Ticket", "Export Report", "Edit Profile", "Change Password"],
                                   state="readonly", width=20, font=("Segoe UI", 10))
         action_combo.pack(side="left", padx=(0, 10))
         action_combo.bind("<<ComboboxSelected>>", lambda e: self.refresh_logs())
+        
+        tb.Label(filter_row, text="Filter by Role:", font=("Segoe UI", 10, "bold")).pack(side="left", padx=(15, 10))
+        
+        self.role_filter_var = tb.StringVar(value="All")
+        role_combo = tb.Combobox(filter_row, textvariable=self.role_filter_var,
+                                values=["All", "Admin", "Client"],
+                                state="readonly", width=15, font=("Segoe UI", 10))
+        role_combo.pack(side="left", padx=(0, 10))
+        role_combo.bind("<<ComboboxSelected>>", lambda e: self.refresh_logs())
         
         # Refresh button
         tb.Button(filter_row, text="🔄 Refresh All", bootstyle="success", 
@@ -110,7 +120,7 @@ class ActivityLogViewer:
         tree_scroll_x.pack(side="bottom", fill="x")
         
         # Treeview
-        columns = ("ID", "Timestamp", "User", "Action", "Target", "IP Address")
+        columns = ("ID", "Timestamp", "User", "Role", "Action", "Target", "IP Address")
         self.tree = ttk.Treeview(table_frame, columns=columns, show="headings",
                                 yscrollcommand=tree_scroll_y.set,
                                 xscrollcommand=tree_scroll_x.set,
@@ -123,16 +133,18 @@ class ActivityLogViewer:
         self.tree.heading("ID", text="ID", command=lambda: self.sort_column("ID"))
         self.tree.heading("Timestamp", text="Timestamp", command=lambda: self.sort_column("Timestamp"))
         self.tree.heading("User", text="User", command=lambda: self.sort_column("User"))
+        self.tree.heading("Role", text="Role", command=lambda: self.sort_column("Role"))
         self.tree.heading("Action", text="Action", command=lambda: self.sort_column("Action"))
         self.tree.heading("Target", text="Target", command=lambda: self.sort_column("Target"))
         self.tree.heading("IP Address", text="IP Address", command=lambda: self.sort_column("IP Address"))
         
         self.tree.column("ID", width=50, anchor="center")
         self.tree.column("Timestamp", width=160, anchor="center")
-        self.tree.column("User", width=180, anchor="w")
-        self.tree.column("Action", width=150, anchor="w")
-        self.tree.column("Target", width=200, anchor="w")
-        self.tree.column("IP Address", width=140, anchor="center")
+        self.tree.column("User", width=150, anchor="w")
+        self.tree.column("Role", width=80, anchor="center")
+        self.tree.column("Action", width=130, anchor="w")
+        self.tree.column("Target", width=180, anchor="w")
+        self.tree.column("IP Address", width=130, anchor="center")
         
         self.tree.pack(fill="both", expand=True)
         
@@ -196,6 +208,7 @@ class ActivityLogViewer:
         # Get filter values
         search_term = self.search_var.get().strip() if self.search_var else ""
         action_filter = self.action_filter_var.get() if self.action_filter_var else "All"
+        role_filter = self.role_filter_var.get() if hasattr(self, 'role_filter_var') and self.role_filter_var else "All"
         
         # Build filter
         filter_action = None if action_filter == "All" else action_filter
@@ -208,6 +221,11 @@ class ActivityLogViewer:
                 search_term=search_term if search_term else None
             )
             
+            # Apply role filter locally (since get_activity_logs doesn't support it yet)
+            if role_filter != "All":
+                self.logs_data = [log for log in self.logs_data 
+                                 if log.get('role', '').lower() == role_filter.lower()]
+            
             # Populate table
             for log in self.logs_data:
                 log_id = log.get('id', '')
@@ -219,12 +237,16 @@ class ActivityLogViewer:
                 username = log.get('username', '')
                 user_display = f"{user_name} ({username})" if username else user_name
                 
+                # Get role and format it
+                role = log.get('role', 'unknown')
+                role_display = "👑 Admin" if role == 'admin' else "👤 Client"
+                
                 action = log.get('action', '')
                 target = log.get('target', '-')
                 ip_address = log.get('ip_address', '-')
                 
                 self.tree.insert("", "end", values=(
-                    log_id, timestamp, user_display, action, target, ip_address
+                    log_id, timestamp, user_display, role_display, action, target, ip_address
                 ))
             
             # Update status
@@ -241,6 +263,8 @@ class ActivityLogViewer:
             self.search_var.set("")
         if self.action_filter_var:
             self.action_filter_var.set("All")
+            if hasattr(self, 'role_filter_var') and self.role_filter_var:
+                self.role_filter_var.set("All")
         self.refresh_logs()
         
     def sort_column(self, col):
@@ -273,7 +297,16 @@ class ActivityLogViewer:
         if not values:
             return
         
-        log_id, timestamp, user, action, target, ip_address = values
+        # Adjust unpacking for new Role column (values now: ID, Timestamp, User, Role, Action, Target, IP)
+        try:
+            log_id, timestamp, user, role_display, action, target, ip_address = values
+        except ValueError:
+            # Fallback: if column mismatch, attempt legacy format
+            if len(values) >= 6:
+                log_id, timestamp, user, action, target, ip_address = values[:6]
+                role_display = "Unknown"
+            else:
+                return
         
         # Find the full log data
         log_data = None
@@ -333,6 +366,7 @@ class ActivityLogViewer:
             ("🆔 Log ID:", log_id),
             ("🕐 Timestamp:", timestamp),
             ("👤 User:", user),
+            ("🪪 Role:", role_display),
             ("⚡ Action:", action),
             ("🎯 Target:", target if target and target != "-" else "N/A"),
             ("🌐 IP Address:", ip_address if ip_address and ip_address != "-" else "N/A"),
@@ -396,6 +430,7 @@ class ActivityLogViewer:
 Log ID: {log_id}
 Timestamp: {timestamp}
 User: {user}
+Role: {role_display}
 Action: {action}
 Target: {target if target and target != '-' else 'N/A'}
 IP Address: {ip_address if ip_address and ip_address != '-' else 'N/A'}

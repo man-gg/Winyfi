@@ -368,6 +368,10 @@ def show_login(root):
                     "device_hostname": device_info.get('hostname'),
                     "device_platform": device_info.get('platform')
                 }
+                # Provide best-effort local IP (may be overridden by server if proxied)
+                local_ip = device_info.get('ip_address') or ''
+                if local_ip:
+                    payload["device_ip"] = local_ip
                 resp = requests.post(f"{api_base_url}/api/login", json=payload, timeout=(2, 5))
                 if resp.status_code == 200:
                     try:

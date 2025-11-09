@@ -1620,7 +1620,8 @@ def get_activity_logs(limit=100, user_id=None, action_filter=None, search_term=N
             al.ip_address,
             al.timestamp,
             CONCAT(u.first_name, ' ', u.last_name) as user_name,
-            u.username
+            u.username,
+            u.role
         FROM activity_logs al
         LEFT JOIN users u ON al.user_id = u.id
         WHERE {where_sql}

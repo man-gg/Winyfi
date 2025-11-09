@@ -1276,6 +1276,27 @@ class ClientDashboard:
         if not messagebox.askyesno("Logout", "Are you sure you want to logout?"):
             return
 
+        # Log logout activity via API
+        try:
+            # Include last known local IP from device utils if available
+            local_ip = None
+            try:
+                from device_utils import get_device_info
+                info = get_device_info()
+                local_ip = info.get('ip_address')
+            except Exception:
+                try:
+                    import socket
+                    local_ip = socket.gethostbyname(socket.gethostname())
+                except Exception:
+                    pass
+            payload = {"user_id": self.current_user.get('id')}
+            if local_ip and local_ip not in ("127.0.0.1", "::1"):
+                payload["device_ip"] = local_ip
+            self.http.post(f"{self.api_base_url}/api/logout", json=payload, timeout=2)
+        except Exception:
+            pass
+
         # Stop any background monitoring
         try:
             self.stop_router_status_monitoring()
