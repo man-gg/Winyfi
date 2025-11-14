@@ -12,6 +12,7 @@ from user_utils import verify_user
 from ticket_utils import fetch_srfs, create_srf
 from router_utils import get_routers, is_router_online_by_status
 from db import get_connection, log_user_login, create_login_sessions_table, get_user_last_login_info, get_user_login_history, update_user_profile, change_user_password, log_activity, create_activity_logs_table, log_user_logout
+from db import ensure_users_agent_column
 from report_utils import get_uptime_percentage, get_bandwidth_usage
 
 def create_app():
@@ -21,6 +22,11 @@ def create_app():
     # Initialize database tables
     create_login_sessions_table()
     create_activity_logs_table()
+    # Ensure new agent column exists (non-fatal if DB unavailable)
+    try:
+        ensure_users_agent_column()
+    except Exception:
+        pass
 
     def _extract_client_ip(req, data=None):
         """Best-effort client IP extraction supporting proxies and client-provided IP.
@@ -111,6 +117,7 @@ def create_app():
             "role": user["role"],
             "first_name": user.get("first_name"),
             "last_name": user.get("last_name"),
+            "is_agent": user.get("is_agent", False),
         })
 
     @app.post("/api/logout")
@@ -244,6 +251,53 @@ def create_app():
                 return jsonify({"success": True})
             else:
                 return jsonify({"error": "Missing user_id or action"}), 400
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.post("/api/devices/report")
+    def receive_agent_report():
+        """
+        Endpoint for agent clients to report discovered devices from their subnet.
+        Accepts device list and saves to network_clients table.
+        """
+        try:
+            from db import save_network_client, create_network_clients_table, ensure_network_clients_router_columns
+            
+            create_network_clients_table()
+            ensure_network_clients_router_columns()
+            
+            data = request.get_json(force=True, silent=True) or {}
+            devices = data.get("devices", [])
+            agent_username = data.get("agent")
+            
+            if not devices:
+                return jsonify({"success": True, "message": "No devices to report", "saved": 0})
+            
+            saved_count = 0
+            for device in devices:
+                mac = device.get("mac_address")
+                if not mac:
+                    continue
+                
+                # Save/update device in database
+                save_network_client(
+                    mac_address=mac,
+                    ip_address=device.get("ip_address"),
+                    hostname=device.get("hostname", "Unknown"),
+                    vendor=device.get("vendor", "Unknown"),
+                    ping_latency=device.get("ping_latency"),
+                    device_type=device.get("device_type"),
+                    notes=f"Reported by agent: {agent_username}" if agent_username else None,
+                    router_id=device.get("router_id"),
+                    router_name=device.get("router_name")
+                )
+                saved_count += 1
+            
+            return jsonify({
+                "success": True,
+                "message": f"Saved {saved_count} devices",
+                "saved": saved_count
+            })
         except Exception as exc:
             return jsonify({"error": str(exc)}), 500
 

@@ -19,7 +19,7 @@ def get_user_by_username(username):
             cur = conn.cursor(dictionary=True)
             cur.execute(
                 """
-                SELECT id, first_name, last_name, username, password_hash, role
+                SELECT id, first_name, last_name, username, password_hash, role, is_agent
                   FROM users
                  WHERE username = %s
                 """,
@@ -72,7 +72,7 @@ def get_all_users():
         try:
             cur = conn.cursor(dictionary=True)
             cur.execute(
-                "SELECT id, first_name, last_name, username, role "
+                "SELECT id, first_name, last_name, username, role, is_agent "
                 "FROM users ORDER BY id"
             )
             return cur.fetchall()
@@ -177,3 +177,23 @@ def get_user_last_login(user_id):
             conn.close()
     
     return execute_with_error_handling("get_user_last_login", _get_last_login)
+
+def update_user_agent_status(user_id, is_agent):
+    """
+    Update the is_agent status for a user.
+    """
+    def _update_agent_status():
+        conn = get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE users SET is_agent = %s WHERE id = %s",
+                (is_agent, user_id)
+            )
+            conn.commit()
+            return cur.rowcount > 0
+        finally:
+            cur.close()
+            conn.close()
+    
+    return execute_with_error_handling("update_user_agent_status", _update_agent_status)

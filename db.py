@@ -30,6 +30,49 @@ class DatabaseOperationError(Exception):
     pass
 
 # =============================
+# Schema ensure helpers (idempotent)
+# =============================
+def ensure_users_agent_column():
+    """Ensure the users table has an is_agent BOOLEAN column.
+
+    Safe to call repeatedly; if the column already exists it does nothing.
+    Added so code that SELECTs is_agent won't break if migration not applied.
+    """
+    try:
+        conn = get_connection(max_retries=1, retry_delay=0, show_dialog=False)
+        cur = conn.cursor()
+        # Check information_schema for column existence
+        cur.execute(
+            """
+            SELECT COUNT(*)
+              FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = %s
+               AND TABLE_NAME = 'users'
+               AND COLUMN_NAME = 'is_agent'
+            """,
+            (DB_CONFIG.get('database'),)
+        )
+        exists = cur.fetchone()[0] == 1
+        if not exists:
+            try:
+                cur.execute("ALTER TABLE users ADD COLUMN is_agent BOOLEAN DEFAULT FALSE AFTER role")
+                conn.commit()
+                logger.info("Added is_agent column to users table")
+            except Exception as alter_err:
+                logger.error(f"Failed to add is_agent column: {alter_err}")
+        try:
+            cur.close()
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
+    except Exception as e:
+        # Non-fatal; leave a log so admin can run migration manually
+        logger.warning(f"ensure_users_agent_column skipped (DB unavailable?): {e}")
+
+# =============================
 # Bandwidth logs helpers
 # =============================
 def create_bandwidth_logs_table():

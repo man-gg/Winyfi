@@ -4691,11 +4691,11 @@ class Dashboard:
         table_frame.pack(fill="both", expand=True)
         
         # Create Treeview with modern styling
-        cols = ("ID", "First Name", "Last Name", "Username", "Role", "Status", "Last Login")
+        cols = ("ID", "First Name", "Last Name", "Username", "Role", "Agent", "Status", "Last Login")
         self.user_table = ttk.Treeview(table_frame, columns=cols, show="headings", height=12)
         
         # Configure columns with better widths
-        column_widths = [60, 140, 140, 140, 100, 100, 140]
+        column_widths = [60, 130, 130, 130, 90, 70, 90, 140]
         for i, (col, width) in enumerate(zip(cols, column_widths)):
             self.user_table.heading(col, text=col, command=lambda c=col: self._sort_users_by_column(c))
             self.user_table.column(col, width=width, anchor="center")
@@ -4847,6 +4847,7 @@ class Dashboard:
             ("Password:", "password", True),
             ("Confirm Password:", "confirm_password", True),
             ("Role:", "role", False),
+                ("Enable as Subnet Agent:", "is_agent", False),
         ]
 
         vars_ = {}
@@ -4860,14 +4861,34 @@ class Dashboard:
             if field_name == "role":
                 # Fixed role: user. Disable dropdown so it can't be changed
                 vars_[field_name] = tb.StringVar(value="user")
-                widget = tb.Combobox(form_frame, textvariable=vars_[field_name],
-                                     values=["user"], state="disabled",
-                                     width=24, font=("Segoe UI", 11), bootstyle="primary")
+                widget = tb.Combobox(
+                    form_frame,
+                    textvariable=vars_[field_name],
+                    values=["user"],
+                    state="disabled",
+                    width=24,
+                    font=("Segoe UI", 11),
+                    bootstyle="primary"
+                )
+            elif field_name == "is_agent":
+                # Checkbox for agent status
+                vars_[field_name] = tb.BooleanVar(value=False)
+                widget = tb.Checkbutton(
+                    form_frame,
+                    text="Allow this user to scan their subnet",
+                    variable=vars_[field_name],
+                    bootstyle="success-round-toggle"
+                )
             else:
                 vars_[field_name] = tb.StringVar()
-                widget = tb.Entry(form_frame, textvariable=vars_[field_name],
-                                  show="*" if is_password else None,
-                                  width=24, font=("Segoe UI", 11), bootstyle="primary")
+                widget = tb.Entry(
+                    form_frame,
+                    textvariable=vars_[field_name],
+                    show="*" if is_password else None,
+                    width=24,
+                    font=("Segoe UI", 11),
+                    bootstyle="primary"
+                )
 
             widget.grid(row=i, column=1, sticky="ew", pady=8)
             entries[field_name] = widget
@@ -4938,9 +4959,18 @@ class Dashboard:
             username = vars_["username"].get().strip()
             password = vars_["password"].get()
             role = vars_["role"].get()
+            is_agent = vars_["is_agent"].get()
 
             try:
-                insert_user(username, password, first, last, role=role)
+                # Insert user first (existing function does not handle is_agent)
+                user_id = insert_user(username, password, first, last, role=role)
+                # Update agent status if selected
+                if is_agent:
+                    try:
+                        from user_utils import update_user_agent_status
+                        update_user_agent_status(user_id, True)
+                    except Exception as agent_err:
+                        print(f"Warning: could not set agent status: {agent_err}")
                 messagebox.showinfo("Success", f"User '{username}' created successfully with {role} role.")
                 # Log activity for user add
                 try:
@@ -4991,74 +5021,67 @@ class Dashboard:
     def _open_edit_user(self, parent, table):
         sel = table.selection()
         if not sel:
-            return messagebox.showerror("Error", "Please select a user to edit.")
-        
-        # Get selected user data
+            messagebox.showerror("Error", "Please select a user to edit.")
+            return
+
         user_data = table.item(sel[0])["values"]
-        uid, first, last, usern, role = user_data[:5]
+        uid = user_data[0]
+        first = user_data[1]
+        last = user_data[2]
+        usern = user_data[3]
+        role = user_data[4]
+        agent_flag = user_data[5] if len(user_data) > 5 else "No"
 
         popup = Toplevel(parent)
         popup.title("✏️ Edit User")
-        popup.geometry("450x500")
+        popup.geometry("480x560")
+        popup.minsize(480, 560)
         popup.transient(parent)
         popup.grab_set()
-        self._center_window(popup, 450, 500)
+        self._center_window(popup, 480, 560)
 
-        # Header
         header_frame = tb.Frame(popup)
         header_frame.pack(fill="x", padx=20, pady=20)
-        
-        tb.Label(header_frame, text="✏️ Edit User", 
-                font=("Segoe UI", 16, "bold"), bootstyle="primary").pack()
-        
-        tb.Label(header_frame, text=f"Editing: {first} {last} ({usern})", 
-                font=("Segoe UI", 10), bootstyle="secondary").pack(pady=(5, 0))
+        tb.Label(header_frame, text="✏️ Edit User", font=("Segoe UI", 16, "bold"), bootstyle="primary").pack()
+        tb.Label(header_frame, text=f"Editing: {first} {last} ({usern})", font=("Segoe UI", 10), bootstyle="secondary").pack(pady=(5, 0))
 
-        # Main form frame
         form_frame = tb.LabelFrame(popup, text="User Information", bootstyle="info", padding=20)
         form_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
-        # Form fields
         fields = [
             ("First Name:", "first_name", False),
             ("Last Name:", "last_name", False),
             ("Username:", "username", False),
             ("New Password:", "password", True),
             ("Confirm Password:", "confirm_password", True),
-            ("Role:", "role", False)
+            ("Role:", "role", False),
+            ("Subnet Agent:", "is_agent", False)
         ]
-        
+
         vars_ = {}
         entries = {}
-        
-        for i, (label, field_name, is_password) in enumerate(fields):
+        for label, field_name, is_password in fields:
             row_frame = tb.Frame(form_frame)
             row_frame.pack(fill="x", pady=8)
-            
-            tb.Label(row_frame, text=label, font=("Segoe UI", 10, "bold"), 
-                    width=15, anchor="w").pack(side="left")
-            
+            tb.Label(row_frame, text=label, font=("Segoe UI", 10, "bold"), width=15, anchor="w").pack(side="left")
             if field_name == "role":
-                # Role selection
                 vars_[field_name] = tb.StringVar(value=role.lower())
-                role_combo = tb.Combobox(row_frame, textvariable=vars_[field_name], 
-                                       values=["user", "admin"], width=25, state="readonly")
-                role_combo.pack(side="left", padx=(10, 0))
-                entries[field_name] = role_combo
+                widget = tb.Combobox(row_frame, textvariable=vars_[field_name], values=["user", "admin"], width=25, state="readonly")
+                widget.pack(side="left", padx=(10, 0))
+            elif field_name == "is_agent":
+                initial_agent = str(agent_flag).lower() in ("yes", "true", "1")
+                vars_[field_name] = tb.BooleanVar(value=initial_agent)
+                widget = tb.Checkbutton(row_frame, text="Enable subnet scanning", variable=vars_[field_name], bootstyle="info-round-toggle")
+                widget.pack(side="left", padx=(10,0))
             else:
-                # Text entry
                 vars_[field_name] = tb.StringVar()
-            if field_name in ["first_name", "last_name", "username"]:
-                field_index = ["first_name", "last_name", "username"].index(field_name) + 1
-                vars_[field_name].set(user_data[field_index])
-                
-                entry = tb.Entry(row_frame, textvariable=vars_[field_name], 
-                               width=30, show="*" if is_password else None,
-                               font=("Segoe UI", 10))
-                entry.pack(side="left", padx=(10, 0))
-                entries[field_name] = entry
+                if field_name in ("first_name", "last_name", "username"):
+                    idx_map = {"first_name": 1, "last_name": 2, "username": 3}
+                    vars_[field_name].set(user_data[idx_map[field_name]])
+                widget = tb.Entry(row_frame, textvariable=vars_[field_name], show="*" if is_password else None, width=30, font=("Segoe UI", 10))
+                widget.pack(side="left", padx=(10,0))
+            entries[field_name] = widget
 
-        # Password strength indicator
         strength_label = tb.Label(form_frame, text="", font=("Segoe UI", 8))
         strength_label.pack(anchor="w", pady=(0, 10))
 
@@ -5077,70 +5100,55 @@ class Dashboard:
 
         vars_["password"].trace('w', lambda *args: check_password_strength())
 
-        # Validation function
         def validate_form():
             new_first = vars_["first_name"].get().strip()
             new_last = vars_["last_name"].get().strip()
             new_username = vars_["username"].get().strip()
             new_password = vars_["password"].get()
             confirm_password = vars_["confirm_password"].get()
-            new_role = vars_["role"].get()
-
             if not all([new_first, new_last, new_username]):
                 messagebox.showerror("Error", "First name, last name, and username are required.")
                 return False
-
             if len(new_username) < 3:
                 messagebox.showerror("Error", "Username must be at least 3 characters long.")
                 return False
-
-            # Check if username already exists (excluding current user)
             if new_username != usern:
                 from user_utils import get_user_by_username
                 if get_user_by_username(new_username):
                     messagebox.showerror("Error", "Username already exists. Please choose a different username.")
                     return False
-
-            # Password validation (only if password is being changed)
             if new_password:
                 if new_password != confirm_password:
                     messagebox.showerror("Error", "Passwords do not match.")
                     return False
-
                 if len(new_password) < 6:
                     messagebox.showerror("Error", "Password must be at least 6 characters long.")
                     return False
-
             return True
 
         def submit_edit():
             if not validate_form():
                 return
-                
             new_first = vars_["first_name"].get().strip()
             new_last = vars_["last_name"].get().strip()
             new_username = vars_["username"].get().strip()
             new_password = vars_["password"].get()
-            new_role = vars_["role"].get()
-
+            new_is_agent = vars_["is_agent"].get()
             try:
-                # Update user with or without password change
                 if new_password:
                     update_user(uid, new_username, new_password, new_first, new_last)
                 else:
                     update_user(uid, new_username, None, new_first, new_last)
-                
+                try:
+                    from user_utils import update_user_agent_status
+                    update_user_agent_status(uid, new_is_agent)
+                except Exception as agent_err:
+                    print(f"Warning: could not update agent status: {agent_err}")
                 messagebox.showinfo("Success", f"User '{new_username}' updated successfully.")
-                # Log activity for user edit
                 try:
                     from device_utils import get_device_info
                     device_info = get_device_info()
-                    log_activity(
-                        user_id=self.current_user.get('id'),
-                        action='Edit User',
-                        target=new_username,
-                        ip_address=device_info.get('ip_address')
-                    )
+                    log_activity(user_id=self.current_user.get('id'), action='Edit User', target=new_username, ip_address=device_info.get('ip_address'))
                 except Exception as log_err:
                     print(f"Error logging user edit activity: {log_err}")
                 popup.destroy()
@@ -5148,14 +5156,10 @@ class Dashboard:
             except Exception as e:
                 messagebox.showerror("Error", f"Could not update user:\n{e}")
 
-        # Buttons
         button_frame = tb.Frame(popup)
-        button_frame.pack(fill="x", padx=20, pady=(0, 20))
-        
-        tb.Button(button_frame, text="💾 Save Changes", bootstyle="primary", 
-                 command=submit_edit, width=15).pack(side="right", padx=(5, 0))
-        tb.Button(button_frame, text="Cancel", bootstyle="secondary", 
-                 command=popup.destroy, width=10).pack(side="right")
+        button_frame.pack(fill="x", padx=20, pady=(0, 12))
+        tb.Button(button_frame, text="💾 Save Changes", bootstyle="primary", command=submit_edit, width=15).pack(side="right", padx=(5,0))
+        tb.Button(button_frame, text="Cancel", bootstyle="secondary", command=popup.destroy, width=10).pack(side="right")
 
 
     def _delete_user(self, table):
@@ -5236,6 +5240,7 @@ class Dashboard:
                 user["last_name"],
                 user["username"],
                 user["role"].title(),
+                ("Yes" if user.get("is_agent") else "No"),
                 status,
                 last_login
             ))
