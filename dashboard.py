@@ -40,7 +40,7 @@ from network_utils import ping_latency,get_bandwidth, detect_loops, discover_cli
 from bandwidth_logger import start_bandwidth_logging
 from db import get_connection 
 from db import database_health_check, get_database_info, DatabaseConnectionError
-from db import create_activity_logs_table, log_activity, get_activity_logs
+from db import create_activity_logs_table, log_activity, get_activity_logs, log_user_logout
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import ticket_utils
@@ -171,6 +171,7 @@ class Dashboard:
             self.start_loop_detection()
 
         start_bandwidth_logging(self._fetch_router_list)
+            
     def _start_unifi_bandwidth_polling(self, interval_ms=60000):
         """Periodically fetch UniFi device bandwidth and log to DB."""
         def poll():
@@ -1288,6 +1289,14 @@ class Dashboard:
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+        # Bind mouse wheel scrolling to canvas
+        def on_mousewheel(event):
+            self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.canvas.bind("<MouseWheel>", on_mousewheel)
+        self.scrollable_frame.bind("<MouseWheel>", on_mousewheel)
 
         # === Modern Dashboard Page Content ===
         self._build_modern_dashboard()
@@ -3003,10 +3012,25 @@ class Dashboard:
                 h_scrollbar = tb.Scrollbar(tree_frame, orient="horizontal", command=tree.xview)
                 tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
                 
-                # Pack treeview and scrollbars
-                tree.pack(side="left", fill="both", expand=True)
-                v_scrollbar.pack(side="right", fill="y")
-                h_scrollbar.pack(side="bottom", fill="x")
+                # Grid layout for tree and scrollbars
+                tree.grid(row=0, column=0, sticky="nsew")
+                v_scrollbar.grid(row=0, column=1, sticky="ns")
+                h_scrollbar.grid(row=1, column=0, sticky="ew")
+                
+                tree_frame.grid_rowconfigure(0, weight=1)
+                tree_frame.grid_columnconfigure(0, weight=1)
+                
+                # Bind mouse wheel scrolling
+                def on_mousewheel_vertical(event):
+                    tree.yview_scroll(int(-1*(event.delta/120)), "units")
+                    return "break"
+                
+                def on_mousewheel_horizontal(event):
+                    tree.xview_scroll(int(-1*(event.delta/120)), "units")
+                    return "break"
+                
+                tree.bind("<MouseWheel>", on_mousewheel_vertical)
+                tree.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
                 
                 # Insert client data
                 for client in clients:
@@ -3166,6 +3190,14 @@ class Dashboard:
                 
                 canvas.pack(side="left", fill="both", expand=True)
                 scrollbar.pack(side="right", fill="y")
+                
+                # Bind mouse wheel scrolling to canvas
+                def on_mousewheel_clients(event):
+                    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+                    return "break"
+                
+                canvas.bind("<MouseWheel>", on_mousewheel_clients)
+                clients_frame.bind("<MouseWheel>", on_mousewheel_clients)
                 
                 # Display each client as a card
                 for idx, client in enumerate(clients):
@@ -3364,6 +3396,14 @@ class Dashboard:
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+        
+        # Bind mouse wheel scrolling to canvas
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        canvas.bind("<MouseWheel>", on_mousewheel)
+        scroll_frame.bind("<MouseWheel>", on_mousewheel)
 
         # --- Store labels for live update ---
         self.detail_status_lbl = None
@@ -3721,6 +3761,13 @@ class Dashboard:
         tree.configure(yscrollcommand=vsb.set)
         tree.pack(side="left", fill="both", expand=True)
         vsb.pack(side="right", fill="y")
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_history(event):
+            tree.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        tree.bind("<MouseWheel>", on_mousewheel_history)
 
         def load_data():
             # parse dates
@@ -4667,6 +4714,18 @@ class Dashboard:
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
         
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.user_table.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.user_table.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.user_table.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.user_table.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
+        
         # Bind interactions
         self.user_table.bind("<Double-1>", lambda e: self._view_user_details(win, self.user_table))
         self.user_table.bind("<Button-3>", self._show_user_context_menu)
@@ -4761,6 +4820,14 @@ class Dashboard:
 
         scroll_frame.bind("<Configure>", _on_configure)
         canvas.bind("<Configure>", _on_configure)
+        
+        # Bind mouse wheel scrolling to canvas
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        canvas.bind("<MouseWheel>", on_mousewheel)
+        scroll_frame.bind("<MouseWheel>", on_mousewheel)
 
         # Form area (grid-based, no pack inside)
         form_frame = tb.LabelFrame(scroll_frame, text="📝 User Information", bootstyle="info", padding=16)
@@ -5570,6 +5637,18 @@ class Dashboard:
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
         
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.user_login_table.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.user_login_table.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.user_login_table.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.user_login_table.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
+        
         # Bind interactions
         self.user_login_table.bind("<Double-1>", lambda e: self._view_user_login_details())
         
@@ -5997,6 +6076,18 @@ Type: {values[9]}
         
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.login_table.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.login_table.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.login_table.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.login_table.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
         
         # Bind interactions
         self.login_table.bind("<Double-1>", lambda e: self._view_login_details())
@@ -6533,7 +6624,7 @@ Type: {values[11]}
 
         # Subheading label describing current table context
         self.bandwidth_table_subtitle = tb.Label(table_container, text="", font=("Segoe UI", 10, "bold"), bootstyle="secondary")
-        self.bandwidth_table_subtitle.pack(anchor="w", pady=(0, 6))
+        self.bandwidth_table_subtitle.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 6))
 
         # Create treeview (without Router column)
         columns = ("timestamp", "download", "upload", "latency")
@@ -6556,10 +6647,25 @@ Type: {values[11]}
         h_scrollbar = ttk.Scrollbar(table_container, orient="horizontal", command=self.bandwidth_table.xview)
         self.bandwidth_table.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
 
-        # Pack widgets
-        self.bandwidth_table.pack(side="left", fill="both", expand=True)
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
+        # Grid layout for table and scrollbars
+        self.bandwidth_table.grid(row=1, column=0, sticky="nsew")
+        v_scrollbar.grid(row=1, column=1, sticky="ns")
+        h_scrollbar.grid(row=2, column=0, sticky="ew")
+        
+        table_container.grid_rowconfigure(1, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.bandwidth_table.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.bandwidth_table.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.bandwidth_table.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.bandwidth_table.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
 
         # Initialize sort flags for column header toggles
         if not hasattr(self, "_reverse_flags"):
@@ -7653,10 +7759,25 @@ Type: {values[11]}
         h_scrollbar = ttk.Scrollbar(table_container, orient="horizontal", command=self.uptime_tree.xview)
         self.uptime_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
 
-        # Pack widgets
-        self.uptime_tree.pack(side="left", fill="both", expand=True)
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
+        # Grid layout for table and scrollbars
+        self.uptime_tree.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.uptime_tree.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.uptime_tree.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.uptime_tree.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.uptime_tree.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
 
         # Charts tab
         self.reports_charts_frame = tb.Frame(self.reports_notebook)
@@ -7722,14 +7843,14 @@ Type: {values[11]}
                     self.root.after(0, lambda: messagebox.showerror("Invalid Date Range", "Start date cannot be after end date."))
                     self.root.after(0, self._hide_reports_loading)
                     return
-                if getattr(self, '_report_cancel_requested', False):
+                if getattr(self, '_report_cancel_requested', False) or not getattr(self, 'app_running', True):
                     self.root.after(0, self._hide_reports_loading)
                     return
 
                 # Phase 2: fetch routers
                 self.root.after(0, self._update_reports_phase, "Loading routers...")
                 routers = get_routers()
-                if getattr(self, '_report_cancel_requested', False):
+                if getattr(self, '_report_cancel_requested', False) or not getattr(self, 'app_running', True):
                     self.root.after(0, self._hide_reports_loading)
                     return
 
@@ -7743,7 +7864,7 @@ Type: {values[11]}
 
                 # Phase 3: per-router stats
                 for idx, r in enumerate(routers, start=1):
-                    if getattr(self, '_report_cancel_requested', False):
+                    if getattr(self, '_report_cancel_requested', False) or not getattr(self, 'app_running', True):
                         break
                     self.root.after(0, self._update_reports_phase, f"Processing router {idx}/{router_count}...")
                     router_id = r['id']
@@ -7772,7 +7893,11 @@ Type: {values[11]}
                         ))
                     self.root.after(0, insert_row)
 
-                if getattr(self, '_report_cancel_requested', False):
+                if getattr(self, '_report_cancel_requested', False) or not getattr(self, 'app_running', True):
+                    # Silently exit if app is closing (app_running=False)
+                    if not getattr(self, 'app_running', True):
+                        return
+                    # Show cancelled message only if user explicitly cancelled
                     self.root.after(0, self._update_reports_phase, "Cancelled")
                     self.root.after(0, self._hide_reports_loading)
                     return
@@ -7794,7 +7919,7 @@ Type: {values[11]}
                         results.append((day_start, avg_uptime))
                     return results
                 daily_data = get_daily_avg_uptime(start_date, end_date)
-                if getattr(self, '_report_cancel_requested', False):
+                if getattr(self, '_report_cancel_requested', False) or not getattr(self, 'app_running', True):
                     self.root.after(0, self._hide_reports_loading)
                     return
 
@@ -7872,7 +7997,11 @@ Type: {values[11]}
                         self.toggle_btn.pack(anchor="ne", padx=5, pady=2)
                     if self.chart_visible and not getattr(self, '_report_cancel_requested', False):
                         draw_chart()
-                    if getattr(self, '_report_cancel_requested', False):
+                    if getattr(self, '_report_cancel_requested', False) or not getattr(self, 'app_running', True):
+                        # Silently exit if app is closing
+                        if not getattr(self, 'app_running', True):
+                            return
+                        # Show cancelled message only if user explicitly cancelled
                         self._update_reports_phase("Cancelled")
                     else:
                         self._update_reports_phase("Done")
@@ -9296,8 +9425,26 @@ Type: {values[11]}
         
         self.tickets_table.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
         
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
+        # Convert to grid layout
+        self.tickets_table.grid_forget()  # Remove pack
+        self.tickets_table.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        table_frame.grid_rowconfigure(0, weight=1)
+        table_frame.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.tickets_table.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.tickets_table.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.tickets_table.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.tickets_table.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
 
         # Enhanced row styling with alternating colors
         self.tickets_table.tag_configure("even", background="#f8f9fa")
@@ -10019,6 +10166,14 @@ Type: {values[11]}
 
         details_canvas.pack(side="left", fill="both", expand=True)
         details_scrollbar.pack(side="right", fill="y")
+        
+        # Bind mouse wheel scrolling to canvas
+        def on_mousewheel_details(event):
+            details_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        details_canvas.bind("<MouseWheel>", on_mousewheel_details)
+        details_scrollable.bind("<MouseWheel>", on_mousewheel_details)
 
         # Request Information Section
         self._create_detail_section(details_scrollable, "🏢 Request Information", [
@@ -10805,7 +10960,7 @@ Type: {values[11]}
             content = tb.Frame(scrollable_frame)
             content.pack(fill='both', expand=True, padx=15, pady=10)
 
-            # Header with close button
+            # Header (no top-right X close icon)
             header_frame = tb.Frame(content)
             header_frame.pack(fill='x', pady=(0, 10))
             
@@ -10817,9 +10972,6 @@ Type: {values[11]}
 
             tb.Label(header_frame, text=f"{status_emoji} ID #{record_id} - {record['status'].replace('_', ' ').title()}",
                     font=("Segoe UI", 13, "bold")).pack(side='left')
-            
-            tb.Button(header_frame, text="✕", bootstyle="danger-link",
-                     command=detail_modal.destroy, width=3).pack(side='right')
 
             # Basic Information Card - compact
             basic_info = tb.LabelFrame(content, text="📋 Basic Information", padding=10, bootstyle="info")
@@ -11608,7 +11760,7 @@ Type: {values[11]}
         main_container = tb.Frame(modal, bootstyle="light")
         main_container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Header section
+        # Header section (no top-right X close icon)
         header_frame = tb.Frame(main_container, bootstyle="info")
         header_frame.pack(fill="x", pady=(0, 10))
 
@@ -11617,16 +11769,7 @@ Type: {values[11]}
         title_frame.pack(fill="x", padx=15, pady=15)
 
         tb.Label(title_frame, text="🌐 Network Clients Monitor", 
-                font=("Segoe UI", 16, "bold"), bootstyle="inverse-info").pack(side="left")
-
-        # Close button with immediate response
-        def close_now():
-            close_btn.config(state="disabled", text="⏳")
-            self.close_client_modal(modal)
-        
-        close_btn = tb.Button(title_frame, text="✕", bootstyle="danger-outline", 
-                            command=close_now, width=3)
-        close_btn.pack(side="right", padx=(10, 0))
+                 font=("Segoe UI", 16, "bold"), bootstyle="inverse-info").pack(side="left")
 
         # Stats frame
         stats_frame = tb.Frame(title_frame)
@@ -12622,13 +12765,7 @@ Type: {values[11]}
             tb.Label(title_frame, text=f"📊 Connection History - {hostname}", 
                     font=("Segoe UI", 14, "bold"), bootstyle="inverse-info").pack(side="left")
             
-            close_btn = tb.Button(title_frame, text="✕", bootstyle="danger-outline", 
-                                command=close_history_modal, width=3)
-            close_btn.pack(side="right", padx=(10, 0))
-            
-            # Visual feedback on close button hover
-            close_btn.bind('<Enter>', lambda e: close_btn.config(cursor='hand2'))
-            close_btn.bind('<Leave>', lambda e: close_btn.config(cursor=''))
+            # Removed top-right X close icon per requirements
             
             # Stats frame
             stats_frame = tb.Frame(main_container)
@@ -12671,10 +12808,32 @@ Type: {values[11]}
             h_scrollbar = tb.Scrollbar(tree_frame, orient="horizontal", command=history_tree.xview)
             history_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
             
-            # Pack treeview and scrollbars
-            history_tree.pack(side="left", fill="both", expand=True)
-            v_scrollbar.pack(side="right", fill="y")
-            h_scrollbar.pack(side="bottom", fill="x")
+            # Grid layout for proper scrollbar positioning
+            history_tree.grid(row=0, column=0, sticky="nsew")
+            v_scrollbar.grid(row=0, column=1, sticky="ns")
+            h_scrollbar.grid(row=1, column=0, sticky="ew")
+            
+            # Configure grid weights
+            tree_frame.grid_rowconfigure(0, weight=1)
+            tree_frame.grid_columnconfigure(0, weight=1)
+            
+            # Bind mouse wheel scrolling for smooth scrolling
+            def on_mousewheel_vertical(event):
+                history_tree.yview_scroll(int(-1 * (event.delta / 120)), "units")
+                return "break"
+            
+            def on_mousewheel_horizontal(event):
+                history_tree.xview_scroll(int(-1 * (event.delta / 120)), "units")
+                return "break"
+            
+            # Bind vertical scroll (normal mouse wheel)
+            history_tree.bind("<MouseWheel>", on_mousewheel_vertical)
+            # Bind horizontal scroll (Shift + mouse wheel)
+            history_tree.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
+            
+            # Prevent modal from scrolling page behind
+            history_modal.bind("<MouseWheel>", lambda e: "break")
+            history_modal.bind("<Shift-MouseWheel>", lambda e: "break")
             
             # Insert history data
             for event in history:
@@ -13065,12 +13224,45 @@ Type: {values[11]}
     
     def on_close(self):
         """Confirm and exit the entire application cleanly from the Admin window."""
+        import sys
+        
         answer = messagebox.askyesno("Exit Confirmation", "Are you sure you want to exit WinyFi?")
+        
         if not answer:
             return
 
+        # Log logout activity before exiting
+        try:
+            from device_utils import get_device_info
+            device_info = get_device_info()
+            user_id = self.current_user.get('id')
+            ip_addr = device_info.get('ip_address')
+            
+            log_activity(
+                user_id=user_id,
+                action='Logout',
+                target='Application Exit',
+                ip_address=ip_addr
+            )
+        except Exception as e:
+            print(f"Error logging logout activity on exit: {e}")
+        
+        # Update login_sessions table
+        try:
+            user_id = self.current_user.get('id')
+            log_user_logout(user_id)
+        except Exception as e:
+            print(f"Error updating login session on exit: {e}")
+
+        # Give time for database operations to complete
+        import time
+        time.sleep(1.0)
+
         # Stop background activities
         self.app_running = False
+        
+        # Don't set _report_cancel_requested here to avoid "Cancelled" message
+        # The app_running flag will stop background tasks gracefully
         
         # Cancel all scheduled after() jobs
         jobs_to_cancel = [
@@ -13102,7 +13294,13 @@ Type: {values[11]}
         except Exception:
             pass
 
-        # Destroy the admin window
+        # Give a brief moment for tasks to cancel
+        try:
+            self.root.update()
+        except Exception:
+            pass
+
+        # Destroy the admin window and terminate the entire application
         try:
             self.root.destroy()
         except Exception:
@@ -13115,12 +13313,10 @@ Type: {values[11]}
                 master.destroy()
         except Exception:
             pass
-
-        # Hard-exit fallback to ensure full termination
-        try:
-            os._exit(0)
-        except Exception:
-            pass
+        
+        # Force exit the entire application
+        import sys
+        sys.exit(0)
     
     def show_user_profile(self):
         """Show user profile information with modern UI design"""
@@ -13718,7 +13914,7 @@ Type: {values[11]}
         if not messagebox.askyesno("Log Out", "Are you sure you want to log out?"):
             return
 
-        # Log logout activity
+        # Log logout activity to activity_logs
         try:
             from device_utils import get_device_info
             device_info = get_device_info()
@@ -13730,9 +13926,18 @@ Type: {values[11]}
             )
         except Exception as e:
             print(f"Error logging logout activity: {e}")
+        
+        # Update login_sessions table
+        try:
+            log_user_logout(self.current_user.get('id'))
+        except Exception as e:
+            print(f"Error updating login session: {e}")
 
-        # Stop background tasks
+        # Stop background tasks BEFORE destroying window
         self.app_running = False
+        
+        # Don't set _report_cancel_requested here to avoid "Cancelled" message
+        # The app_running flag will stop background tasks gracefully
         
         # Cancel all scheduled after() jobs
         jobs_to_cancel = [
@@ -13752,6 +13957,7 @@ Type: {values[11]}
                 job = getattr(self, job_name, None)
                 if job:
                     self.root.after_cancel(job)
+                    setattr(self, job_name, None)
             except Exception:
                 pass
         
@@ -13763,6 +13969,18 @@ Type: {values[11]}
         # Stop UniFi auto-refresh
         try:
             self._stop_unifi_auto_refresh()
+        except Exception:
+            pass
+        
+        # Stop routers auto-refresh
+        try:
+            self.stop_routers_auto_refresh()
+        except Exception:
+            pass
+
+        # Give a brief moment for tasks to cancel
+        try:
+            self.root.update()
         except Exception:
             pass
 

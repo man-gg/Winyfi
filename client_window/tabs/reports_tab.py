@@ -19,9 +19,10 @@ from print_utils import print_srf_form
 
 
 class ReportsTab:
-    def __init__(self, parent_frame, root):
+    def __init__(self, parent_frame, root, app=None):
         self.parent_frame = parent_frame
         self.root = root
+        self.app = app  # Reference to parent ClientApp
         self.api_base_url = os.getenv("WINYFI_API", "http://127.0.0.1:5000")
         self._build_reports_page()
 
@@ -137,9 +138,13 @@ class ReportsTab:
         table_container = tb.Frame(self.table_frame)
         table_container.pack(fill='both', expand=True, padx=10, pady=10)
         
+        # Create tree container for grid layout
+        tree_container = tb.Frame(table_container)
+        tree_container.pack(fill='both', expand=True)
+        
         # Treeview for data
         columns = ("Router Name", "Start Date", "Uptime %", "Downtime", "Bandwidth Usage")
-        self.report_tree = tb.Treeview(table_container, columns=columns, show="headings", height=15)
+        self.report_tree = tb.Treeview(tree_container, columns=columns, show="headings", height=15)
         
         # Configure columns
         for col in columns:
@@ -147,14 +152,32 @@ class ReportsTab:
             self.report_tree.column(col, width=120, anchor='center')
         
         # Scrollbars
-        v_scrollbar = tb.Scrollbar(table_container, orient="vertical", command=self.report_tree.yview)
-        h_scrollbar = tb.Scrollbar(table_container, orient="horizontal", command=self.report_tree.xview)
+        v_scrollbar = tb.Scrollbar(tree_container, orient="vertical", command=self.report_tree.yview)
+        h_scrollbar = tb.Scrollbar(tree_container, orient="horizontal", command=self.report_tree.xview)
         self.report_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
         
-        # Pack widgets
-        self.report_tree.pack(side="left", fill="both", expand=True)
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
+        # Grid layout for proper scrollbar positioning
+        self.report_tree.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        # Configure grid weights
+        tree_container.grid_rowconfigure(0, weight=1)
+        tree_container.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling for smooth scrolling
+        def on_mousewheel_vertical(event):
+            self.report_tree.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.report_tree.xview_scroll(int(-1 * (event.delta / 120)), "units")
+            return "break"
+        
+        # Bind vertical scroll (normal mouse wheel)
+        self.report_tree.bind("<MouseWheel>", on_mousewheel_vertical)
+        # Bind horizontal scroll (Shift + mouse wheel)
+        self.report_tree.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
         
         # Charts tab
         self.charts_frame = tb.Frame(self.notebook)
@@ -210,19 +233,32 @@ class ReportsTab:
         self._report_cancel_event = threading.Event()
 
         def finish(success, msg, payload=None):
-            self._hide_report_loader()
+            try:
+                self._hide_report_loader()
+            except Exception:
+                # Widget may have been destroyed
+                return
+            
             if success:
-                data = (payload or {}).get('report_data', [])
-                chart_data = (payload or {}).get('chart_data', {})
-                summary = (payload or {}).get('summary', {})
-                self.report_data = data
-                self.total_routers_label.config(text=str(summary.get('total_routers', 0)))
-                self.avg_uptime_label.config(text=f"{summary.get('avg_uptime', 0):.1f}%")
-                self.total_bandwidth_label.config(text=f"{summary.get('total_bandwidth', 0):.1f} MB")
-                self.update_table()
-                self.update_chart(chart_data)
+                try:
+                    data = (payload or {}).get('report_data', [])
+                    chart_data = (payload or {}).get('chart_data', {})
+                    summary = (payload or {}).get('summary', {})
+                    self.report_data = data
+                    self.total_routers_label.config(text=str(summary.get('total_routers', 0)))
+                    self.avg_uptime_label.config(text=f"{summary.get('avg_uptime', 0):.1f}%")
+                    self.total_bandwidth_label.config(text=f"{summary.get('total_bandwidth', 0):.1f} MB")
+                    self.update_table()
+                    self.update_chart(chart_data)
+                except Exception:
+                    # Widget may have been destroyed during logout
+                    pass
             else:
-                messagebox.showerror("Report Error", msg)
+                try:
+                    messagebox.showerror("Report Error", msg)
+                except Exception:
+                    # Window may have been destroyed
+                    pass
 
         def worker():
             try:
@@ -235,7 +271,13 @@ class ReportsTab:
                 except Exception as e:
                     self.root.after(0, lambda e=e: finish(False, f"Connection error: {e}"))
                     return
+                # Check if app is closing (silent exit) or report cancelled (show message)
                 if self._report_cancel_event.is_set():
+                    app_closing = self.app and not getattr(self.app, 'status_monitoring_running', True)
+                    if app_closing:
+                        # App is closing, exit silently without message
+                        return
+                    # User explicitly cancelled, show message
                     self.root.after(0, lambda: finish(False, "Report cancelled."))
                     return
                 if not resp.ok:
@@ -252,7 +294,13 @@ class ReportsTab:
                 except Exception:
                     self.root.after(0, lambda: finish(False, "Invalid JSON response."))
                     return
+                # Check if app is closing (silent exit) or report cancelled (show message)
                 if self._report_cancel_event.is_set():
+                    app_closing = self.app and not getattr(self.app, 'status_monitoring_running', True)
+                    if app_closing:
+                        # App is closing, exit silently without message
+                        return
+                    # User explicitly cancelled, show message
                     self.root.after(0, lambda: finish(False, "Report cancelled."))
                     return
                 # Simulate small processing steps for user feedback (optional quick phases)
@@ -289,7 +337,11 @@ class ReportsTab:
         for btn in (self.generate_btn, self.export_csv_btn, self.print_pdf_btn, self.print_pdf_charts_btn):
             try: btn.config(state='normal')
             except Exception: pass
-        self._report_phase_label.config(text='')
+        try:
+            if self._report_phase_label.winfo_exists():
+                self._report_phase_label.config(text='')
+        except Exception:
+            pass
         self._report_generating = False
         self._report_cancel_event = None
 
@@ -670,8 +722,25 @@ class ReportsTab:
         
         self.tickets_table.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
         
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
+        # Convert to grid layout
+        self.tickets_table.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        table_frame.grid_rowconfigure(0, weight=1)
+        table_frame.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.tickets_table.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.tickets_table.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.tickets_table.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.tickets_table.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
 
         # Enhanced row styling with alternating colors
         self.tickets_table.tag_configure("even", background="#f8f9fa")

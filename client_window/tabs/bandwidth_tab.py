@@ -155,15 +155,23 @@ class BandwidthTab:
 
         # Subtitle label describing current table context
         self.table_subtitle = tb.Label(table_container, text="", font=("Segoe UI", 10, "bold"), bootstyle="secondary")
-        self.table_subtitle.pack(anchor="w", pady=(0, 6))
+        self.table_subtitle.grid(row=0, column=0, sticky="w", pady=(0, 6))
 
         # Define column configurations for different views
         self.table_columns_all = ("timestamp", "download", "upload", "latency")
         self.table_columns_router = ("timestamp", "download", "upload", "latency")
 
+        # Create treeview frame for grid layout
+        tree_container = tb.Frame(table_container)
+        tree_container.grid(row=1, column=0, sticky="nsew")
+        
+        # Configure grid weights for table_container
+        table_container.grid_rowconfigure(1, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
+        
         # Create treeview
         columns = ("timestamp", "router", "download", "upload", "latency")
-        self.bandwidth_table = ttk.Treeview(table_container, columns=columns, show="headings", height=20)
+        self.bandwidth_table = ttk.Treeview(tree_container, columns=columns, show="headings", height=20)
         
         # Configure columns
         self.bandwidth_table.column("timestamp", width=180, anchor="center")
@@ -180,14 +188,32 @@ class BandwidthTab:
         self.bandwidth_table.heading("latency", text="Latency (ms)")
 
         # Scrollbars
-        v_scrollbar = ttk.Scrollbar(table_container, orient="vertical", command=self.bandwidth_table.yview)
-        h_scrollbar = ttk.Scrollbar(table_container, orient="horizontal", command=self.bandwidth_table.xview)
+        v_scrollbar = ttk.Scrollbar(tree_container, orient="vertical", command=self.bandwidth_table.yview)
+        h_scrollbar = ttk.Scrollbar(tree_container, orient="horizontal", command=self.bandwidth_table.xview)
         self.bandwidth_table.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
 
-        # Pack widgets
-        self.bandwidth_table.pack(side="left", fill="both", expand=True)
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
+        # Grid layout for proper scrollbar positioning
+        self.bandwidth_table.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        # Configure grid weights
+        tree_container.grid_rowconfigure(0, weight=1)
+        tree_container.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling for smooth scrolling
+        def on_mousewheel_vertical(event):
+            self.bandwidth_table.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.bandwidth_table.xview_scroll(int(-1 * (event.delta / 120)), "units")
+            return "break"
+        
+        # Bind vertical scroll (normal mouse wheel)
+        self.bandwidth_table.bind("<MouseWheel>", on_mousewheel_vertical)
+        # Bind horizontal scroll (Shift + mouse wheel)
+        self.bandwidth_table.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
 
         # Load initial data
         self.load_routers()

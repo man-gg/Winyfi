@@ -1,0 +1,4 @@
+=== Dashboard __init__ completed ===
+Protocol binding set: 2306403773504on_close
+on_close method exists: True
+Root window: .!toplevel

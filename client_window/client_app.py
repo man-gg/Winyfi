@@ -286,7 +286,7 @@ class ClientDashboard:
         # Build page UIs using separate tab classes
         self.dashboard_tab = DashboardTab(self.dashboard_frame, self.api_base_url, self.root)
         self.routers_tab = RoutersTab(self.routers_frame, self.api_base_url, self.root)
-        self.reports_tab = ReportsTab(self.reports_frame, self.root)
+        self.reports_tab = ReportsTab(self.reports_frame, self.root, app=self)
         self.bandwidth_tab = BandwidthTab(self.bandwidth_frame, self.api_base_url, self.root)
         self.settings_tab = SettingsTab(self.settings_frame, self.api_base_url, self.root)
         # Default tab
@@ -1244,9 +1244,51 @@ class ClientDashboard:
         if not messagebox.askyesno("Exit", "Are you sure you want to exit?"):
             return
 
-        # Stop background monitoring
+        # Log logout activity via API before exiting
+        try:
+            # Include last known local IP from device utils if available
+            local_ip = None
+            try:
+                from device_utils import get_device_info
+                info = get_device_info()
+                local_ip = info.get('ip_address')
+            except Exception:
+                try:
+                    import socket
+                    local_ip = socket.gethostbyname(socket.gethostname())
+                except Exception:
+                    pass
+            payload = {"user_id": self.current_user.get('id')}
+            if local_ip and local_ip not in ("127.0.0.1", "::1"):
+                payload["device_ip"] = local_ip
+            # Add target to indicate it's an application exit
+            payload["target"] = "Application Exit"
+            self.http.post(f"{self.api_base_url}/api/logout", json=payload, timeout=2)
+        except Exception as e:
+            print(f"Error logging logout activity on exit: {e}")
+
+        # Give time for API request to complete
+        import time
+        time.sleep(0.5)
+
+        # Stop all background monitoring and tasks
+        self.status_monitoring_running = False
+        
         try:
             self.stop_router_status_monitoring()
+        except Exception:
+            pass
+        
+        # Cancel any report generation in tabs
+        try:
+            if hasattr(self, 'reports_tab') and hasattr(self.reports_tab, '_report_cancel_event'):
+                self.reports_tab._report_cancel_event.set()
+        except Exception:
+            pass
+        
+        # Give background threads a moment to notice the cancel flag
+        try:
+            self.root.update()
         except Exception:
             pass
 
@@ -1264,12 +1306,9 @@ class ClientDashboard:
         except Exception:
             pass
 
-        # Hard-exit fallback to ensure full termination
-        try:
-            import os
-            os._exit(0)
-        except Exception:
-            pass
+        # Force exit the entire application
+        import sys
+        sys.exit(0)
 
     def logout(self):
         """Handle user logout"""
@@ -1297,9 +1336,24 @@ class ClientDashboard:
         except Exception:
             pass
 
-        # Stop any background monitoring
+        # Stop all background monitoring and tasks
+        self.status_monitoring_running = False
+        
         try:
             self.stop_router_status_monitoring()
+        except Exception:
+            pass
+        
+        # Cancel any report generation in tabs
+        try:
+            if hasattr(self, 'reports_tab') and hasattr(self.reports_tab, '_report_cancel_event'):
+                self.reports_tab._report_cancel_event.set()
+        except Exception:
+            pass
+        
+        # Give background threads a moment to notice the cancel flag
+        try:
+            self.root.update()
         except Exception:
             pass
 

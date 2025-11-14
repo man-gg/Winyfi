@@ -102,6 +102,14 @@ class RoutersTab:
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+        
+        # Bind mouse wheel scrolling to canvas
+        def on_mousewheel(event):
+            self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.canvas.bind("<MouseWheel>", on_mousewheel)
+        self.scrollable_frame.bind("<MouseWheel>", on_mousewheel)
 
         self.router_status_var = tb.StringVar(value="Loading routers…")
         tb.Label(self.parent_frame, textvariable=self.router_status_var, bootstyle='secondary').pack(padx=10, pady=(0,10), anchor='w')
@@ -730,6 +738,14 @@ class RoutersTab:
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+        
+        # Bind mouse wheel scrolling to canvas
+        def on_mousewheel_details(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        canvas.bind("<MouseWheel>", on_mousewheel_details)
+        scroll_frame.bind("<MouseWheel>", on_mousewheel_details)
 
         # Store labels for updates
         detail_status_lbl = None
@@ -1065,10 +1081,25 @@ class RoutersTab:
                 h_scrollbar = tb.Scrollbar(tree_frame, orient="horizontal", command=tree.xview)
                 tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
 
-                # Pack treeview and scrollbars
-                tree.pack(side="left", fill="both", expand=True)
-                v_scrollbar.pack(side="right", fill="y")
-                h_scrollbar.pack(side="bottom", fill="x")
+                # Grid layout for treeview and scrollbars
+                tree.grid(row=0, column=0, sticky="nsew")
+                v_scrollbar.grid(row=0, column=1, sticky="ns")
+                h_scrollbar.grid(row=1, column=0, sticky="ew")
+                
+                tree_frame.grid_rowconfigure(0, weight=1)
+                tree_frame.grid_columnconfigure(0, weight=1)
+                
+                # Bind mouse wheel scrolling
+                def on_mousewheel_vertical(event):
+                    tree.yview_scroll(int(-1*(event.delta/120)), "units")
+                    return "break"
+                
+                def on_mousewheel_horizontal(event):
+                    tree.xview_scroll(int(-1*(event.delta/120)), "units")
+                    return "break"
+                
+                tree.bind("<MouseWheel>", on_mousewheel_vertical)
+                tree.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
 
                 # Insert client data
                 for client in clients:
@@ -1220,6 +1251,13 @@ class RoutersTab:
         tree.configure(yscrollcommand=vsb.set)
         tree.pack(side="left", fill="both", expand=True)
         vsb.pack(side="right", fill="y")
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_history(event):
+            tree.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        tree.bind("<MouseWheel>", on_mousewheel_history)
 
         def load_data():
             try:
@@ -1378,17 +1416,12 @@ class RoutersTab:
         header_frame = tb.Frame(main_container, bootstyle="info")
         header_frame.pack(fill="x", pady=(0, 10))
 
-        # Title and stats
+    # Title and stats (no top-right X close icon)
         title_frame = tb.Frame(header_frame)
         title_frame.pack(fill="x", padx=15, pady=15)
 
         tb.Label(title_frame, text="🌐 Network Clients Monitor", 
                 font=("Segoe UI", 16, "bold"), bootstyle="inverse-info").pack(side="left")
-
-        # Close button
-        close_btn = tb.Button(title_frame, text="✕", bootstyle="danger-outline", 
-                            command=self.close_client_modal, width=3)
-        close_btn.pack(side="right", padx=(10, 0))
 
         # Stats frame
         stats_frame = tb.Frame(title_frame)
@@ -1469,10 +1502,25 @@ class RoutersTab:
         h_scrollbar = tb.Scrollbar(tree_frame, orient="horizontal", command=self.client_tree.xview)
         self.client_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
 
-        # Pack treeview and scrollbars
-        self.client_tree.pack(side="left", fill="both", expand=True)
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
+        # Grid layout for treeview and scrollbars
+        self.client_tree.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        tree_frame.grid_rowconfigure(0, weight=1)
+        tree_frame.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.client_tree.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.client_tree.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.client_tree.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.client_tree.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
 
         # Status bar
         status_frame = tb.Frame(main_container)
@@ -2081,9 +2129,7 @@ class RoutersTab:
             tb.Label(title_frame, text=f"📊 Connection History - {hostname}", 
                     font=("Segoe UI", 14, "bold"), bootstyle="inverse-info").pack(side="left")
             
-            close_btn = tb.Button(title_frame, text="✕", bootstyle="danger-outline", 
-                                command=history_modal.destroy, width=3)
-            close_btn.pack(side="right", padx=(10, 0))
+            # Removed top-right X close icon per requirements
             
             # Stats frame
             stats_frame = tb.Frame(main_container)
@@ -2123,10 +2169,32 @@ class RoutersTab:
             h_scrollbar = tb.Scrollbar(tree_frame, orient="horizontal", command=history_tree.xview)
             history_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
             
-            # Pack treeview and scrollbars
-            history_tree.pack(side="left", fill="both", expand=True)
-            v_scrollbar.pack(side="right", fill="y")
-            h_scrollbar.pack(side="bottom", fill="x")
+            # Grid layout for proper scrollbar positioning
+            history_tree.grid(row=0, column=0, sticky="nsew")
+            v_scrollbar.grid(row=0, column=1, sticky="ns")
+            h_scrollbar.grid(row=1, column=0, sticky="ew")
+            
+            # Configure grid weights
+            tree_frame.grid_rowconfigure(0, weight=1)
+            tree_frame.grid_columnconfigure(0, weight=1)
+            
+            # Bind mouse wheel scrolling for smooth scrolling
+            def on_mousewheel_vertical(event):
+                history_tree.yview_scroll(int(-1 * (event.delta / 120)), "units")
+                return "break"
+            
+            def on_mousewheel_horizontal(event):
+                history_tree.xview_scroll(int(-1 * (event.delta / 120)), "units")
+                return "break"
+            
+            # Bind vertical scroll (normal mouse wheel)
+            history_tree.bind("<MouseWheel>", on_mousewheel_vertical)
+            # Bind horizontal scroll (Shift + mouse wheel)
+            history_tree.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
+            
+            # Prevent modal from scrolling page behind
+            history_modal.bind("<MouseWheel>", lambda e: "break")
+            history_modal.bind("<Shift-MouseWheel>", lambda e: "break")
             
             # Insert history data
             for event in history:
@@ -2470,10 +2538,25 @@ class RoutersTab:
         h_scrollbar = tb.Scrollbar(tree_frame, orient="horizontal", command=self.loop_tree.xview)
         self.loop_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
 
-        # Pack treeview and scrollbars
-        self.loop_tree.pack(side="left", fill="both", expand=True)
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
+        # Grid layout for treeview and scrollbars
+        self.loop_tree.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+        
+        tree_frame.grid_rowconfigure(0, weight=1)
+        tree_frame.grid_columnconfigure(0, weight=1)
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel_vertical(event):
+            self.loop_tree.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        def on_mousewheel_horizontal(event):
+            self.loop_tree.xview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        self.loop_tree.bind("<MouseWheel>", on_mousewheel_vertical)
+        self.loop_tree.bind("<Shift-MouseWheel>", on_mousewheel_horizontal)
 
         # Status bar
         status_frame = tb.Frame(main_container)

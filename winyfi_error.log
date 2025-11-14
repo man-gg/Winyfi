@@ -15589,3 +15589,560 @@ ValueError: too many values to unpack (expected 6)
 2025-11-09 16:01:11,448 INFO [root] Detection status: CLEAN
 2025-11-09 16:01:11,448 INFO [root] Overall status: CLEAN, max_severity=0.7
 2025-11-09 16:01:11,458 INFO [db] Loop detection saved to database (ID: 417, severity: 0.72, cross-subnet: False)
+2025-11-14 13:43:52,458 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 13:43:52,482 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 13:44:03,591 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 13:44:03,754 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 13:44:03,842 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 13:44:03,865 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 13:44:03,915 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 13:44:03,939 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 13:44:09,132 INFO [root] 📦 Capture complete. Packets seen: 4214, Analyzed: 4214
+2025-11-14 13:44:09,132 INFO [root] Unique MACs detected: 0
+2025-11-14 13:44:09,133 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 13:44:09,135 INFO [root] Detection status: CLEAN
+2025-11-14 13:44:09,189 INFO [root] 📦 Capture complete. Packets seen: 74, Analyzed: 74
+2025-11-14 13:44:09,194 INFO [root] Unique MACs detected: 0
+2025-11-14 13:44:09,196 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 13:44:09,202 INFO [root] Detection status: CLEAN
+2025-11-14 13:44:09,204 INFO [root] Overall status: CLEAN, max_severity=0.0
+2025-11-14 13:44:09,258 INFO [db] Loop detection saved to database (ID: 404, severity: 0.00, cross-subnet: False)
+2025-11-14 13:49:10,213 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 13:49:10,296 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 13:49:10,297 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 13:49:10,298 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 13:49:10,298 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 13:49:10,299 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 13:49:15,310 INFO [root] 📦 Capture complete. Packets seen: 1380, Analyzed: 1380
+2025-11-14 13:49:15,310 INFO [root] Unique MACs detected: 0
+2025-11-14 13:49:15,312 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 13:49:15,312 INFO [root] 📦 Capture complete. Packets seen: 36, Analyzed: 36
+2025-11-14 13:49:15,313 INFO [root] Detection status: CLEAN
+2025-11-14 13:49:15,314 INFO [root] Unique MACs detected: 2
+2025-11-14 13:49:15,314 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 13:49:15,315 INFO [root] Detection status: CLEAN
+2025-11-14 13:49:15,316 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 13:49:15,336 INFO [db] Loop detection saved to database (ID: 405, severity: 0.68, cross-subnet: False)
+2025-11-14 14:19:01,518 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 14:19:01,544 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 14:19:10,705 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 14:19:10,756 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 14:19:10,762 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 14:19:10,764 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 14:19:10,765 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 14:19:10,768 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 14:19:15,807 INFO [root] 📦 Capture complete. Packets seen: 46, Analyzed: 46
+2025-11-14 14:19:15,808 INFO [root] Unique MACs detected: 2
+2025-11-14 14:19:15,809 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-14 14:19:15,810 INFO [root] Detection status: CLEAN
+2025-11-14 14:19:15,812 INFO [root] 📦 Capture complete. Packets seen: 1274, Analyzed: 1274
+2025-11-14 14:19:15,812 INFO [root] Unique MACs detected: 0
+2025-11-14 14:19:15,813 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 14:19:15,813 INFO [root] Detection status: CLEAN
+2025-11-14 14:19:15,815 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-14 14:19:15,831 INFO [db] Loop detection saved to database (ID: 406, severity: 0.34, cross-subnet: False)
+2025-11-14 14:24:15,863 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 14:24:15,967 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 14:24:15,969 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 14:24:15,969 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 14:24:15,969 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 14:24:15,970 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 14:24:21,021 INFO [root] 📦 Capture complete. Packets seen: 41, Analyzed: 41
+2025-11-14 14:24:21,025 INFO [root] Unique MACs detected: 2
+2025-11-14 14:24:21,041 INFO [root] Max severity: 0.4 (threshold: 15)
+2025-11-14 14:24:21,042 INFO [root] 📦 Capture complete. Packets seen: 191, Analyzed: 191
+2025-11-14 14:24:21,054 INFO [root] Detection status: CLEAN
+2025-11-14 14:24:21,072 INFO [root] Unique MACs detected: 0
+2025-11-14 14:24:21,086 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 14:24:21,095 INFO [root] Detection status: CLEAN
+2025-11-14 14:24:21,099 INFO [root] Overall status: CLEAN, max_severity=0.4
+2025-11-14 14:24:21,243 INFO [db] Loop detection saved to database (ID: 407, severity: 0.38, cross-subnet: False)
+2025-11-14 14:29:49,690 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 14:29:49,710 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 14:29:59,032 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 14:29:59,114 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 14:29:59,116 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 14:29:59,116 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 14:29:59,129 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 14:29:59,143 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 14:30:04,170 INFO [root] 📦 Capture complete. Packets seen: 46, Analyzed: 46
+2025-11-14 14:30:04,172 INFO [root] Unique MACs detected: 2
+2025-11-14 14:30:04,173 INFO [root] Max severity: 1.1 (threshold: 15)
+2025-11-14 14:30:04,173 INFO [root] Detection status: CLEAN
+2025-11-14 14:30:04,239 INFO [root] 📦 Capture complete. Packets seen: 1350, Analyzed: 1350
+2025-11-14 14:30:04,240 INFO [root] Unique MACs detected: 0
+2025-11-14 14:30:04,241 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 14:30:04,241 INFO [root] Detection status: CLEAN
+2025-11-14 14:30:04,242 INFO [root] Overall status: CLEAN, max_severity=1.1
+2025-11-14 14:30:04,257 INFO [db] Loop detection saved to database (ID: 408, severity: 1.10, cross-subnet: False)
+2025-11-14 14:45:12,386 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 14:45:12,426 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 14:45:22,007 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 14:45:22,104 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 14:45:22,105 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 14:45:22,106 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 14:45:22,106 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 14:45:22,109 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 14:45:27,134 INFO [root] 📦 Capture complete. Packets seen: 47, Analyzed: 47
+2025-11-14 14:45:27,137 INFO [root] Unique MACs detected: 2
+2025-11-14 14:45:27,137 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 14:45:27,138 INFO [root] Detection status: CLEAN
+2025-11-14 14:45:27,147 INFO [root] 📦 Capture complete. Packets seen: 917, Analyzed: 917
+2025-11-14 14:45:27,148 INFO [root] Unique MACs detected: 0
+2025-11-14 14:45:27,149 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 14:45:27,150 INFO [root] Detection status: CLEAN
+2025-11-14 14:45:27,151 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 14:45:27,174 INFO [db] Loop detection saved to database (ID: 409, severity: 0.72, cross-subnet: False)
+2025-11-14 15:18:35,897 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:18:35,931 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 15:18:37,282 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\login.py", line 410, in handle_login
+    show_dashboard(dashboard_window, user, api_base_url)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 13954, in show_dashboard
+    Dashboard(root, current_user, api_base_url)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 146, in __init__
+    self._build_ui()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 1117, in _build_ui
+    self.build_bandwidth_tab()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6650, in build_bandwidth_tab
+    self.bandwidth_table.grid(row=0, column=0, sticky="nsew")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2693, in grid_configure
+    self.tk.call(
+    ~~~~~~~~~~~~^
+          ('grid', 'configure', self._w)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          + self._options(cnf, kw))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: cannot use geometry manager grid inside .!toplevel.!frame3.!frame5.!notebook.!frame2.!frame which already has slaves managed by pack
+
+2025-11-14 15:19:00,441 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\Desktop\network monitoring\main.py", line 154, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
+
+2025-11-14 15:21:12,433 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:21:12,460 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 15:21:13,669 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\login.py", line 410, in handle_login
+    show_dashboard(dashboard_window, user, api_base_url)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 13954, in show_dashboard
+    Dashboard(root, current_user, api_base_url)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 146, in __init__
+    self._build_ui()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 1117, in _build_ui
+    self.build_bandwidth_tab()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\dashboard.py", line 6650, in build_bandwidth_tab
+    self.bandwidth_table.grid(row=0, column=0, sticky="nsew")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2693, in grid_configure
+    self.tk.call(
+    ~~~~~~~~~~~~^
+          ('grid', 'configure', self._w)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          + self._options(cnf, kw))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: cannot use geometry manager grid inside .!toplevel.!frame3.!frame5.!notebook.!frame2.!frame which already has slaves managed by pack
+
+2025-11-14 15:21:44,664 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\Desktop\network monitoring\main.py", line 154, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
+
+2025-11-14 15:23:04,481 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:23:04,494 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 15:23:13,566 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 15:23:13,688 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 15:23:13,770 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 15:23:13,775 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 15:23:13,775 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 15:23:13,807 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 15:23:18,829 INFO [root] 📦 Capture complete. Packets seen: 43, Analyzed: 43
+2025-11-14 15:23:18,831 INFO [root] Unique MACs detected: 2
+2025-11-14 15:23:18,832 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 15:23:18,832 INFO [root] Detection status: CLEAN
+2025-11-14 15:23:18,834 INFO [root] 📦 Capture complete. Packets seen: 1625, Analyzed: 1625
+2025-11-14 15:23:18,834 INFO [root] Unique MACs detected: 0
+2025-11-14 15:23:18,835 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 15:23:18,835 INFO [root] Detection status: CLEAN
+2025-11-14 15:23:18,836 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 15:23:18,870 INFO [db] Loop detection saved to database (ID: 410, severity: 0.72, cross-subnet: False)
+2025-11-14 15:26:31,207 WARNING [root] Ping to 192.168.1.4 timed out after 1000ms
+2025-11-14 15:28:58,536 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:28:58,568 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 15:29:07,829 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 15:29:07,884 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 15:29:07,887 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 15:29:07,891 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 15:29:07,892 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 15:29:07,897 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 15:29:12,914 INFO [root] 📦 Capture complete. Packets seen: 36, Analyzed: 36
+2025-11-14 15:29:12,916 INFO [root] Unique MACs detected: 2
+2025-11-14 15:29:12,917 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 15:29:12,917 INFO [root] Detection status: CLEAN
+2025-11-14 15:29:12,923 INFO [root] 📦 Capture complete. Packets seen: 1599, Analyzed: 1599
+2025-11-14 15:29:12,924 INFO [root] Unique MACs detected: 0
+2025-11-14 15:29:12,925 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 15:29:12,926 INFO [root] Detection status: CLEAN
+2025-11-14 15:29:12,928 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 15:29:12,941 INFO [db] Loop detection saved to database (ID: 411, severity: 0.72, cross-subnet: False)
+2025-11-14 15:29:27,361 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:30:15,095 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:30:28,129 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:30:47,494 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:31:16,951 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 15:31:16,980 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 15:31:25,953 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 15:31:26,008 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 15:31:26,010 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 15:31:26,014 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 15:31:26,019 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 15:31:26,028 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 15:31:31,060 INFO [root] 📦 Capture complete. Packets seen: 126, Analyzed: 126
+2025-11-14 15:31:31,079 INFO [root] Unique MACs detected: 2
+2025-11-14 15:31:31,081 INFO [root] Max severity: 1.1 (threshold: 15)
+2025-11-14 15:31:31,082 INFO [root] Detection status: CLEAN
+2025-11-14 15:31:31,092 INFO [root] 📦 Capture complete. Packets seen: 1181, Analyzed: 1181
+2025-11-14 15:31:31,093 INFO [root] Unique MACs detected: 0
+2025-11-14 15:31:31,148 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 15:31:31,149 INFO [root] Detection status: CLEAN
+2025-11-14 15:31:31,150 INFO [root] Overall status: CLEAN, max_severity=1.1
+2025-11-14 15:31:31,309 INFO [db] Loop detection saved to database (ID: 412, severity: 1.10, cross-subnet: False)
+2025-11-14 15:31:38,362 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:01:20,279 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:01:20,310 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 16:01:31,178 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:01:31,245 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:01:31,258 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:01:31,263 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:01:31,271 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:01:31,274 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:01:36,290 INFO [root] 📦 Capture complete. Packets seen: 52, Analyzed: 52
+2025-11-14 16:01:36,292 INFO [root] Unique MACs detected: 2
+2025-11-14 16:01:36,293 INFO [root] Max severity: 0.8 (threshold: 15)
+2025-11-14 16:01:36,295 INFO [root] Detection status: CLEAN
+2025-11-14 16:01:36,297 INFO [root] 📦 Capture complete. Packets seen: 1487, Analyzed: 1487
+2025-11-14 16:01:36,299 INFO [root] Unique MACs detected: 0
+2025-11-14 16:01:36,301 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:01:36,302 INFO [root] Detection status: CLEAN
+2025-11-14 16:01:36,308 INFO [root] Overall status: CLEAN, max_severity=0.8
+2025-11-14 16:01:36,334 INFO [db] Loop detection saved to database (ID: 413, severity: 0.76, cross-subnet: False)
+2025-11-14 16:03:46,439 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:03:46,462 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 16:03:56,450 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:03:56,521 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:03:56,540 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:03:56,546 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:03:56,547 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:03:56,552 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:04:01,563 INFO [root] 📦 Capture complete. Packets seen: 46, Analyzed: 46
+2025-11-14 16:04:01,565 INFO [root] Unique MACs detected: 2
+2025-11-14 16:04:01,569 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 16:04:01,579 INFO [root] Detection status: CLEAN
+2025-11-14 16:04:01,583 INFO [root] 📦 Capture complete. Packets seen: 1115, Analyzed: 1115
+2025-11-14 16:04:01,584 INFO [root] Unique MACs detected: 0
+2025-11-14 16:04:01,584 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:04:01,585 INFO [root] Detection status: CLEAN
+2025-11-14 16:04:01,586 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 16:04:01,605 INFO [db] Loop detection saved to database (ID: 414, severity: 0.68, cross-subnet: False)
+2025-11-14 16:04:32,660 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:09:01,633 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:09:01,699 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:09:01,703 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:09:01,704 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:09:01,705 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:09:01,705 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:09:06,715 INFO [root] 📦 Capture complete. Packets seen: 47, Analyzed: 47
+2025-11-14 16:09:06,716 INFO [root] Unique MACs detected: 2
+2025-11-14 16:09:06,717 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 16:09:06,718 INFO [root] Detection status: CLEAN
+2025-11-14 16:09:06,812 INFO [root] 📦 Capture complete. Packets seen: 198, Analyzed: 198
+2025-11-14 16:09:06,812 INFO [root] Unique MACs detected: 0
+2025-11-14 16:09:06,813 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:09:06,813 INFO [root] Detection status: CLEAN
+2025-11-14 16:09:06,814 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 16:09:06,825 INFO [db] Loop detection saved to database (ID: 415, severity: 0.72, cross-subnet: False)
+2025-11-14 16:14:06,849 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:14:06,895 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:14:06,897 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:14:06,899 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:14:06,899 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:14:06,901 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:14:11,926 INFO [root] 📦 Capture complete. Packets seen: 139, Analyzed: 139
+2025-11-14 16:14:11,927 INFO [root] Unique MACs detected: 0
+2025-11-14 16:14:11,928 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:14:11,929 INFO [root] Detection status: CLEAN
+2025-11-14 16:14:11,952 INFO [root] 📦 Capture complete. Packets seen: 181, Analyzed: 181
+2025-11-14 16:14:11,952 INFO [root] Unique MACs detected: 2
+2025-11-14 16:14:11,953 INFO [root] Max severity: 0.8 (threshold: 15)
+2025-11-14 16:14:11,953 INFO [root] Detection status: CLEAN
+2025-11-14 16:14:11,954 INFO [root] Overall status: CLEAN, max_severity=0.8
+2025-11-14 16:14:12,080 INFO [db] Loop detection saved to database (ID: 416, severity: 0.76, cross-subnet: False)
+2025-11-14 16:28:34,897 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\reports_tab.py", line 282, in <lambda>
+    self.root.after(0, lambda: finish(True, "Done", payload))
+                               ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\reports_tab.py", line 235, in finish
+    self._hide_report_loader()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\63967\Desktop\network monitoring\client_window\tabs\reports_tab.py", line 314, in _hide_report_loader
+    self._report_phase_label.config(text='')
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\site-packages\ttkbootstrap\style.py", line 5252, in configure
+    func(self, cnf, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1822, in configure
+    return self._configure('configure', cnf, kw)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1812, in _configure
+    self.tk.call(_flatten((self._w, cmd)) + self._options(cnf))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel.!frame3.!frame3.!labelframe.!frame2.!frame.!label"
+
+2025-11-14 16:39:33,867 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\63967\Desktop\network monitoring\main.py", line 154, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\63967\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
+
+2025-11-14 16:47:55,271 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:47:55,289 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 16:48:03,499 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:48:03,548 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:48:03,551 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:48:03,555 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:48:03,556 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:48:03,557 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:48:08,591 INFO [root] 📦 Capture complete. Packets seen: 105, Analyzed: 105
+2025-11-14 16:48:08,602 INFO [root] Unique MACs detected: 2
+2025-11-14 16:48:08,604 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 16:48:08,606 INFO [root] Detection status: CLEAN
+2025-11-14 16:48:08,626 INFO [root] 📦 Capture complete. Packets seen: 1261, Analyzed: 1261
+2025-11-14 16:48:08,628 INFO [root] Unique MACs detected: 0
+2025-11-14 16:48:08,629 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:48:08,630 INFO [root] Detection status: CLEAN
+2025-11-14 16:48:08,631 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 16:48:08,644 INFO [db] Loop detection saved to database (ID: 417, severity: 0.68, cross-subnet: False)
+2025-11-14 16:48:14,963 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:48:45,461 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:48:45,511 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 16:48:54,905 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:48:54,961 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:48:54,974 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:48:54,980 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:48:54,986 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:48:54,991 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:49:00,016 INFO [root] 📦 Capture complete. Packets seen: 71, Analyzed: 71
+2025-11-14 16:49:00,017 INFO [root] Unique MACs detected: 2
+2025-11-14 16:49:00,021 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 16:49:00,028 INFO [root] Detection status: CLEAN
+2025-11-14 16:49:00,055 INFO [root] 📦 Capture complete. Packets seen: 1211, Analyzed: 1211
+2025-11-14 16:49:00,056 INFO [root] Unique MACs detected: 0
+2025-11-14 16:49:00,057 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:49:00,058 INFO [root] Detection status: CLEAN
+2025-11-14 16:49:00,061 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 16:49:00,075 INFO [db] Loop detection saved to database (ID: 418, severity: 0.72, cross-subnet: False)
+2025-11-14 16:49:12,940 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:53:11,354 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:53:11,374 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 16:53:20,622 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:53:20,769 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:53:20,779 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:53:20,781 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:53:20,784 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:53:20,794 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:53:25,817 INFO [root] 📦 Capture complete. Packets seen: 43, Analyzed: 43
+2025-11-14 16:53:25,821 INFO [root] Unique MACs detected: 2
+2025-11-14 16:53:25,821 INFO [root] Max severity: 0.8 (threshold: 15)
+2025-11-14 16:53:25,823 INFO [root] Detection status: CLEAN
+2025-11-14 16:53:25,826 INFO [root] 📦 Capture complete. Packets seen: 1734, Analyzed: 1734
+2025-11-14 16:53:25,827 INFO [root] Unique MACs detected: 0
+2025-11-14 16:53:25,828 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:53:25,829 INFO [root] Detection status: CLEAN
+2025-11-14 16:53:25,830 INFO [root] Overall status: CLEAN, max_severity=0.8
+2025-11-14 16:53:25,847 INFO [db] Loop detection saved to database (ID: 419, severity: 0.76, cross-subnet: False)
+2025-11-14 16:53:38,701 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:55:03,659 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:55:03,709 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 16:55:12,892 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:55:12,941 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:55:12,945 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:55:12,948 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:55:12,951 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:55:12,955 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:55:17,967 INFO [root] 📦 Capture complete. Packets seen: 48, Analyzed: 48
+2025-11-14 16:55:17,968 INFO [root] Unique MACs detected: 2
+2025-11-14 16:55:17,968 INFO [root] Max severity: 0.4 (threshold: 15)
+2025-11-14 16:55:17,969 INFO [root] Detection status: CLEAN
+2025-11-14 16:55:17,995 INFO [root] 📦 Capture complete. Packets seen: 1286, Analyzed: 1286
+2025-11-14 16:55:17,997 INFO [root] Unique MACs detected: 0
+2025-11-14 16:55:17,998 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:55:18,001 INFO [root] Detection status: CLEAN
+2025-11-14 16:55:18,003 INFO [root] Overall status: CLEAN, max_severity=0.4
+2025-11-14 16:55:18,033 INFO [db] Loop detection saved to database (ID: 420, severity: 0.42, cross-subnet: False)
+2025-11-14 16:55:46,249 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:59:20,614 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 16:59:20,642 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 16:59:29,615 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 16:59:29,747 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 16:59:29,749 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 16:59:29,750 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 16:59:29,750 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 16:59:29,755 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 16:59:34,785 INFO [root] 📦 Capture complete. Packets seen: 1386, Analyzed: 1386
+2025-11-14 16:59:34,786 INFO [root] Unique MACs detected: 0
+2025-11-14 16:59:34,788 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 16:59:34,789 INFO [root] Detection status: CLEAN
+2025-11-14 16:59:34,821 INFO [root] 📦 Capture complete. Packets seen: 61, Analyzed: 61
+2025-11-14 16:59:34,823 INFO [root] Unique MACs detected: 2
+2025-11-14 16:59:34,823 INFO [root] Max severity: 0.8 (threshold: 15)
+2025-11-14 16:59:34,824 INFO [root] Detection status: CLEAN
+2025-11-14 16:59:34,825 INFO [root] Overall status: CLEAN, max_severity=0.8
+2025-11-14 16:59:34,840 INFO [db] Loop detection saved to database (ID: 421, severity: 0.76, cross-subnet: False)
+2025-11-14 16:59:54,859 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 17:03:18,369 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 17:03:18,421 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 17:03:27,393 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 17:03:27,443 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 17:03:27,445 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 17:03:27,450 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 17:03:27,451 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 17:03:27,454 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 17:03:32,498 INFO [root] 📦 Capture complete. Packets seen: 1369, Analyzed: 1369
+2025-11-14 17:03:32,499 INFO [root] Unique MACs detected: 0
+2025-11-14 17:03:32,500 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 17:03:32,500 INFO [root] Detection status: CLEAN
+2025-11-14 17:03:32,559 INFO [root] 📦 Capture complete. Packets seen: 64, Analyzed: 64
+2025-11-14 17:03:32,560 INFO [root] Unique MACs detected: 2
+2025-11-14 17:03:32,561 INFO [root] Max severity: 0.8 (threshold: 15)
+2025-11-14 17:03:32,562 INFO [root] Detection status: CLEAN
+2025-11-14 17:03:32,563 INFO [root] Overall status: CLEAN, max_severity=0.8
+2025-11-14 17:03:32,576 INFO [db] Loop detection saved to database (ID: 422, severity: 0.76, cross-subnet: False)
+2025-11-14 17:14:22,994 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 17:14:23,013 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 17:14:32,413 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 17:14:32,462 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 17:14:32,466 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 17:14:32,469 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 17:14:32,470 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 17:14:32,473 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 17:14:37,496 INFO [root] 📦 Capture complete. Packets seen: 38, Analyzed: 38
+2025-11-14 17:14:37,497 INFO [root] Unique MACs detected: 2
+2025-11-14 17:14:37,498 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 17:14:37,498 INFO [root] Detection status: CLEAN
+2025-11-14 17:14:37,501 INFO [root] 📦 Capture complete. Packets seen: 1335, Analyzed: 1335
+2025-11-14 17:14:37,502 INFO [root] Unique MACs detected: 0
+2025-11-14 17:14:37,502 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 17:14:37,502 INFO [root] Detection status: CLEAN
+2025-11-14 17:14:37,504 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 17:14:37,524 INFO [db] Loop detection saved to database (ID: 423, severity: 0.72, cross-subnet: False)
+2025-11-14 17:19:56,060 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 17:19:56,091 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 17:20:05,980 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 17:20:06,031 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 17:20:06,033 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 17:20:06,035 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 17:20:06,039 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 17:20:06,040 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 17:20:11,067 INFO [root] 📦 Capture complete. Packets seen: 859, Analyzed: 859
+2025-11-14 17:20:11,068 INFO [root] Unique MACs detected: 0
+2025-11-14 17:20:11,068 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 17:20:11,069 INFO [root] Detection status: CLEAN
+2025-11-14 17:20:11,138 INFO [root] 📦 Capture complete. Packets seen: 123, Analyzed: 123
+2025-11-14 17:20:11,142 INFO [root] Unique MACs detected: 3
+2025-11-14 17:20:11,144 INFO [root] Max severity: 1.0 (threshold: 15)
+2025-11-14 17:20:11,144 INFO [root] Detection status: CLEAN
+2025-11-14 17:20:11,146 INFO [root] Overall status: CLEAN, max_severity=1.0
+2025-11-14 17:20:11,200 INFO [db] Loop detection saved to database (ID: 424, severity: 1.02, cross-subnet: False)
+2025-11-14 17:20:48,111 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 17:20:48,129 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 17:20:57,437 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 17:20:57,489 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 17:20:57,491 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 17:20:57,491 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 17:20:57,492 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 17:20:57,498 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 17:21:02,524 INFO [root] 📦 Capture complete. Packets seen: 1201, Analyzed: 1201
+2025-11-14 17:21:02,526 INFO [root] Unique MACs detected: 0
+2025-11-14 17:21:02,528 INFO [root] 📦 Capture complete. Packets seen: 78, Analyzed: 78
+2025-11-14 17:21:02,528 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 17:21:02,529 INFO [root] Unique MACs detected: 1
+2025-11-14 17:21:02,530 INFO [root] Detection status: CLEAN
+2025-11-14 17:21:02,530 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 17:21:02,534 INFO [root] Detection status: CLEAN
+2025-11-14 17:21:02,535 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 17:21:02,552 INFO [db] Loop detection saved to database (ID: 425, severity: 0.68, cross-subnet: False)
+2025-11-14 17:21:37,846 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 17:24:13,248 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 17:24:13,268 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 17:24:23,885 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 17:24:23,938 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 17:24:23,950 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 17:24:23,954 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 17:24:23,958 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 17:24:23,970 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 17:24:28,985 INFO [root] 📦 Capture complete. Packets seen: 69, Analyzed: 69
+2025-11-14 17:24:28,988 INFO [root] Unique MACs detected: 2
+2025-11-14 17:24:28,990 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 17:24:28,990 INFO [root] Detection status: CLEAN
+2025-11-14 17:24:29,066 INFO [root] 📦 Capture complete. Packets seen: 689, Analyzed: 689
+2025-11-14 17:24:29,066 INFO [root] Unique MACs detected: 0
+2025-11-14 17:24:29,067 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 17:24:29,072 INFO [root] Detection status: CLEAN
+2025-11-14 17:24:29,076 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 17:24:29,093 INFO [db] Loop detection saved to database (ID: 426, severity: 0.72, cross-subnet: False)
+2025-11-14 17:27:12,159 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 17:27:12,182 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 17:27:22,351 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 17:27:22,404 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-14 17:27:22,409 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-14 17:27:22,410 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-14 17:27:22,411 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 17:27:22,428 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 17:27:27,540 INFO [root] 📦 Capture complete. Packets seen: 30, Analyzed: 30
+2025-11-14 17:27:27,554 INFO [root] Unique MACs detected: 2
+2025-11-14 17:27:27,555 INFO [root] Max severity: 0.7 (threshold: 15)
+2025-11-14 17:27:27,556 INFO [root] Detection status: CLEAN
+2025-11-14 17:27:27,897 INFO [root] 📦 Capture complete. Packets seen: 428, Analyzed: 428
+2025-11-14 17:27:27,990 INFO [root] Unique MACs detected: 0
+2025-11-14 17:27:28,020 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 17:27:28,034 INFO [root] Detection status: CLEAN
+2025-11-14 17:27:28,035 INFO [root] Overall status: CLEAN, max_severity=0.7
+2025-11-14 17:27:28,095 INFO [db] Loop detection saved to database (ID: 427, severity: 0.72, cross-subnet: False)

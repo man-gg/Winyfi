@@ -1,5 +1,7 @@
+import tkinter as tk
 import ttkbootstrap as tb
 from tkinter import messagebox
+from datetime import datetime
 
 
 class SettingsTab:
@@ -135,6 +137,13 @@ class SettingsTab:
         
         tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+        
+        # Bind mouse wheel scrolling
+        def on_mousewheel(event):
+            tree.yview_scroll(int(-1*(event.delta/120)), "units")
+            return "break"
+        
+        tree.bind("<MouseWheel>", on_mousewheel)
         
         # Status label
         status_label = tb.Label(history_window, text="Loading...", bootstyle="info")

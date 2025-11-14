@@ -11,7 +11,7 @@ if BASE_DIR not in sys.path:
 from user_utils import verify_user
 from ticket_utils import fetch_srfs, create_srf
 from router_utils import get_routers, is_router_online_by_status
-from db import get_connection, log_user_login, create_login_sessions_table, get_user_last_login_info, get_user_login_history, update_user_profile, change_user_password, log_activity, create_activity_logs_table
+from db import get_connection, log_user_login, create_login_sessions_table, get_user_last_login_info, get_user_login_history, update_user_profile, change_user_password, log_activity, create_activity_logs_table, log_user_logout
 from report_utils import get_uptime_percentage, get_bandwidth_usage
 
 def create_app():
@@ -102,15 +102,19 @@ def create_app():
         try:
             data = request.get_json(force=True, silent=True) or {}
             user_id = data.get("user_id")
+            target = data.get("target", "Client Portal")
             
             if user_id:
                 device_ip = _extract_client_ip(request, data)
+                # Log to activity_logs table
                 log_activity(
                     user_id=user_id,
                     action='Logout',
-                    target='Client Portal',
+                    target=target,
                     ip_address=device_ip
                 )
+                # Update login_sessions table
+                log_user_logout(user_id)
             
             return jsonify({"success": True})
         except Exception as exc:
