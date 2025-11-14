@@ -252,16 +252,103 @@ def show_login(root):
             reset_login()
             return
 
+        # -------------------------------------------------------------
+        # Fast path: try API login FIRST so that client users never
+        # require local MySQL/XAMPP. Admins can still fall back to
+        # offline (local DB) login if server unreachable.
+        # -------------------------------------------------------------
+        device_info = get_device_info()  # Needed for both paths
+        api_base_url = os.environ.get("WINYFI_API", "http://localhost:5000").rstrip("/")
+        api_user = None
+        api_error = None  # ("unreachable" | "invalid" | f"http:{code}" | None)
+
+        try:
+            # Attempt API login with short timeouts (connect, read)
+            payload = {
+                "username": username,
+                "password": password,
+                "device_mac": device_info.get('mac_address'),
+                "device_hostname": device_info.get('hostname'),
+                "device_platform": device_info.get('platform')
+            }
+            local_ip = device_info.get('ip_address') or ''
+            if local_ip:
+                payload['device_ip'] = local_ip
+            resp = requests.post(f"{api_base_url}/api/login", json=payload, timeout=(1.5, 3))
+            if resp.status_code == 200:
+                try:
+                    api_user = resp.json() or {}
+                except Exception:
+                    api_user = {}
+            elif resp.status_code == 401:
+                api_error = "invalid"
+            else:
+                api_error = f"http:{resp.status_code}"
+        except requests.exceptions.RequestException:
+            api_error = "unreachable"
+
+        # If API user is a non-admin, proceed immediately (skip ALL DB checks)
+        if api_user and api_user.get('role') and api_user.get('role') != 'admin':
+            root.withdraw()
+            user = api_user  # Canonical user from server
+            client_top = tb.Toplevel(root)
+            client_top.title("Client Portal")
+            center_window(client_top, 1000, 700)
+            client_top.resizable(True, True)
+
+            show_client_window(client_top, user)
+
+            def on_client_close():
+                """Confirm and exit the entire application when the client window is closed."""
+                if messagebox.askyesno("Exit", "Are you sure you want to exit?"):
+                    try:
+                        client_top.destroy()
+                    except Exception:
+                        pass
+                    try:
+                        root.destroy()
+                    except Exception:
+                        pass
+                    try:
+                        os._exit(0)
+                    except Exception:
+                        pass
+
+            client_top.protocol("WM_DELETE_WINDOW", on_client_close)
+            _login_inflight["busy"] = False
+            return  # ✅ Done (client path, no local DB needed)
+
+        # If API responded with invalid credentials and we did NOT get a user
+        # we can fail fast (do not attempt offline admin unless user might be admin)
+        if api_error == "invalid":
+            login_attempts[username].append(time.time())
+            messagebox.showerror("Login Failed", "Invalid username or password.")
+            reset_login()
+            return
+        # For other API errors we continue: if unreachable we allow offline admin login;
+        # if other HTTP errors we show them unless user might be trying admin offline.
+        if api_error and api_error not in ("unreachable"):
+            # Non-401 server error: show message and allow user to retry (admin can still try offline by closing server?)
+            messagebox.showerror("Server Error", f"Login API error: {api_error}")
+            # We do NOT attempt offline DB unless server unreachable (to avoid confusion)
+            reset_login()
+            return
+
+        # At this point either: API unreachable (offline scenario) OR we received an admin user?
+        # If we actually received an admin user from API (rare since we early-return only non-admin), we keep existing admin DB path.
+
         # Fast pre-check: is the MySQL server reachable at all?
         try:
             server_ok, _ = check_mysql_server_status()
         except Exception:
             server_ok = False
         if not server_ok:
+            # Only block here if attempting ADMIN (offline) login.
+            # Clients already handled above; so remaining path is for admin.
             messagebox.showerror(
                 "Can't Reach Database",
-                "Cannot connect to MySQL database.\n\n"
-                "Please start MySQL (XAMPP/WAMP) and try again."
+                "Cannot connect to MySQL database (required for admin offline login).\n\n"
+                "Start MySQL (XAMPP/WAMP) and retry, or ensure server is online for client users."
             )
             reset_login()
             return
@@ -291,7 +378,7 @@ def show_login(root):
             reset_login()
             return
 
-        # Try to verify user, but catch DB connection errors and None result
+        # Try to verify user (admin offline path), but catch DB connection errors and None result
         user = None
         db_error = None
         try:
@@ -309,10 +396,8 @@ def show_login(root):
             reset_login()
             return
         if user is None:
-            # If DB is up but user not found, show invalid login
-            # If DB is down, previous block already handled
             login_attempts[username].append(time.time())
-            messagebox.showerror("Login Failed", "Invalid username or password.")
+            messagebox.showerror("Login Failed", "Invalid username or password (offline/admin mode).")
             reset_login()
             return
 
@@ -329,8 +414,7 @@ def show_login(root):
                 reset_login()
                 return
 
-        # Get device information for logging
-        device_info = get_device_info()
+    # device_info already collected earlier for potential API path
 
         # Decide login path: Admins log locally; Clients log via API (server logs session)
         login_type = 'admin' if user.get('role') == 'admin' else 'client'

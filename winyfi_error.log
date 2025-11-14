@@ -16278,3 +16278,113 @@ KeyboardInterrupt
 2025-11-14 19:33:56,887 INFO [root] Detection status: CLEAN
 2025-11-14 19:33:56,888 INFO [root] Overall status: CLEAN, max_severity=0.3
 2025-11-14 19:33:56,899 INFO [db] Loop detection saved to database (ID: 435, severity: 0.34, cross-subnet: False)
+2025-11-14 23:24:45,155 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 23:24:45,186 INFO [db] Activity logged: User 2 - Login - None
+2025-11-14 23:24:51,435 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 23:24:51,468 INFO [root] Interfaces to scan: ['Ethernet 5', 'Loopback Pseudo-Interface 1']
+2025-11-14 23:24:51,471 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Ethernet 5)
+2025-11-14 23:24:51,472 INFO [root] 📡 Starting packet capture on interface: Ethernet 5
+2025-11-14 23:24:51,474 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 23:24:51,481 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 23:24:56,482 INFO [root] 📦 Capture complete. Packets seen: 60, Analyzed: 60
+2025-11-14 23:24:56,483 INFO [root] Unique MACs detected: 2
+2025-11-14 23:24:56,483 INFO [root] Max severity: 0.4 (threshold: 15)
+2025-11-14 23:24:56,483 INFO [root] Detection status: CLEAN
+2025-11-14 23:24:56,520 INFO [root] 📦 Capture complete. Packets seen: 4362, Analyzed: 4362
+2025-11-14 23:24:56,520 INFO [root] Unique MACs detected: 0
+2025-11-14 23:24:56,521 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 23:24:56,521 INFO [root] Detection status: CLEAN
+2025-11-14 23:24:56,522 INFO [root] Overall status: CLEAN, max_severity=0.4
+2025-11-14 23:24:56,542 INFO [db] Loop detection saved to database (ID: 418, severity: 0.42, cross-subnet: False)
+2025-11-14 23:25:09,986 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-14 23:29:56,558 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-14 23:29:56,576 INFO [root] Interfaces to scan: ['Ethernet 5', 'Loopback Pseudo-Interface 1']
+2025-11-14 23:29:56,577 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Ethernet 5)
+2025-11-14 23:29:56,578 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-14 23:29:56,578 INFO [root] 📡 Starting packet capture on interface: Ethernet 5
+2025-11-14 23:29:56,578 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-14 23:30:01,597 INFO [root] 📦 Capture complete. Packets seen: 223, Analyzed: 223
+2025-11-14 23:30:01,597 INFO [root] Unique MACs detected: 0
+2025-11-14 23:30:01,598 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-14 23:30:01,599 INFO [root] Detection status: CLEAN
+2025-11-14 23:30:01,625 INFO [root] 📦 Capture complete. Packets seen: 1275, Analyzed: 1275
+2025-11-14 23:30:01,627 INFO [root] Unique MACs detected: 3
+2025-11-14 23:30:01,627 INFO [root] Max severity: 0.4 (threshold: 15)
+2025-11-14 23:30:01,628 INFO [root] Detection status: CLEAN
+2025-11-14 23:30:01,629 INFO [root] Overall status: CLEAN, max_severity=0.4
+2025-11-14 23:30:01,718 INFO [db] Loop detection saved to database (ID: 419, severity: 0.38, cross-subnet: False)
+2025-11-14 23:30:06,068 INFO [db] Activity logged: User 2 - Logout - None
+2025-11-14 23:30:10,446 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 4289, in _update_bandwidth_label
+    if not bw_label or not bw_label.winfo_exists():
+                           ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1234, in winfo_exists
+    self.tk.call('winfo', 'exists', self._w))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: can't invoke "winfo" command: application has been destroyed
+
+2025-11-14 23:30:10,449 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 4289, in _update_bandwidth_label
+    if not bw_label or not bw_label.winfo_exists():
+                           ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1234, in winfo_exists
+    self.tk.call('winfo', 'exists', self._w))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: can't invoke "winfo" command: application has been destroyed
+
+2025-11-14 23:30:14,339 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 4289, in _update_bandwidth_label
+    if not bw_label or not bw_label.winfo_exists():
+                           ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1234, in winfo_exists
+    self.tk.call('winfo', 'exists', self._w))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: can't invoke "winfo" command: application has been destroyed
+
+2025-11-14 23:30:14,374 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 862, in callit
+    func(*args)
+    ~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 4289, in _update_bandwidth_label
+    if not bw_label or not bw_label.winfo_exists():
+                           ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1234, in winfo_exists
+    self.tk.call('winfo', 'exists', self._w))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: can't invoke "winfo" command: application has been destroyed
+
+2025-11-14 23:30:14,671 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\main.py", line 154, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
+
