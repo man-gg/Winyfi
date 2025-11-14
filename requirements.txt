@@ -11,4 +11,5 @@ psutil
 scapy
 speedtest-cli
 mplcursors
+zeroconf
 

@@ -457,11 +457,10 @@ class RoutersTab:
             threading.Thread(target=self._fetch_bandwidth_latency_safe, args=(router.get('id'),), daemon=True).start()
         else:
             if not is_online:
-                # If offline, ensure latency shows unknown and neutral style
+                # If offline, show "Device Offline" for bandwidth and latency
                 try:
                     if w.get('bandwidth_label') and w['bandwidth_label'].winfo_exists():
-                        # Combined line
-                        w['bandwidth_label'].configure(text='📊 ↓0.0 Mbps ↑0.0 Mbps   ⚡ --', bootstyle='secondary')
+                        w['bandwidth_label'].configure(text='📊 Device Offline', bootstyle='danger')
                 except Exception:
                     pass
 
@@ -529,7 +528,7 @@ class RoutersTab:
             style = ("info" if (dl>0 or ul>0) else ("success" if is_online else "secondary")) if is_online else "secondary"
             self.root.after(0, lambda: (w['bandwidth_label'].config(text=new_text, bootstyle=style) if w['bandwidth_label'].winfo_exists() else None))
         except Exception:
-            self.root.after(0, lambda: (w and w.get('bandwidth_label') and w['bandwidth_label'].winfo_exists() and w['bandwidth_label'].config(text='📊 ↓0.0 Mbps ↑0.0 Mbps   ⚡ --', bootstyle='secondary')))
+            self.root.after(0, lambda: (w and w.get('bandwidth_label') and w['bandwidth_label'].winfo_exists() and w['bandwidth_label'].config(text='📊 Device Offline', bootstyle='danger')))
 
     def _ping_and_update_latency(self, rid, widget_ref):
         # Direct ping fallback to populate latency if missing
@@ -623,6 +622,15 @@ class RoutersTab:
                             w['status_label'].configure(text=desired_status, bootstyle=desired_style)
                 except Exception:
                     pass
+                
+                # If offline, show "Device Offline" for bandwidth and skip further processing
+                if not is_online:
+                    try:
+                        if w.get('bandwidth_label') and w['bandwidth_label'].winfo_exists():
+                            w['bandwidth_label'].configure(text='📊 Device Offline', bootstyle='danger')
+                    except Exception:
+                        pass
+                    continue
                 
                 # Update card border style
                 try:

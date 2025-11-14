@@ -4181,14 +4181,18 @@ class Dashboard:
         # Bandwidth/latency text
         try:
             if router.get('is_unifi'):
-                down = float(router.get('download_speed') or 0.0)
-                up = float(router.get('upload_speed') or 0.0)
-                latency = router.get('latency')
-                latency_text = f"   ⚡ {latency:.1f} ms" if isinstance(latency, (int, float)) else "   ⚡ --"
-                speed_text = (f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps" if (down > 0 or up > 0) else "📶 Bandwidth: --")
-                new_text = speed_text + latency_text
-                if w['bandwidth_label'].cget('text') != new_text:
-                    w['bandwidth_label'].configure(text=new_text, bootstyle=("info" if (down > 0 or up > 0) else "secondary"))
+                # Check if UniFi router is offline
+                if not online_flag:
+                    w['bandwidth_label'].configure(text='📶 Device Offline', bootstyle='danger')
+                else:
+                    down = float(router.get('download_speed') or 0.0)
+                    up = float(router.get('upload_speed') or 0.0)
+                    latency = router.get('latency')
+                    latency_text = f"   ⚡ {latency:.1f} ms" if isinstance(latency, (int, float)) else "   ⚡ --"
+                    speed_text = (f"📶 ↓{down:.1f} Mbps ↑{up:.1f} Mbps" if (down > 0 or up > 0) else "📶 Bandwidth: --")
+                    new_text = speed_text + latency_text
+                    if w['bandwidth_label'].cget('text') != new_text:
+                        w['bandwidth_label'].configure(text=new_text, bootstyle=("info" if (down > 0 or up > 0) else "secondary"))
             else:
                 cur_status = self.status_history.get(router['id'], {}).get('current')
                 desired_text = "🔴 Device Offline" if cur_status is False else "… Checking..."

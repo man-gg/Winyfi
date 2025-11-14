@@ -159,7 +159,7 @@ def update_router_status_in_db(router_id, is_online_status):
             pass
 
 # Check if router is online based on router_status_log table
-def is_router_online_by_status(router_id, timeout_seconds=5):
+def is_router_online_by_status(router_id, timeout_seconds=60):
     """
     Check if a router is online based on the most recent 'online' status 
     in router_status_log table within the specified timeout.
@@ -214,13 +214,13 @@ def is_router_online_by_status(router_id, timeout_seconds=5):
         conn.close()
 
 # Get router status with additional info
-def get_router_status_info(router_id, timeout_seconds=5):
+def get_router_status_info(router_id, timeout_seconds=60):
     """
     Get detailed router status information including last online time and time since last update.
     
     Args:
         router_id: The router ID to check
-        timeout_seconds: Number of seconds to consider as timeout (default: 5)
+        timeout_seconds: Number of seconds to consider as timeout (default: 60)
     
     Returns:
         dict: Status information including is_online, last_online_time, seconds_since_last_update

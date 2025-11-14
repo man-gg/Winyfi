@@ -43,7 +43,24 @@ def create_app():
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok"}
+        """Health check endpoint with server discovery information"""
+        import socket
+        try:
+            # Get local IP by connecting to external address (doesn't actually send data)
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+        except:
+            local_ip = "unknown"
+        
+        return {
+            "status": "ok",
+            "service": "network-monitoring-api",
+            "version": "1.0",
+            "ip": local_ip,
+            "port": 5000
+        }
 
 
     @app.post("/api/login")
@@ -280,7 +297,7 @@ def create_app():
     def router_status(router_id):
         try:
             from router_utils import get_router_status_info
-            status_info = get_router_status_info(router_id, timeout_seconds=5)
+            status_info = get_router_status_info(router_id, timeout_seconds=60)
             return jsonify(status_info)
         except Exception as exc:
             return jsonify({"error": str(exc)}), 500
@@ -290,10 +307,10 @@ def create_app():
         try:
             routers = get_routers()
             total = len(routers)
-            # Use status-based online detection with 5-second timeout
+            # Use status-based online detection with 60-second timeout
             online = 0
             for r in routers:
-                if is_router_online_by_status(r['id'], timeout_seconds=5):
+                if is_router_online_by_status(r['id'], timeout_seconds=60):
                     online += 1
             offline = max(0, total - online)
             return jsonify({"total": total, "online": online, "offline": offline})
@@ -1490,6 +1507,23 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
+    import socket
+    
+    # Get and display local IP addresses
+    hostname = socket.gethostname()
+    try:
+        local_ip = socket.gethostbyname(hostname)
+        print(f"\n{'='*60}")
+        print(f"  Network Monitoring API Server Starting")
+        print(f"{'='*60}")
+        print(f"  Local access:   http://127.0.0.1:5000")
+        print(f"  Network access: http://{local_ip}:5000")
+        print(f"  Health check:   http://{local_ip}:5000/api/health")
+        print(f"{'='*60}\n")
+    except:
+        print("\n[SERVER] Starting on all network interfaces...")
+        print("[SERVER] Use 'ipconfig' to find your local IP address\n")
+    
     app.run(host="0.0.0.0", port=5000, debug=True)
 
 

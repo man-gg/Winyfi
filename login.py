@@ -19,6 +19,7 @@ from db import (
 )
 import requests
 import os
+from server_discovery import ServerDiscovery
 
 login_attempts = defaultdict(list)
 
@@ -138,7 +139,7 @@ def show_login(root):
         card,
         text="Please Login",
         font=("Segoe UI", 16, "bold"),
-        bootstyle="primary"
+        bootstyle="danger"
     ).pack(pady=(0, 20))
 
     # Server status indicator for client logins
@@ -478,10 +479,376 @@ def show_login(root):
         text="Login",
         bootstyle="danger",
         width=20,
-        command=handle_login,
-        style="primary-outline"
+        command=handle_login
     )
     login_button.pack(pady=(15, 0))
 
     # Bind Enter key
     root.bind("<Return>", handle_login)
+
+    # Server Settings Icon (Bottom Right)
+    settings_icon_frame = tb.Frame(root)
+    settings_icon_frame.place(relx=0.98, rely=0.98, anchor="se")
+    
+    _discovery_in_progress = {"busy": False}
+    _settings_modal = {"window": None}
+    
+    def show_server_settings_modal():
+        """Show server configuration modal"""
+        # Prevent multiple modals
+        if _settings_modal["window"] and _settings_modal["window"].winfo_exists():
+            _settings_modal["window"].lift()
+            return
+        
+        # Create modal
+        modal = tb.Toplevel(root)
+        modal.title("Server Configuration")
+        modal.geometry("500x450")
+        modal.transient(root)
+        modal.grab_set()
+        modal.resizable(False, False)
+        _settings_modal["window"] = modal
+        
+        # Center modal
+        modal.update_idletasks()
+        x = root.winfo_x() + (root.winfo_width() // 2) - (500 // 2)
+        y = root.winfo_y() + (root.winfo_height() // 2) - (450 // 2)
+        modal.geometry(f"+{x}+{y}")
+        
+        # Header
+        header_frame = tb.Frame(modal, bootstyle="primary")
+        header_frame.pack(fill="x", padx=0, pady=0)
+        
+        tb.Label(
+            header_frame,
+            text="⚙️ Server Configuration",
+            font=("Segoe UI", 14, "bold"),
+            bootstyle="inverse-primary",
+            padding=15
+        ).pack()
+        
+        # Create canvas with scrollbar for content
+        canvas_frame = tb.Frame(modal)
+        canvas_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        
+        canvas = tb.Canvas(canvas_frame, highlightthickness=0)
+        scrollbar = tb.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tb.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack scrollbar and canvas
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        
+        # Bind mouse wheel to canvas
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        def bind_mousewheel(event):
+            canvas.bind_all("<MouseWheel>", on_mousewheel)
+        
+        def unbind_mousewheel(event):
+            canvas.unbind_all("<MouseWheel>")
+        
+        canvas.bind("<Enter>", bind_mousewheel)
+        canvas.bind("<Leave>", unbind_mousewheel)
+        
+        # Content frame (now inside scrollable area)
+        content_frame = tb.Frame(scrollable_frame, padding=20)
+        content_frame.pack(fill="both", expand=True)
+        
+        # Current server status
+        status_frame = tb.LabelFrame(content_frame, text="Current Status", padding=15)
+        status_frame.pack(fill="x", pady=(0, 15))
+        
+        server_ip_frame = tb.Frame(status_frame)
+        server_ip_frame.pack(fill="x")
+        
+        tb.Label(
+            server_ip_frame,
+            text="Server:",
+            font=("Segoe UI", 10, "bold")
+        ).pack(side="left", padx=(0, 10))
+        
+        server_ip_label = tb.Label(
+            server_ip_frame,
+            text="Checking...",
+            font=("Segoe UI", 10),
+            foreground="gray"
+        )
+        server_ip_label.pack(side="left")
+        
+        # Progress label
+        progress_label = tb.Label(
+            status_frame,
+            text="",
+            font=("Segoe UI", 9),
+            foreground="gray"
+        )
+        progress_label.pack(pady=(10, 0))
+        
+        # Auto Discovery Section
+        auto_frame = tb.LabelFrame(content_frame, text="🔍 Auto Discovery", padding=15)
+        auto_frame.pack(fill="x", pady=(0, 15))
+        
+        tb.Label(
+            auto_frame,
+            text="Automatically scan the network to find the server.",
+            font=("Segoe UI", 9),
+            foreground="gray"
+        ).pack(pady=(0, 10))
+        
+        def auto_discover_server():
+            """Auto-discover server in background"""
+            if _discovery_in_progress["busy"]:
+                return
+            
+            _discovery_in_progress["busy"] = True
+            auto_discover_btn.config(state="disabled", text="Discovering...")
+            manual_discover_btn.config(state="disabled")
+            progress_label.config(text="🔄 Starting discovery...", foreground="orange")
+            modal.update()
+            
+            def progress_callback(current, total):
+                """Update progress during scan"""
+                percent = (current / total) * 100
+                try:
+                    modal.after(0, lambda c=current, t=total, p=percent: progress_label.config(
+                        text=f"🔄 Scanning network... {c}/{t} ({p:.0f}%)",
+                        foreground="orange"
+                    ))
+                except:
+                    pass
+            
+            def discovery_worker():
+                """Run discovery in background thread"""
+                discovery = ServerDiscovery()
+                server_info = discovery.discover(progress_callback=progress_callback)
+                
+                def update_ui():
+                    """Update UI with results on main thread"""
+                    if server_info:
+                        ip = server_info.get('ip', 'Unknown')
+                        port = server_info.get('port', 5000)
+                        api_url = f"http://{ip}:{port}"
+                        
+                        # Update environment variable
+                        os.environ["WINYFI_API"] = api_url
+                        
+                        # Update UI
+                        server_ip_label.config(
+                            text=f"{ip}:{port} ✓",
+                            foreground="green"
+                        )
+                        progress_label.config(
+                            text=f"✓ Server found! Version {server_info.get('version', 'unknown')}",
+                            foreground="green"
+                        )
+                        
+                        # Refresh server status on main login
+                        try:
+                            update_server_status()
+                        except:
+                            pass
+                    else:
+                        progress_label.config(
+                            text="❌ Server not found. Try manual entry or start the server.",
+                            foreground="red"
+                        )
+                    
+                    auto_discover_btn.config(state="normal", text="Start Auto Discovery")
+                    manual_discover_btn.config(state="normal")
+                    _discovery_in_progress["busy"] = False
+                
+                modal.after(0, update_ui)
+            
+            threading.Thread(target=discovery_worker, daemon=True).start()
+        
+        auto_discover_btn = tb.Button(
+            auto_frame,
+            text="Start Auto Discovery",
+            bootstyle="primary",
+            command=auto_discover_server,
+            width=25
+        )
+        auto_discover_btn.pack()
+        
+        # Manual Entry Section
+        manual_frame = tb.LabelFrame(content_frame, text="✏️ Manual Entry", padding=15)
+        manual_frame.pack(fill="x", pady=(0, 15))
+        
+        tb.Label(
+            manual_frame,
+            text="Enter the server IP address manually.",
+            font=("Segoe UI", 9),
+            foreground="gray"
+        ).pack(pady=(0, 10))
+        
+        # IP Entry
+        ip_frame = tb.Frame(manual_frame)
+        ip_frame.pack(fill="x", pady=5)
+        
+        tb.Label(ip_frame, text="IP Address:", width=12, anchor="w").pack(side="left")
+        ip_entry = tb.Entry(ip_frame, width=20)
+        ip_entry.pack(side="left", padx=(10, 0), fill="x", expand=True)
+        ip_entry.insert(0, "192.168.1.")
+        
+        # Port Entry
+        port_frame = tb.Frame(manual_frame)
+        port_frame.pack(fill="x", pady=5)
+        
+        tb.Label(port_frame, text="Port:", width=12, anchor="w").pack(side="left")
+        port_entry = tb.Entry(port_frame, width=20)
+        port_entry.pack(side="left", padx=(10, 0))
+        port_entry.insert(0, "5000")
+        
+        def verify_manual():
+            """Verify manually entered server"""
+            ip = ip_entry.get().strip()
+            port_str = port_entry.get().strip()
+            
+            if not ip:
+                progress_label.config(text="❌ Please enter an IP address", foreground="red")
+                return
+            
+            try:
+                port = int(port_str)
+            except:
+                progress_label.config(text="❌ Invalid port number", foreground="red")
+                return
+            
+            progress_label.config(text="🔄 Verifying...", foreground="orange")
+            manual_discover_btn.config(state="disabled")
+            auto_discover_btn.config(state="disabled")
+            modal.update()
+            
+            def verify_worker():
+                """Verify in background"""
+                discovery = ServerDiscovery()
+                server_info = discovery.discover_manual(ip, port)
+                
+                def update_result():
+                    if server_info:
+                        ip = server_info.get('ip', 'Unknown')
+                        port = server_info.get('port', 5000)
+                        api_url = f"http://{ip}:{port}"
+                        
+                        # Update environment variable
+                        os.environ["WINYFI_API"] = api_url
+                        
+                        # Update UI
+                        server_ip_label.config(
+                            text=f"{ip}:{port} ✓",
+                            foreground="green"
+                        )
+                        progress_label.config(
+                            text=f"✓ Server verified! Version {server_info.get('version', 'unknown')}",
+                            foreground="green"
+                        )
+                        
+                        # Refresh server status on main login
+                        try:
+                            update_server_status()
+                        except:
+                            pass
+                    else:
+                        progress_label.config(
+                            text="❌ Server not found at this address",
+                            foreground="red"
+                        )
+                    
+                    manual_discover_btn.config(state="normal")
+                    auto_discover_btn.config(state="normal")
+                
+                modal.after(0, update_result)
+            
+            threading.Thread(target=verify_worker, daemon=True).start()
+        
+        manual_discover_btn = tb.Button(
+            manual_frame,
+            text="Verify Server",
+            bootstyle="success",
+            command=verify_manual,
+            width=25
+        )
+        manual_discover_btn.pack(pady=(10, 0))
+        
+        # Close button
+        close_btn_frame = tb.Frame(content_frame)
+        close_btn_frame.pack(pady=(10, 0))
+        
+        tb.Button(
+            close_btn_frame,
+            text="Close",
+            bootstyle="secondary",
+            command=modal.destroy,
+            width=25
+        ).pack()
+        
+        # Load current server status
+        def load_current_status():
+            """Load and display current server configuration"""
+            discovery = ServerDiscovery()
+            if discovery.last_known_server:
+                ip = discovery.last_known_server.get('ip', 'Unknown')
+                port = discovery.last_known_server.get('port', 5000)
+                server_ip_label.config(
+                    text=f"{ip}:{port} (saved)",
+                    foreground="orange"
+                )
+                # Pre-fill manual entry
+                ip_entry.delete(0, "end")
+                ip_entry.insert(0, ip)
+            else:
+                server_ip_label.config(
+                    text="Not configured",
+                    foreground="gray"
+                )
+        
+        modal.after(100, load_current_status)
+        
+        # Handle window close
+        def on_modal_close():
+            canvas.unbind_all("<MouseWheel>")
+            _settings_modal["window"] = None
+            modal.destroy()
+        
+        modal.protocol("WM_DELETE_WINDOW", on_modal_close)
+    
+    settings_btn = tb.Button(
+        settings_icon_frame,
+        text="⚙️",
+        bootstyle="secondary-outline",
+        command=show_server_settings_modal,
+        width=3
+    )
+    settings_btn.pack()
+    
+    # Tooltip on hover (optional)
+    def on_settings_enter(event):
+        settings_btn.config(bootstyle="primary")
+    
+    def on_settings_leave(event):
+        settings_btn.config(bootstyle="secondary-outline")
+    
+    settings_btn.bind("<Enter>", on_settings_enter)
+    settings_btn.bind("<Leave>", on_settings_leave)
+    
+    # Initialize server config on startup
+    def init_server_config():
+        """Initialize server configuration from saved config"""
+        discovery = ServerDiscovery()
+        if discovery.last_known_server:
+            ip = discovery.last_known_server.get('ip', 'Unknown')
+            port = discovery.last_known_server.get('port', 5000)
+            os.environ["WINYFI_API"] = f"http://{ip}:{port}"
+    
+    root.after(500, init_server_config)
+
