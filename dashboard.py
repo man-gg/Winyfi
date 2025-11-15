@@ -98,7 +98,7 @@ class Dashboard:
         self.app_running = True
         # UniFi API URL - configurable via environment or use localhost default
         # For remote setup: set WINYFI_UNIFI_API_URL=http://<machine-a-ip>:5001
-        self.unifi_api_url = os.getenv("WINYFI_UNIFI_API_URL", "http://localhost:5001")
+        self.unifi_api_url = os.getenv("WINYFI_UNIFI_API_URL", "http://192.168.1.27:5001")
         print(f"[Dashboard] UniFi API URL: {self.unifi_api_url}")
         self.unifi_devices = []  # Store UniFi devices
         self.unifi_refresh_job = None  # Auto-refresh job for UniFi data
