@@ -16804,3 +16804,254 @@ KeyboardInterrupt
 2025-11-15 15:38:55,826 INFO [root] Detection status: CLEAN
 2025-11-15 15:38:55,827 INFO [root] Overall status: CLEAN, max_severity=0.7
 2025-11-15 15:38:55,835 INFO [db] Loop detection saved to database (ID: 453, severity: 0.68, cross-subnet: False)
+2025-11-15 16:28:21,902 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+2025-11-15 16:28:21,933 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+2025-11-15 16:28:21,965 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+2025-11-15 16:28:21,995 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+2025-11-15 16:28:22,030 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\login.py", line 636, in on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2013, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+_tkinter.TclError: invalid command name ".!toplevel.!frame2.!canvas"
+
+2025-11-15 16:31:10,543 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-15 16:31:10,579 INFO [db] Activity logged: User 2 - Login - None
+2025-11-15 16:31:18,083 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-15 16:31:18,109 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-15 16:31:18,110 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-15 16:31:18,111 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-15 16:31:18,111 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-15 16:31:18,116 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-15 16:31:23,117 INFO [root] 📦 Capture complete. Packets seen: 91, Analyzed: 91
+2025-11-15 16:31:23,118 INFO [root] Unique MACs detected: 2
+2025-11-15 16:31:23,123 INFO [root] Max severity: 0.4 (threshold: 15)
+2025-11-15 16:31:23,124 INFO [root] Detection status: CLEAN
+2025-11-15 16:31:23,137 INFO [root] 📦 Capture complete. Packets seen: 5348, Analyzed: 5348
+2025-11-15 16:31:23,137 INFO [root] Unique MACs detected: 0
+2025-11-15 16:31:23,138 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-15 16:31:23,138 INFO [root] Detection status: CLEAN
+2025-11-15 16:31:23,138 INFO [root] Overall status: CLEAN, max_severity=0.4
+2025-11-15 16:31:23,150 INFO [db] Loop detection saved to database (ID: 454, severity: 0.38, cross-subnet: False)
+2025-11-15 16:31:26,967 INFO [db] Activity logged: User 2 - Logout - None
+2025-11-15 16:37:21,214 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-15 16:37:21,233 INFO [db] Activity logged: User 2 - Login - None
+2025-11-15 16:37:28,430 INFO [root] 🚀 Starting multi-interface detection (timeout=5s, threshold=15, sampling=False)
+2025-11-15 16:37:28,460 INFO [root] Interfaces to scan: ['Wi-Fi', 'Loopback Pseudo-Interface 1']
+2025-11-15 16:37:28,463 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Wi-Fi)
+2025-11-15 16:37:28,463 INFO [root] 🔍 Starting lightweight loop detection (timeout=5s, threshold=15, iface=Loopback Pseudo-Interface 1)
+2025-11-15 16:37:28,463 INFO [root] 📡 Starting packet capture on interface: Wi-Fi
+2025-11-15 16:37:28,465 INFO [root] 📡 Starting packet capture on interface: Loopback Pseudo-Interface 1
+2025-11-15 16:37:33,499 INFO [root] 📦 Capture complete. Packets seen: 4660, Analyzed: 4660
+2025-11-15 16:37:33,499 INFO [root] Unique MACs detected: 0
+2025-11-15 16:37:33,500 INFO [root] Max severity: 0.0 (threshold: 15)
+2025-11-15 16:37:33,500 INFO [root] Detection status: CLEAN
+2025-11-15 16:37:33,524 INFO [root] 📦 Capture complete. Packets seen: 120, Analyzed: 120
+2025-11-15 16:37:33,524 INFO [root] Unique MACs detected: 1
+2025-11-15 16:37:33,524 INFO [root] Max severity: 0.3 (threshold: 15)
+2025-11-15 16:37:33,525 INFO [root] Detection status: CLEAN
+2025-11-15 16:37:33,525 INFO [root] Overall status: CLEAN, max_severity=0.3
+2025-11-15 16:37:33,534 INFO [db] Loop detection saved to database (ID: 455, severity: 0.34, cross-subnet: False)
+2025-11-15 16:37:35,944 INFO [db] Activity logged: User 2 - Logout - None
+2025-11-15 16:37:45,535 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 861, in callit
+    func(*args)
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\dashboard.py", line 4372, in _update_bandwidth_label
+    if not bw_label or not bw_label.winfo_exists():
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1139, in winfo_exists
+    self.tk.call('winfo', 'exists', self._w))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: can't invoke "winfo" command: application has been destroyed
+
+2025-11-15 16:37:50,872 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1967, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 861, in callit
+    func(*args)
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\dashboard.py", line 4372, in _update_bandwidth_label
+    if not bw_label or not bw_label.winfo_exists():
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1139, in winfo_exists
+    self.tk.call('winfo', 'exists', self._w))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: can't invoke "winfo" command: application has been destroyed
+
+2025-11-15 16:37:58,853 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\USER\OneDrive\Documents\ufiesgbhsdf\kilaeman\Winyfi\main.py", line 154, in <module>
+    root.mainloop()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1504, in mainloop
+    self.tk.mainloop(n)
+KeyboardInterrupt
+

@@ -288,7 +288,7 @@ class ClientDashboard:
         self.routers_tab = RoutersTab(self.routers_frame, self.api_base_url, self.root)
         self.reports_tab = ReportsTab(self.reports_frame, self.root, app=self)
         self.bandwidth_tab = BandwidthTab(self.bandwidth_frame, self.api_base_url, self.root)
-        self.settings_tab = SettingsTab(self.settings_frame, self.api_base_url, self.root)
+        self.settings_tab = SettingsTab(self.settings_frame, self.api_base_url, self.root, app=self)
         # Default tab
         self.show_page("Dashboard")
 
@@ -1317,27 +1317,34 @@ class ClientDashboard:
 
         # Log logout activity via API
         try:
-            # Include last known local IP from device utils if available
-            local_ip = None
-            try:
-                from device_utils import get_device_info
-                info = get_device_info()
-                local_ip = info.get('ip_address')
-            except Exception:
+            if self.current_user and self.current_user.get('id'):
+                # Include last known local IP from device utils if available
+                local_ip = None
                 try:
-                    import socket
-                    local_ip = socket.gethostbyname(socket.gethostname())
+                    from device_utils import get_device_info
+                    info = get_device_info()
+                    local_ip = info.get('ip_address')
                 except Exception:
-                    pass
-            payload = {"user_id": self.current_user.get('id')}
-            if local_ip and local_ip not in ("127.0.0.1", "::1"):
-                payload["device_ip"] = local_ip
-            self.http.post(f"{self.api_base_url}/api/logout", json=payload, timeout=2)
-        except Exception:
-            pass
+                    try:
+                        import socket
+                        local_ip = socket.gethostbyname(socket.gethostname())
+                    except Exception:
+                        pass
+                payload = {"user_id": self.current_user.get('id')}
+                if local_ip and local_ip not in ("127.0.0.1", "::1"):
+                    payload["device_ip"] = local_ip
+                self.http.post(f"{self.api_base_url}/api/logout", json=payload, timeout=2)
+        except Exception as e:
+            print(f"Error logging logout activity: {e}")
 
         # Stop all background monitoring and tasks
         self.status_monitoring_running = False
+        
+        # Stop server health monitoring
+        try:
+            self._health_stop_event.set()
+        except Exception:
+            pass
         
         try:
             self.stop_router_status_monitoring()
@@ -1351,9 +1358,18 @@ class ClientDashboard:
         except Exception:
             pass
         
+        # Close HTTP session
+        try:
+            if hasattr(self, 'http'):
+                self.http.close()
+        except Exception:
+            pass
+        
         # Give background threads a moment to notice the cancel flag
         try:
             self.root.update()
+            import time
+            time.sleep(0.1)  # Brief pause for threads to respond
         except Exception:
             pass
 

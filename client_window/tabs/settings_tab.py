@@ -5,10 +5,11 @@ from datetime import datetime
 
 
 class SettingsTab:
-    def __init__(self, parent_frame, api_base_url, root_window):
+    def __init__(self, parent_frame, api_base_url, root_window, app=None):
         self.parent_frame = parent_frame
         self.api_base_url = api_base_url
         self.root = root_window
+        self.app = app  # Reference to parent ClientApp/Dashboard
         self._build_settings_page()
 
     def _build_settings_page(self):
@@ -66,6 +67,19 @@ class SettingsTab:
                 font=("Segoe UI", 11)).pack(anchor='w')
         tb.Button(system_card, text="Configure System", 
                  bootstyle="secondary", state='disabled').pack(pady=(10, 0))
+        
+        # Logout Section
+        logout_card = tb.LabelFrame(settings_container, text="🚪 Account", 
+                                   bootstyle="danger", padding=15)
+        logout_card.pack(fill='x', pady=(0, 15))
+        
+        tb.Label(logout_card, text="Sign out of your account", 
+                font=("Segoe UI", 11)).pack(anchor='w')
+        logout_btn = tb.Button(logout_card, text="🚪 Logout", 
+                              bootstyle="danger", 
+                              command=self.handle_logout,
+                              width=22)
+        logout_btn.pack(pady=(10, 0))
 
     def open_user_mgmt(self):
         """Open user profile window"""
@@ -308,3 +322,10 @@ Severity: {latest.get('severity_score', 0):.2f}"""
             self.status_text.delete("1.0", tk.END)
             self.status_text.insert(tk.END, f"Error loading status: {str(e)}")
             self.status_text.config(state="disabled")
+    
+    def handle_logout(self):
+        """Handle logout - call parent app's logout method if available"""
+        if self.app and hasattr(self.app, 'logout'):
+            self.app.logout()
+        else:
+            messagebox.showwarning("Logout", "Logout functionality is not available. Please use the logout button in the main menu.")

@@ -127,27 +127,22 @@ class BandwidthTab:
             self.stats_cards[key].pack()
             tb.Label(card, text=unit, font=("Segoe UI", 8), bootstyle="secondary").pack()
 
-        # Main content area with notebook
-        self.notebook = tb.Notebook(self.parent_frame)
-        self.notebook.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-
-        # Charts tab
-        self.charts_frame = tb.Frame(self.notebook)
-        self.notebook.add(self.charts_frame, text="📈 Charts")
-
-        # Bandwidth trend chart
-        chart_frame = tb.LabelFrame(self.charts_frame, text="📊 Bandwidth Trends", 
-                                   bootstyle="info", padding=10)
-        chart_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(10, 8), dpi=100, constrained_layout=True)
+        # Chart frame - add chart above the table (like dashboard.py)
+        self.bandwidth_chart_frame = tb.Frame(self.parent_frame)
+        self.bandwidth_chart_frame.pack(fill="both", expand=True, padx=20, pady=(10, 10))
+        
+        # Initialize matplotlib figure and axes for bandwidth chart (side-by-side like dashboard.py)
+        self.fig, (self.ax1, self.ax2) = plt.subplots(1, 2, figsize=(12, 4), dpi=100)
         self.fig.patch.set_facecolor('white')
-        self.canvas = FigureCanvasTkAgg(self.fig, master=chart_frame)
+        self.fig.tight_layout(pad=2.0)
+        
+        # Embed canvas in Tkinter
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.bandwidth_chart_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
 
-        # Data table tab
-        self.table_frame = tb.Frame(self.notebook)
-        self.notebook.add(self.table_frame, text="📋 Data Table")
+        # Main content area - data table below the chart
+        self.table_frame = tb.Frame(self.parent_frame)
+        self.table_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
         # Table with scrollbars
         table_container = tb.Frame(self.table_frame)
@@ -402,19 +397,13 @@ class BandwidthTab:
     def force_chart_refresh(self):
         """Force a complete chart refresh"""
         try:
-            # Aggressively lock figure size before any operations
-            self._lock_figure_size()
-            
-            # Clear and redraw the entire figure
+            # Clear and redraw the entire figure with side-by-side layout
             self.fig.clear()
-            self.ax1, self.ax2 = self.fig.subplots(2, 1)
+            self.ax1, self.ax2 = self.fig.subplots(1, 2, figsize=(12, 4), dpi=100)
             
-            # Restore figure properties and lock size
+            # Restore figure properties
             self.fig.patch.set_facecolor('white')
-            self.fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, hspace=0.3)
-            
-            # Lock size again after subplot creation
-            self._lock_figure_size()
+            self.fig.tight_layout(pad=2.0)
             
             # Update with current data
             self.update_charts()
@@ -422,15 +411,13 @@ class BandwidthTab:
             print(f"Error in force_chart_refresh: {e}")
 
     def update_charts(self):
-        """Update the bandwidth charts with robust, responsive resizing"""
+        """Update the bandwidth charts - side-by-side layout like dashboard.py"""
+        import matplotlib.dates as mdates
+        
         try:
             self.ax1.clear()
             self.ax2.clear()
             self.fig.patch.set_facecolor('white')
-            self.ax1.set_facecolor('white')
-            self.ax2.set_facecolor('white')
-            self.ax1.grid(False)
-            self.ax2.grid(False)
 
             # Use the unified filtered list to keep chart aligned with table
             source = getattr(self, "_bw_filtered", None)
@@ -438,19 +425,19 @@ class BandwidthTab:
                 source = list(self.bandwidth_data[:100]) if self.bandwidth_data else []
 
             if not source:
-                self.ax1.text(0.5, 0.5, 'No data available', ha='center', va='center', 
-                            transform=self.ax1.transAxes, fontsize=12)
-                self.ax2.text(0.5, 0.5, 'No data available', ha='center', va='center', 
-                            transform=self.ax2.transAxes, fontsize=12)
-                self.canvas.get_tk_widget().pack_forget()
-                self.canvas.get_tk_widget().pack(fill="both", expand=True)
-                self.canvas.draw_idle()
+                # Clear charts if no data
+                self.canvas.draw()
                 return
 
-            # Parse timestamps once and sort by real datetime to keep chart aligned with data
-            parsed_records = []
+            # Parse timestamps and prepare data
+            timestamps = []
+            downloads = []
+            uploads = []
+            latencies = []
+            
             for d in source:
                 try:
+                    # Parse timestamp
                     ts_str = d['timestamp']
                     if 'GMT' in ts_str:
                         ts = datetime.strptime(ts_str, '%a, %d %b %Y %H:%M:%S GMT')
@@ -458,151 +445,99 @@ class BandwidthTab:
                         ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
                     else:
                         ts = datetime.fromisoformat(ts_str)
-                except Exception as e:
-                    print(f"Error parsing timestamp {d.get('timestamp')}: {e}")
-                    ts = datetime.now()
-                parsed_records.append((ts, d))
-
-            # Sort ascending by timestamp for proper time series plotting
-            parsed_records.sort(key=lambda x: x[0])
-
-            # Downsample older points while preserving chronological order
-            max_points = 200
-            if len(parsed_records) > max_points:
-                step = max(1, len(parsed_records) // max_points)
-                # Keep the most recent 50 points in full resolution
-                recent = parsed_records[-50:]
-                older = parsed_records[:-50]
-                sampled_older = older[::step]
-                parsed_records = sampled_older + recent  # maintain ascending order
-                if len(parsed_records) > max_points:
-                    parsed_records = parsed_records[-max_points:]
-
-            # Rebuild lists in the final plotting order
-            timestamps = [ts for ts, _ in parsed_records]
-
-            downloads = []
-            uploads = []
-            latencies = []
-            for _, d in parsed_records:
-                download_val = d.get('download_mbps')
-                if download_val is None or download_val == '':
-                    downloads.append(0.0)
-                else:
-                    try:
-                        downloads.append(float(download_val))
-                    except (ValueError, TypeError):
+                    
+                    timestamps.append(ts)
+                    
+                    # Parse download
+                    download_val = d.get('download_mbps')
+                    if download_val is None or download_val == '':
                         downloads.append(0.0)
-                upload_val = d.get('upload_mbps')
-                if upload_val is None or upload_val == '':
-                    uploads.append(0.0)
-                else:
-                    try:
-                        uploads.append(float(upload_val))
-                    except (ValueError, TypeError):
+                    else:
+                        try:
+                            downloads.append(float(download_val))
+                        except (ValueError, TypeError):
+                            downloads.append(0.0)
+                    
+                    # Parse upload
+                    upload_val = d.get('upload_mbps')
+                    if upload_val is None or upload_val == '':
                         uploads.append(0.0)
-                latency_val = d.get('latency_ms')
-                if latency_val is None or latency_val == '':
-                    latencies.append(0.0)
-                else:
-                    try:
-                        latencies.append(float(latency_val))
-                    except (ValueError, TypeError):
+                    else:
+                        try:
+                            uploads.append(float(upload_val))
+                        except (ValueError, TypeError):
+                            uploads.append(0.0)
+                    
+                    # Parse latency
+                    latency_val = d.get('latency_ms')
+                    if latency_val is None or latency_val == '':
                         latencies.append(0.0)
+                    else:
+                        try:
+                            latencies.append(float(latency_val))
+                        except (ValueError, TypeError):
+                            latencies.append(0.0)
+                except Exception as e:
+                    print(f"Error parsing data point: {e}")
+                    continue
 
-            time_indices = list(range(len(timestamps)))
-            time_labels = []
-            for i, t in enumerate(timestamps):
-                if i % max(1, len(timestamps) // 10) == 0:
-                    time_labels.append(t.strftime('%H:%M'))
-                else:
-                    time_labels.append('')
+            if not timestamps:
+                self.canvas.draw()
+                return
 
-            all_downloads_zero = all(d == 0.0 for d in downloads)
-            all_uploads_zero = all(u == 0.0 for u in uploads)
+            # Plot 1: Download and Upload (Mbps) - side by side like dashboard.py
+            self.ax1.plot(timestamps, downloads, label="Download (Mbps)", 
+                         color="#dc3545", linewidth=2, marker='o', markersize=3)
+            self.ax1.plot(timestamps, uploads, label="Upload (Mbps)", 
+                         color="#28a745", linewidth=2, marker='s', markersize=3)
+            self.ax1.set_title("Bandwidth Usage", fontsize=12, fontweight='bold')
+            self.ax1.set_xlabel("Date", fontsize=10)
+            self.ax1.set_ylabel("Mbps", fontsize=10)
+            self.ax1.legend(loc='upper left', fontsize=9)
+            self.ax1.grid(True, alpha=0.3)
+            self.ax1.tick_params(axis="x", rotation=45, labelsize=8)
+            
+            # Format x-axis dates - always show date
+            if len(timestamps) > 1:
+                time_span = (timestamps[-1] - timestamps[0]).total_seconds()
+                if time_span < 86400:  # Less than 1 day - show date and time
+                    self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
+                elif time_span < 604800:  # Less than 1 week - show date and time
+                    self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
+                else:  # More than 1 week - show date
+                    self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d/%Y"))
 
-            self.ax1.plot(time_indices, downloads, 'b-', label='Download', linewidth=2, alpha=0.8)
-            self.ax1.plot(time_indices, uploads, 'g-', label='Upload', linewidth=2, alpha=0.8)
-            if all_downloads_zero and all_uploads_zero:
-                self.ax1.text(0.5, 0.5, 'All bandwidth values are 0 Mbps\nTry refreshing or checking date range', 
-                            ha='center', va='center', transform=self.ax1.transAxes, 
-                            fontsize=10, style='italic', color='gray')
-            self.ax1.set_title('Bandwidth Trends (Mbps)', fontsize=12, fontweight='bold')
-            self.ax1.set_ylabel('Speed (Mbps)')
-            self.ax1.set_xlabel('Time')
-            self.ax1.legend()
-            self.ax1.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
-            if len(timestamps) > 0:
-                max_labels = 10
-                step = max(1, len(timestamps) // max_labels)
-                shown_ticks = list(range(0, len(timestamps), step))
-                self.ax1.set_xticks(shown_ticks)
-                self.ax1.set_xticklabels([timestamps[i].strftime('%H:%M') for i in shown_ticks], rotation=45)
-            if downloads or uploads:
-                max_bandwidth = max(max(downloads) if downloads else 0, max(uploads) if uploads else 0)
-                min_bandwidth = min(min(downloads) if downloads else 0, min(uploads) if uploads else 0)
+            # Plot 2: Latency (ms) - side by side like dashboard.py
+            self.ax2.plot(timestamps, latencies, label="Latency (ms)", 
+                         color="#007bff", linewidth=2, marker='^', markersize=3)
+            self.ax2.set_title("Latency", fontsize=12, fontweight='bold')
+            self.ax2.set_xlabel("Date", fontsize=10)
+            self.ax2.set_ylabel("ms", fontsize=10)
+            self.ax2.legend(loc='upper left', fontsize=9)
+            self.ax2.grid(True, alpha=0.3)
+            self.ax2.tick_params(axis="x", rotation=45, labelsize=8)
+            
+            # Format x-axis dates for latency chart - always show date
+            if len(timestamps) > 1:
+                time_span = (timestamps[-1] - timestamps[0]).total_seconds()
+                if time_span < 86400:  # Less than 1 day - show date and time
+                    self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
+                elif time_span < 604800:  # Less than 1 week - show date and time
+                    self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
+                else:  # More than 1 week - show date
+                    self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d/%Y"))
 
-                # Robust scaling: clamp to 95th percentile to avoid old outliers (e.g., unit mismatches)
-                def _percentile(values, p):
-                    vals = sorted([v for v in values if isinstance(v, (int, float))])
-                    if not vals:
-                        return 0
-                    k = int((len(vals) - 1) * (p / 100.0))
-                    return vals[k]
-
-                valid_vals = [v for v in downloads + uploads if v is not None]
-                p95 = _percentile(valid_vals, 95) if valid_vals else 0
-
-                if max_bandwidth == 0 and min_bandwidth == 0:
-                    self.ax1.set_ylim(-0.1, 0.1)
-                else:
-                    upper = max_bandwidth
-                    if p95 > 0:
-                        # Use the smaller of actual max and 110% of 95th percentile
-                        upper = min(max_bandwidth, p95 * 1.1)
-                    lower = min_bandwidth * 0.9 if min_bandwidth < 0 else 0
-                    # Ensure non-degenerate range
-                    if upper - lower < 0.1:
-                        upper = lower + 0.1
-                    self.ax1.set_ylim(lower, upper)
-            else:
-                self.ax1.set_ylim(-0.1, 0.1)
-
-            self.ax2.plot(time_indices, latencies, 'r-', label='Latency', linewidth=2, alpha=0.8)
-            self.ax2.set_title('Latency Trends (ms)', fontsize=12, fontweight='bold')
-            self.ax2.set_ylabel('Latency (ms)')
-            self.ax2.set_xlabel('Time')
-            self.ax2.legend()
-            self.ax2.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
-            if len(timestamps) > 0:
-                max_labels = 10
-                step = max(1, len(timestamps) // max_labels)
-                shown_ticks = list(range(0, len(timestamps), step))
-                self.ax2.set_xticks(shown_ticks)
-                self.ax2.set_xticklabels([timestamps[i].strftime('%H:%M') for i in shown_ticks], rotation=45)
-            if latencies:
-                valid_latencies = [l for l in latencies if l is not None and l > 0]
-                if valid_latencies:
-                    max_latency = max(valid_latencies)
-                    min_latency = min(valid_latencies)
-                    self.ax2.set_ylim(min_latency * 0.9, max_latency * 1.1)
-                else:
-                    self.ax2.set_ylim(0, 1000)
-            else:
-                self.ax2.set_ylim(0, 1000)
-
-            # Update data points counter to reflect any downsampling
+            # Update data points counter
             total_points = len(self.bandwidth_data)
             displayed_points = len(timestamps)
             if total_points > displayed_points:
-                self.data_points_label.config(text=f"Data Points: {displayed_points}/{total_points} (sampled)")
+                self.data_points_label.config(text=f"Data Points: {displayed_points}/{total_points}")
             else:
                 self.data_points_label.config(text=f"Data Points: {displayed_points}")
 
-            # Responsive layout and redraw
-            self.canvas.get_tk_widget().pack_forget()
-            self.canvas.get_tk_widget().pack(fill="both", expand=True)
-            self.canvas.draw_idle()
+            # Adjust layout and redraw
+            self.fig.tight_layout(pad=2.0)
+            self.canvas.draw()
 
         except Exception as e:
             print(f"Error updating charts: {e}")

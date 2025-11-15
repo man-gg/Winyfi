@@ -14043,20 +14043,22 @@ Type: {values[11]}
 
         # Log logout activity to activity_logs
         try:
-            from device_utils import get_device_info
-            device_info = get_device_info()
-            log_activity(
-                user_id=self.current_user.get('id'),
-                action='Logout',
-                target=None,
-                ip_address=device_info.get('ip_address')
-            )
+            if self.current_user and self.current_user.get('id'):
+                from device_utils import get_device_info
+                device_info = get_device_info()
+                log_activity(
+                    user_id=self.current_user.get('id'),
+                    action='Logout',
+                    target=None,
+                    ip_address=device_info.get('ip_address')
+                )
         except Exception as e:
             print(f"Error logging logout activity: {e}")
         
         # Update login_sessions table
         try:
-            log_user_logout(self.current_user.get('id'))
+            if self.current_user and self.current_user.get('id'):
+                log_user_logout(self.current_user.get('id'))
         except Exception as e:
             print(f"Error updating login session: {e}")
 
