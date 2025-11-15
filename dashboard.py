@@ -1953,37 +1953,59 @@ class Dashboard:
                 self.bandwidth_canvas.draw_idle()
                 return
 
-            # Query database for latest bandwidth data (last 24 hours)
+            # Query database for total bandwidth over last 7 days per router (matching report calculation)
             top_routers = []
             conn = None
             cursor = None
             try:
                 conn = get_connection()
                 cursor = conn.cursor(dictionary=True)
+                # Calculate date range: last 7 complete days (matching report default)
+                from datetime import datetime, timedelta
+                end_date = datetime.now().replace(hour=23, minute=59, second=59)
+                start_date = (end_date - timedelta(days=7)).replace(hour=0, minute=0, second=0)
+                
+                # Get total bandwidth using exact same logic as report_utils.get_bandwidth_usage
                 cursor.execute(
                     """
                     SELECT 
                         r.id as router_id,
                         r.name as router_name,
-                        COALESCE(SUM(bl.download_mbps + bl.upload_mbps), 0) as total_bandwidth_mbps,
-                        MAX(bl.timestamp) as last_update
+                        (SELECT SUM(download_mbps + upload_mbps) 
+                         FROM bandwidth_logs 
+                         WHERE router_id = r.id 
+                           AND timestamp BETWEEN %s AND %s) as total_bandwidth_mb
                     FROM routers r
-                    LEFT JOIN bandwidth_logs bl ON r.id = bl.router_id 
-                        AND bl.timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-                    GROUP BY r.id, r.name
-                    HAVING total_bandwidth_mbps > 0
-                    ORDER BY total_bandwidth_mbps DESC
+                    WHERE EXISTS (
+                        SELECT 1 FROM bandwidth_logs bl 
+                        WHERE bl.router_id = r.id 
+                          AND bl.timestamp BETWEEN %s AND %s
+                    )
+                    ORDER BY total_bandwidth_mb DESC
                     LIMIT 3
-                    """
+                    """,
+                    (start_date, end_date, start_date, end_date)
                 )
                 top_routers = cursor.fetchall() or []
+                
+                # Debug: print actual values and verify against report
+                if top_routers:
+                    print(f"[Dashboard] Top 3 Bandwidth - Total from {start_date.strftime('%Y-%m-%d %H:%M:%S')} to {end_date.strftime('%Y-%m-%d %H:%M:%S')}:")
+                    for r in top_routers:
+                        total_mb = float(r['total_bandwidth_mb'] or 0)
+                        total_gb = total_mb / 1024
+                        if total_gb >= 1:
+                            print(f"  {r['router_name']} (ID: {r['router_id']}): {total_gb:.2f} GB ({total_mb:.2f} MB)")
+                        else:
+                            print(f"  {r['router_name']} (ID: {r['router_id']}): {total_mb:.2f} MB")
             finally:
                 try:
                     if cursor: cursor.close()
                 finally:
                     if conn: conn.close()
 
-            # Fallback without window functions (compatible with MySQL 5.7): use latest sample per router
+            # Fallback is no longer needed since main query already uses latest sample
+            # But keep it for edge cases where the above query might fail
             if not top_routers:
                 conn = None
                 cursor = None
@@ -2033,9 +2055,9 @@ class Dashboard:
                 self.bandwidth_canvas.draw_idle()
                 return
 
-            # Extract router names and values
+            # Extract router names and values (convert to GB for better readability)
             router_names = [r['router_name'][:18] if r['router_name'] else f"Router {r['router_id']}" for r in top_routers]
-            bandwidth_values = [float(r['total_bandwidth_mbps'] or 0) for r in top_routers]
+            bandwidth_values = [float(r['total_bandwidth_mb'] or 0) / 1024 for r in top_routers]  # Convert MB to GB
 
             # Compute a nice upper y-limit so small values are still visible
             def nice_upper(v):
@@ -2060,14 +2082,18 @@ class Dashboard:
             # Add value labels on bars
             for bar, value in zip(bars, bandwidth_values):
                 if value > 0:
-                    label = f"{value:.2f}" if value >= 1 else f"{value:.1f}"
+                    # Format based on size: use GB for values >= 1, otherwise MB
+                    if value >= 1:
+                        label = f"{value:.2f} GB"
+                    else:
+                        label = f"{value * 1024:.1f} MB"
                     ax.text(bar.get_x() + bar.get_width()/2., value + (y_max * 0.02),
                             label, ha='center', va='bottom', fontsize=9, color='#495057')
 
             # Styling
             ax.set_xlabel('Routers', fontsize=10)
-            ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
-            ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+            ax.set_ylabel('Total Bandwidth (GB)', fontsize=10)
+            ax.set_title('Top 3 Routers by Bandwidth (Last 7 Days)', fontsize=12, fontweight='bold', pad=10)
             ax.set_xticks(range(len(router_names)))
             ax.set_xticklabels(router_names, fontsize=9, rotation=15, ha='right')
             ax.grid(True, alpha=0.15, axis='y')
