@@ -96,7 +96,10 @@ class Dashboard:
         threading.Thread(target=do_ping, daemon=True).start()
     def __init__(self, root, current_user, api_base_url="http://localhost:5000"):
         self.app_running = True
-        self.unifi_api_url = "http://localhost:5001"  # UniFi API server
+        # UniFi API URL - configurable via environment or use localhost default
+        # For remote setup: set WINYFI_UNIFI_API_URL=http://<machine-a-ip>:5001
+        self.unifi_api_url = os.getenv("WINYFI_UNIFI_API_URL", "http://localhost:5001")
+        print(f"[Dashboard] UniFi API URL: {self.unifi_api_url}")
         self.unifi_devices = []  # Store UniFi devices
         self.unifi_refresh_job = None  # Auto-refresh job for UniFi data
         self.root = root

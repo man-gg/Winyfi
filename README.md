@@ -150,14 +150,61 @@ Login with the seeded admin or an existing user. Admins see the full dashboard; 
 
 ## Configuration tips
 
+### UniFi Integration (Remote Setup)
+
+WinyFi supports integration with UniFi Controllers running on separate machines:
+
+**Architecture:**
+- Machine A: UniFi Controller + unifi_api.py (Flask API server)
+- Machine B: WinyFi Admin Dashboard
+
+**Setup Steps:**
+
+1. **On Machine A (Controller + API):**
+   ```powershell
+   # Configure UniFi Controller connection
+   $env:UNIFI_URL = "https://192.168.1.100:8443"
+   $env:UNIFI_USER = "admin"
+   $env:UNIFI_PASS = "your_password"
+   $env:UNIFI_VERIFY = "false"  # Disable SSL verify for self-signed certs
+   
+   # Start API server (listens on 0.0.0.0:5001)
+   cd server
+   python unifi_api.py
+   ```
+
+2. **On Machine B (Dashboard):**
+   ```powershell
+   # Point to Machine A's API
+   $env:WINYFI_UNIFI_API_URL = "http://192.168.1.100:5001"
+   
+   # Start dashboard
+   python main.py
+   ```
+
+**Testing:**
+```powershell
+# Test UniFi connection before starting
+python test_unifi_connection.py
+
+# Or use the startup script
+.\start_unifi_api.bat
+```
+
+📖 **Detailed setup guide:** See `UNIFI_API_SETUP.md`
+
+### General Configuration
+
 - `db.py`: MySQL connection settings
 - `network_utils.py`: set `DISABLE_BANDWIDTH = False` to enable speed tests. Requires `speedtest-cli` and Internet access. Heavy tests run with cooldowns.
 - `bandwidth_logger.py`: `LOG_INTERVAL` (default 300s)
 - `server/app.py`: Flask app; exposes report, bandwidth, router status, and loop detection endpoints
 - `WINYFI_API`: environment variable to override API URL used by the desktop app
+- `.env` file: Copy `.env.example` to `.env` for easy configuration
 
 ## Notable endpoints (server)
 
+### Main API Server (`server/app.py`)
 - GET `/api/health`
 - POST `/api/login`
 - GET `/api/routers`, `/api/routers/<id>/status`
@@ -166,6 +213,16 @@ Login with the seeded admin or an existing user. Admins see the full dashboard; 
 - GET `/api/reports/pdf`, `/api/reports/pdf-with-charts`
 - GET `/api/bandwidth/logs`, `/api/bandwidth/stats`
 - GET `/api/loop-detection` (history + stats)
+
+### UniFi API Server (`server/unifi_api.py`)
+- GET `/api/unifi/status` — Controller status and health
+- GET `/api/unifi/test` — Test connection to controller
+- GET `/api/unifi/devices` — List all UniFi devices (APs, switches, gateways)
+- GET `/api/unifi/clients` — List all connected clients
+- GET `/api/unifi/bandwidth/total` — Total bandwidth across all devices
+- GET `/api/unifi/clients/count` — Count of active clients
+- GET `/api/unifi/devices/<mac>/clients` — Clients connected to specific device
+- GET `/api/unifi/ping/<mac>` — Ping device by MAC address
 
 ## File guide
 

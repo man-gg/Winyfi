@@ -40,23 +40,31 @@ from requests.adapters import HTTPAdapter
 try:
     # urllib3 location differs across versions; this import covers common cases
     from urllib3.util.retry import Retry  # type: ignore
+    import urllib3
 except Exception:  # pragma: no cover
     Retry = None  # Fallback to no retries if urllib3 Retry unavailable
+    urllib3 = None
 
 app = Flask(__name__)
 
 # --- Controller configuration (overridable via env) ---
-# Your UniFi controller runs on HTTP port 8080
-CONTROLLER_URL = os.getenv("UNIFI_URL", "http://127.0.0.1:8080").rstrip("/")
+# UniFi controller typically runs on HTTPS port 8443
+# For remote connections, set UNIFI_URL to https://<controller-ip>:8443
+CONTROLLER_URL = os.getenv("UNIFI_URL", "https://127.0.0.1:8443").rstrip("/")
 USERNAME = os.getenv("UNIFI_USER", "admin")
 PASSWORD = os.getenv("UNIFI_PASS", "admin123")
 SITE = os.getenv("UNIFI_SITE", "default")
 REFRESH_INTERVAL = 5000  # Auto-refresh every 5000 ms (5 sec)
 
+# SSL Verification - disabled by default for self-signed certificates
+# Set UNIFI_VERIFY=true to enable SSL verification (requires valid cert)
+DISABLE_SSL_VERIFY = os.getenv("UNIFI_VERIFY", "false").lower() == "false"
+
 # --- Security & behavior configuration ---
 FLASK_DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
-# In dev we allow skipping auth for convenience; in prod default is strict
-ALLOW_NO_AUTH = os.getenv("ALLOW_NO_AUTH", "true" if FLASK_DEBUG else "false").lower() == "true"
+# For development/internal use, allow requests without API keys
+# Set ALLOW_NO_AUTH=false in production to enforce API key authentication
+ALLOW_NO_AUTH = os.getenv("ALLOW_NO_AUTH", "true").lower() == "true"
 
 # API Keys (comma separated). If empty and ALLOW_NO_AUTH is False, all requests will be rejected.
 API_KEYS = {k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()}
@@ -76,13 +84,36 @@ ENABLE_HSTS = os.getenv("ENABLE_HSTS", "false").lower() == "true"
 _RATE_STORE: Dict[str, List[float]] = {}
 
 # Debug logging
-print(f"[UniFi API] Starting with config:")
+print(f"\n{'='*70}")
+print(f"[UniFi API] Starting UniFi API Server")
+print(f"{'='*70}")
 print(f"  Controller URL: {CONTROLLER_URL}")
 print(f"  Site: {SITE}")
-print(f"  Debug: {FLASK_DEBUG}")
+print(f"  SSL Verify: {not DISABLE_SSL_VERIFY}")
+print(f"  Flask Debug: {FLASK_DEBUG}")
 print(f"  Auth: {'disabled' if ALLOW_NO_AUTH else 'required'} | API keys loaded: {len(API_KEYS)} | Admin keys: {len(ADMIN_API_KEYS)}")
 print(f"  Allowed sites: {sorted(ALLOWED_SITES)}")
 print(f"  Mock enabled: {ENABLE_MOCK}")
+print(f"{'='*70}\n")
+
+# Connectivity check on startup
+print("[UniFi API] Performing startup connectivity check...")
+try:
+    import socket
+    controller_host = CONTROLLER_URL.split("://")[1].split(":")[0]
+    controller_port = int(CONTROLLER_URL.split(":")[-1].split("/")[0]) if ":" in CONTROLLER_URL.split("://")[1] else (443 if CONTROLLER_URL.startswith("https") else 80)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(3)
+    result = sock.connect_ex((controller_host, controller_port))
+    sock.close()
+    if result == 0:
+        print(f"✓ Controller at {controller_host}:{controller_port} is reachable")
+    else:
+        print(f"⚠ WARNING: Controller at {controller_host}:{controller_port} is NOT reachable")
+        print(f"  This may be normal if controller is remote or not started yet")
+except Exception as e:
+    print(f"⚠ Could not verify controller connectivity: {e}")
+print()
 
 
 # --- Real UniFi session helper ---
@@ -99,14 +130,23 @@ class UniFiSession:
         self.s = requests.Session()
         # Disable redirects on login calls to better detect auth issues
         self.s.max_redirects = 3
-        # TLS verification: only relevant on HTTPS. Default to verify True on HTTPS.
-        # Allow override UNIFI_VERIFY=true/false or UNIFI_CA_BUNDLE=/path/to/ca.pem
+        
+        # SSL verification setup for remote connections
+        # UniFi uses self-signed certificates by default, so we disable verification
+        # unless explicitly enabled or a CA bundle is provided
         if self.base_url.startswith("https://"):
             ca_bundle = os.getenv("UNIFI_CA_BUNDLE")
             if ca_bundle and os.path.exists(ca_bundle):
                 self.verify = ca_bundle
+                print(f"[UniFi] Using CA bundle: {ca_bundle}")
             else:
-                self.verify = os.getenv("UNIFI_VERIFY", "true").lower() == "true"
+                # Default to False for remote connections with self-signed certs
+                self.verify = not DISABLE_SSL_VERIFY
+                if not self.verify:
+                    print("[UniFi] SSL verification DISABLED (self-signed cert support)")
+                    # Suppress InsecureRequestWarning
+                    if urllib3:
+                        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         else:
             self.verify = False  # verify parameter ignored for http
         # Install simple retry strategy for transient errors if available
@@ -135,62 +175,145 @@ class UniFiSession:
         return headers
 
     def login(self) -> None:
-        """Attempt login using new then legacy endpoints."""
+        """Attempt login using new then legacy endpoints.
+        
+        Supports remote UniFi Controllers with proper error handling.
+        """
         payload = {"username": self.username, "password": self.password}
         last_error = None
         
-        # Try new auth
+        # Try new auth endpoint (UniFi OS / Network Application 7.x+)
         try:
             url = f"{self.base_url}/api/auth/login"
             print(f"[UniFi] Attempting login to {url}")
-            resp = self.s.post(url, json=payload, headers={"Content-Type": "application/json"}, allow_redirects=False, verify=self.verify, timeout=10)
+            resp = self.s.post(
+                url, 
+                json=payload, 
+                headers={"Content-Type": "application/json"}, 
+                allow_redirects=False, 
+                verify=self.verify, 
+                timeout=15  # Increased timeout for remote connections
+            )
             print(f"[UniFi] New auth response: {resp.status_code}")
             if resp.status_code in (200, 204):
                 self._set_csrf_from_response(resp)
-                print("[UniFi] Login successful (new auth)")
+                print("[UniFi] ✓ Login successful (new auth endpoint)")
                 return
+        except requests.exceptions.SSLError as e:
+            last_error = f"SSL Error: {e}. Try setting UNIFI_VERIFY=false"
+            print(f"[UniFi] SSL Error on new auth: {e}")
+        except requests.exceptions.ConnectionError as e:
+            last_error = f"Connection Error: {e}. Check controller URL and network"
+            print(f"[UniFi] Connection Error on new auth: {e}")
+        except requests.exceptions.Timeout as e:
+            last_error = f"Timeout: {e}. Controller may be slow or unreachable"
+            print(f"[UniFi] Timeout on new auth: {e}")
         except Exception as e:
             last_error = str(e)
             print(f"[UniFi] New auth failed: {e}")
 
-        # Fallback to legacy auth
+        # Fallback to legacy auth endpoint (older UniFi versions)
         try:
             url = f"{self.base_url}/api/login"
             print(f"[UniFi] Trying legacy login to {url}")
-            resp = self.s.post(url, json=payload, headers={"Content-Type": "application/json"}, allow_redirects=False, verify=self.verify, timeout=10)
+            resp = self.s.post(
+                url, 
+                json=payload, 
+                headers={"Content-Type": "application/json"}, 
+                allow_redirects=False, 
+                verify=self.verify, 
+                timeout=15
+            )
             print(f"[UniFi] Legacy auth response: {resp.status_code}")
             if resp.status_code not in (200, 204):
-                raise RuntimeError(f"UniFi login failed: {resp.status_code} {resp.text}")
+                raise RuntimeError(f"UniFi login failed: {resp.status_code} {resp.text[:200]}")
             self._set_csrf_from_response(resp)
-            print("[UniFi] Login successful (legacy auth)")
+            print("[UniFi] ✓ Login successful (legacy auth endpoint)")
+            return
+        except requests.exceptions.SSLError as e:
+            print(f"[UniFi] SSL Error on legacy auth: {e}")
+            raise RuntimeError(f"SSL verification failed. Set UNIFI_VERIFY=false or provide UNIFI_CA_BUNDLE. Controller: {self.base_url}")
+        except requests.exceptions.ConnectionError as e:
+            print(f"[UniFi] Connection Error on legacy auth: {e}")
+            raise RuntimeError(f"Cannot connect to UniFi Controller at {self.base_url}. Check IP, port, and network connectivity.")
+        except requests.exceptions.Timeout as e:
+            print(f"[UniFi] Timeout on legacy auth: {e}")
+            raise RuntimeError(f"Connection timeout to {self.base_url}. Controller may be down or slow.")
         except Exception as e:
             print(f"[UniFi] Legacy auth failed: {e}")
-            raise RuntimeError(f"UniFi login failed. Last error: {e}. Controller URL: {self.base_url}")
+            raise RuntimeError(f"UniFi login failed on both endpoints. Last error: {last_error}. Controller URL: {self.base_url}")
 
     def _request(self, method: str, path: str, **kwargs) -> requests.Response:
+        """Make authenticated request with automatic re-login on auth failure."""
         url = f"{self.base_url}{path}"
         headers = kwargs.pop("headers", {})
         merged_headers = {**self._auth_headers(), **headers}
-        # Default timeout to avoid hanging workers
-        kwargs.setdefault("timeout", float(os.getenv("HTTP_TIMEOUT", "8")))
-        resp = self.s.request(method, url, headers=merged_headers, verify=self.verify, **kwargs)
-        # If unauthorized, try a re-login once
-        if resp.status_code in (401, 403):
-            self.login()
-            resp = self.s.request(method, url, headers=self._auth_headers(), verify=self.verify, **kwargs)
-        return resp
+        # Longer timeout for remote connections
+        kwargs.setdefault("timeout", float(os.getenv("HTTP_TIMEOUT", "15")))
+        
+        try:
+            resp = self.s.request(method, url, headers=merged_headers, verify=self.verify, **kwargs)
+            # If unauthorized, try a re-login once
+            if resp.status_code in (401, 403):
+                print(f"[UniFi] Auth expired, re-logging in...")
+                self.login()
+                resp = self.s.request(method, url, headers=self._auth_headers(), verify=self.verify, **kwargs)
+            return resp
+        except requests.exceptions.SSLError as e:
+            print(f"[UniFi] SSL Error on {method} {path}: {e}")
+            raise
+        except requests.exceptions.ConnectionError as e:
+            print(f"[UniFi] Connection Error on {method} {path}: {e}")
+            raise
+        except requests.exceptions.Timeout as e:
+            print(f"[UniFi] Timeout on {method} {path}: {e}")
+            raise
 
     def get_devices(self, site: str) -> List[Dict[str, Any]]:
-        resp = self._request("GET", f"/api/s/{site}/stat/device")
-        resp.raise_for_status()
-        data = resp.json().get("data", [])
-        return data
+        """Get all devices (APs, switches, gateways) from UniFi Controller."""
+        try:
+            resp = self._request("GET", f"/api/s/{site}/stat/device")
+            resp.raise_for_status()
+            data = resp.json().get("data", [])
+            print(f"[UniFi] Retrieved {len(data)} devices")
+            return data
+        except Exception as e:
+            print(f"[UniFi] Error getting devices: {e}")
+            raise
 
     def get_clients(self, site: str) -> List[Dict[str, Any]]:
-        resp = self._request("GET", f"/api/s/{site}/stat/sta")
-        resp.raise_for_status()
-        data = resp.json().get("data", [])
-        return data
+        """Get all connected clients from UniFi Controller."""
+        try:
+            resp = self._request("GET", f"/api/s/{site}/stat/sta")
+            resp.raise_for_status()
+            data = resp.json().get("data", [])
+            print(f"[UniFi] Retrieved {len(data)} clients")
+            return data
+        except Exception as e:
+            print(f"[UniFi] Error getting clients: {e}")
+            raise
+    
+    def get_controller_status(self) -> Dict[str, Any]:
+        """Get UniFi Controller status and version info."""
+        try:
+            resp = self._request("GET", "/api/stat/health")
+            if resp.status_code == 200:
+                return {"status": "online", "health": resp.json().get("data", [])}
+            return {"status": "unknown", "code": resp.status_code}
+        except Exception as e:
+            print(f"[UniFi] Error getting controller status: {e}")
+            return {"status": "error", "error": str(e)}
+    
+    def test_connection(self) -> Dict[str, Any]:
+        """Test connection to UniFi Controller."""
+        try:
+            # Try to get a simple status
+            resp = self._request("GET", f"/api/s/{SITE}/self")
+            if resp.status_code == 200:
+                return {"status": "success", "message": "Connected to UniFi Controller", "url": self.base_url}
+            return {"status": "error", "message": f"Unexpected status: {resp.status_code}", "url": self.base_url}
+        except Exception as e:
+            return {"status": "error", "message": str(e), "url": self.base_url}
 
 
 # Create a lazy session (login on first use)
@@ -409,8 +532,14 @@ def compat_stat_device(site):
     try:
         devices = get_session().get_devices(site)
         return jsonify({'data': devices})
+    except requests.exceptions.SSLError as e:
+        return jsonify({'data': [], 'error': 'ssl_error', 'message': 'SSL certificate verification failed. Set UNIFI_VERIFY=false'}), 502
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'data': [], 'error': 'connection_error', 'message': f'Cannot connect to controller: {str(e)}'}), 502
+    except requests.exceptions.Timeout as e:
+        return jsonify({'data': [], 'error': 'timeout', 'message': 'Connection timeout'}), 504
     except Exception as e:
-        return jsonify({'data': [], 'error': 'upstream_error'}), 502
+        return jsonify({'data': [], 'error': 'upstream_error', 'message': str(e)}), 502
 
 @app.route('/api/s/<site>/stat/sta')
 @require_api_key()
@@ -423,8 +552,14 @@ def compat_stat_sta(site):
     try:
         clients = get_session().get_clients(site)
         return jsonify({'data': clients})
+    except requests.exceptions.SSLError as e:
+        return jsonify({'data': [], 'error': 'ssl_error', 'message': 'SSL certificate verification failed. Set UNIFI_VERIFY=false'}), 502
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'data': [], 'error': 'connection_error', 'message': f'Cannot connect to controller: {str(e)}'}), 502
+    except requests.exceptions.Timeout as e:
+        return jsonify({'data': [], 'error': 'timeout', 'message': 'Connection timeout'}), 504
     except Exception as e:
-        return jsonify({'data': [], 'error': 'upstream_error'}), 502
+        return jsonify({'data': [], 'error': 'upstream_error', 'message': str(e)}), 502
 
 
 # --- Additional endpoints for dashboard integration ---
@@ -489,11 +624,20 @@ def api_devices():
                 'connected': True if d.get('state') == 1 else False,
             })
         return jsonify(mapped)
+    except requests.exceptions.SSLError as e:
+        print(f"[UniFi API] /api/unifi/devices SSL error: {e}")
+        return jsonify({'error': 'ssl_error', 'message': 'SSL certificate verification failed. Set UNIFI_VERIFY=false'}), 502
+    except requests.exceptions.ConnectionError as e:
+        print(f"[UniFi API] /api/unifi/devices connection error: {e}")
+        return jsonify({'error': 'connection_error', 'message': f'Cannot connect to controller at {CONTROLLER_URL}'}), 502
+    except requests.exceptions.Timeout as e:
+        print(f"[UniFi API] /api/unifi/devices timeout: {e}")
+        return jsonify({'error': 'timeout', 'message': 'Connection timeout'}), 504
     except Exception as e:
         print(f"[UniFi API] /api/unifi/devices error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': 'upstream_error'}), 502
+        return jsonify({'error': 'upstream_error', 'message': str(e)}), 502
 
 @app.route('/api/unifi/clients')
 @require_api_key()
@@ -553,9 +697,18 @@ def api_clients():
 
         clients = [map_client(c) for c in raw_clients]
         return jsonify(clients)
+    except requests.exceptions.SSLError as e:
+        print(f"[UniFi API] /api/unifi/clients SSL error: {e}")
+        return jsonify({'error': 'ssl_error', 'message': 'SSL certificate verification failed'}), 502
+    except requests.exceptions.ConnectionError as e:
+        print(f"[UniFi API] /api/unifi/clients connection error: {e}")
+        return jsonify({'error': 'connection_error', 'message': 'Cannot connect to controller'}), 502
+    except requests.exceptions.Timeout as e:
+        print(f"[UniFi API] /api/unifi/clients timeout: {e}")
+        return jsonify({'error': 'timeout', 'message': 'Connection timeout'}), 504
     except Exception as e:
         print(f"[UniFi API] /api/unifi/clients error: {e}")
-        return jsonify({'error': 'upstream_error'}), 502
+        return jsonify({'error': 'upstream_error', 'message': str(e)}), 502
 
 @app.route('/api/unifi/mock', methods=['POST'])
 @require_api_key(admin=True)
@@ -594,13 +747,54 @@ def api_bandwidth_total():
             total_up += float(st.get('xput_up') or 0)
         return jsonify({'total_down': total_down, 'total_up': total_up})
     except Exception as e:
-        return jsonify({'total_down': 0, 'total_up': 0, 'error': 'upstream_error'}), 502
+        print(f"[UniFi API] /api/unifi/bandwidth/total error: {e}")
+        return jsonify({'total_down': 0, 'total_up': 0, 'error': 'upstream_error', 'message': str(e)}), 502
 
 @app.route('/api/unifi/clients/count')
 @require_api_key()
 def api_clients_count():
     if MOCK_MODE['clients']:
         return jsonify({'count': len(MOCK_CLIENTS)})
+    try:
+        clients = get_session().get_clients(SITE)
+        return jsonify({'count': len(clients)})
+    except Exception as e:
+        return jsonify({'count': 0, 'error': 'upstream_error'}), 502
+
+# --- NEW: Controller status and connection test endpoints ---
+@app.route('/api/unifi/status')
+@require_api_key()
+def api_controller_status():
+    """Get UniFi Controller status and connection health."""
+    try:
+        session = get_session()
+        status = session.get_controller_status()
+        status['controller_url'] = CONTROLLER_URL
+        status['site'] = SITE
+        return jsonify(status)
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'controller_url': CONTROLLER_URL,
+            'message': 'Failed to connect to UniFi Controller'
+        }), 502
+
+@app.route('/api/unifi/test')
+@require_api_key()
+def api_test_connection():
+    """Test connection to UniFi Controller."""
+    try:
+        session = get_session()
+        result = session.test_connection()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'url': CONTROLLER_URL,
+            'help': 'Check UNIFI_URL, credentials, and network connectivity'
+        }), 502
     try:
         clients = get_session().get_clients(SITE)
         return jsonify({'count': len(clients)})
@@ -778,4 +972,4 @@ def ping_with_latency(ip: str) -> Tuple[Optional[bool], Optional[float]]:
 
 if __name__ == '__main__':
     # Never enable debug=True by default
-    app.run(port=5001, debug=FLASK_DEBUG)
+    app.run(host='0.0.0.0', port=5001, debug=FLASK_DEBUG)
