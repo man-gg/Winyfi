@@ -870,15 +870,23 @@ def api_device_clients(mac):
 def api_ping_device(mac):
     if not MAC_REGEX.match(mac):
         return jsonify({'error': 'invalid_mac'}), 400
+    
     # Try real devices first
     ip = None
+    state = None
     try:
         devices = get_session().get_devices(SITE)
-        ap = next((d for d in devices if (d.get('mac') or '').upper() == mac.upper()), None)
+        # Match MAC address (case-insensitive)
+        ap = next((d for d in devices if (d.get('mac') or '').lower() == mac.lower()), None)
         if ap:
-            ip = ap.get('ip')
+            # Try multiple IP field locations
+            ip = ap.get('ip') or ap.get('inform_ip') or ap.get('config_network', {}).get('ip')
             state = ap.get('state')
-    except Exception:
+            print(f"[UniFi] Found device {mac}, IP: {ip}, state: {state}")
+        else:
+            print(f"[UniFi] Device {mac} not found in controller")
+    except Exception as e:
+        print(f"[UniFi] Error finding device: {e}")
         ap = None
         state = None
 
@@ -888,8 +896,9 @@ def api_ping_device(mac):
         if ap:
             ip = ap.get('ip')
             state = ap.get('state')
+    
     if not ip:
-        return jsonify({'error': 'Device not found or IP unavailable'}), 404
+        return jsonify({'error': 'Device not found or IP unavailable', 'mac': mac}), 404
 
     is_online, latency = ping_with_latency(ip)
     payload = {
