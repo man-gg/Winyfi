@@ -1928,141 +1928,176 @@ class Dashboard:
         self.health_canvas.draw_idle()  # Use draw_idle for better performance
 
     def _update_bandwidth_chart(self):
-        """Update the bandwidth usage chart with top 3 routers by actual bandwidth usage"""
-        if not hasattr(self, 'bandwidth_ax') or not self.bandwidth_ax:
-            return
-            
+        """Update the dashboard 'Top 3 Routers by Bandwidth' bar chart with dynamic scaling and robust fallbacks."""
         try:
-            self.bandwidth_ax.clear()
-            
-            # Always set proper axes limits first to prevent default 0.0-1.0 display
-            self.bandwidth_ax.set_ylim(0, 100)
-            self.bandwidth_ax.set_xlim(-0.5, 2.5)  # For up to 3 routers
-            
-            # Get router data
+            if not hasattr(self, 'bandwidth_ax') or not self.bandwidth_ax or not hasattr(self, 'bandwidth_canvas'):
+                return
+            ax = self.bandwidth_ax
+            ax.clear()
+
+            # Early exit if we have no routers configured
             routers = self.router_list or get_routers()
             if not routers:
-                self.bandwidth_ax.text(0.5, 0.5, 'No Router Data', ha='center', va='center', 
-                                     transform=self.bandwidth_ax.transAxes, fontsize=12, color='#6c757d')
-                self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
-                self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
-                self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
-                self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
+                ax.set_xlabel('Routers', fontsize=10)
+                ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+                ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+                ax.grid(True, alpha=0.15, axis='y')
+                ax.text(0.5, 0.5, 'No Router Data', ha='center', va='center',
+                        transform=ax.transAxes, fontsize=12, color='#6c757d')
+                # Style spines
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.spines['left'].set_color('#dee2e6')
+                ax.spines['bottom'].set_color('#dee2e6')
+                self.bandwidth_fig.tight_layout(pad=1.0)
                 self.bandwidth_canvas.draw_idle()
                 return
-            
+
             # Query database for latest bandwidth data (last 24 hours)
-            conn = get_connection()
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get total bandwidth (download + upload) for each router from last 24 hours
-            # Using the most recent data per router
-            query = """
-                SELECT 
-                    r.id as router_id,
-                    r.name as router_name,
-                    COALESCE(SUM(bl.download_mbps + bl.upload_mbps), 0) as total_bandwidth_mbps,
-                    MAX(bl.timestamp) as last_update
-                FROM routers r
-                LEFT JOIN bandwidth_logs bl ON r.id = bl.router_id 
-                    AND bl.timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-                GROUP BY r.id, r.name
-                HAVING total_bandwidth_mbps > 0
-                ORDER BY total_bandwidth_mbps DESC
-                LIMIT 3
-            """
-            
-            cursor.execute(query)
-            top_routers = cursor.fetchall()
-            cursor.close()
-            conn.close()
-            
-            # If no data from last 24 hours, try getting latest single entry per router
-            if not top_routers:
+            top_routers = []
+            conn = None
+            cursor = None
+            try:
                 conn = get_connection()
                 cursor = conn.cursor(dictionary=True)
-                query = """
+                cursor.execute(
+                    """
                     SELECT 
                         r.id as router_id,
                         r.name as router_name,
-                        COALESCE(bl.download_mbps + bl.upload_mbps, 0) as total_bandwidth_mbps,
-                        bl.timestamp as last_update
+                        COALESCE(SUM(bl.download_mbps + bl.upload_mbps), 0) as total_bandwidth_mbps,
+                        MAX(bl.timestamp) as last_update
                     FROM routers r
-                    LEFT JOIN (
-                        SELECT router_id, download_mbps, upload_mbps, timestamp,
-                               ROW_NUMBER() OVER (PARTITION BY router_id ORDER BY timestamp DESC) as rn
-                        FROM bandwidth_logs
-                    ) bl ON r.id = bl.router_id AND bl.rn = 1
-                    WHERE COALESCE(bl.download_mbps + bl.upload_mbps, 0) > 0
+                    LEFT JOIN bandwidth_logs bl ON r.id = bl.router_id 
+                        AND bl.timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+                    GROUP BY r.id, r.name
+                    HAVING total_bandwidth_mbps > 0
                     ORDER BY total_bandwidth_mbps DESC
                     LIMIT 3
-                """
-                cursor.execute(query)
-                top_routers = cursor.fetchall()
-                cursor.close()
-                conn.close()
-            
+                    """
+                )
+                top_routers = cursor.fetchall() or []
+            finally:
+                try:
+                    if cursor: cursor.close()
+                finally:
+                    if conn: conn.close()
+
+            # Fallback without window functions (compatible with MySQL 5.7): use latest sample per router
+            if not top_routers:
+                conn = None
+                cursor = None
+                try:
+                    conn = get_connection()
+                    cursor = conn.cursor(dictionary=True)
+                    cursor.execute(
+                        """
+                        SELECT 
+                            r.id as router_id,
+                            r.name as router_name,
+                            COALESCE(bl_latest.download_mbps + bl_latest.upload_mbps, 0) as total_bandwidth_mbps
+                        FROM routers r
+                        LEFT JOIN bandwidth_logs bl_latest
+                          ON bl_latest.router_id = r.id
+                         AND bl_latest.timestamp = (
+                              SELECT MAX(bl2.timestamp)
+                              FROM bandwidth_logs bl2
+                              WHERE bl2.router_id = r.id
+                         )
+                        WHERE COALESCE(bl_latest.download_mbps + bl_latest.upload_mbps, 0) > 0
+                        ORDER BY total_bandwidth_mbps DESC
+                        LIMIT 3
+                        """
+                    )
+                    top_routers = cursor.fetchall() or []
+                finally:
+                    try:
+                        if cursor: cursor.close()
+                    finally:
+                        if conn: conn.close()
+
             # Ensure we have data to display
             if not top_routers:
-                self.bandwidth_ax.text(0.5, 0.5, 'No Bandwidth Data Available', ha='center', va='center', 
-                                     transform=self.bandwidth_ax.transAxes, fontsize=12, color='#6c757d')
-                self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
-                self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
-                self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
-                self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
+                ax.set_xlabel('Routers', fontsize=10)
+                ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+                ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+                ax.grid(True, alpha=0.15, axis='y')
+                ax.text(0.5, 0.5, 'No Bandwidth Data Available', ha='center', va='center',
+                        transform=ax.transAxes, fontsize=12, color='#6c757d')
+                # Style spines
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.spines['left'].set_color('#dee2e6')
+                ax.spines['bottom'].set_color('#dee2e6')
+                self.bandwidth_fig.tight_layout(pad=1.0)
                 self.bandwidth_canvas.draw_idle()
                 return
-            
-            # Extract router names and bandwidth values
-            router_names = [r['router_name'][:15] if r['router_name'] else f"Router {r['router_id']}" for r in top_routers]
+
+            # Extract router names and values
+            router_names = [r['router_name'][:18] if r['router_name'] else f"Router {r['router_id']}" for r in top_routers]
             bandwidth_values = [float(r['total_bandwidth_mbps'] or 0) for r in top_routers]
-            
-            # Find max bandwidth for dynamic y-axis scaling (with some padding)
-            max_bandwidth = max(bandwidth_values) if bandwidth_values else 100
-            y_max = max(100, max_bandwidth * 1.2)  # Add 20% padding, minimum 100
-            
-            # Create optimized bar chart
+
+            # Compute a nice upper y-limit so small values are still visible
+            def nice_upper(v):
+                if v <= 0: return 1.0
+                v *= 1.1  # headroom for labels
+                import math
+                exp = math.floor(math.log10(v))
+                base = 10 ** exp
+                for m in (1, 2, 5, 10):
+                    if v <= m * base:
+                        return float(m * base)
+                return float(10 ** (exp + 1))
+
+            max_bandwidth = max(bandwidth_values) if bandwidth_values else 0.0
+            y_max = nice_upper(max_bandwidth)
+
+            # Create bar chart
             colors = ['#007bff', '#28a745', '#ffc107']
-            bars = self.bandwidth_ax.bar(range(len(router_names)), bandwidth_values, 
-                                       color=colors, alpha=0.85, width=0.7)
-            
+            bars = ax.bar(range(len(router_names)), bandwidth_values,
+                          color=colors[:len(router_names)], alpha=0.9, width=0.65)
+
             # Add value labels on bars
-            for i, (bar, value) in enumerate(zip(bars, bandwidth_values)):
-                height = bar.get_height()
-                if height > 0:
-                    self.bandwidth_ax.text(bar.get_x() + bar.get_width()/2., height + (y_max * 0.02),
-                                         f'{value:.1f} Mbps', ha='center', va='bottom', 
-                                         fontsize=9, fontweight='bold')
-            
-            # Optimized styling
-            self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
-            self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
-            self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
-            self.bandwidth_ax.set_xticks(range(len(router_names)))
-            self.bandwidth_ax.set_xticklabels(router_names, fontsize=9, rotation=15, ha='right')
-            self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
-            self.bandwidth_ax.set_ylim(0, y_max)
-            self.bandwidth_ax.margins(x=0.15, y=0.05)
-            
+            for bar, value in zip(bars, bandwidth_values):
+                if value > 0:
+                    label = f"{value:.2f}" if value >= 1 else f"{value:.1f}"
+                    ax.text(bar.get_x() + bar.get_width()/2., value + (y_max * 0.02),
+                            label, ha='center', va='bottom', fontsize=9, color='#495057')
+
+            # Styling
+            ax.set_xlabel('Routers', fontsize=10)
+            ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+            ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+            ax.set_xticks(range(len(router_names)))
+            ax.set_xticklabels(router_names, fontsize=9, rotation=15, ha='right')
+            ax.grid(True, alpha=0.15, axis='y')
+            ax.set_ylim(0, y_max)
+            ax.set_xlim(-0.5, len(router_names) - 0.5)
+            ax.margins(x=0.15, y=0.05)
+
             # Re-apply styling after clear
-            self.bandwidth_ax.spines['top'].set_visible(False)
-            self.bandwidth_ax.spines['right'].set_visible(False)
-            self.bandwidth_ax.spines['left'].set_color('#dee2e6')
-            self.bandwidth_ax.spines['bottom'].set_color('#dee2e6')
-            
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['left'].set_color('#dee2e6')
+            ax.spines['bottom'].set_color('#dee2e6')
+
             # Optimize drawing
+            self.bandwidth_fig.tight_layout(pad=1.0)
             self.bandwidth_canvas.draw_idle()
         except Exception as e:
             # Fallback: show error message with proper axes
-            self.bandwidth_ax.clear()
-            self.bandwidth_ax.set_ylim(0, 100)
-            self.bandwidth_ax.set_xlim(-0.5, 2.5)
-            self.bandwidth_ax.text(0.5, 0.5, f'Error: {str(e)[:30]}', ha='center', va='center', 
-                                 transform=self.bandwidth_ax.transAxes, fontsize=10, color='red')
-            self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
-            self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
-            self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
-            self.bandwidth_canvas.draw_idle()
+            try:
+                ax = self.bandwidth_ax
+                ax.clear()
+                ax.text(0.5, 0.5, f'Error: {str(e)[:60]}', ha='center', va='center',
+                        transform=ax.transAxes, fontsize=10, color='red')
+                ax.set_xlabel('Routers', fontsize=10)
+                ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+                ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+                self.bandwidth_fig.tight_layout(pad=1.0)
+                self.bandwidth_canvas.draw_idle()
+            except Exception:
+                pass
 
 
     def apply_filter(self):
@@ -7231,7 +7266,7 @@ Type: {values[11]}
             self._refresh_bandwidth_table()
             
             # Update chart with the same data
-            self._update_bandwidth_chart()
+            self._update_bandwidth_tab_chart()
 
             # Update subtitle label
             if hasattr(self, 'bandwidth_table_subtitle'):
@@ -7367,7 +7402,7 @@ Type: {values[11]}
         except Exception as e:
             print(f"Error updating bandwidth statistics: {e}")
 
-    def _update_bandwidth_chart(self):
+    def _update_bandwidth_tab_chart(self):
         """
         Updates the bandwidth chart with data from self._bandwidth_rows.
         Creates line charts for download/upload and latency over time.
