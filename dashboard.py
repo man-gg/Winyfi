@@ -1568,6 +1568,16 @@ class Dashboard:
         self.bandwidth_fig.patch.set_facecolor('#ffffff')
         self.bandwidth_ax.set_facecolor('#ffffff')
         
+        # Initialize with proper axes limits to prevent 0.0-1.0 default display
+        self.bandwidth_ax.set_ylim(0, 100)
+        self.bandwidth_ax.set_xlim(-0.5, 2.5)  # For up to 3 routers
+        
+        # Set initial labels and title
+        self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
+        self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+        self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+        self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
+        
         # Optimize figure settings
         self.bandwidth_fig.tight_layout(pad=1.0)
         
@@ -1576,6 +1586,10 @@ class Dashboard:
         self.bandwidth_ax.spines['right'].set_visible(False)
         self.bandwidth_ax.spines['left'].set_color('#dee2e6')
         self.bandwidth_ax.spines['bottom'].set_color('#dee2e6')
+        
+        # Show placeholder message initially
+        self.bandwidth_ax.text(0.5, 0.5, 'Loading...', ha='center', va='center', 
+                             transform=self.bandwidth_ax.transAxes, fontsize=12, color='#6c757d')
         
         self.bandwidth_canvas = FigureCanvasTkAgg(self.bandwidth_fig, master=chart_frame)
         self.bandwidth_canvas.get_tk_widget().pack(fill="both", expand=True)
@@ -1622,8 +1636,10 @@ class Dashboard:
     def _on_tab_change(self, event):
         tab = event.widget.tab(event.widget.select(), "text")
         if tab == "Bandwidth":
-            self.load_bandwidth_data()
-        self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_change)
+            # Refresh the bandwidth chart when tab becomes visible
+            if hasattr(self, 'bandwidth_frame') and hasattr(self, 'refresh_total_bandwidth_chart'):
+                # Small delay to ensure tab is fully visible before refreshing
+                self.root.after(100, self.refresh_total_bandwidth_chart)
 
     def refresh_report_tables(self):
         # parse dates from the Entry widgets
@@ -1912,77 +1928,141 @@ class Dashboard:
         self.health_canvas.draw_idle()  # Use draw_idle for better performance
 
     def _update_bandwidth_chart(self):
-        """Update the bandwidth usage chart with stable, realistic data"""
+        """Update the bandwidth usage chart with top 3 routers by actual bandwidth usage"""
         if not hasattr(self, 'bandwidth_ax') or not self.bandwidth_ax:
             return
             
-        self.bandwidth_ax.clear()
-        
-        # Get router data for bandwidth visualization
-        routers = self.router_list or get_routers()
-        if not routers:
-            self.bandwidth_ax.text(0.5, 0.5, 'No Router Data', ha='center', va='center', 
-                                 transform=self.bandwidth_ax.transAxes, fontsize=12)
+        try:
+            self.bandwidth_ax.clear()
+            
+            # Always set proper axes limits first to prevent default 0.0-1.0 display
+            self.bandwidth_ax.set_ylim(0, 100)
+            self.bandwidth_ax.set_xlim(-0.5, 2.5)  # For up to 3 routers
+            
+            # Get router data
+            routers = self.router_list or get_routers()
+            if not routers:
+                self.bandwidth_ax.text(0.5, 0.5, 'No Router Data', ha='center', va='center', 
+                                     transform=self.bandwidth_ax.transAxes, fontsize=12, color='#6c757d')
+                self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
+                self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+                self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+                self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
+                self.bandwidth_canvas.draw_idle()
+                return
+            
+            # Query database for latest bandwidth data (last 24 hours)
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get total bandwidth (download + upload) for each router from last 24 hours
+            # Using the most recent data per router
+            query = """
+                SELECT 
+                    r.id as router_id,
+                    r.name as router_name,
+                    COALESCE(SUM(bl.download_mbps + bl.upload_mbps), 0) as total_bandwidth_mbps,
+                    MAX(bl.timestamp) as last_update
+                FROM routers r
+                LEFT JOIN bandwidth_logs bl ON r.id = bl.router_id 
+                    AND bl.timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+                GROUP BY r.id, r.name
+                HAVING total_bandwidth_mbps > 0
+                ORDER BY total_bandwidth_mbps DESC
+                LIMIT 3
+            """
+            
+            cursor.execute(query)
+            top_routers = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            
+            # If no data from last 24 hours, try getting latest single entry per router
+            if not top_routers:
+                conn = get_connection()
+                cursor = conn.cursor(dictionary=True)
+                query = """
+                    SELECT 
+                        r.id as router_id,
+                        r.name as router_name,
+                        COALESCE(bl.download_mbps + bl.upload_mbps, 0) as total_bandwidth_mbps,
+                        bl.timestamp as last_update
+                    FROM routers r
+                    LEFT JOIN (
+                        SELECT router_id, download_mbps, upload_mbps, timestamp,
+                               ROW_NUMBER() OVER (PARTITION BY router_id ORDER BY timestamp DESC) as rn
+                        FROM bandwidth_logs
+                    ) bl ON r.id = bl.router_id AND bl.rn = 1
+                    WHERE COALESCE(bl.download_mbps + bl.upload_mbps, 0) > 0
+                    ORDER BY total_bandwidth_mbps DESC
+                    LIMIT 3
+                """
+                cursor.execute(query)
+                top_routers = cursor.fetchall()
+                cursor.close()
+                conn.close()
+            
+            # Ensure we have data to display
+            if not top_routers:
+                self.bandwidth_ax.text(0.5, 0.5, 'No Bandwidth Data Available', ha='center', va='center', 
+                                     transform=self.bandwidth_ax.transAxes, fontsize=12, color='#6c757d')
+                self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
+                self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+                self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+                self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
+                self.bandwidth_canvas.draw_idle()
+                return
+            
+            # Extract router names and bandwidth values
+            router_names = [r['router_name'][:15] if r['router_name'] else f"Router {r['router_id']}" for r in top_routers]
+            bandwidth_values = [float(r['total_bandwidth_mbps'] or 0) for r in top_routers]
+            
+            # Find max bandwidth for dynamic y-axis scaling (with some padding)
+            max_bandwidth = max(bandwidth_values) if bandwidth_values else 100
+            y_max = max(100, max_bandwidth * 1.2)  # Add 20% padding, minimum 100
+            
+            # Create optimized bar chart
+            colors = ['#007bff', '#28a745', '#ffc107']
+            bars = self.bandwidth_ax.bar(range(len(router_names)), bandwidth_values, 
+                                       color=colors, alpha=0.85, width=0.7)
+            
+            # Add value labels on bars
+            for i, (bar, value) in enumerate(zip(bars, bandwidth_values)):
+                height = bar.get_height()
+                if height > 0:
+                    self.bandwidth_ax.text(bar.get_x() + bar.get_width()/2., height + (y_max * 0.02),
+                                         f'{value:.1f} Mbps', ha='center', va='bottom', 
+                                         fontsize=9, fontweight='bold')
+            
+            # Optimized styling
+            self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
+            self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+            self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+            self.bandwidth_ax.set_xticks(range(len(router_names)))
+            self.bandwidth_ax.set_xticklabels(router_names, fontsize=9, rotation=15, ha='right')
+            self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
+            self.bandwidth_ax.set_ylim(0, y_max)
+            self.bandwidth_ax.margins(x=0.15, y=0.05)
+            
+            # Re-apply styling after clear
+            self.bandwidth_ax.spines['top'].set_visible(False)
+            self.bandwidth_ax.spines['right'].set_visible(False)
+            self.bandwidth_ax.spines['left'].set_color('#dee2e6')
+            self.bandwidth_ax.spines['bottom'].set_color('#dee2e6')
+            
+            # Optimize drawing
             self.bandwidth_canvas.draw_idle()
-            return
-        
-        # Get top 3 routers by bandwidth with stable data
-        router_names = [r.get('name', f'Router {r.get("id", "Unknown")}')[:10] for r in routers[:3]]
-        
-        # Generate stable bandwidth data based on router characteristics
-        bandwidth_usage = []
-        for i, router in enumerate(routers[:3]):
-            router_id = router.get('id', 0)
-            router_name = router.get('name', f'Router {router_id}')
-            # Prefer computed display status (from routers tab) and fall back to status_history
-            is_online = (
-                router.get('is_online_display') is True
-            ) or (
-                self.status_history.get(router_id, {}).get('current') is True
-            )
-            
-            # Check if we have stored data for this router
-            if router_name not in self.bandwidth_data:
-                # Initialize stable bandwidth based on router ID for consistency
-                base_bandwidth = (router_id * 15) % 60 + 20  # Range: 20-80%
-                self.bandwidth_data[router_name] = base_bandwidth
-            
-            # Get stored bandwidth and adjust based on online status
-            stored_bandwidth = self.bandwidth_data[router_name]
-            
-            if is_online:
-                # Online routers show their stored bandwidth (stable)
-                bandwidth = stored_bandwidth
-            else:
-                # Offline routers show 0% bandwidth
-                bandwidth = 0
-            
-            bandwidth_usage.append(bandwidth)
-        
-        # Create optimized bar chart
-        colors = ['#007bff', '#28a745', '#ffc107']
-        bars = self.bandwidth_ax.bar(range(len(router_names)), bandwidth_usage, 
-                                   color=colors, alpha=0.85, width=0.7)
-        
-        # Add value labels on bars - optimized
-        for i, (bar, value) in enumerate(zip(bars, bandwidth_usage)):
-            height = bar.get_height()
-            self.bandwidth_ax.text(bar.get_x() + bar.get_width()/2., height + 1.5,
-                                 f'{value:.0f}%', ha='center', va='bottom', 
-                                 fontsize=9, fontweight='bold')
-        
-        # Optimized styling
-        self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
-        self.bandwidth_ax.set_ylabel('Bandwidth Usage (%)', fontsize=10)
-        self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
-        self.bandwidth_ax.set_xticks(range(len(router_names)))
-        self.bandwidth_ax.set_xticklabels(router_names, fontsize=9)
-        self.bandwidth_ax.grid(True, alpha=0.15, axis='y')
-        self.bandwidth_ax.set_ylim(0, 100)
-        self.bandwidth_ax.margins(x=0.15, y=0.05)
-        
-        # Optimize drawing
-        self.bandwidth_canvas.draw_idle()
+        except Exception as e:
+            # Fallback: show error message with proper axes
+            self.bandwidth_ax.clear()
+            self.bandwidth_ax.set_ylim(0, 100)
+            self.bandwidth_ax.set_xlim(-0.5, 2.5)
+            self.bandwidth_ax.text(0.5, 0.5, f'Error: {str(e)[:30]}', ha='center', va='center', 
+                                 transform=self.bandwidth_ax.transAxes, fontsize=10, color='red')
+            self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
+            self.bandwidth_ax.set_ylabel('Bandwidth Usage (Mbps)', fontsize=10)
+            self.bandwidth_ax.set_title('Top 3 Routers by Bandwidth', fontsize=12, fontweight='bold', pad=10)
+            self.bandwidth_canvas.draw_idle()
 
 
     def apply_filter(self):
@@ -6497,8 +6577,13 @@ Type: {values[11]}
         router_frame.pack(fill="x", pady=(0, 10))
         
         tb.Label(router_frame, text="Select Router:", font=("Segoe UI", 10)).pack(side="left")
-        self.router_var = tk.StringVar()
-        router_names = ["All Routers"] + [r["name"] for r in get_routers()]
+        self.router_var = tk.StringVar(value="All Routers")
+        try:
+            routers = get_routers()
+            router_names = ["All Routers"] + [r["name"] for r in routers if r.get("name")]
+        except Exception:
+            router_names = ["All Routers"]
+        
         self.router_picker = tb.Combobox(
             router_frame,
             textvariable=self.router_var,
@@ -6509,6 +6594,24 @@ Type: {values[11]}
         self.router_picker.current(0)  # Default to All Routers
         self.router_picker.pack(side="left", padx=(10, 0))
         self.router_picker.bind("<<ComboboxSelected>>", lambda e: self.refresh_total_bandwidth_chart())
+        
+        # Helper method to refresh router list (can be called when routers are added/removed)
+        def refresh_router_list():
+            try:
+                routers = get_routers()
+                router_names = ["All Routers"] + [r["name"] for r in routers if r.get("name")]
+                current_value = self.router_var.get()
+                self.router_picker['values'] = router_names if router_names else ["No routers available"]
+                # Restore selection if it still exists, otherwise default to "All Routers"
+                if current_value in router_names:
+                    self.router_picker.set(current_value)
+                else:
+                    self.router_picker.current(0)
+            except Exception as e:
+                print(f"Error refreshing router list in bandwidth tab: {e}")
+        
+        # Store refresh method for external calls
+        self.refresh_bandwidth_router_list = refresh_router_list
 
         # Date range filter
         date_frame = tb.Frame(controls_frame)
@@ -6601,34 +6704,25 @@ Type: {values[11]}
         for i in range(4):
             self.bandwidth_stats_frame.grid_columnconfigure(i, weight=1)
 
-        # Main content area with notebook
-        self.bandwidth_notebook = tb.Notebook(self.bandwidth_frame)
-        self.bandwidth_notebook.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-
-        # Charts tab
-        self.bandwidth_charts_frame = tb.Frame(self.bandwidth_notebook)
-        self.bandwidth_notebook.add(self.bandwidth_charts_frame, text="📈 Charts")
-
-        # Bandwidth trend chart
-        chart_frame = tb.LabelFrame(self.bandwidth_charts_frame, text="📊 Bandwidth Trends", 
-                                   bootstyle="info", padding=10)
-        chart_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # Create figure with explicit tight layout
-        self.bandwidth_fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(10, 8), dpi=100)
-        self.bandwidth_fig.tight_layout(pad=2.0)
+        # Chart frame - add chart above the table
+        self.bandwidth_chart_frame = tb.Frame(self.bandwidth_frame)
+        self.bandwidth_chart_frame.pack(fill="both", expand=True, padx=20, pady=(10, 10))
         
-        # Embed canvas
-        self.bandwidth_canvas = FigureCanvasTkAgg(self.bandwidth_fig, master=chart_frame)
-        canvas_widget = self.bandwidth_canvas.get_tk_widget()
-        canvas_widget.pack(fill="both", expand=True)
+        # Initialize matplotlib figure and axes for bandwidth chart
+        self.bandwidth_chart_fig, (self.bandwidth_chart_ax1, self.bandwidth_chart_ax2) = plt.subplots(
+            1, 2, figsize=(12, 4), dpi=100
+        )
+        self.bandwidth_chart_fig.patch.set_facecolor('#ffffff')
+        self.bandwidth_chart_fig.tight_layout(pad=2.0)
         
-        # Force initial draw
-        self.bandwidth_canvas.draw()
+        # Embed canvas in Tkinter
+        self.bandwidth_chart_canvas = FigureCanvasTkAgg(self.bandwidth_chart_fig, master=self.bandwidth_chart_frame)
+        self.bandwidth_chart_canvas.get_tk_widget().pack(fill="both", expand=True)
 
-        # Data table tab
-        self.bandwidth_table_frame = tb.Frame(self.bandwidth_notebook)
-        self.bandwidth_notebook.add(self.bandwidth_table_frame, text="📋 Data Table")
+        # Main content area - data table below the chart
+        # Table container (no notebook needed since we only have the table now)
+        self.bandwidth_table_frame = tb.Frame(self.bandwidth_frame)
+        self.bandwidth_table_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
         # Table with scrollbars
         table_container = tb.Frame(self.bandwidth_table_frame)
@@ -6801,10 +6895,19 @@ Type: {values[11]}
         except Exception:
             return
         
-        if self.bandwidth_auto_update_var.get():
+        # Only continue if auto-update is still enabled
+        if not hasattr(self, 'bandwidth_auto_update_var') or not self.bandwidth_auto_update_var.get():
+            return
+        
+        try:
             self.refresh_total_bandwidth_chart()
             self.update_bandwidth_last_update_display()
+            # Schedule next update
             self.bandwidth_auto_update_job = self.root.after(self.bandwidth_auto_update_interval, self.auto_update_bandwidth)
+        except Exception as e:
+            print(f"Error in auto_update_bandwidth: {e}")
+            import traceback
+            traceback.print_exc()
 
     def update_bandwidth_last_update_display(self):
         """Update the last update time display for bandwidth"""
@@ -6859,49 +6962,82 @@ Type: {values[11]}
     def update_bandwidth_statistics(self):
         """Update bandwidth statistics cards"""
         try:
-            # Get bandwidth data from the current table
-            if not hasattr(self, 'bandwidth_table'):
-                return
+            # Get bandwidth data from stored rows (more reliable than parsing table)
+            if not hasattr(self, '_bandwidth_rows') or not self._bandwidth_rows:
+                # Fallback to table if rows not available
+                if not hasattr(self, 'bandwidth_table'):
+                    return
+                    
+                downloads = []
+                uploads = []
+                latencies = []
                 
-            # Extract data from table
-            downloads = []
-            uploads = []
-            latencies = []
-            
-            for item in self.bandwidth_table.get_children():
-                values = self.bandwidth_table.item(item)['values']
-                if len(values) >= 4:
-                    try:
-                        # Column order: timestamp(0), download(1), upload(2), latency(3)
-                        download_val = float(str(values[1]).replace(' Mbps', ''))
-                        upload_val = float(str(values[2]).replace(' Mbps', ''))
-                        latency_val = float(str(values[3]).replace(' ms', ''))
-                        
-                        downloads.append(download_val)
-                        uploads.append(upload_val)
-                        latencies.append(latency_val)
-                    except (ValueError, IndexError, AttributeError):
-                        continue
+                for item in self.bandwidth_table.get_children():
+                    values = self.bandwidth_table.item(item)['values']
+                    if len(values) >= 4:
+                        try:
+                            # Column order: timestamp(0), download(1), upload(2), latency(3)
+                            # Values may be strings like "12.34" or "12.34 Mbps"
+                            download_str = str(values[1]).replace(' Mbps', '').strip()
+                            upload_str = str(values[2]).replace(' Mbps', '').strip()
+                            latency_str = str(values[3]).replace(' ms', '').strip()
+                            
+                            download_val = float(download_str)
+                            upload_val = float(upload_str)
+                            latency_val = float(latency_str)
+                            
+                            downloads.append(download_val)
+                            uploads.append(upload_val)
+                            latencies.append(latency_val)
+                        except (ValueError, IndexError, AttributeError):
+                            continue
+            else:
+                # Use stored rows directly (more efficient)
+                downloads = []
+                uploads = []
+                latencies = []
+                
+                for row in self._bandwidth_rows:
+                    if len(row) >= 4:
+                        try:
+                            downloads.append(float(row[1]))
+                            uploads.append(float(row[2]))
+                            latencies.append(float(row[3]))
+                        except (ValueError, TypeError):
+                            continue
             
             # Update statistics cards
             if downloads and hasattr(self, 'avg_download_label'):
                 avg_download = sum(downloads) / len(downloads)
                 self.avg_download_label.config(text=f"{avg_download:.2f} Mbps")
                 
-                max_download = max(downloads)
                 if hasattr(self, 'max_download_label'):
+                    max_download = max(downloads)
                     self.max_download_label.config(text=f"{max_download:.2f} Mbps")
+            else:
+                if hasattr(self, 'avg_download_label'):
+                    self.avg_download_label.config(text="—")
+                if hasattr(self, 'max_download_label'):
+                    self.max_download_label.config(text="—")
             
             if uploads and hasattr(self, 'avg_upload_label'):
                 avg_upload = sum(uploads) / len(uploads)
                 self.avg_upload_label.config(text=f"{avg_upload:.2f} Mbps")
+            else:
+                if hasattr(self, 'avg_upload_label'):
+                    self.avg_upload_label.config(text="—")
             
             if latencies and hasattr(self, 'avg_latency_label'):
                 avg_latency = sum(latencies) / len(latencies)
                 self.avg_latency_label.config(text=f"{avg_latency:.1f} ms")
+            else:
+                if hasattr(self, 'avg_latency_label'):
+                    self.avg_latency_label.config(text="—")
                 
         except Exception as e:
             print(f"Error updating bandwidth statistics: {e}")
+            import traceback
+            traceback.print_exc()
 
     # Add this helper method inside Dashboard class
     def _reverse_column(self, col_name):
@@ -6999,9 +7135,12 @@ Type: {values[11]}
                 cur.close()
                 conn.close()
                 if not rows:
-                    self.ax1.clear()
-                    self.ax2.clear()
-                    self.bandwidth_canvas.draw()
+                    # Clear chart if it exists
+                    if hasattr(self, 'bandwidth_chart_ax1') and hasattr(self, 'bandwidth_chart_ax2'):
+                        self.bandwidth_chart_ax1.clear()
+                        self.bandwidth_chart_ax2.clear()
+                        if hasattr(self, 'bandwidth_chart_canvas'):
+                            self.bandwidth_chart_canvas.draw()
                     self.bandwidth_table.delete(*self.bandwidth_table.get_children())
                     messagebox.showinfo("No Data", "No bandwidth data available for the selected period.")
                     return
@@ -7058,9 +7197,12 @@ Type: {values[11]}
                 cur.close()
                 conn.close()
                 if not rows:
-                    self.ax1.clear()
-                    self.ax2.clear()
-                    self.bandwidth_canvas.draw()
+                    # Clear chart if it exists
+                    if hasattr(self, 'bandwidth_chart_ax1') and hasattr(self, 'bandwidth_chart_ax2'):
+                        self.bandwidth_chart_ax1.clear()
+                        self.bandwidth_chart_ax2.clear()
+                        if hasattr(self, 'bandwidth_chart_canvas'):
+                            self.bandwidth_chart_canvas.draw()
                     self.bandwidth_table.delete(*self.bandwidth_table.get_children())
                     messagebox.showinfo("No Data", "No bandwidth data available for the selected period.")
                     return
@@ -7087,6 +7229,9 @@ Type: {values[11]}
 
             # Refresh table (this will also render the chart from the same data)
             self._refresh_bandwidth_table()
+            
+            # Update chart with the same data
+            self._update_bandwidth_chart()
 
             # Update subtitle label
             if hasattr(self, 'bandwidth_table_subtitle'):
@@ -7201,7 +7346,7 @@ Type: {values[11]}
                 data.sort(key=lambda x: _nz_sort(x[idx]), reverse=reverse)
 
         for row in data:
-            # Format the values properly
+            # Format the values properly for table display
             timestamp, download, upload, latency = row
             def _fmt2(v, places=2):
                 try:
@@ -7216,163 +7361,114 @@ Type: {values[11]}
             )
             self.bandwidth_table.insert("", "end", values=formatted_row)
 
-        # Update chart to match table
-        self._update_bandwidth_chart_from_data(data)
-        
         # Update statistics cards
-        self.update_bandwidth_statistics()
-
-
-    def _update_bandwidth_chart_from_data(self, data):
-        """Updates chart from table data."""
-        # Ensure axes exist
-        if not hasattr(self, 'ax1') or not hasattr(self, 'ax2'):
-            return
-            
-        self.ax1.clear()
-        self.ax2.clear()
-        if not data:
-            self.bandwidth_canvas.draw()
-            return
-
-        # Column order in data rows: (timestamp, download, upload, latency)
-        raw_ts = [r[0] for r in data]
-        def to_float(v):
-            try:
-                return float(v)
-            except Exception:
-                return 0.0
-        downloads  = [to_float(r[1]) for r in data]
-        uploads    = [to_float(r[2]) for r in data]
-        latencies  = [to_float(r[3]) for r in data]
-
-        # Parse timestamps to datetime for reliable time-series plotting
-        from datetime import datetime as _dt
-        parsed_ts = []
-        for s in raw_ts:
-            dt = None
-            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:00:00", "%Y-%m-%d"):
-                try:
-                    dt = _dt.strptime(s, fmt)
-                    break
-                except Exception:
-                    continue
-            if dt is None:
-                try:
-                    dt = _dt.fromisoformat(str(s))
-                except Exception:
-                    dt = _dt.now()
-            parsed_ts.append(dt)
-
-        # Dynamic downsampling for readability - use uniform sampling
-        max_points = 100
-        n = len(parsed_ts)
-        binned = False
-        timestamps = parsed_ts
-        if n > max_points:
-            import math
-            # Use uniform downsampling to maintain visual distribution
-            step = max(1, n // max_points)
-            timestamps = parsed_ts[::step]
-            downloads = downloads[::step]
-            uploads = uploads[::step]
-            latencies = latencies[::step]
-            binned = True
-
-        # Plot bandwidth (with robust scaling to avoid outliers flattening the view)
-        self.ax1.plot(timestamps, downloads, label="Download (Mbps)", color="blue", linewidth=2, marker='o', markersize=3)
-        self.ax1.plot(timestamps, uploads, label="Upload (Mbps)", color="green", linewidth=2, marker='s', markersize=3)
-        suffix = f" (showing {len(timestamps)} pts)" if binned else f" ({len(timestamps)} points)"
-        self.ax1.set_title(f"Bandwidth Trends{suffix}", fontsize=12, fontweight='bold')
-        self.ax1.set_xlabel("Date & Time", fontsize=10)
-        self.ax1.set_ylabel("Mbps", fontsize=10)
-        self.ax1.grid(True, alpha=0.3, linestyle='--')
-        # Use date formatting on x-axis for readability
         try:
-            import matplotlib.dates as mdates
-            self.ax1.xaxis.set_major_locator(mdates.AutoDateLocator())
-            self.ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d\n%H:%M'))
-        except Exception:
-            pass
-        # Robust y-limits using 95th percentile clamping
-        def _percentile(values, p):
-            vals = [v for v in values if isinstance(v, (int, float))]
-            if not vals:
-                return 0.0
-            vals.sort()
-            k = int((len(vals) - 1) * (p / 100.0))
-            return vals[k]
-        if downloads or uploads:
-            all_bw = [v for v in downloads + uploads if v is not None]
-            max_bw = max(all_bw) if all_bw else 0.0
-            min_bw = min(all_bw) if all_bw else 0.0
-            p95 = _percentile(all_bw, 95) if all_bw else 0.0
-            if max_bw == 0 and min_bw == 0:
-                self.ax1.set_ylim(-0.1, 0.1)
-            else:
-                upper = min(max_bw, p95 * 1.1) if p95 > 0 else max_bw
-                lower = min_bw * 0.9 if min_bw < 0 else 0
-                if upper - lower < 0.1:
-                    upper = lower + 0.1
-                self.ax1.set_ylim(lower, upper)
-        # Manage x ticks
-        try:
-            import matplotlib.ticker as mticker
-            self.ax1.xaxis.set_major_locator(mticker.MaxNLocator(nbins=10, prune='lower'))
-        except Exception:
-            pass
-        self.ax1.tick_params(axis="x", rotation=0, labelsize=8)
-        self.ax1.legend(loc="upper left", fontsize=9, framealpha=0.9)
-
-        # Plot latency with gentle clamping (98th percentile) to ignore spikes
-        self.ax2.plot(timestamps, latencies, label="Latency (ms)", color="red", linewidth=2, marker="o", markersize=4)
-        self.ax2.set_title(f"Latency Trends{suffix}", fontsize=12, fontweight='bold')
-        self.ax2.set_xlabel("Date & Time", fontsize=10)
-        self.ax2.set_ylabel("Latency (ms)", fontsize=10)
-        self.ax2.grid(True, alpha=0.3, linestyle='--')
-        try:
-            import matplotlib.dates as mdates
-            self.ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
-            self.ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d\n%H:%M'))
-        except Exception:
-            pass
-        if latencies:
-            valid_lat = [v for v in latencies if isinstance(v, (int, float))]
-            if valid_lat:
-                lat_min = min(valid_lat)
-                lat_max = max(valid_lat)
-                p98 = _percentile(valid_lat, 98)
-                upper = min(lat_max, p98 * 1.1) if p98 > 0 else lat_max
-                lower = max(0, lat_min * 0.9)
-                if upper - lower < 1:
-                    upper = lower + 1
-                self.ax2.set_ylim(lower, upper)
-        self.ax2.tick_params(axis="x", rotation=0, labelsize=8)
-        self.ax2.legend(loc="upper right", fontsize=9, framealpha=0.9)
-
-        # Tight layout for readability
-        try:
-            self.bandwidth_fig.tight_layout()
+            self.update_bandwidth_statistics()
         except Exception as e:
-            print(f"⚠️ tight_layout failed: {e}")
+            print(f"Error updating bandwidth statistics: {e}")
+
+    def _update_bandwidth_chart(self):
+        """
+        Updates the bandwidth chart with data from self._bandwidth_rows.
+        Creates line charts for download/upload and latency over time.
+        """
+        import matplotlib.dates as mdates
         
-        # Force canvas redraw with explicit update
-        try:
-            self.bandwidth_fig.canvas.draw_idle()
-            self.bandwidth_canvas.draw()
-            self.bandwidth_canvas.flush_events()
-            # Force Tkinter to update the display
-            self.root.update_idletasks()
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-
-    def _reverse_column(self, col_name):
-        """Toggles column sorting on header click."""
-        reverse = self._reverse_flags.get(col_name, False)
-        self._refresh_bandwidth_table(sort_column=col_name, reverse=reverse)
-        self._reverse_flags[col_name] = not reverse
-
+        if not hasattr(self, 'bandwidth_chart_fig') or not hasattr(self, '_bandwidth_rows'):
+            return
+        
+        data = list(getattr(self, "_bandwidth_rows", []))
+        if not data:
+            # Clear charts if no data
+            self.bandwidth_chart_ax1.clear()
+            self.bandwidth_chart_ax2.clear()
+            self.bandwidth_chart_canvas.draw()
+            return
+        
+        # Parse data from rows: (timestamp, download, upload, latency)
+        timestamps = []
+        downloads = []
+        uploads = []
+        latencies = []
+        
+        for row in data:
+            timestamp_str, download, upload, latency = row
+            try:
+                # Parse timestamp - handle different formats
+                if isinstance(timestamp_str, str):
+                    # Try multiple timestamp formats
+                    ts = None
+                    for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:00:00", "%Y-%m-%d"]:
+                        try:
+                            ts = datetime.strptime(timestamp_str, fmt)
+                            break
+                        except ValueError:
+                            continue
+                    if ts is None:
+                        continue
+                else:
+                    ts = timestamp_str
+                
+                timestamps.append(ts)
+                downloads.append(float(download) if download is not None else 0.0)
+                uploads.append(float(upload) if upload is not None else 0.0)
+                latencies.append(float(latency) if latency is not None else 0.0)
+            except Exception as e:
+                continue
+        
+        if not timestamps:
+            return
+        
+        # Clear previous plots
+        self.bandwidth_chart_ax1.clear()
+        self.bandwidth_chart_ax2.clear()
+        
+        # Plot 1: Download and Upload (Mbps)
+        self.bandwidth_chart_ax1.plot(timestamps, downloads, label="Download (Mbps)", 
+                                     color="#dc3545", linewidth=2, marker='o', markersize=3)
+        self.bandwidth_chart_ax1.plot(timestamps, uploads, label="Upload (Mbps)", 
+                                     color="#28a745", linewidth=2, marker='s', markersize=3)
+        self.bandwidth_chart_ax1.set_title("Bandwidth Usage", fontsize=12, fontweight='bold')
+        self.bandwidth_chart_ax1.set_xlabel("Time", fontsize=10)
+        self.bandwidth_chart_ax1.set_ylabel("Mbps", fontsize=10)
+        self.bandwidth_chart_ax1.legend(loc='upper left', fontsize=9)
+        self.bandwidth_chart_ax1.grid(True, alpha=0.3)
+        self.bandwidth_chart_ax1.tick_params(axis="x", rotation=45, labelsize=8)
+        
+        # Format x-axis dates
+        if len(timestamps) > 1:
+            # Use appropriate date formatter based on time range
+            time_span = (timestamps[-1] - timestamps[0]).total_seconds()
+            if time_span < 86400:  # Less than 1 day
+                self.bandwidth_chart_ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+            elif time_span < 604800:  # Less than 1 week
+                self.bandwidth_chart_ax1.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
+            else:
+                self.bandwidth_chart_ax1.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+        
+        # Plot 2: Latency (ms)
+        self.bandwidth_chart_ax2.plot(timestamps, latencies, label="Latency (ms)", 
+                                     color="#007bff", linewidth=2, marker='^', markersize=3)
+        self.bandwidth_chart_ax2.set_title("Latency", fontsize=12, fontweight='bold')
+        self.bandwidth_chart_ax2.set_xlabel("Time", fontsize=10)
+        self.bandwidth_chart_ax2.set_ylabel("ms", fontsize=10)
+        self.bandwidth_chart_ax2.legend(loc='upper left', fontsize=9)
+        self.bandwidth_chart_ax2.grid(True, alpha=0.3)
+        self.bandwidth_chart_ax2.tick_params(axis="x", rotation=45, labelsize=8)
+        
+        # Format x-axis dates for latency chart
+        if len(timestamps) > 1:
+            time_span = (timestamps[-1] - timestamps[0]).total_seconds()
+            if time_span < 86400:
+                self.bandwidth_chart_ax2.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+            elif time_span < 604800:
+                self.bandwidth_chart_ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
+            else:
+                self.bandwidth_chart_ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+        
+        # Adjust layout and redraw
+        self.bandwidth_chart_fig.tight_layout(pad=2.0)
+        self.bandwidth_chart_canvas.draw()
 
 
     def build_total_bandwidth_tab(self):
@@ -7479,122 +7575,141 @@ Type: {values[11]}
             self._show_bandwidth_loading()
             # Cancel any scheduled refresh (auto-update job)
             if hasattr(self, "_bandwidth_after_job") and self._bandwidth_after_job:
-                self.bandwidth_frame.after_cancel(self._bandwidth_after_job)
+                try:
+                    self.root.after_cancel(self._bandwidth_after_job)
+                except Exception:
+                    pass
                 self._bandwidth_after_job = None
+            # Also cancel auto-update job if running
+            if hasattr(self, 'bandwidth_auto_update_job') and self.bandwidth_auto_update_job:
+                try:
+                    self.root.after_cancel(self.bandwidth_auto_update_job)
+                except Exception:
+                    pass
+                self.bandwidth_auto_update_job = None
         except Exception as e:
             import traceback
             traceback.print_exc()
+            self._hide_bandwidth_loading()
             return
 
-        # Get current router and date picker values directly from UI
-        router_name = self.router_var.get() if hasattr(self, 'router_var') else "All Routers"
-        start_date_str = self.start_date.entry.get() if hasattr(self, 'start_date') else None
-        end_date_str = self.end_date.entry.get() if hasattr(self, 'end_date') else None
-
-        # Parse dates
         try:
-            start_date = datetime.strptime(start_date_str, "%m/%d/%Y").date() if start_date_str else None
-        except Exception:
-            start_date = None
-        try:
-            end_date = datetime.strptime(end_date_str, "%m/%d/%Y").date() if end_date_str else None
-        except Exception:
-            end_date = None
+            # Get current router and date picker values directly from UI
+            router_name = self.router_var.get() if hasattr(self, 'router_var') else "All Routers"
+            start_date_str = self.start_date.entry.get() if hasattr(self, 'start_date') else None
+            end_date_str = self.end_date.entry.get() if hasattr(self, 'end_date') else None
 
-        # Default to last 7 days if empty (only if dates are None, don't modify the UI)
-        today = datetime.now().date()
-        if not start_date:
-            start_date = today - timedelta(days=7)
-        if not end_date:
-            end_date = today
+            # Parse dates
+            try:
+                start_date = datetime.strptime(start_date_str, "%m/%d/%Y").date() if start_date_str else None
+            except Exception:
+                start_date = None
+            try:
+                end_date = datetime.strptime(end_date_str, "%m/%d/%Y").date() if end_date_str else None
+            except Exception:
+                end_date = None
 
-        start_str = start_date.strftime("%Y-%m-%d")
-        end_str = end_date.strftime("%Y-%m-%d")
+            # Default to last 7 days if empty (only if dates are None, don't modify the UI)
+            today = datetime.now().date()
+            if not start_date:
+                start_date = today - timedelta(days=7)
+            if not end_date:
+                end_date = today
 
-        # Get router ID if not "All Routers"
-        router_id = None
-        routers = get_routers()
-        for r in routers:
-            if r["name"] == router_name:
-                router_id = r["id"]
-                break
+            start_str = start_date.strftime("%Y-%m-%d")
+            end_str = end_date.strftime("%Y-%m-%d")
 
-        # Build SQL query
-        query_params = []
-        if router_id:
-            query = (
-                "SELECT timestamp, download_mbps AS total_download, "
-                "upload_mbps AS total_upload, latency_ms AS avg_latency "
-                "FROM bandwidth_logs "
-                "WHERE router_id=%s AND DATE(timestamp) BETWEEN %s AND %s "
-                "ORDER BY timestamp ASC LIMIT 500"
-            )
-            query_params.extend([router_id, start_str, end_str])
-        else:
-            query = (
-                "SELECT DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00') AS timestamp, "
-                "SUM(download_mbps) AS total_download, "
-                "SUM(upload_mbps) AS total_upload, "
-                "AVG(latency_ms) AS avg_latency "
-                "FROM bandwidth_logs "
-                "WHERE DATE(timestamp) BETWEEN %s AND %s "
-                "GROUP BY DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00') "
-                "ORDER BY timestamp ASC LIMIT 500"
-            )
-            query_params.extend([start_str, end_str])
+            # Get router ID if not "All Routers"
+            router_id = None
+            routers = get_routers()
+            for r in routers:
+                if r["name"] == router_name:
+                    router_id = r["id"]
+                    break
 
-        # Execute query
-        conn = get_connection()
-        cur = conn.cursor(dictionary=True)
-        cur.execute(query, query_params)
-        rows = cur.fetchall()
-        conn.close()
-
-        # Prepare data for chart & table
-        filtered_rows = []
-        for r in rows:
+            # Build SQL query
+            query_params = []
             if router_id:
-                ts_display = r["timestamp"].strftime("%Y-%m-%d %H:%M:%S") if hasattr(r["timestamp"], 'strftime') else str(r["timestamp"])
+                query = (
+                    "SELECT timestamp, download_mbps AS total_download, "
+                    "upload_mbps AS total_upload, latency_ms AS avg_latency "
+                    "FROM bandwidth_logs "
+                    "WHERE router_id=%s AND DATE(timestamp) BETWEEN %s AND %s "
+                    "ORDER BY timestamp ASC LIMIT 500"
+                )
+                query_params.extend([router_id, start_str, end_str])
             else:
-                ts_display = r["timestamp"] if isinstance(r["timestamp"], str) else r["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
-            row_tuple = (
-                ts_display,
-                float(r["total_download"] or 0),
-                float(r["total_upload"] or 0),
-                float(r["avg_latency"] or 0)
-            )
-            filtered_rows.append(row_tuple)
-        
-        # Store filtered rows for table use
-        self._bandwidth_rows = filtered_rows
+                query = (
+                    "SELECT DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00') AS timestamp, "
+                    "SUM(download_mbps) AS total_download, "
+                    "SUM(upload_mbps) AS total_upload, "
+                    "AVG(latency_ms) AS avg_latency "
+                    "FROM bandwidth_logs "
+                    "WHERE DATE(timestamp) BETWEEN %s AND %s "
+                    "GROUP BY DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00') "
+                    "ORDER BY timestamp ASC LIMIT 500"
+                )
+                query_params.extend([start_str, end_str])
 
-        # Update subtitle label
-        if hasattr(self, 'bandwidth_table_subtitle'):
-            if router_id:
-                self.bandwidth_table_subtitle.config(text=f"📊 Viewing: {router_name}")
-            else:
-                self.bandwidth_table_subtitle.config(text="📊 Viewing: All Routers (Hourly Aggregated)")
+            # Execute query
+            conn = get_connection()
+            cur = conn.cursor(dictionary=True)
+            cur.execute(query, query_params)
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
 
-        # Update last updated label
-        now = datetime.now().strftime("%H:%M:%S")
-        if hasattr(self, 'bandwidth_last_update_label'):
-            self.bandwidth_last_update_label.config(text=f"Last updated: {now}")
+            # Prepare data for chart & table
+            filtered_rows = []
+            for r in rows:
+                if router_id:
+                    ts_display = r["timestamp"].strftime("%Y-%m-%d %H:%M:%S") if hasattr(r["timestamp"], 'strftime') else str(r["timestamp"])
+                else:
+                    ts_display = r["timestamp"] if isinstance(r["timestamp"], str) else r["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
+                row_tuple = (
+                    ts_display,
+                    float(r["total_download"] or 0),
+                    float(r["total_upload"] or 0),
+                    float(r["avg_latency"] or 0)
+                )
+                filtered_rows.append(row_tuple)
+            
+            # Store filtered rows for table use
+            self._bandwidth_rows = filtered_rows
 
-        # Refresh both table and chart using the unified method
-        # This ensures chart and table are always in sync
-        try:
-            self._refresh_bandwidth_table(sort_column=None, reverse=False)
+            # Update subtitle label
+            if hasattr(self, 'bandwidth_table_subtitle'):
+                if router_id:
+                    self.bandwidth_table_subtitle.config(text=f"📊 Viewing: {router_name}")
+                else:
+                    self.bandwidth_table_subtitle.config(text="📊 Viewing: All Routers (Hourly Aggregated)")
+
+            # Update last updated label
+            now = datetime.now().strftime("%H:%M:%S")
+            if hasattr(self, 'bandwidth_last_update_label'):
+                self.bandwidth_last_update_label.config(text=f"Last updated: {now}")
+
+            # Refresh table (chart removed)
+            try:
+                self._refresh_bandwidth_table(sort_column=None, reverse=False)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+
+            # Schedule auto-refresh (interval from UI) - only if auto-update is enabled
+            if getattr(self, 'bandwidth_auto_update_var', None) and self.bandwidth_auto_update_var.get():
+                interval_map = {"10s": 10000, "30s": 30000, "1m": 60000, "2m": 120000, "5m": 300000}
+                interval_str = self.bandwidth_interval_var.get() if hasattr(self, 'bandwidth_interval_var') else "30s"
+                interval_ms = interval_map.get(interval_str, 30000)
+                self._bandwidth_after_job = self.root.after(interval_ms, self.refresh_total_bandwidth_chart)
+            
         except Exception as e:
             import traceback
             traceback.print_exc()
-
-        # Schedule auto-refresh (interval from UI)
-        interval_map = {"10s": 10000, "30s": 30000, "1m": 60000, "2m": 120000, "5m": 300000}
-        interval_str = self.bandwidth_interval_var.get() if hasattr(self, 'bandwidth_interval_var') else "30s"
-        interval_ms = interval_map.get(interval_str, 30000)
-        if getattr(self, 'bandwidth_auto_update_var', None) and self.bandwidth_auto_update_var.get():
-            self._bandwidth_after_job = self.bandwidth_frame.after(interval_ms, self.refresh_total_bandwidth_chart)
-        self._hide_bandwidth_loading()
+            messagebox.showerror("Error", f"Failed to refresh bandwidth data: {str(e)}")
+        finally:
+            self._hide_bandwidth_loading()
+    
 
     # Helper: force chart refresh and cancel any pending auto-refresh
     def force_total_bandwidth_chart_refresh(self):
