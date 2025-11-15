@@ -7724,12 +7724,20 @@ Type: {values[11]}
             if hasattr(self, 'bandwidth_last_update_label'):
                 self.bandwidth_last_update_label.config(text=f"Last updated: {now}")
 
-            # Refresh table (chart removed)
+            # Refresh table
             try:
                 self._refresh_bandwidth_table(sort_column=None, reverse=False)
             except Exception as e:
                 import traceback
                 traceback.print_exc()
+
+            # Update the bandwidth charts with the same filtered rows
+            try:
+                if hasattr(self, '_update_bandwidth_tab_chart'):
+                    self._update_bandwidth_tab_chart()
+            except Exception:
+                # Keep the table visible even if chart update fails
+                pass
 
             # Schedule auto-refresh (interval from UI) - only if auto-update is enabled
             if getattr(self, 'bandwidth_auto_update_var', None) and self.bandwidth_auto_update_var.get():
