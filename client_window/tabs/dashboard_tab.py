@@ -463,7 +463,11 @@ class DashboardTab:
                 
                 if response.ok:
                     data = response.json()
-                    routers_data = data.get('routers', [])
+                    print(f"API Response keys: {data.keys()}")  # Debug
+                    
+                    # The endpoint returns report_data array, not routers
+                    routers_data = data.get('report_data', [])
+                    print(f"Found {len(routers_data)} routers with data")  # Debug
                     
                     if not routers_data:
                         self.bandwidth_ax.text(0.5, 0.5, 'No Bandwidth Data', ha='center', va='center', 
@@ -490,6 +494,7 @@ class DashboardTab:
                         bw_mb = router.get('bandwidth_mb', 0)
                         bw_gb = bw_mb / 1024
                         bandwidth_values.append(bw_gb)
+                        print(f"Router {name}: {bw_mb} MB = {bw_gb:.2f} GB")  # Debug
                     
                     if not bandwidth_values or max(bandwidth_values) == 0:
                         self.bandwidth_ax.text(0.5, 0.5, 'No Bandwidth Data', ha='center', va='center', 
@@ -544,11 +549,14 @@ class DashboardTab:
                     
                 else:
                     # Fallback to placeholder if API fails
+                    print(f"API Error: Status {response.status_code}")  # Debug
                     self.bandwidth_ax.text(0.5, 0.5, 'API Error - No Data', ha='center', va='center', 
                                          transform=self.bandwidth_ax.transAxes, fontsize=12)
                 
             except Exception as e:
                 print(f"Error fetching bandwidth data from API: {e}")
+                import traceback
+                traceback.print_exc()  # Debug
                 self.bandwidth_ax.text(0.5, 0.5, 'Error Loading Data', ha='center', va='center', 
                                      transform=self.bandwidth_ax.transAxes, fontsize=12)
             
@@ -557,16 +565,8 @@ class DashboardTab:
             self.bandwidth_canvas.flush_events()
         except Exception as e:
             print(f"Error updating bandwidth chart: {e}")
-            self.bandwidth_ax.set_xticklabels(router_names, rotation=15, ha='right', fontsize=8)
-            self.bandwidth_ax.grid(True, alpha=0.2, axis='y', linestyle='--')
-            self.bandwidth_ax.set_ylim(0, 105)
-            self.bandwidth_ax.margins(x=0.1, y=0.05)
-            
-            # Force canvas to draw
-            self.bandwidth_canvas.draw_idle()
-            self.bandwidth_canvas.flush_events()
-        except Exception as e:
-            print(f"Error updating bandwidth chart: {e}")
+            import traceback
+            traceback.print_exc()  # Debug
 
     def start_auto_update(self):
         """Start the automatic update timer"""

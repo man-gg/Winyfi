@@ -2813,7 +2813,21 @@ class Dashboard:
                 except Exception as e:
                     print(f"Error logging router add activity: {e}")
             popup.destroy()
+            # Clear snapshot hash to force refresh on next update
+            self._routers_snapshot_hash = None
             self.reload_routers(force_reload=True)
+            
+            # If editing, reopen router details with fresh data
+            if mode == 'edit' and router:
+                # Fetch fresh router data from DB
+                from router_utils import get_routers
+                updated_router = None
+                for r in get_routers():
+                    if r.get('id') == router['id']:
+                        updated_router = r
+                        break
+                if updated_router:
+                    self.open_router_details(updated_router)
 
         btn_text = "Update Router" if mode=='edit' else "Add Router"
         tb.Button(
@@ -2942,17 +2956,22 @@ class Dashboard:
             self.router_list = None  # Clear cached list to force DB reload
             # Clear router_widgets so cards are rebuilt
             self.router_widgets.clear()
+            # Clear snapshot hash to force refresh on next update
+            self._routers_snapshot_hash = None
             self.reload_routers(force_reload=True)
 
-            # Always fetch fresh router data from DB for details
-            from router_utils import get_routers
-            updated_router = None
-            for r in get_routers():
-                if r.get('id') == db_id:
-                    updated_router = r
-                    break
-            if updated_router:
-                self.open_router_details(updated_router)
+            # Always fetch fresh router data from DB for details (with small delay to ensure DB is updated)
+            def reopen_details():
+                from router_utils import get_routers
+                updated_router = None
+                for r in get_routers():
+                    if r.get('id') == db_id:
+                        updated_router = r
+                        break
+                if updated_router:
+                    self.open_router_details(updated_router)
+            # Schedule reopen after UI updates
+            self.root.after(100, reopen_details)
 
         # Buttons
         btn_frame = tb.Frame(form_frame)
@@ -4311,14 +4330,37 @@ class Dashboard:
                 bw_label = tb.Label(inner, text="… Checking...", bootstyle="secondary")
             bw_label.pack(pady=2)
 
-        # Click bindings
-        def bind_card_click(widget, router_obj):
-            widget.bind("<Button-1>", lambda e: self.open_router_details(router_obj))
-            if not router_obj.get('is_unifi'):
-                widget.bind("<Button-3>", lambda e: self.show_context_menu(e, router_obj))
-        bind_card_click(inner, router)
+        # Click bindings - use router ID to fetch fresh data on click
+        def bind_card_click(widget, router_id):
+            def on_click(e):
+                # Fetch fresh router data at click time
+                from router_utils import get_routers
+                fresh_router = None
+                for r in get_routers():
+                    if r.get('id') == router_id:
+                        fresh_router = r
+                        break
+                if fresh_router:
+                    self.open_router_details(fresh_router)
+            
+            def on_right_click(e):
+                # Fetch fresh router data at right-click time
+                from router_utils import get_routers
+                fresh_router = None
+                for r in get_routers():
+                    if r.get('id') == router_id:
+                        fresh_router = r
+                        break
+                if fresh_router:
+                    self._show_context_menu(e, fresh_router)
+            
+            widget.bind("<Button-1>", on_click)
+            if not router.get('is_unifi'):
+                widget.bind("<Button-3>", on_right_click)
+        
+        bind_card_click(inner, router['id'])
         for child in inner.winfo_children():
-            bind_card_click(child, router)
+            bind_card_click(child, router['id'])
 
         self.router_widgets[router['id']] = {
             'card': card,
