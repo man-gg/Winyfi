@@ -450,10 +450,61 @@ class ReportsTab:
         self.generate_report()
 
     def print_pdf(self):
-        """Generate and download PDF report"""
+        """Generate and download PDF report with fresh data from database"""
         try:
-            start_date = self.start_date.entry.get()
-            end_date = self.end_date.entry.get()
+            start_date_raw = self.start_date.entry.get()
+            end_date_raw = self.end_date.entry.get()
+            mode = self.view_mode_var.get()
+            
+            # Convert MM/DD/YYYY to YYYY-MM-DD for API
+            try:
+                start_dt = datetime.strptime(start_date_raw, "%m/%d/%Y")
+                end_dt = datetime.strptime(end_date_raw, "%m/%d/%Y")
+                start_date = start_dt.strftime('%Y-%m-%d')
+                end_date = end_dt.strftime('%Y-%m-%d')
+            except ValueError:
+                messagebox.showerror("Invalid Date", "Please enter valid dates in MM/DD/YYYY format.")
+                return
+            
+            # Show progress message
+            messagebox.showinfo("Generating PDF", "Generating PDF report with actual data... Please wait.")
+            
+            # Make API request for PDF
+            params = {
+                "start_date": start_date,
+                "end_date": end_date,
+                "mode": mode
+            }
+            
+            response = requests.get(f"{self.api_base_url}/api/reports/pdf", params=params, timeout=30)
+            
+            if response.ok:
+                # Save PDF file
+                filename = filedialog.asksaveasfilename(
+                    defaultextension=".pdf",
+                    filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
+                    initialfile=f"network_report_{start_date}_to_{end_date}.pdf"
+                )
+                
+                if filename:
+                    with open(filename, 'wb') as f:
+                        f.write(response.content)
+                    messagebox.showinfo("Success", f"PDF report saved to:\n{filename}")
+                        
+            else:
+                error_msg = response.json().get('error', 'Unknown error') if response.headers.get('content-type') == 'application/json' else response.text
+                messagebox.showerror("Error", f"Failed to generate PDF:\n{error_msg}")
+                
+        except requests.exceptions.RequestException as e:
+            messagebox.showerror("Connection Error", f"Failed to connect to server: {str(e)}")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while generating PDF: {str(e)}")
+
+    def print_pdf_with_charts(self):
+        """Generate and download PDF report with charts and fresh data"""
+        try:
+            start_date_raw = self.start_date.entry.get()
+            end_date_raw = self.end_date.entry.get()
             mode = self.view_mode_var.get()
             
             # Convert MM/DD/YYYY to YYYY-MM-DD for API
@@ -471,7 +522,7 @@ class ReportsTab:
                 return
             
             # Show progress message
-            messagebox.showinfo("Generating PDF", "Generating PDF report... Please wait.")
+            messagebox.showinfo("Generating PDF", "Generating PDF report with actual database data... Please wait.")
             
             # Make API request for PDF
             params = {
@@ -536,7 +587,7 @@ class ReportsTab:
                 return
             
             # Show progress message
-            messagebox.showinfo("Generating PDF", "Generating PDF report with charts... Please wait.")
+            messagebox.showinfo("Generating PDF", "Generating PDF report with charts and actual database data... Please wait.")
             
             # Make API request for PDF with charts
             params = {

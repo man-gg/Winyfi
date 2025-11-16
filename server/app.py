@@ -1171,21 +1171,45 @@ def create_app():
             cursor.execute(query)
             routers = cursor.fetchall()
             
-            # Calculate uptime for each router
+            # Calculate uptime for each router using actual database data
+            from datetime import datetime as dt, timedelta
             report_data = []
+            
+            # Parse dates
+            start_dt = dt.strptime(start_date, '%Y-%m-%d')
+            end_dt = dt.strptime(end_date, '%Y-%m-%d')
+            
             for router in routers:
-                # Calculate uptime percentage (simplified - in real app, this would be more complex)
-                uptime_percentage = 95.5  # Placeholder - would calculate from actual data
-                downtime = "2h 15m"  # Placeholder
-                bandwidth_usage = f"{router['current_download']:.1f} / {router['current_upload']:.1f} Mbps"
+                router_id = router['id']
+                
+                # Get actual uptime percentage from database
+                uptime = get_uptime_percentage(router_id, start_dt, end_dt)
+                
+                # Calculate downtime
+                downtime_seconds = (1 - uptime / 100) * (end_dt - start_dt).total_seconds()
+                days, remainder = divmod(downtime_seconds, 86400)
+                hours, remainder = divmod(remainder, 3600)
+                minutes, sec = divmod(remainder, 60)
+                if days > 0:
+                    downtime = f"{int(days)}d {int(hours)}h {int(minutes)}m"
+                elif hours > 0:
+                    downtime = f"{int(hours)}h {int(minutes)}m"
+                elif minutes > 0:
+                    downtime = f"{int(minutes)}m {int(sec)}s"
+                else:
+                    downtime = f"{int(sec)}s"
+                
+                # Get actual bandwidth usage from database
+                bandwidth_mb = get_bandwidth_usage(router_id, start_dt, end_dt)
+                bandwidth_str = f"{bandwidth_mb / 1024:.2f} GB" if bandwidth_mb >= 1024 else f"{bandwidth_mb:.2f} MB"
                 
                 report_data.append({
                     "router_name": router["name"],
                     "start_date": start_date,
-                    "uptime_percentage": uptime_percentage,
+                    "uptime_percentage": uptime,
                     "downtime": downtime,
-                    "bandwidth_usage": bandwidth_usage,
-                    "bandwidth_mb": router["current_download"] + router["current_upload"]
+                    "bandwidth_usage": bandwidth_str,
+                    "bandwidth_mb": bandwidth_mb
                 })
             
             # Create temporary PDF file
@@ -1385,21 +1409,45 @@ def create_app():
             cursor.execute(query)
             routers = cursor.fetchall()
             
-            # Calculate uptime for each router
+            # Calculate uptime for each router using actual database data
+            from datetime import datetime as dt, timedelta
             report_data = []
+            
+            # Parse dates
+            start_dt = dt.strptime(start_date, '%Y-%m-%d')
+            end_dt = dt.strptime(end_date, '%Y-%m-%d')
+            
             for router in routers:
-                # Calculate uptime percentage (simplified - in real app, this would be more complex)
-                uptime_percentage = 95.5  # Placeholder - would calculate from actual data
-                downtime = "2h 15m"  # Placeholder
-                bandwidth_usage = f"{router['current_download']:.1f} / {router['current_upload']:.1f} Mbps"
+                router_id = router['id']
+                
+                # Get actual uptime percentage from database
+                uptime = get_uptime_percentage(router_id, start_dt, end_dt)
+                
+                # Calculate downtime
+                downtime_seconds = (1 - uptime / 100) * (end_dt - start_dt).total_seconds()
+                days, remainder = divmod(downtime_seconds, 86400)
+                hours, remainder = divmod(remainder, 3600)
+                minutes, sec = divmod(remainder, 60)
+                if days > 0:
+                    downtime = f"{int(days)}d {int(hours)}h {int(minutes)}m"
+                elif hours > 0:
+                    downtime = f"{int(hours)}h {int(minutes)}m"
+                elif minutes > 0:
+                    downtime = f"{int(minutes)}m {int(sec)}s"
+                else:
+                    downtime = f"{int(sec)}s"
+                
+                # Get actual bandwidth usage from database
+                bandwidth_mb = get_bandwidth_usage(router_id, start_dt, end_dt)
+                bandwidth_str = f"{bandwidth_mb / 1024:.2f} GB" if bandwidth_mb >= 1024 else f"{bandwidth_mb:.2f} MB"
                 
                 report_data.append({
                     "router_name": router["name"],
                     "start_date": start_date,
-                    "uptime_percentage": uptime_percentage,
+                    "uptime_percentage": uptime,
                     "downtime": downtime,
-                    "bandwidth_usage": bandwidth_usage,
-                    "bandwidth_mb": router["current_download"] + router["current_upload"]
+                    "bandwidth_usage": bandwidth_str,
+                    "bandwidth_mb": bandwidth_mb
                 })
             
             # Create temporary PDF file

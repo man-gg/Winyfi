@@ -112,6 +112,18 @@ class Dashboard:
         self.update_task = None  # Store .after() task ID
         self.db_health_status = {"status": "unknown", "message": "Not checked"}
         
+        # Inline loader state defaults (defensive init)
+        self._bandwidth_loading = False
+        self._reports_loading = False
+        self._bandwidth_loading_started = None
+        self._reports_loading_started = None
+        self._loader_min_ms = 350
+        self._bandwidth_hide_after_job = None
+        self._reports_hide_after_job = None
+        
+        # Routers view caching (avoid glitchy redraws)
+        self._routers_snapshot_hash = None
+        
         # Routers tab auto-refresh settings
         self.routers_refresh_job = None
         self.routers_refresh_interval = 30000  # 30 seconds default
@@ -615,7 +627,7 @@ class Dashboard:
             elapsed_ms = ( _perf_time.perf_counter() - self._reports_loading_started ) * 1000
         remaining = self._loader_min_ms - elapsed_ms
         if remaining > 0:
-            if self._reports_hide_after_job:
+            if getattr(self, '_reports_hide_after_job', None):
                 try: self.root.after_cancel(self._reports_hide_after_job)
                 except Exception: pass
             self._reports_hide_after_job = self.root.after(int(remaining), self._hide_reports_loading)
@@ -873,20 +885,44 @@ class Dashboard:
                 
                 # Get current router list from DB
                 db_routers = get_routers()
-                db_macs = {r.get('mac_address') for r in db_routers if r.get('mac_address')}
                 
-                # Check if there are new UniFi devices not in DB
-                unifi_macs = {d.get('mac_address') for d in unifi_devices if d.get('mac_address')}
-                new_devices = unifi_macs - db_macs
-                
-                # Schedule UI update on main thread if changes detected
-                if new_devices or len(db_routers) != len(self.router_widgets):
-                    self.root.after(0, lambda: self._perform_routers_refresh(f"Found {len(new_devices)} new device(s)"))
-                else:
-                    # Just update the timestamp
+                # Build a lightweight snapshot hash of routers and UniFi presence
+                def compute_snapshot(routers, devices):
+                    try:
+                        import hashlib
+                        # Core router identity + placement fields only
+                        r_tuples = [(
+                            r.get('id'),
+                            r.get('name'),
+                            r.get('ip_address'),
+                            r.get('brand'),
+                            r.get('mac_address'),
+                            r.get('location'),
+                        ) for r in routers or []]
+                        r_tuples.sort(key=lambda t: t[0])
+                        # UniFi device MAC set captures add/remove without including transient speeds
+                        u_macs = sorted([d.get('mac_address') for d in (devices or []) if d.get('mac_address')])
+                        payload = repr((r_tuples, u_macs)).encode('utf-8')
+                        return hashlib.md5(payload).hexdigest()
+                    except Exception:
+                        # Fallback: length-based signature
+                        return f"len:{len(routers or [])}|u:{len(devices or [])}"
+
+                new_hash = compute_snapshot(db_routers, unifi_devices)
+
+                def only_update_timestamp():
                     from datetime import datetime
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    self.root.after(0, lambda: self.routers_last_update_label.config(text=f"Last checked: {timestamp}"))
+                    ts = datetime.now().strftime("%H:%M:%S")
+                    self.routers_last_update_label.config(text=f"Last checked: {ts}")
+
+                # Schedule UI update on main thread if changes detected
+                if self._routers_snapshot_hash != new_hash or len(db_routers) != len(self.router_widgets):
+                    def do_refresh():
+                        self._routers_snapshot_hash = new_hash
+                        self._perform_routers_refresh("")
+                    self.root.after(0, do_refresh)
+                else:
+                    self.root.after(0, only_update_timestamp)
                 
             except Exception as e:
                 print(f"⚠️ Error in auto-refresh check: {str(e)}")
@@ -4378,6 +4414,16 @@ class Dashboard:
             # Deduplicate and keep order
             seen = set()
             ordered = [rid for rid in ids if (rid not in seen and not seen.add(rid))]
+            # Skip re-layout if nothing changed since last layout for this container
+            try:
+                last_order = getattr(container, '_last_order', None)
+                last_cols = getattr(container, '_last_cols', None)
+                if last_order == ordered and last_cols == max_cols:
+                    return
+                container._last_order = ordered
+                container._last_cols = max_cols
+            except Exception:
+                pass
             # Reset grid ONLY for cards we're about to re-grid
             for rid in ordered:
                 w = self.router_widgets.get(rid)
@@ -6886,7 +6932,8 @@ Type: {values[11]}
             return
         
         if self.report_auto_update_var.get():
-            self.generate_report_table(filter_mode=self.report_mode.get().lower())
+            # Incremental update to avoid full table redraw flicker
+            self.generate_report_table(filter_mode=self.report_mode.get().lower(), incremental=True)
             self.update_report_last_update_display()
             self.report_auto_update_job = self.root.after(self.report_auto_update_interval, self.auto_update_reports)
 
@@ -8006,13 +8053,17 @@ Type: {values[11]}
         self.root.after(1000, self.start_report_auto_update)
 
 
-    def generate_report_table(self, filter_mode="weekly"):
-        """Generate the reports table and charts. Refactored to defer heavy work so the spinner shows."""
+    def generate_report_table(self, filter_mode="weekly", incremental=False):
+        """Generate or incrementally update the reports table and charts.
+        When incremental=True, only changed rows are updated/inserted/removed,
+        and the spinner is not shown to avoid flicker during auto-refresh.
+        """
         import threading
         # Prevent multiple overlapping generations
         if getattr(self, '_report_generation_thread', None) and self._report_generation_thread.is_alive():
             return
-        self._show_reports_loading()
+        if not incremental:
+            self._show_reports_loading()
         try:
             self.root.update_idletasks()
         except Exception:
@@ -8050,15 +8101,30 @@ Type: {values[11]}
                     self.root.after(0, self._hide_reports_loading)
                     return
 
-                # Clear previous table
-                if hasattr(self, 'uptime_tree'):
-                    self.root.after(0, lambda: self.uptime_tree.delete(*self.uptime_tree.get_children()))
+                # Initialize incremental caches
+                if not hasattr(self, '_reports_row_items'):
+                    self._reports_row_items = {}
+                if not hasattr(self, '_reports_last_rows'):
+                    self._reports_last_rows = {}
+
+                # Clear previous table in full refresh only
+                if not incremental and hasattr(self, 'uptime_tree'):
+                    def _clear_all():
+                        try:
+                            self.uptime_tree.delete(*self.uptime_tree.get_children())
+                            self._reports_row_items.clear()
+                            self._reports_last_rows.clear()
+                        except Exception:
+                            pass
+                    self.root.after(0, _clear_all)
 
                 total_uptime = 0
                 total_bandwidth = 0
                 router_count = len(routers)
 
                 # Phase 3: per-router stats
+                # Build new snapshot for change detection
+                new_rows = {}
                 for idx, r in enumerate(routers, start=1):
                     if getattr(self, '_report_cancel_requested', False) or not getattr(self, 'app_running', True):
                         break
@@ -8069,9 +8135,10 @@ Type: {values[11]}
                     bandwidth = get_bandwidth_usage(router_id, start_date, end_date)
                     total_uptime += uptime
                     total_bandwidth += bandwidth
-                    # Insert row
+                    # Prepare display values
                     def insert_row(r=r, uptime=uptime, downtime_seconds=downtime_seconds, bandwidth=bandwidth):
-                        if not hasattr(self, 'uptime_tree'): return
+                        if not hasattr(self, 'uptime_tree'):
+                            return
                         def format_downtime(seconds):
                             days, remainder = divmod(seconds, 86400)
                             hours, remainder = divmod(remainder, 3600)
@@ -8081,12 +8148,30 @@ Type: {values[11]}
                             elif minutes > 0: return f"{minutes}m {sec}s"
                             else: return f"{sec}s"
                         bandwidth_str = f"{bandwidth / 1024:.2f} GB" if bandwidth >= 1024 else f"{bandwidth:.2f} MB"
-                        self.uptime_tree.insert("", "end", values=(
+                        key = r.get('id')
+                        values = (
                             r['name'],
                             f"{uptime:.2f}%",
                             format_downtime(int(downtime_seconds)),
                             bandwidth_str
-                        ))
+                        )
+                        new_rows[key] = values
+                        # Incremental upsert
+                        def upsert():
+                            try:
+                                items = getattr(self, '_reports_row_items', {})
+                                last = getattr(self, '_reports_last_rows', {})
+                                if incremental and key in items:
+                                    if last.get(key) != values:
+                                        self.uptime_tree.item(items[key], values=values)
+                                else:
+                                    iid = self.uptime_tree.insert("", "end", values=values)
+                                    items[key] = iid
+                                last[key] = values
+                            except Exception:
+                                pass
+                        self.root.after(0, upsert)
+
                     self.root.after(0, insert_row)
 
                 if getattr(self, '_report_cancel_requested', False) or not getattr(self, 'app_running', True):
@@ -8097,6 +8182,25 @@ Type: {values[11]}
                     self.root.after(0, self._update_reports_phase, "Cancelled")
                     self.root.after(0, self._hide_reports_loading)
                     return
+
+                # After rows, prune removed routers during incremental update
+                if incremental:
+                    def prune_removed():
+                        try:
+                            items = getattr(self, '_reports_row_items', {})
+                            last = getattr(self, '_reports_last_rows', {})
+                            existing_keys = set(items.keys())
+                            new_keys = set(new_rows.keys())
+                            for removed in list(existing_keys - new_keys):
+                                try:
+                                    self.uptime_tree.delete(items[removed])
+                                except Exception:
+                                    pass
+                                items.pop(removed, None)
+                                last.pop(removed, None)
+                        except Exception:
+                            pass
+                    self.root.after(0, prune_removed)
 
                 # Summary cards
                 self.root.after(0, self._update_reports_phase, "Updating summary...")
@@ -8201,7 +8305,8 @@ Type: {values[11]}
                         self._update_reports_phase("Cancelled")
                     else:
                         self._update_reports_phase("Done")
-                    self._hide_reports_loading()
+                    if not incremental:
+                        self._hide_reports_loading()
                 self.root.after(0, finish)
             except Exception as e:
                 from tkinter import messagebox
@@ -8212,24 +8317,82 @@ Type: {values[11]}
         self._report_generation_thread.start()
             
     def print_report(self):
-        """Show print preview window with report and charts"""
+        """Show print preview window with report and charts - uses fresh DB data"""
         try:
-            if hasattr(self, 'uptime_tree') and self.uptime_tree.get_children():
-                # Get all data from the table
-                data = []
-                for item in self.uptime_tree.get_children():
-                    values = self.uptime_tree.item(item)['values']
-                    data.append(values)
+            if not hasattr(self, 'uptime_tree'):
+                from tkinter import messagebox
+                messagebox.showwarning("No Data", "No data to print. Please generate a report first.")
+                return
+            
+            # Get fresh data from database using current report filters
+            from report_utils import get_uptime_percentage, get_bandwidth_usage
+            from datetime import timedelta
+            
+            # Get date range from UI
+            if hasattr(self, 'report_start_date'):
+                start_date = datetime.strptime(self.report_start_date.entry.get(), "%m/%d/%Y")
+            else:
+                start_date = datetime.now() - timedelta(days=7)
+            
+            if hasattr(self, 'report_end_date'):
+                end_date = datetime.strptime(self.report_end_date.entry.get(), "%m/%d/%Y")
+            else:
+                end_date = datetime.now()
+            
+            # Get filter mode
+            filter_mode = self.report_mode.get().lower() if hasattr(self, 'report_mode') else "all"
+            
+            # Fetch routers based on filter
+            from router_utils import get_routers
+            if filter_mode == "all":
+                routers = get_routers()
+            elif filter_mode == "online_only":
+                routers = [r for r in get_routers() if r.get('status') == 'online']
+            elif filter_mode == "offline_only":
+                routers = [r for r in get_routers() if r.get('status') != 'online']
+            else:
+                routers = get_routers()
+            
+            if not routers:
+                from tkinter import messagebox
+                messagebox.showwarning("No Data", "No routers found matching the current filter.")
+                return
+            
+            # Build fresh data from database queries
+            data = []
+            for r in routers:
+                router_id = r['id']
+                uptime = get_uptime_percentage(router_id, start_date, end_date)
+                downtime_seconds = (1 - uptime / 100) * (end_date - start_date).total_seconds()
+                bandwidth = get_bandwidth_usage(router_id, start_date, end_date)
                 
-                if data:
-                    # Show print preview window
-                    self._show_print_preview(data)
-                else:
-                    from tkinter import messagebox
-                    messagebox.showwarning("No Data", "No data to print. Please generate a report first.")
+                # Format values matching display format
+                def format_downtime(seconds):
+                    days, remainder = divmod(seconds, 86400)
+                    hours, remainder = divmod(remainder, 3600)
+                    minutes, sec = divmod(remainder, 60)
+                    if days > 0: return f"{days}d {hours}h {minutes}m"
+                    elif hours > 0: return f"{hours}h {minutes}m"
+                    elif minutes > 0: return f"{minutes}m {sec}s"
+                    else: return f"{sec}s"
+                
+                bandwidth_str = f"{bandwidth / 1024:.2f} GB" if bandwidth >= 1024 else f"{bandwidth:.2f} MB"
+                
+                values = (
+                    r['name'],
+                    f"{uptime:.2f}%",
+                    format_downtime(int(downtime_seconds)),
+                    bandwidth_str
+                )
+                data.append(values)
+            
+            if data:
+                # Show print preview window with fresh data
+                self._show_print_preview(data)
             else:
                 from tkinter import messagebox
                 messagebox.showwarning("No Data", "No data to print. Please generate a report first.")
+                
         except Exception as e:
             from tkinter import messagebox
             messagebox.showerror("Error", f"Error showing print preview: {e}")
@@ -12623,7 +12786,7 @@ Type: {values[11]}
             self.schedule_auto_refresh()
 
     def export_clients(self):
-        """Export client data to CSV."""
+        """Export client data to CSV - uses current filter state from visible data."""
         try:
             from tkinter import filedialog
             filename = filedialog.asksaveasfilename(
@@ -12634,11 +12797,38 @@ Type: {values[11]}
             
             if filename:
                 import csv
+                
+                # Use client_data (full dataset) or filtered_client_data based on current UI state
+                # Reapply filters to ensure we export what's currently visible
+                export_data = []
+                search_term = self.client_search_var.get().lower() if hasattr(self, 'client_search_var') else ""
+                filter_value = self.client_filter_var.get() if hasattr(self, 'client_filter_var') else "All Clients"
+                
+                # Start with full dataset
+                data_to_export = self.client_data.copy() if hasattr(self, 'client_data') else []
+                
+                # Apply search filter
+                if search_term:
+                    data_to_export = [
+                        client for client in data_to_export
+                        if (search_term in client["ip"].lower() or 
+                            search_term in client["mac"].lower() or 
+                            search_term in client["hostname"].lower() or
+                            search_term in client["vendor"].lower())
+                    ]
+                
+                # Apply status filter
+                if filter_value == "Online Only":
+                    data_to_export = [c for c in data_to_export if c.get("is_online", False)]
+                elif filter_value == "Offline Only":
+                    data_to_export = [c for c in data_to_export if not c.get("is_online", True)]
+                
+                # Write to CSV
                 with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
                     writer = csv.writer(csvfile)
                     writer.writerow(["Status", "IP Address", "MAC Address", "Hostname", "Vendor", "Ping (ms)", "First Seen", "Last Seen"])
                     
-                    for client in self.filtered_client_data:
+                    for client in data_to_export:
                         ping_display = f"{client['ping']:.0f}" if client['ping'] else "N/A"
                         writer.writerow([
                             client["status"],
@@ -12651,7 +12841,7 @@ Type: {values[11]}
                             client["last_seen"]
                         ])
                 
-                messagebox.showinfo("Export Complete", f"Client data exported to {filename}")
+                messagebox.showinfo("Export Complete", f"Client data exported to {filename}\n{len(data_to_export)} clients exported.")
         except Exception as e:
             messagebox.showerror("Export Error", f"Failed to export data: {str(e)}")
 

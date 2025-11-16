@@ -440,83 +440,123 @@ class DashboardTab:
             print(f"Error updating health chart: {e}")
 
     def _update_bandwidth_chart(self):
-        """Update the bandwidth usage chart with stable data"""
+        """Update the bandwidth usage chart with actual database data in GB/MB"""
         if not hasattr(self, 'bandwidth_ax') or not self.bandwidth_ax:
             return
         
         try:
             self.bandwidth_ax.clear()
             
-            # Get router data for bandwidth visualization
+            # Get actual bandwidth data from API (last 7 days total)
             try:
-                response = requests.get(f"{self.api_base_url}/api/routers", timeout=5)
+                from datetime import datetime, timedelta
+                end_date = datetime.now().replace(hour=23, minute=59, second=59)
+                start_date = (end_date - timedelta(days=7)).replace(hour=0, minute=0, second=0)
+                
+                # Get bandwidth report data from API
+                params = {
+                    'start_date': start_date.strftime('%Y-%m-%d'),
+                    'end_date': end_date.strftime('%Y-%m-%d'),
+                    'mode': 'weekly'
+                }
+                response = requests.get(f"{self.api_base_url}/api/reports/uptime", params=params, timeout=5)
+                
                 if response.ok:
-                    routers = response.json() or []
+                    data = response.json()
+                    routers_data = data.get('routers', [])
+                    
+                    if not routers_data:
+                        self.bandwidth_ax.text(0.5, 0.5, 'No Bandwidth Data', ha='center', va='center', 
+                                             transform=self.bandwidth_ax.transAxes, fontsize=12)
+                        self.bandwidth_canvas.draw_idle()
+                        self.bandwidth_canvas.flush_events()
+                        return
+                    
+                    # Sort routers by bandwidth_mb and get top 5
+                    sorted_routers = sorted(routers_data, 
+                                          key=lambda r: r.get('bandwidth_mb', 0),
+                                          reverse=True)[:5]
+                    
+                    router_names = []
+                    bandwidth_values = []  # In GB
+                    
+                    for router in sorted_routers:
+                        name = router.get('router_name', 'Unknown')
+                        # Truncate long names
+                        display_name = name[:12] + '...' if len(name) > 12 else name
+                        router_names.append(display_name)
+                        
+                        # Get bandwidth in MB and convert to GB
+                        bw_mb = router.get('bandwidth_mb', 0)
+                        bw_gb = bw_mb / 1024
+                        bandwidth_values.append(bw_gb)
+                    
+                    if not bandwidth_values or max(bandwidth_values) == 0:
+                        self.bandwidth_ax.text(0.5, 0.5, 'No Bandwidth Data', ha='center', va='center', 
+                                             transform=self.bandwidth_ax.transAxes, fontsize=12)
+                        self.bandwidth_canvas.draw_idle()
+                        self.bandwidth_canvas.flush_events()
+                        return
+                    
+                    # Compute dynamic y-axis limit
+                    def nice_upper(v):
+                        if v <= 0: return 1.0
+                        v *= 1.1  # headroom for labels
+                        import math
+                        exp = math.floor(math.log10(v))
+                        base = 10 ** exp
+                        for m in (1, 2, 5, 10):
+                            if v <= m * base:
+                                return float(m * base)
+                        return float(10 ** (exp + 1))
+                    
+                    max_bandwidth = max(bandwidth_values)
+                    y_max = nice_upper(max_bandwidth)
+                    
+                    # Create optimized bar chart with gradient colors
+                    colors = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6610f2']
+                    bars = self.bandwidth_ax.bar(range(len(router_names)), bandwidth_values, 
+                                               color=colors[:len(router_names)], alpha=0.85, width=0.65)
+                    
+                    # Add value labels on bars - show GB or MB based on size
+                    for bar, value in zip(bars, bandwidth_values):
+                        if value > 0:
+                            height = bar.get_height()
+                            # Format based on size: use GB for values >= 1, otherwise MB
+                            if value >= 1:
+                                label = f"{value:.2f} GB"
+                            else:
+                                label = f"{value * 1024:.1f} MB"
+                            self.bandwidth_ax.text(bar.get_x() + bar.get_width()/2., height + (y_max * 0.02),
+                                                 label, ha='center', va='bottom', 
+                                                 fontsize=9, fontweight='bold')
+                    
+                    # Optimized styling
+                    self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
+                    self.bandwidth_ax.set_ylabel('Total Bandwidth (GB)', fontsize=10)
+                    self.bandwidth_ax.set_title(f'Top {len(router_names)} Routers by Bandwidth (Last 7 Days)', 
+                                              fontsize=11, fontweight='bold', pad=8)
+                    self.bandwidth_ax.set_xticks(range(len(router_names)))
+                    self.bandwidth_ax.set_xticklabels(router_names, rotation=15, ha='right', fontsize=8)
+                    self.bandwidth_ax.grid(True, alpha=0.2, axis='y', linestyle='--')
+                    self.bandwidth_ax.set_ylim(0, y_max)
+                    self.bandwidth_ax.margins(x=0.1, y=0.05)
+                    
                 else:
-                    routers = []
-            except:
-                routers = []
-            
-            if not routers:
-                self.bandwidth_ax.text(0.5, 0.5, 'No Router Data', ha='center', va='center', 
+                    # Fallback to placeholder if API fails
+                    self.bandwidth_ax.text(0.5, 0.5, 'API Error - No Data', ha='center', va='center', 
+                                         transform=self.bandwidth_ax.transAxes, fontsize=12)
+                
+            except Exception as e:
+                print(f"Error fetching bandwidth data from API: {e}")
+                self.bandwidth_ax.text(0.5, 0.5, 'Error Loading Data', ha='center', va='center', 
                                      transform=self.bandwidth_ax.transAxes, fontsize=12)
-                self.bandwidth_canvas.draw_idle()
-                self.bandwidth_canvas.flush_events()
-                return
             
-            # Get top 5 routers for bandwidth visualization
-            top_routers = routers[:5] if len(routers) >= 5 else routers
-            router_names = []
-            bandwidth_usage = []
-            
-            # Generate stable bandwidth data based on router characteristics
-            for i, router in enumerate(top_routers):
-                router_id = router.get('id', 0)
-                router_name = router.get('name', f'Router {router_id}')
-                
-                # Truncate long names
-                display_name = router_name[:12] + '...' if len(router_name) > 12 else router_name
-                router_names.append(display_name)
-                
-                # Check router status - look for status field
-                router_status = router.get('status', 'unknown')
-                is_online = router_status not in ['offline', 'down', 'disconnected']
-                
-                # Check if we have stored data for this router
-                router_key = f"{router_id}_{router_name}"
-                if router_key not in self.bandwidth_data or not is_online:
-                    if is_online:
-                        # Initialize stable bandwidth based on router characteristics
-                        # Use router_id and name hash for deterministic but varied values
-                        name_hash = sum(ord(c) for c in router_name)
-                        base_bandwidth = ((router_id * 17 + name_hash) % 50) + 30  # Range: 30-80%
-                        self.bandwidth_data[router_key] = base_bandwidth
-                    else:
-                        # Offline routers show 0% bandwidth
-                        self.bandwidth_data[router_key] = 0
-                
-                # Get stored bandwidth
-                bandwidth = self.bandwidth_data[router_key]
-                bandwidth_usage.append(bandwidth)
-            
-            # Create optimized bar chart with gradient colors
-            colors = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6610f2']
-            bars = self.bandwidth_ax.bar(range(len(router_names)), bandwidth_usage, 
-                                       color=colors[:len(router_names)], alpha=0.85, width=0.65)
-            
-            # Add value labels on bars - optimized
-            for i, (bar, value) in enumerate(zip(bars, bandwidth_usage)):
-                height = bar.get_height()
-                if height > 0:
-                    self.bandwidth_ax.text(bar.get_x() + bar.get_width()/2., height + 2,
-                                         f'{value:.0f}%', ha='center', va='bottom', 
-                                         fontsize=9, fontweight='bold')
-            
-            # Optimized styling
-            self.bandwidth_ax.set_xlabel('Routers', fontsize=10)
-            self.bandwidth_ax.set_ylabel('Usage (%)', fontsize=10)
-            self.bandwidth_ax.set_title(f'Top {len(top_routers)} Routers by Bandwidth', fontsize=11, fontweight='bold', pad=8)
-            self.bandwidth_ax.set_xticks(range(len(router_names)))
+            # Force canvas to draw
+            self.bandwidth_canvas.draw_idle()
+            self.bandwidth_canvas.flush_events()
+        except Exception as e:
+            print(f"Error updating bandwidth chart: {e}")
             self.bandwidth_ax.set_xticklabels(router_names, rotation=15, ha='right', fontsize=8)
             self.bandwidth_ax.grid(True, alpha=0.2, axis='y', linestyle='--')
             self.bandwidth_ax.set_ylim(0, 105)
