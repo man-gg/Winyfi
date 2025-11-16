@@ -129,7 +129,17 @@ class BandwidthTab:
 
         # Chart frame - add chart above the table (like dashboard.py)
         self.bandwidth_chart_frame = tb.Frame(self.parent_frame)
+        # Set a minimum height so the canvas has room even before data/first draw
+        try:
+            self.bandwidth_chart_frame.configure(height=320)
+        except Exception:
+            pass
         self.bandwidth_chart_frame.pack(fill="both", expand=True, padx=20, pady=(10, 10))
+        # Prevent frame from resizing based on child requests to avoid jumps
+        try:
+            self.bandwidth_chart_frame.pack_propagate(False)
+        except Exception:
+            pass
         
         # Initialize matplotlib figure and axes for bandwidth chart (side-by-side like dashboard.py)
         self.fig, (self.ax1, self.ax2) = plt.subplots(1, 2, figsize=(12, 4), dpi=100)
@@ -139,6 +149,13 @@ class BandwidthTab:
         # Embed canvas in Tkinter
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.bandwidth_chart_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
+        try:
+            # Ensure an initial draw so the widget realizes correctly
+            self.canvas.draw_idle()
+        except Exception:
+            pass
+        # Track last known canvas pixel size
+        self._last_fig_px = (None, None)
 
         # Main content area - data table below the chart
         self.table_frame = tb.Frame(self.parent_frame)
@@ -267,8 +284,10 @@ class BandwidthTab:
                 if selected_router and selected_router != "All Routers":
                     router = next((r for r in self.routers if r["name"] == selected_router), None)
                     if router:
-                        router_id = router["id"]
-                params = {"limit": 1000}
+                        # Align with admin which uses internal DB id
+                        router_id = router.get("id")
+                # Match admin: fetch up to 500 records
+                params = {"limit": 500}
                 if router_id:
                     params["router_id"] = router_id
                 start_date = self.start_date.entry.get()
@@ -303,15 +322,95 @@ class BandwidthTab:
                     return
                 self.root.after(0, lambda: self._update_bw_phase("Parsing data..."))
                 try:
-                    self.bandwidth_data = resp.json()
+                    raw = resp.json() or []
                 except Exception:
-                    self.bandwidth_data = []
+                    raw = []
                     self.root.after(0, lambda: self._update_all_components())
                     self.root.after(0, lambda: finish(False, "Invalid JSON."))
                     return
                 if self._bw_cancel_event.is_set():
                     self.root.after(0, lambda: finish(False, "Cancelled."))
                     return
+                # Align with admin: when viewing All Routers, aggregate hourly across all routers
+                processed = []
+                try:
+                    if not router_id:
+                        # Aggregate by hour: sum download/upload, avg latency
+                        from collections import defaultdict
+                        agg = {}
+                        counts = defaultdict(int)
+                        for item in raw:
+                            try:
+                                ts_str = item.get('timestamp')
+                                # Parse common formats
+                                if isinstance(ts_str, str):
+                                    if 'GMT' in ts_str:
+                                        ts = datetime.strptime(ts_str, '%a, %d %b %Y %H:%M:%S GMT')
+                                    elif 'Z' in ts_str:
+                                        ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+                                    else:
+                                        # Supports both ISO and 'YYYY-MM-DD HH:MM:SS'
+                                        ts = datetime.fromisoformat(ts_str)
+                                else:
+                                    ts = ts_str
+                                # Floor to hour
+                                if hasattr(ts, 'replace'):
+                                    key = ts.replace(minute=0, second=0, microsecond=0)
+                                else:
+                                    # Fallback if timestamp isn't a datetime
+                                    key = ts
+                            except Exception:
+                                continue
+
+                            rec = agg.get(key)
+                            if not rec:
+                                rec = {'download_mbps': 0.0, 'upload_mbps': 0.0, 'latency_ms': 0.0}
+                                agg[key] = rec
+                            # Sum downloads/uploads
+                            try:
+                                dv = item.get('download_mbps')
+                                rec['download_mbps'] += float(dv) if dv is not None and dv != '' else 0.0
+                            except Exception:
+                                pass
+                            try:
+                                uv = item.get('upload_mbps')
+                                rec['upload_mbps'] += float(uv) if uv is not None and uv != '' else 0.0
+                            except Exception:
+                                pass
+                            # Avg latency → accumulate, divide by count later
+                            try:
+                                lv = item.get('latency_ms')
+                                rec['latency_ms'] += float(lv) if lv is not None and lv != '' else 0.0
+                            except Exception:
+                                pass
+                            counts[key] += 1
+
+                        # Finalize averages and produce list sorted ascending by time
+                        keys_sorted = sorted(agg.keys())
+                        for k in keys_sorted:
+                            cnt = max(counts.get(k, 1), 1)
+                            entry = agg[k]
+                            processed.append({
+                                'timestamp': k.strftime('%Y-%m-%d %H:00:00') if hasattr(k, 'strftime') else str(k),
+                                'download_mbps': float(entry.get('download_mbps') or 0.0),
+                                'upload_mbps': float(entry.get('upload_mbps') or 0.0),
+                                'latency_ms': float(entry.get('latency_ms') or 0.0) / cnt
+                            })
+                    else:
+                        # Specific router: use raw as-is but ensure types
+                        for item in reversed(list(raw)):
+                            # reverse to oldest→newest like admin
+                            processed.append({
+                                'timestamp': item.get('timestamp'),
+                                'download_mbps': float(item.get('download_mbps') or 0.0),
+                                'upload_mbps': float(item.get('upload_mbps') or 0.0),
+                                'latency_ms': float(item.get('latency_ms') or 0.0)
+                            })
+                except Exception:
+                    processed = []
+
+                # Store processed dataset (charts/tables use this)
+                self.bandwidth_data = processed
                 self.root.after(0, lambda: self._update_bw_phase("Updating UI..."))
                 self.root.after(0, self._update_all_components)
                 self.root.after(0, lambda: finish(True, "Loaded"))
@@ -363,8 +462,39 @@ class BandwidthTab:
             self._update_bw_phase("Cancelling...")
     
     def _prepare_chart_for_update(self):
-        """No-op: No forced size locking needed for robust resizing."""
-        pass
+        """Lock figure size to current canvas size to prevent jumpy resizing."""
+        try:
+            widget = self.canvas.get_tk_widget()
+            # Ensure geometry info is up to date
+            try:
+                widget.update_idletasks()
+            except Exception:
+                pass
+            w = int(widget.winfo_width() or 0)
+            h = int(widget.winfo_height() or 0)
+            # Fallbacks on first paint
+            if w < 10 or h < 10:
+                # Try parent frame
+                try:
+                    w = int(self.bandwidth_chart_frame.winfo_width() or 0)
+                    h = int(self.bandwidth_chart_frame.winfo_height() or 0)
+                except Exception:
+                    w = 900
+                    h = 320
+                if w < 10 or h < 10:
+                    w, h = 900, 320
+            # Remember last good size
+            self._last_fig_px = (w, h)
+            # Disable geometry propagation on container to keep steady size
+            try:
+                self.bandwidth_chart_frame.pack_propagate(False)
+            except Exception:
+                pass
+            # Apply figure size to match widget
+            dpi = float(self.fig.get_dpi() or 100.0)
+            self.fig.set_size_inches(max(w, 10) / dpi, max(h, 10) / dpi, forward=True)
+        except Exception:
+            pass
     
     def _lock_figure_size(self):
         """No-op: No forced size locking needed for robust resizing."""
@@ -382,8 +512,8 @@ class BandwidthTab:
         """Update all chart components consistently"""
         try:
             # Build a unified filtered dataset so chart, table, and stats stay in sync
-            # Limit to 100 rows to match table size and user expectations
-            self._bw_filtered = list(self.bandwidth_data[:100]) if self.bandwidth_data else []
+            # Use the full processed dataset; server-side limit already applied
+            self._bw_filtered = list(self.bandwidth_data) if self.bandwidth_data else []
             self.update_charts()
             self.update_table()
             self.update_statistics()
@@ -415,6 +545,8 @@ class BandwidthTab:
         import matplotlib.dates as mdates
         
         try:
+            # Lock current size to avoid resize jumps on redraw
+            self._prepare_chart_for_update()
             self.ax1.clear()
             self.ax2.clear()
             self.fig.patch.set_facecolor('white')
@@ -438,7 +570,9 @@ class BandwidthTab:
             for d in source:
                 try:
                     # Parse timestamp
-                    ts_str = d['timestamp']
+                    ts_str = d.get('timestamp')
+                    if ts_str is None:
+                        continue
                     if 'GMT' in ts_str:
                         ts = datetime.strptime(ts_str, '%a, %d %b %Y %H:%M:%S GMT')
                     elif 'Z' in ts_str:
@@ -550,39 +684,38 @@ class BandwidthTab:
                 self.bandwidth_table.delete(item)
 
             selected_router = self.router_var.get() if hasattr(self, 'router_var') else "All Routers"
-            # If 'All Routers', hide router column and aggregate by hour if possible
+            # We aggregate for 'All Routers' like admin; no router column needed
+            self.bandwidth_table['displaycolumns'] = ("timestamp", "download", "upload", "latency")
+            self.bandwidth_table.column("router", width=0, stretch=False)
             if selected_router == "All Routers":
-                # Show router column for 'All Routers'
-                self.bandwidth_table['displaycolumns'] = ("timestamp", "router", "download", "upload", "latency")
-                self.bandwidth_table.column("router", width=150, anchor="center", stretch=True)
                 self.table_subtitle.config(text="📊 Viewing: All Routers (Hourly Aggregated)")
             else:
-                # Hide router column for specific router
-                self.bandwidth_table['displaycolumns'] = ("timestamp", "download", "upload", "latency")
-                self.bandwidth_table.column("router", width=0, stretch=False)
                 self.table_subtitle.config(text=f"📊 Viewing: {selected_router}")
 
             # Add new data
             # Use the same unified filtered list as the chart
             source = getattr(self, "_bw_filtered", None)
             if source is None:
-                source = list(self.bandwidth_data[:100]) if self.bandwidth_data else []
+                source = list(self.bandwidth_data) if self.bandwidth_data else []
             for data in source:  # Already limited for performance
                 try:
                     # Handle timestamp parsing
-                    timestamp_str = data['timestamp']
-                    if 'GMT' in timestamp_str:
-                        timestamp = datetime.strptime(timestamp_str, '%a, %d %b %Y %H:%M:%S GMT')
-                    elif 'Z' in timestamp_str:
-                        timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                    timestamp_str = data.get('timestamp')
+                    if isinstance(timestamp_str, str):
+                        if 'GMT' in timestamp_str:
+                            timestamp = datetime.strptime(timestamp_str, '%a, %d %b %Y %H:%M:%S GMT')
+                        elif 'Z' in timestamp_str:
+                            timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                        else:
+                            # Supports ISO or 'YYYY-MM-DD HH:MM:SS'
+                            timestamp = datetime.fromisoformat(timestamp_str)
+                        formatted_time = timestamp.strftime('%Y-%m-%d %H:%M:%S')
                     else:
-                        timestamp = datetime.fromisoformat(timestamp_str)
-                    formatted_time = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                        # Already a datetime or invalid; fallback to str()
+                        formatted_time = str(timestamp_str)
                 except Exception as e:
                     print(f"Error parsing timestamp in table: {e}")
                     formatted_time = "Invalid Date"
-
-                router_name = data.get('router_name', 'Unknown')
 
                 # Handle None values safely
                 try:
@@ -602,15 +735,9 @@ class BandwidthTab:
                     latency = f"{float(latency_val):.1f}" if latency_val is not None else "0.0"
                 except (ValueError, TypeError):
                     latency = "0.0"
-
-                if selected_router == "All Routers":
-                    self.bandwidth_table.insert('', 'end', values=(
-                        formatted_time, router_name, download, upload, latency
-                    ))
-                else:
-                    self.bandwidth_table.insert('', 'end', values=(
-                        formatted_time, download, upload, latency
-                    ))
+                self.bandwidth_table.insert('', 'end', values=(
+                    formatted_time, download, upload, latency
+                ))
         except Exception as e:
             print(f"Error updating table: {e}")
 

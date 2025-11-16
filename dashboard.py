@@ -7535,6 +7535,31 @@ Type: {values[11]}
             self.bandwidth_chart_canvas.draw()
             return
         
+        # Lock canvas/frame size to avoid resizing jitter during redraw
+        try:
+            widget = self.bandwidth_chart_canvas.get_tk_widget()
+            try:
+                widget.update_idletasks()
+            except Exception:
+                pass
+            w = int(widget.winfo_width() or 0)
+            h = int(widget.winfo_height() or 0)
+            if w < 10 or h < 10:
+                try:
+                    parent = widget.master
+                    w = int(parent.winfo_width() or 900)
+                    h = int(parent.winfo_height() or 320)
+                except Exception:
+                    w, h = 900, 320
+            try:
+                widget.master.pack_propagate(False)
+            except Exception:
+                pass
+            dpi = float(self.bandwidth_chart_fig.get_dpi() or 100.0)
+            self.bandwidth_chart_fig.set_size_inches(max(w, 10)/dpi, max(h, 10)/dpi, forward=True)
+        except Exception:
+            pass
+
         # Parse data from rows: (timestamp, download, upload, latency)
         timestamps = []
         downloads = []
