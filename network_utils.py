@@ -1050,6 +1050,9 @@ class LoopDetectionEngine:
         Returns (is_loop, storm_rate, reason)
         """
         mac_data = self.mac_history[mac]
+        # Ensure local variables exist even if optional branches are skipped
+        recent_broadcast = []
+        recent_packets = []
         
         # Check ARP broadcast rate (sliding window: last 1 second)
         arp_times = list(mac_data["arp_broadcast_times"])
@@ -1063,10 +1066,9 @@ class LoopDetectionEngine:
         
         # Check broadcast packet flood rate (sliding window: last 2 seconds)
         broadcast_times = list(mac_data["broadcast_times"])
-        if len(broadcast_times) >= 2:
+        if broadcast_times:
             recent_broadcast = [t for t in broadcast_times if current_time - t <= 2.0]
             broadcast_count = len(recent_broadcast)
-            
             # TRIGGER 2: Broadcast flood detection (>300 broadcasts in 2 sec)
             if broadcast_count > 300:
                 broadcast_rate = broadcast_count / 2.0
@@ -1074,14 +1076,13 @@ class LoopDetectionEngine:
         
         # Check overall packet rate (sliding window: last 1 second)
         packet_times = list(mac_data["packet_times"])
-        if len(packet_times) >= 10:
+        if packet_times:
             recent_packets = [t for t in packet_times if current_time - t <= 1.0]
             packet_rate = len(recent_packets)
-            
             # TRIGGER 3: High sustained packet rate (>100 PPS)
             if packet_rate > 100:
                 # Additional check: verify it's mostly broadcasts
-                broadcast_ratio = len(recent_broadcast) / max(1, len(recent_packets))
+                broadcast_ratio = (len(recent_broadcast) / max(1, len(recent_packets))) if recent_broadcast else 0.0
                 if broadcast_ratio > 0.7:  # 70% broadcasts
                     return True, packet_rate, f"High broadcast rate ({packet_rate} PPS, {broadcast_ratio*100:.0f}% broadcasts)"
         
@@ -1097,11 +1098,12 @@ class LoopDetectionEngine:
                     return True, packet_rate, f"Repetitive packet flooding (entropy={entropy:.2f}, rate={packet_rate:.0f} PPS)"
         
         # Check for baseline deviation (3x normal rate)
-        if self.baseline["avg_broadcast_rate"] > 0:
+        if self.baseline["avg_broadcast_rate"] > 0 and mac_data["first_seen"]:
             current_broadcast_rate = len(broadcast_times) / max(1, current_time - mac_data["first_seen"])
-            if current_broadcast_rate > self.baseline["avg_broadcast_rate"] * 3:
-                if current_broadcast_rate > 50:  # Must exceed absolute threshold
-                    return True, current_broadcast_rate, f"3x baseline broadcast rate ({current_broadcast_rate:.0f} vs {self.baseline['avg_broadcast_rate']:.0f} PPS)"
+            if current_broadcast_rate > self.baseline["avg_broadcast_rate"] * 3 and current_broadcast_rate > 50:
+                return True, current_broadcast_rate, (
+                    f"3x baseline broadcast rate ({current_broadcast_rate:.0f} vs {self.baseline['avg_broadcast_rate']:.0f} PPS)"
+                )
         
         return False, 0, None
     
