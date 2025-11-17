@@ -4631,6 +4631,11 @@ class Dashboard:
                             self.root.after(0, lambda r=rid, s=new: self._update_gui_status(r, s))
                             # Update notification count
                             self.root.after(0, self.update_notification_count)
+                            
+                            # NEW: Trigger manual loop detection when router goes offline
+                            if not new:  # Router is now offline
+                                print(f"🔍 Router offline detected - triggering manual loop detection...")
+                                self.root.after(0, lambda: self._trigger_loop_detection_on_router_offline(router_name, router_ip))
             # Immediately stop if app closed during processing
             for _ in range(30):  # sleep for 3 seconds total, but check every 0.1s
                 if not self.app_running:
@@ -11768,6 +11773,115 @@ Type: {values[11]}
             time.sleep(0.2)
 
 
+    def _trigger_loop_detection_on_router_offline(self, router_name, router_ip):
+        """Trigger manual loop detection when a router goes offline (runs in background thread)."""
+        def run_detection():
+            try:
+                print(f"🔍 Running loop detection triggered by router offline: {router_name} ({router_ip})")
+                from network_utils import detect_loops, get_default_iface
+                
+                # Get the primary network interface
+                iface = get_default_iface()
+                print(f"🔍 Router offline scan - scanning interface: {iface}")
+                
+                # Run detection on primary interface with advanced engine (same as manual)
+                total_packets, offenders, stats, advanced_metrics = detect_loops(
+                    timeout=5,  # 5 seconds for thorough scan
+                    threshold=100,  # Threshold for severity
+                    iface=iface,
+                    enable_advanced=True  # Use advanced detection
+                )
+                
+                # Extract status from advanced detection
+                max_severity = 0
+                for mac, info in stats.items():
+                    if isinstance(info.get("severity"), dict):
+                        severity_value = info["severity"]["total"]
+                    else:
+                        severity_value = info.get("severity", 0)
+                    max_severity = max(max_severity, severity_value)
+                
+                # Determine status
+                if advanced_metrics.get("arp_storm_detected") or advanced_metrics.get("broadcast_flood_detected"):
+                    status = "loop_detected"
+                elif max_severity > 250:
+                    status = "loop_detected"
+                elif max_severity > 100:
+                    status = "suspicious"
+                else:
+                    status = "clean"
+                
+                # Build efficiency metrics
+                efficiency_metrics = {
+                    "detection_method": "ADVANCED",
+                    "interfaces_scanned": [iface],
+                    "total_interfaces": 1,
+                    "detection_duration": advanced_metrics.get("duration", 5),
+                    "packets_per_second": total_packets / max(1, advanced_metrics.get("duration", 5)),
+                    "unique_macs": advanced_metrics.get("total_unique_macs", 0),
+                    "arp_storm_detected": advanced_metrics.get("arp_storm_detected", False),
+                    "broadcast_flood_detected": advanced_metrics.get("broadcast_flood_detected", False),
+                    "storm_rate": advanced_metrics.get("storm_rate", 0),
+                    "early_exit": advanced_metrics.get("early_exit", False),
+                    "early_exit_reason": advanced_metrics.get("early_exit_reason", None),
+                    "actual_duration": advanced_metrics.get("duration", 5),
+                    "interface_results": [{
+                        "interface": iface,
+                        "packets": total_packets,
+                        "offenders": offenders,
+                        "status": status
+                    }],
+                    "triggered_by": f"Router offline: {router_name} ({router_ip})"
+                }
+                
+                interface_str = iface
+                
+                # Save to database
+                from db import save_loop_detection
+                detection_id = save_loop_detection(
+                    total_packets=total_packets,
+                    offenders=offenders,
+                    stats=stats,
+                    status=status,
+                    severity_score=max_severity,
+                    interface=interface_str,
+                    duration=efficiency_metrics.get('detection_duration', 5),
+                    efficiency_metrics=efficiency_metrics
+                )
+                
+                # Send notification if loop detected
+                if status in ["loop_detected", "suspicious"]:
+                    from notification_utils import notify_loop_detected
+                    notify_loop_detected(max_severity, offenders, interface_str)
+                    self.root.after(0, self.update_notification_count)
+                    
+                    # Show popup alert for loop detected
+                    if status == "loop_detected":
+                        self.root.after(0, lambda: messagebox.showwarning(
+                            "⚠️ Network Loop Detected!",
+                            f"A network loop has been detected after router {router_name} went offline!\n\n"
+                            f"Severity Score: {max_severity:.1f}\n"
+                            f"Offending Devices: {len(offenders)}\n"
+                            f"Interface: {interface_str}\n\n"
+                            f"Click 'Loop Test' button to view details."
+                        ))
+                
+                # Reload stats and history from database
+                from db import get_loop_detection_stats, get_loop_detections_history
+                self.loop_detection_stats = get_loop_detection_stats()
+                self.loop_detection_history = get_loop_detections_history(100)
+                
+                # Print status
+                print(f"✅ Router offline loop detection complete: status={status}, severity={max_severity:.2f}, offenders={len(offenders)}")
+                
+            except Exception as e:
+                import traceback
+                print(f"❌ Router offline loop detection error: {e}")
+                traceback.print_exc()
+        
+        # Run in background thread
+        threading.Thread(target=run_detection, daemon=True).start()
+
     def _run_loop_scan_thread(self, modal):
         try:
             # LOOP DETECTION FIX: Use default interface first, then multi-interface if needed
@@ -13410,26 +13524,71 @@ Type: {values[11]}
         print("⏹️ Automatic loop detection stopped")
 
     def _run_loop_detection(self):
-        """Background loop detection thread with multi-interface support."""
+        """Background loop detection thread using the same working method as manual detection."""
         while self.loop_detection_running and self.app_running:
             try:
-                from network_utils import detect_loops_multi_interface
+                # FIX: Use the same working method as manual loop detection
+                from network_utils import detect_loops, get_default_iface
                 
-                # Run multi-interface detection across entire network
-                # This monitors ALL active network interfaces (WiFi + LAN)
-                # LOWERED THRESHOLD from 30 to 15 for better sensitivity
-                total_packets, offenders, stats, status, severity_score, efficiency_metrics = detect_loops_multi_interface(
-                    timeout=5,  # Increased from 3 to 5 seconds for better capture
-                    threshold=15,  # LOWERED from 30 to 15 for more sensitive detection
-                    use_sampling=False  # DISABLED sampling to capture all packets
+                # Get the primary network interface (same as manual detection)
+                iface = get_default_iface()
+                print(f"🔄 Automatic loop detection scanning interface: {iface}")
+                
+                # Run detection on primary interface with advanced engine (same as manual)
+                total_packets, offenders, stats, advanced_metrics = detect_loops(
+                    timeout=5,  # 5 seconds for thorough scan
+                    threshold=100,  # Threshold for severity
+                    iface=iface,  # Use same interface as manual detection
+                    enable_advanced=True  # Use advanced detection like manual
                 )
                 
-                # Get scanned interfaces for logging
-                interfaces = efficiency_metrics.get('interfaces_scanned', ['Unknown'])
-                interface_str = ', '.join(interfaces)
+                # Extract status from advanced detection (same logic as manual)
+                max_severity = 0
+                for mac, info in stats.items():
+                    if isinstance(info.get("severity"), dict):
+                        severity_value = info["severity"]["total"]
+                    else:
+                        severity_value = info.get("severity", 0)
+                    max_severity = max(max_severity, severity_value)
+                
+                # Determine status (same logic as manual)
+                if advanced_metrics.get("arp_storm_detected") or advanced_metrics.get("broadcast_flood_detected"):
+                    status = "loop_detected"
+                elif max_severity > 250:
+                    status = "loop_detected"
+                elif max_severity > 100:
+                    status = "suspicious"
+                else:
+                    status = "clean"
+                
+                severity_score = max_severity
+                
+                # Build efficiency metrics compatible with dashboard
+                efficiency_metrics = {
+                    "detection_method": "ADVANCED",
+                    "interfaces_scanned": [iface],
+                    "total_interfaces": 1,
+                    "detection_duration": advanced_metrics.get("duration", 5),
+                    "packets_per_second": total_packets / max(1, advanced_metrics.get("duration", 5)),
+                    "unique_macs": advanced_metrics.get("total_unique_macs", 0),
+                    "arp_storm_detected": advanced_metrics.get("arp_storm_detected", False),
+                    "broadcast_flood_detected": advanced_metrics.get("broadcast_flood_detected", False),
+                    "storm_rate": advanced_metrics.get("storm_rate", 0),
+                    "early_exit": advanced_metrics.get("early_exit", False),
+                    "early_exit_reason": advanced_metrics.get("early_exit_reason", None),
+                    "actual_duration": advanced_metrics.get("duration", 5),
+                    "interface_results": [{
+                        "interface": iface,
+                        "packets": total_packets,
+                        "offenders": offenders,
+                        "status": status
+                    }]
+                }
+                
+                interface_str = iface
                 
                 # Enhanced logging
-                print(f"📊 Detection: packets={total_packets}, offenders={len(offenders)}, severity={severity_score:.1f}, status={status}")
+                print(f"📊 Automatic Detection: packets={total_packets}, offenders={len(offenders)}, severity={severity_score:.1f}, status={status}")
                 if offenders:
                     print(f"   Offending MACs: {', '.join(offenders[:3])}")
                 
@@ -13441,9 +13600,9 @@ Type: {values[11]}
                     stats=stats,
                     status=status,
                     severity_score=severity_score,
-                    interface=interface_str,  # Log all scanned interfaces
+                    interface=interface_str,
                     duration=efficiency_metrics.get('detection_duration', 5),
-                    efficiency_metrics=efficiency_metrics  # Pass enhanced metrics
+                    efficiency_metrics=efficiency_metrics
                 )
                 
                 # Send notification for loop detection
@@ -13488,7 +13647,7 @@ Type: {values[11]}
                     "status": status,
                     "severity_score": severity_score,
                     "duration": 5,
-                    "efficiency_metrics": efficiency_metrics  # Added for enhanced loop detection
+                    "efficiency_metrics": efficiency_metrics
                 }
                 
                 # Update UI if loop detection tab is visible
@@ -13502,10 +13661,14 @@ Type: {values[11]}
                     pass  # Modal might not be open
                 
             except Exception as e:
-                print(f"❌ Loop detection error: {e}")
+                import traceback
+                print(f"❌ Automatic loop detection error: {e}")
+                traceback.print_exc()
             
-            # Wait for next interval
-            time.sleep(self.loop_detection_interval)
+            # Wait for next interval (ensure this always happens)
+            if self.loop_detection_running and self.app_running:
+                print(f"⏳ Waiting {self.loop_detection_interval // 60} minutes until next automatic scan...")
+                time.sleep(self.loop_detection_interval)
 
     def _update_loop_detection_ui(self, detection_record):
         """Update loop detection UI with new detection record."""
