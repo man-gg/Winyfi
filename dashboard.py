@@ -4071,7 +4071,19 @@ class Dashboard:
                         break
                 if api_online is None:
                     api_online = True
-                router['is_online_unifi'] = bool(ping_online) and bool(api_online)
+                # If ping_online is None (latency not set yet), use api_online as primary indicator
+                # and check status_history as fallback. Only require both when ping_online is available.
+                if ping_online is None:
+                    # Check status_history as fallback if API status is unclear
+                    status_history_online = self.status_history.get(router['id'], {}).get('current')
+                    if status_history_online is not None:
+                        router['is_online_unifi'] = bool(status_history_online) and bool(api_online)
+                    else:
+                        # Use API status as primary indicator when ping is not available
+                        router['is_online_unifi'] = bool(api_online)
+                else:
+                    # When ping_online is available, require both ping and API to be online
+                    router['is_online_unifi'] = bool(ping_online) and bool(api_online)
             all_devices.append(router)
 
         # Helper: background latency update for UniFi
