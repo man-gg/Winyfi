@@ -1262,6 +1262,12 @@ class Dashboard:
             bootstyle="warning",
             command=self.open_loop_test_modal
         ).pack(side="right", padx=5)
+        tb.Button(
+            router_header_frame,
+            text="🗺️ Topology",
+            bootstyle="secondary",
+            command=self.open_topology_window
+        ).pack(side="right", padx=5)
         
         # Manual refresh button
         self.refresh_routers_btn = tb.Button(
@@ -14536,6 +14542,1491 @@ Type: {values[11]}
                 set_busy(False)
 
         save_btn.configure(command=on_save)
+
+    # =============================
+    # Network Topology - Visual Wiring Map
+    # =============================
+    def open_topology_window(self):
+        """Open simplified network topology for visualizing router positions and wiring."""
+        try:
+            from db import ensure_topology_schema
+            ensure_topology_schema()
+        except Exception:
+            pass
+
+        import tkinter as tk
+        import ttkbootstrap as tb
+        from router_utils import (
+            get_routers,
+            update_router_position,
+            get_router_connections,
+            add_router_connection,
+            remove_router_connection,
+        )
+
+        if getattr(self, '_topology_window', None) and self._topology_window.winfo_exists():
+            self._topology_window.lift()
+            return
+
+        win = tk.Toplevel(self.root)
+        win.title("Network Topology - Wiring & Positions")
+        win.geometry("1100x700")
+        self._center_window(win, 1100, 700)
+        self._topology_window = win
+
+        outer = tb.Frame(win)
+        outer.pack(fill='both', expand=True)
+
+        # Simplified header with essential controls
+        header = tb.Frame(outer, bootstyle='secondary')
+        header.pack(fill='x', padx=0, pady=0)
+        
+        # Left side - Title
+        title_frame = tb.Frame(header)
+        title_frame.pack(side='left', padx=12, pady=8)
+        tb.Label(title_frame, text="🗺️ Network Topology Map", 
+                font=('Segoe UI', 14, 'bold')).pack(side='left')
+        
+        # Right side - Controls
+        ctrl = tb.Frame(header)
+        ctrl.pack(side='right', padx=12, pady=8)
+        
+        self._topology_edit_mode = tk.BooleanVar(value=False)
+        edit_btn = tb.Checkbutton(ctrl, text="🎨 Edit Mode", variable=self._topology_edit_mode,
+                                 bootstyle='warning-round-toggle')
+        edit_btn.pack(side='left', padx=6)
+        
+        self._topology_auto_refresh = tk.BooleanVar(value=True)
+        tb.Checkbutton(ctrl, text="Auto-Refresh", variable=self._topology_auto_refresh,
+                       bootstyle='success-round-toggle').pack(side='left', padx=6)
+        tb.Button(ctrl, text="🔄 Refresh", bootstyle='info-outline', 
+                 command=self._topology_refresh_status, width=10).pack(side='left', padx=4)
+        
+        # Help button
+        def _show_help():
+            help_text = """🎨 TOPOLOGY DRAWING GUIDE
+            
+📍 BASIC CONTROLS:
+• Drag routers to reposition them
+• Click two routers to connect/disconnect
+• Ctrl+Scroll or use zoom slider to zoom
+
+✏️ EDIT MODE TOOLS:
+• 👆 Select: Click shapes to select, drag to move, drag handles to resize
+• ⬜ Box: Draw rectangles to group routers or mark areas
+• 📝 Text: Add labels for buildings, floors, departments
+• 📏 Line: Draw connection lines or annotations
+
+🎨 STYLING:
+• Choose from 8 colors for shapes and text
+• Adjust line width (1-5px)
+• Enable fill for rectangles with light colors
+• Text: sizes 8-24px, bold toggle
+
+⌨️ KEYBOARD SHORTCUTS:
+• ESC: Cancel current drawing
+• Right-click: Delete shape (with confirmation)
+• Ctrl+Scroll: Zoom in/out
+
+💡 TIPS:
+• Use filled rectangles to highlight building floors
+• Add text labels before drawing for context
+• Select mode lets you modify existing shapes
+• All changes are auto-saved"""
+            messagebox.showinfo("Topology Guide", help_text, parent=win)
+        
+        tb.Button(ctrl, text="❓ Help", bootstyle='secondary-outline',
+                 command=_show_help, width=8).pack(side='left', padx=4)
+        
+        # Instructions bar
+        info_bar = tb.Frame(outer, bootstyle='light')
+        info_bar.pack(fill='x', padx=0, pady=0)
+        
+        # Left side - instructions (dynamic based on edit mode)
+        self._topology_instructions_var = tk.StringVar(value="💡 Drag routers to position | Click two routers to connect/disconnect | Ctrl+Scroll to zoom")
+        tb.Label(info_bar, textvariable=self._topology_instructions_var, 
+                bootstyle='secondary', font=('Segoe UI', 9)).pack(side='left', padx=12, pady=6)
+        
+        # Drawing tools panel (shown when edit mode is on)
+        self._topology_tools_frame = tb.Frame(info_bar, bootstyle='light')
+        
+        self._topology_draw_mode = tk.StringVar(value='select')
+        self._topology_draw_color = tk.StringVar(value='#f59e0b')  # Orange
+        self._topology_line_width = tk.IntVar(value=2)
+        self._topology_fill_enabled = tk.BooleanVar(value=False)
+        self._topology_fill_color = tk.StringVar(value='#fef3c7')  # Light yellow
+        self._topology_text_size = tk.IntVar(value=12)
+        self._topology_text_bold = tk.BooleanVar(value=True)
+        self._topology_tool_buttons = {}  # Store button references
+        
+        def _update_tool_buttons(*args):
+            """Update tool button styling when mode changes."""
+            current_mode = self._topology_draw_mode.get()
+            for mode, btn in self._topology_tool_buttons.items():
+                if mode == current_mode:
+                    btn.configure(bootstyle='primary')
+                else:
+                    btn.configure(bootstyle='secondary-outline')
+        
+        def _create_tool_btn(text, mode, emoji):
+            def select_tool():
+                self._topology_draw_mode.set(mode)
+                _update_tool_buttons()
+            
+            btn = tb.Button(self._topology_tools_frame, text=f"{emoji} {text}", 
+                          bootstyle='primary' if mode == 'select' else 'secondary-outline',
+                          width=9,
+                          command=select_tool)
+            btn.pack(side='left', padx=2)
+            self._topology_tool_buttons[mode] = btn
+            return btn
+        
+        # === DRAWING TOOLS SECTION ===
+        tb.Label(self._topology_tools_frame, text="✏️ Draw:", font=('Segoe UI', 9, 'bold')).pack(side='left', padx=(0, 6))
+        _create_tool_btn('Select', 'select', '👆')
+        _create_tool_btn('Box', 'rectangle', '⬜')
+        _create_tool_btn('Text', 'text', '📝')
+        _create_tool_btn('Line', 'line', '📏')
+        
+        # Separator
+        tb.Separator(self._topology_tools_frame, orient='vertical').pack(side='left', fill='y', padx=10, pady=4)
+        
+        # === STYLE SECTION ===
+        tb.Label(self._topology_tools_frame, text="🎨 Style:", font=('Segoe UI', 9, 'bold')).pack(side='left', padx=(0, 6))
+        
+        # Color picker with names
+        tb.Label(self._topology_tools_frame, text="Color:", font=('Segoe UI', 9)).pack(side='left', padx=(0, 3))
+        
+        color_map = {
+            '🟠 Orange': '#f59e0b',
+            '🔵 Blue': '#3b82f6', 
+            '🔴 Red': '#ef4444',
+            '🟢 Green': '#10b981',
+            '🟡 Yellow': '#eab308',
+            '🟣 Purple': '#8b5cf6',
+            '⚫ Black': '#1f2937',
+            '⚪ Gray': '#6b7280'
+        }
+        
+        color_names = list(color_map.keys())
+        color_combo = tb.Combobox(self._topology_tools_frame, 
+                                 values=color_names,
+                                 state='readonly', width=11, font=('Segoe UI', 9))
+        color_combo.set('🟠 Orange')  # Default
+        color_combo.pack(side='left', padx=(0, 4))
+        
+        def _on_color_change(event):
+            selected_name = color_combo.get()
+            self._topology_draw_color.set(color_map.get(selected_name, '#f59e0b'))
+        
+        color_combo.bind('<<ComboboxSelected>>', _on_color_change)
+        
+        # Line width
+        tb.Label(self._topology_tools_frame, text="Width:", font=('Segoe UI', 9)).pack(side='left', padx=(10, 3))
+        width_combo = tb.Combobox(self._topology_tools_frame, textvariable=self._topology_line_width,
+                                 values=[1, 2, 3, 4, 5], state='readonly', width=3, font=('Segoe UI', 9))
+        width_combo.set(2)  # Set default
+        width_combo.pack(side='left', padx=(0, 4))
+        
+        # Separator
+        tb.Separator(self._topology_tools_frame, orient='vertical').pack(side='left', fill='y', padx=10, pady=4)
+        
+        # === FILL SECTION (for rectangles) ===
+        tb.Label(self._topology_tools_frame, text="🎯 Fill:", font=('Segoe UI', 9, 'bold')).pack(side='left', padx=(0, 6))
+        fill_check = tb.Checkbutton(self._topology_tools_frame, text="Enable", variable=self._topology_fill_enabled,
+                                   bootstyle='success-round-toggle')
+        fill_check.pack(side='left', padx=(0, 6))
+        
+        # Fill color with names
+        tb.Label(self._topology_tools_frame, text="Color:", font=('Segoe UI', 9)).pack(side='left', padx=(0, 3))
+        
+        fill_color_map = {
+            '🟡 Lt Yellow': '#fef3c7',
+            '🔵 Lt Blue': '#dbeafe',
+            '🔴 Lt Red': '#fee2e2',
+            '🟢 Lt Green': '#d1fae5',
+            '🟡 Cream': '#fef9c3',
+            '🟣 Lt Purple': '#e9d5ff',
+            '⚪ Lt Gray': '#f3f4f6'
+        }
+        
+        fill_names = list(fill_color_map.keys())
+        fill_combo = tb.Combobox(self._topology_tools_frame,
+                                values=fill_names,
+                                state='readonly', width=12)
+        fill_combo.set('🟡 Lt Yellow')  # Default
+        fill_combo.pack(side='left', padx=2)
+        
+        def _on_fill_color_change(event):
+            selected_name = fill_combo.get()
+            self._topology_fill_color.set(fill_color_map.get(selected_name, '#fef3c7'))
+        
+        fill_combo.bind('<<ComboboxSelected>>', _on_fill_color_change)
+        
+        # Separator
+        tb.Separator(self._topology_tools_frame, orient='vertical').pack(side='left', fill='y', padx=10, pady=4)
+        
+        # === TEXT FORMATTING SECTION ===
+        tb.Label(self._topology_tools_frame, text="📝 Text:", font=('Segoe UI', 9, 'bold')).pack(side='left', padx=(0, 6))
+        tb.Label(self._topology_tools_frame, text="Size:", font=('Segoe UI', 9)).pack(side='left', padx=(0, 3))
+        size_combo = tb.Combobox(self._topology_tools_frame, textvariable=self._topology_text_size,
+                                values=[8, 10, 12, 14, 16, 18, 20, 24], state='readonly', width=3, font=('Segoe UI', 9))
+        size_combo.set(12)  # Set default
+        size_combo.pack(side='left', padx=(0, 4))
+        
+        # Bold toggle
+        tb.Checkbutton(self._topology_tools_frame, text="Bold", variable=self._topology_text_bold,
+                      bootstyle='info-round-toggle').pack(side='left', padx=(8, 0))
+        
+        # Separator and help text
+        tb.Separator(self._topology_tools_frame, orient='vertical').pack(side='left', fill='y', padx=10, pady=4)
+        tb.Label(self._topology_tools_frame, text="💡 Right-click shapes to delete | ESC to cancel", 
+                font=('Segoe UI', 8), bootstyle='secondary').pack(side='left', padx=(4, 0))
+        
+        def _update_instructions(*args):
+            if self._topology_edit_mode.get():
+                # Show contextual help based on selected tool
+                mode = self._topology_draw_mode.get()
+                if mode == 'select':
+                    self._topology_instructions_var.set("👆 SELECT MODE: Click shapes to select • Drag to move • Drag handles to resize • Right-click to delete")
+                elif mode == 'rectangle':
+                    self._topology_instructions_var.set("⬜ RECTANGLE: Click and drag to draw • Use Fill toggle for background color • ESC to cancel")
+                elif mode == 'text':
+                    self._topology_instructions_var.set("📝 TEXT: Click anywhere to add label • Set size and color before clicking • Right-click to delete")
+                elif mode == 'line':
+                    self._topology_instructions_var.set("📏 LINE: Click and drag to draw connection • Adjust width and color as needed • ESC to cancel")
+                self._topology_tools_frame.pack(side='left', padx=(20, 0), pady=6)
+            else:
+                self._topology_instructions_var.set("💡 Drag routers to position | Click two routers to connect/disconnect | Ctrl+Scroll to zoom")
+                self._topology_tools_frame.pack_forget()
+        
+        self._topology_edit_mode.trace_add('write', _update_instructions)
+        self._topology_draw_mode.trace_add('write', _update_instructions)
+        
+        # Right side - zoom controls with slider
+        zoom_frame = tb.Frame(info_bar)
+        zoom_frame.pack(side='right', padx=12, pady=6)
+        
+        tb.Label(zoom_frame, text="🔍", font=('Segoe UI', 12)).pack(side='left', padx=(0, 8))
+        tb.Button(zoom_frame, text="−", bootstyle='secondary-outline', width=3,
+                 command=lambda: self._topology_set_zoom(self._topology_zoom_slider.get() - 10)).pack(side='left', padx=2)
+        
+        # Zoom slider (25% to 300%) - using ttkbootstrap Scale
+        self._topology_zoom_slider = tb.Scale(zoom_frame, from_=25, to=300, orient='horizontal',
+                                             length=150, bootstyle='info',
+                                             command=lambda v: self._topology_apply_zoom(float(v)))
+        self._topology_zoom_slider.set(100)
+        self._topology_zoom_slider.pack(side='left', padx=6)
+        
+        self._topology_zoom_var = tk.StringVar(value="100%")
+        zoom_label = tb.Label(zoom_frame, textvariable=self._topology_zoom_var, 
+                             font=('Segoe UI', 10, 'bold'), width=5)
+        zoom_label.pack(side='left', padx=6)
+        
+        tb.Button(zoom_frame, text="+", bootstyle='secondary-outline', width=3,
+                 command=lambda: self._topology_set_zoom(self._topology_zoom_slider.get() + 10)).pack(side='left', padx=2)
+        tb.Button(zoom_frame, text="Reset", bootstyle='info-outline', width=6,
+                 command=lambda: self._topology_set_zoom(100)).pack(side='left', padx=4)
+
+        # Main canvas area with grid background
+        canvas_frame = tb.Frame(outer, bootstyle='light')
+        canvas_frame.pack(fill='both', expand=True, padx=8, pady=8)
+        
+        hscroll = tb.Scrollbar(canvas_frame, orient='horizontal')
+        vscroll = tb.Scrollbar(canvas_frame, orient='vertical')
+        topo_canvas = tk.Canvas(canvas_frame, bg='#ffffff', 
+                               xscrollcommand=hscroll.set, yscrollcommand=vscroll.set,
+                               relief='sunken', borderwidth=1)
+        hscroll.config(command=topo_canvas.xview)
+        vscroll.config(command=topo_canvas.yview)
+        topo_canvas.pack(side='left', fill='both', expand=True)
+        vscroll.pack(side='right', fill='y')
+        hscroll.pack(side='bottom', fill='x')
+
+        # Draw subtle grid for easier positioning
+        def _draw_grid():
+            grid_size = 50
+            for x in range(0, 2000, grid_size):
+                topo_canvas.create_line(x, 0, x, 2000, fill='#e5e7eb', width=1, tags='grid')
+            for y in range(0, 2000, grid_size):
+                topo_canvas.create_line(0, y, 2000, y, fill='#e5e7eb', width=1, tags='grid')
+            topo_canvas.tag_lower('grid')
+        _draw_grid()
+
+        # Zoom functionality
+        self._topology_zoom_level = 1.0
+        
+        def _on_mousewheel(event):
+            # Check for Ctrl key more reliably
+            ctrl_pressed = (event.state & 0x0004) or (event.state & 0x20004)
+            shift_pressed = event.state & 0x0001
+            
+            # Ctrl + Wheel = Zoom using slider
+            if ctrl_pressed:
+                if hasattr(self, '_topology_zoom_slider'):
+                    current_zoom = self._topology_zoom_slider.get()
+                    if event.delta > 0:
+                        new_zoom = min(300, current_zoom + 10)
+                    else:
+                        new_zoom = max(25, current_zoom - 10)
+                    self._topology_set_zoom(new_zoom)
+                return "break"  # Prevent default scrolling
+            # Shift + Wheel = Horizontal scroll
+            elif shift_pressed:
+                topo_canvas.xview_scroll(-1 if event.delta > 0 else 1, 'units')
+            # Wheel alone = Vertical scroll
+            else:
+                topo_canvas.yview_scroll(-1 if event.delta > 0 else 1, 'units')
+        
+        # Bind mouse wheel events
+        topo_canvas.bind('<MouseWheel>', _on_mousewheel)
+        topo_canvas.bind('<Control-MouseWheel>', _on_mousewheel)
+
+        # Data stores
+        self._topology_canvas = topo_canvas
+        self._topology_nodes = {}
+        self._topology_connections = {}
+        self._topology_selected = None
+        self._dragging_node = None
+        self._drag_offset = (0, 0)
+        self._topology_shapes = {}  # Store drawn shapes {id: {'type': 'rect'/'text'/'line', 'items': [canvas_ids], 'data': {}}}
+        self._topology_shape_counter = 0
+        self._topology_drawing = False
+        self._topology_draw_start = None
+        self._topology_temp_shape = None
+        self._topology_selected_shape = None
+        self._dragging_shape = None
+        self._shape_drag_start = None
+        self._shape_resize_handle = None
+        self._shape_resize_handles = {}  # Store resize handles {shape_id: [handle_items]}
+
+        routers = get_routers() or []
+        pairs = set(tuple(sorted((c['router_a_id'], c['router_b_id']))) for c in (get_router_connections() or []))
+
+        # Smart initial layout - spread routers nicely
+        cols = max(3, int((len(routers) ** 0.5)))
+        base_x, base_y = 100, 100
+        gap_x, gap_y = 250, 180
+
+        # Draw routers with improved visual design
+        for i, r in enumerate(routers):
+            rid = r['id']
+            name = r.get('name', f"Router {rid}")
+            ip = r.get('ip_address', '0.0.0.0')
+            
+            # Check actual online status by pinging
+            from router_utils import is_online
+            status_bool = is_online(ip)
+            status = 'online' if status_bool else 'offline'
+            
+            # Use saved position or calculate new position
+            x = r.get('pos_x') if r.get('pos_x') is not None else base_x + (i % cols) * gap_x
+            y = r.get('pos_y') if r.get('pos_y') is not None else base_y + (i // cols) * gap_y
+            
+            # Larger, cleaner router boxes
+            w, h = 200, 90
+            
+            # Shadow effect
+            shadow = topo_canvas.create_rectangle(x+4, y+4, x+w+4, y+h+4, 
+                                                 fill='#d1d5db', outline='', tags='shadow')
+            
+            # Main router box with gradient-like effect
+            rect = topo_canvas.create_rectangle(x, y, x + w, y + h, 
+                                               fill='#ffffff', outline='#6b7280', width=2,
+                                               tags='router')
+            
+            # Status indicator (larger and clearer)
+            dot_color = '#10b981' if status == 'online' else '#ef4444'
+            dot = topo_canvas.create_oval(x + 10, y + 10, x + 28, y + 28, 
+                                         fill=dot_color, outline='', tags='status')
+            
+            # Router icon/label
+            icon = topo_canvas.create_text(x + w/2, y + 30, text="📡", 
+                                          font=('Segoe UI', 18), tags='icon')
+            
+            # Router name
+            txt = topo_canvas.create_text(x + w/2, y + h/2 + 10, text=name, 
+                                         font=('Segoe UI', 11, 'bold'), tags='label')
+            
+            # IP address
+            ip_txt = topo_canvas.create_text(x + w/2, y + h/2 + 28, text=ip, 
+                                            font=('Segoe UI', 9), fill='#6b7280', tags='ip')
+            
+            self._topology_nodes[rid] = {
+                'rect': rect, 'shadow': shadow, 'dot': dot, 'icon': icon,
+                'text': txt, 'ip_text': ip_txt, 'w': w, 'h': h
+            }
+
+        def _center(rid):
+            """Get center point of router box."""
+            nd = self._topology_nodes[rid]
+            x1, y1, x2, y2 = topo_canvas.coords(nd['rect'])
+            return (x1 + (x2 - x1)/2, y1 + (y2 - y1)/2)
+
+        # Draw connection wires with improved styling
+        for a, b in pairs:
+            if a in self._topology_nodes and b in self._topology_nodes:
+                x1, y1 = _center(a)
+                x2, y2 = _center(b)
+                
+                # Draw thicker, more visible connection lines
+                line = topo_canvas.create_line(x1, y1, x2, y2, 
+                                              fill='#3b82f6', width=3,
+                                              arrow=tk.BOTH, arrowshape=(10, 12, 5),
+                                              tags='connection')
+                
+                # Add connection label showing link
+                mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+                label_bg = topo_canvas.create_oval(mid_x-15, mid_y-15, mid_x+15, mid_y+15,
+                                                  fill='#dbeafe', outline='#3b82f6', width=2,
+                                                  tags='connection_label')
+                label_text = topo_canvas.create_text(mid_x, mid_y, text="🔗",
+                                                    font=('Segoe UI', 10),
+                                                    tags='connection_label')
+                
+                topo_canvas.tag_lower('connection')
+                topo_canvas.tag_lower('connection_label')
+                topo_canvas.tag_lower('grid')
+                
+                self._topology_connections[(a, b)] = {
+                    'line': line, 
+                    'label_bg': label_bg, 
+                    'label_text': label_text
+                }
+        
+        # Load saved shapes from database
+        def _load_saved_shapes():
+            """Load all saved shapes from database and render them on canvas."""
+            from db import get_topology_shapes
+            import logging
+            logger = logging.getLogger(__name__)
+            saved_shapes = get_topology_shapes()
+            
+            for db_shape in saved_shapes:
+                try:
+                    shape_id = self._topology_shape_counter
+                    self._topology_shape_counter += 1
+                    
+                    shape_type = db_shape['type']
+                    color = db_shape.get('color', '#f59e0b')
+                    width = db_shape.get('stroke_width', 2)
+                    
+                    # Skip shapes with invalid data
+                    if db_shape.get('x') is None or db_shape.get('y') is None:
+                        continue
+                    
+                    if shape_type == 'rect':
+                        x, y = db_shape['x'], db_shape['y']
+                        w, h = db_shape.get('w', 100), db_shape.get('h', 100)
+                        
+                        # Skip if width or height is None
+                        if w is None or h is None:
+                            continue
+                            
+                        x0, y0, x1, y1 = x, y, x + w, y + h
+                        fill_color = db_shape.get('fill_color', '')
+                        
+                        rect = topo_canvas.create_rectangle(
+                            x0, y0, x1, y1,
+                            outline=color, width=width or 2, fill=fill_color if fill_color else '',
+                            tags=('shape', f'shape_{shape_id}')
+                        )
+                        try:
+                            topo_canvas.tag_lower('shape')
+                            topo_canvas.tag_lower('grid')
+                        except Exception:
+                            pass  # Ignore layer reorder errors
+                        
+                        self._topology_shapes[shape_id] = {
+                            'type': 'rectangle',
+                            'items': [rect],
+                            'data': {'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'color': color, 'width': width or 2, 'fill': fill_color if fill_color else ''},
+                            'db_id': db_shape['id']
+                        }
+                    
+                    elif shape_type == 'line':
+                        x0, y0 = db_shape['x'], db_shape['y']
+                        x1, y1 = db_shape.get('x2'), db_shape.get('y2')
+                        
+                        # Skip if endpoint coordinates are None
+                        if x1 is None or y1 is None:
+                            continue
+                        
+                        line = topo_canvas.create_line(
+                            x0, y0, x1, y1,
+                            fill=color, width=width or 2,
+                            tags=('shape', f'shape_{shape_id}')
+                        )
+                        try:
+                            topo_canvas.tag_lower('shape')
+                            topo_canvas.tag_lower('grid')
+                        except Exception:
+                            pass  # Ignore layer reorder errors
+                        
+                        self._topology_shapes[shape_id] = {
+                            'type': 'line',
+                            'items': [line],
+                            'data': {'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'color': color, 'width': width or 2},
+                            'db_id': db_shape['id']
+                        }
+                    
+                    elif shape_type == 'text':
+                        x, y = db_shape['x'], db_shape['y']
+                        text = db_shape.get('text', 'Label')
+                        size = db_shape.get('stroke_width', 12)  # Using stroke_width for text size
+                        
+                        # Skip if text is None or empty
+                        if not text:
+                            text = 'Label'
+                        
+                        # Ensure size is valid
+                        if size is None or size < 8:
+                            size = 12
+                        
+                        text_item = topo_canvas.create_text(
+                            x, y,
+                            text=text,
+                            font=('Segoe UI', int(size), 'bold'),
+                            fill=color,
+                            tags=('shape', f'shape_{shape_id}')
+                        )
+                        
+                        self._topology_shapes[shape_id] = {
+                            'type': 'text',
+                            'items': [text_item],
+                            'data': {'x': x, 'y': y, 'text': text, 'color': color, 'size': int(size), 'bold': True},
+                            'db_id': db_shape['id']
+                        }
+                except Exception as e:
+                    # Skip shapes that can't be loaded
+                    logger.warning(f"Could not load shape {db_shape.get('id')}: {e}")
+                    continue
+        
+        # Load shapes after grid and routers are drawn
+        _load_saved_shapes()
+
+        def _node_at(event):
+            """Find which router node was clicked."""
+            items = topo_canvas.find_overlapping(event.x, event.y, event.x, event.y)
+            for item in items:
+                for rid, nd in self._topology_nodes.items():
+                    if item in (nd['rect'], nd['shadow'], nd['dot'], nd['icon'], nd['text'], nd['ip_text']):
+                        return rid
+            return None
+        
+        def _shape_at(event):
+            """Find which shape was clicked."""
+            items = topo_canvas.find_overlapping(event.x, event.y, event.x, event.y)
+            for item in items:
+                tags = topo_canvas.gettags(item)
+                for tag in tags:
+                    if tag.startswith('shape_'):
+                        shape_id = int(tag.split('_')[1])
+                        if shape_id in self._topology_shapes:
+                            return shape_id
+            return None
+        
+        def _add_resize_handles(shape_id):
+            """Add resize handles to selected shape."""
+            if shape_id not in self._topology_shapes:
+                return
+            
+            shape = self._topology_shapes[shape_id]
+            shape_type = shape['type']
+            
+            # Clear existing handles
+            _clear_resize_handles()
+            
+            if shape_type == 'rectangle':
+                data = shape['data']
+                x0, y0, x1, y1 = data['x0'], data['y0'], data['x1'], data['y1']
+                
+                # Create 8 handles (corners and midpoints)
+                handles = []
+                positions = [
+                    (x0, y0, 'nw'), (x1, y0, 'ne'), (x0, y1, 'sw'), (x1, y1, 'se'),  # Corners
+                    ((x0+x1)/2, y0, 'n'), ((x0+x1)/2, y1, 's'),  # Top/bottom
+                    (x0, (y0+y1)/2, 'w'), (x1, (y0+y1)/2, 'e')   # Left/right
+                ]
+                
+                for x, y, cursor in positions:
+                    handle = topo_canvas.create_rectangle(
+                        x-4, y-4, x+4, y+4,
+                        fill='#3b82f6', outline='white', width=2,
+                        tags=('resize_handle', f'handle_{cursor}')
+                    )
+                    handles.append(handle)
+                
+                self._shape_resize_handles[shape_id] = handles
+            
+            elif shape_type == 'line':
+                data = shape['data']
+                x0, y0, x1, y1 = data['x0'], data['y0'], data['x1'], data['y1']
+                
+                # Create 2 handles (endpoints)
+                handles = [
+                    topo_canvas.create_oval(
+                        x0-4, y0-4, x0+4, y0+4,
+                        fill='#3b82f6', outline='white', width=2,
+                        tags=('resize_handle', 'handle_start')
+                    ),
+                    topo_canvas.create_oval(
+                        x1-4, y1-4, x1+4, y1+4,
+                        fill='#3b82f6', outline='white', width=2,
+                        tags=('resize_handle', 'handle_end')
+                    )
+                ]
+                self._shape_resize_handles[shape_id] = handles
+        
+        def _clear_resize_handles():
+            """Remove all resize handles."""
+            for handles in self._shape_resize_handles.values():
+                for handle in handles:
+                    topo_canvas.delete(handle)
+            self._shape_resize_handles.clear()
+        
+        def _handle_at(event):
+            """Check if clicking on a resize handle."""
+            items = topo_canvas.find_overlapping(event.x, event.y, event.x, event.y)
+            for item in items:
+                tags = topo_canvas.gettags(item)
+                if 'resize_handle' in tags:
+                    for tag in tags:
+                        if tag.startswith('handle_'):
+                            return tag.replace('handle_', '')
+            return None
+
+        def _on_press(event):
+            """Handle mouse press for router dragging or shape drawing."""
+            # Check if in edit mode with drawing tool selected
+            if self._topology_edit_mode.get() and self._topology_draw_mode.get() != 'select':
+                tool = self._topology_draw_mode.get()
+                self._topology_drawing = True
+                self._topology_draw_start = (event.x, event.y)
+                
+                # Create temporary preview shape
+                if tool == 'rectangle':
+                    self._topology_temp_shape = topo_canvas.create_rectangle(
+                        event.x, event.y, event.x, event.y,
+                        outline='#f59e0b', width=2, dash=(5, 5),
+                        tags='temp_shape'
+                    )
+                elif tool == 'line':
+                    self._topology_temp_shape = topo_canvas.create_line(
+                        event.x, event.y, event.x, event.y,
+                        fill='#f59e0b', width=2, dash=(5, 5),
+                        tags='temp_shape'
+                    )
+                return
+            
+            # In select mode with edit enabled - check for shape selection/resize
+            if self._topology_edit_mode.get() and self._topology_draw_mode.get() == 'select':
+                # Check for resize handle first
+                handle = _handle_at(event)
+                if handle:
+                    self._shape_resize_handle = handle
+                    self._shape_drag_start = (event.x, event.y)
+                    return
+                
+                # Check for shape selection
+                shape_id = _shape_at(event)
+                if shape_id is not None:
+                    # Deselect previous shape
+                    if self._topology_selected_shape is not None and self._topology_selected_shape != shape_id:
+                        _clear_resize_handles()
+                    
+                    # Select this shape
+                    self._topology_selected_shape = shape_id
+                    self._dragging_shape = shape_id
+                    self._shape_drag_start = (event.x, event.y)
+                    _add_resize_handles(shape_id)
+                    return
+                else:
+                    # Clicked empty space - deselect
+                    self._topology_selected_shape = None
+                    _clear_resize_handles()
+            
+            # Normal router dragging
+            rid = _node_at(event)
+            if rid is None:
+                return
+            self._dragging_node = rid
+            x1, y1, x2, y2 = topo_canvas.coords(self._topology_nodes[rid]['rect'])
+            self._drag_offset = (event.x - x1, event.y - y1)
+        
+        def _on_right_click(event):
+            """Handle right-click for editing router name."""
+            if not self._topology_edit_mode.get():
+                return
+            
+            rid = _node_at(event)
+            if rid is None:
+                return
+            
+            # Get current router info
+            router_info = None
+            for r in routers:
+                if r['id'] == rid:
+                    router_info = r
+                    break
+            
+            if not router_info:
+                return
+            
+            # Create edit dialog
+            current_name = router_info.get('name', f"Router {rid}")
+            new_name = tk.simpledialog.askstring(
+                "Edit Router Name",
+                f"Enter new name for router:\nCurrent: {current_name}",
+                initialvalue=current_name,
+                parent=win
+            )
+            
+            if new_name and new_name.strip() and new_name != current_name:
+                # Update database
+                try:
+                    from router_utils import update_router_name
+                    update_router_name(rid, new_name.strip())
+                    
+                    # Update canvas
+                    nd = self._topology_nodes[rid]
+                    topo_canvas.itemconfig(nd['text'], text=new_name.strip())
+                    
+                    messagebox.showinfo("Success", f"Router renamed to: {new_name.strip()}")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to rename router: {e}")
+        
+        def _on_double_click(event):
+            """Handle double-click for detailed router editing."""
+            if not self._topology_edit_mode.get():
+                return
+            
+            rid = _node_at(event)
+            if rid is None:
+                return
+            
+            # Get current router info
+            router_info = None
+            for r in routers:
+                if r['id'] == rid:
+                    router_info = r
+                    break
+            
+            if not router_info:
+                return
+            
+            # Create detailed edit dialog
+            edit_window = tk.Toplevel(win)
+            edit_window.title(f"Edit Router Details - {router_info.get('name', f'Router {rid}')}")
+            edit_window.geometry("400x300")
+            edit_window.resizable(False, False)
+            edit_window.transient(win)
+            edit_window.grab_set()
+            
+            # Center the window
+            edit_window.update_idletasks()
+            x = (edit_window.winfo_screenwidth() - 400) // 2
+            y = (edit_window.winfo_screenheight() - 300) // 2
+            edit_window.geometry(f"400x300+{x}+{y}")
+            
+            frame = tb.Frame(edit_window, padding=20)
+            frame.pack(fill='both', expand=True)
+            
+            tb.Label(frame, text="Router Details", font=('Segoe UI', 14, 'bold')).pack(pady=(0, 15))
+            
+            # Name field
+            tb.Label(frame, text="Router Name:", font=('Segoe UI', 10)).pack(anchor='w')
+            name_var = tk.StringVar(value=router_info.get('name', f"Router {rid}"))
+            name_entry = tb.Entry(frame, textvariable=name_var, font=('Segoe UI', 10))
+            name_entry.pack(fill='x', pady=(0, 10))
+            
+            # IP field
+            tb.Label(frame, text="IP Address:", font=('Segoe UI', 10)).pack(anchor='w')
+            ip_var = tk.StringVar(value=router_info.get('ip_address', ''))
+            ip_entry = tb.Entry(frame, textvariable=ip_var, font=('Segoe UI', 10))
+            ip_entry.pack(fill='x', pady=(0, 10))
+            
+            # Location field
+            tb.Label(frame, text="Location/Building:", font=('Segoe UI', 10)).pack(anchor='w')
+            location_var = tk.StringVar(value=router_info.get('location', ''))
+            location_entry = tb.Entry(frame, textvariable=location_var, font=('Segoe UI', 10))
+            location_entry.pack(fill='x', pady=(0, 15))
+            
+            def save_changes():
+                try:
+                    from router_utils import update_router_details
+                    
+                    new_name = name_var.get().strip()
+                    new_ip = ip_var.get().strip()
+                    new_location = location_var.get().strip()
+                    
+                    if not new_name:
+                        messagebox.showwarning("Validation", "Router name cannot be empty!")
+                        return
+                    
+                    if not new_ip:
+                        messagebox.showwarning("Validation", "IP address cannot be empty!")
+                        return
+                    
+                    # Update database
+                    update_router_details(rid, new_name, new_ip, new_location)
+                    
+                    # Update canvas
+                    nd = self._topology_nodes[rid]
+                    topo_canvas.itemconfig(nd['text'], text=new_name)
+                    topo_canvas.itemconfig(nd['ip_text'], text=new_ip)
+                    
+                    messagebox.showinfo("Success", "Router details updated successfully!")
+                    edit_window.destroy()
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to update router: {e}")
+            
+            # Buttons
+            btn_frame = tb.Frame(frame)
+            btn_frame.pack(fill='x', pady=(10, 0))
+            
+            tb.Button(btn_frame, text="Cancel", bootstyle='secondary', 
+                     command=edit_window.destroy).pack(side='right', padx=(10, 0))
+            tb.Button(btn_frame, text="Save Changes", bootstyle='success', 
+                     command=save_changes).pack(side='right')
+
+        def _on_motion(event):
+            """Handle mouse motion for router dragging or shape preview."""
+            # Check if canvas still exists
+            if not topo_canvas.winfo_exists():
+                return
+                
+            # Drawing mode - update temporary shape preview
+            if self._topology_drawing and self._topology_temp_shape:
+                tool = self._topology_draw_mode.get()
+                x0, y0 = self._topology_draw_start
+                
+                try:
+                    if tool == 'rectangle':
+                        topo_canvas.coords(self._topology_temp_shape, x0, y0, event.x, event.y)
+                    elif tool == 'line':
+                        topo_canvas.coords(self._topology_temp_shape, x0, y0, event.x, event.y)
+                except Exception:
+                    pass  # Ignore if canvas item doesn't exist
+                return
+            
+            # Shape resizing mode
+            if self._shape_resize_handle and self._topology_selected_shape is not None:
+                shape_id = self._topology_selected_shape
+                shape = self._topology_shapes.get(shape_id)
+                if not shape:
+                    return
+                    
+                dx = event.x - self._shape_drag_start[0]
+                dy = event.y - self._shape_drag_start[1]
+                
+                if shape['type'] == 'rectangle':
+                    data = shape['data']
+                    x0, y0, x1, y1 = data['x0'], data['y0'], data['x1'], data['y1']
+                    handle = self._shape_resize_handle
+                    
+                    # Update coordinates based on handle
+                    if 'n' in handle:
+                        y0 += dy
+                    if 's' in handle:
+                        y1 += dy
+                    if 'w' in handle:
+                        x0 += dx
+                    if 'e' in handle:
+                        x1 += dx
+                    
+                    # Update shape
+                    try:
+                        topo_canvas.coords(shape['items'][0], x0, y0, x1, y1)
+                        data.update({'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1})
+                    except Exception:
+                        return  # Canvas item no longer exists
+                    self._shape_drag_start = (event.x, event.y)
+                    
+                    # Update database
+                    if 'db_id' in shape:
+                        from db import update_topology_shape
+                        update_topology_shape(
+                            shape['db_id'],
+                            x=int(min(x0, x1)), y=int(min(y0, y1)),
+                            w=int(abs(x1-x0)), h=int(abs(y1-y0))
+                        )
+                    
+                    # Update handles
+                    _add_resize_handles(shape_id)
+                
+                elif shape['type'] == 'line':
+                    data = shape['data']
+                    if self._shape_resize_handle == 'start':
+                        data['x0'] = event.x
+                        data['y0'] = event.y
+                    elif self._shape_resize_handle == 'end':
+                        data['x1'] = event.x
+                        data['y1'] = event.y
+                    
+                    topo_canvas.coords(shape['items'][0], data['x0'], data['y0'], data['x1'], data['y1'])
+                    
+                    # Update database
+                    if 'db_id' in shape:
+                        from db import update_topology_shape
+                        update_topology_shape(
+                            shape['db_id'],
+                            x=int(data['x0']), y=int(data['y0']),
+                            x2=int(data['x1']), y2=int(data['y1'])
+                        )
+                    
+                    _add_resize_handles(shape_id)
+                return
+            
+            # Shape dragging mode (move entire shape)
+            if self._dragging_shape is not None and self._shape_drag_start:
+                dx = event.x - self._shape_drag_start[0]
+                dy = event.y - self._shape_drag_start[1]
+                
+                shape = self._topology_shapes[self._dragging_shape]
+                
+                # Move all shape items
+                for item in shape['items']:
+                    topo_canvas.move(item, dx, dy)
+                
+                # Update shape data
+                data = shape['data']
+                if shape['type'] == 'rectangle':
+                    data['x0'] += dx
+                    data['y0'] += dy
+                    data['x1'] += dx
+                    data['y1'] += dy
+                    # Update database
+                    if 'db_id' in shape:
+                        from db import update_topology_shape
+                        update_topology_shape(
+                            shape['db_id'],
+                            x=int(min(data['x0'], data['x1'])), y=int(min(data['y0'], data['y1']))
+                        )
+                elif shape['type'] == 'line':
+                    data['x0'] += dx
+                    data['y0'] += dy
+                    data['x1'] += dx
+                    data['y1'] += dy
+                    # Update database
+                    if 'db_id' in shape:
+                        from db import update_topology_shape
+                        update_topology_shape(
+                            shape['db_id'],
+                            x=int(data['x0']), y=int(data['y0']),
+                            x2=int(data['x1']), y2=int(data['y1'])
+                        )
+                elif shape['type'] == 'text':
+                    data['x'] += dx
+                    data['y'] += dy
+                    # Update database
+                    if 'db_id' in shape:
+                        from db import update_topology_shape
+                        update_topology_shape(
+                            shape['db_id'],
+                            x=int(data['x']), y=int(data['y'])
+                        )
+                
+                self._shape_drag_start = (event.x, event.y)
+                
+                # Update resize handles
+                if self._topology_selected_shape == self._dragging_shape:
+                    _add_resize_handles(self._dragging_shape)
+                return
+            
+            # Normal router dragging
+            if self._dragging_node is None:
+                return
+            
+            # Check if canvas still exists
+            if not topo_canvas.winfo_exists():
+                return
+                
+            nd = self._topology_nodes[self._dragging_node]
+            try:
+                x1, y1, x2, y2 = topo_canvas.coords(nd['rect'])
+            except Exception:
+                return  # Canvas item no longer exists
+                
+            nx1 = event.x - self._drag_offset[0]
+            ny1 = event.y - self._drag_offset[1]
+            dx = nx1 - x1
+            dy = ny1 - y1
+            
+            # Move all router elements together
+            try:
+                for key in ('rect', 'shadow', 'dot', 'icon', 'text', 'ip_text'):
+                    topo_canvas.move(nd[key], dx, dy)
+            except Exception:
+                return  # Canvas items no longer exist
+            
+            # Update connected wires
+            try:
+                for (a, b), conn_items in self._topology_connections.items():
+                    if a == self._dragging_node or b == self._dragging_node:
+                        ax, ay = _center(a)
+                        bx, by = _center(b)
+                        mid_x, mid_y = (ax + bx) / 2, (ay + by) / 2
+                        
+                        topo_canvas.coords(conn_items['line'], ax, ay, bx, by)
+                        topo_canvas.coords(conn_items['label_bg'], 
+                                          mid_x-15, mid_y-15, mid_x+15, mid_y+15)
+                        topo_canvas.coords(conn_items['label_text'], mid_x, mid_y)
+            except Exception:
+                pass  # Ignore connection update errors
+            
+            try:
+                topo_canvas.configure(scrollregion=topo_canvas.bbox('all'))
+            except Exception:
+                pass  # Ignore scroll region update errors
+
+        def _on_release(event):
+            """Handle mouse release - save position, finalize shapes, or handle connections."""
+            # Drawing mode - finalize shape
+            if self._topology_drawing:
+                tool = self._topology_draw_mode.get()
+                x0, y0 = self._topology_draw_start
+                x1, y1 = event.x, event.y
+                
+                # Delete temporary preview
+                if self._topology_temp_shape:
+                    topo_canvas.delete(self._topology_temp_shape)
+                    self._topology_temp_shape = None
+                
+                # Only create if dragged significantly (>10 pixels)
+                if abs(x1 - x0) > 10 or abs(y1 - y0) > 10:
+                    shape_id = self._topology_shape_counter
+                    self._topology_shape_counter += 1
+                    
+                    color = self._topology_draw_color.get()
+                    width = self._topology_line_width.get()
+                    
+                    if tool == 'rectangle':
+                        # Create permanent rectangle with selected settings
+                        fill_color = self._topology_fill_color.get() if self._topology_fill_enabled.get() else ''
+                        rect = topo_canvas.create_rectangle(
+                            x0, y0, x1, y1,
+                            outline=color, width=width, fill=fill_color,
+                            tags=('shape', f'shape_{shape_id}')
+                        )
+                        # Lower behind routers but above grid
+                        try:
+                            topo_canvas.tag_lower('shape')
+                            topo_canvas.tag_lower('grid')
+                        except Exception:
+                            pass  # Ignore layer reorder errors
+                        
+                        # Save to database
+                        from db import insert_topology_shape
+                        db_id = insert_topology_shape(
+                            shape_type='rect',
+                            x=int(min(x0, x1)), y=int(min(y0, y1)),
+                            w=int(abs(x1-x0)), h=int(abs(y1-y0)),
+                            color=color, fill_color=fill_color if fill_color else None, stroke_width=width
+                        )
+                        
+                        self._topology_shapes[shape_id] = {
+                            'type': 'rectangle',
+                            'items': [rect],
+                            'data': {'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'color': color, 'width': width, 'fill': fill_color},
+                            'db_id': db_id
+                        }
+                    
+                    elif tool == 'line':
+                        # Create permanent line with selected settings
+                        line = topo_canvas.create_line(
+                            x0, y0, x1, y1,
+                            fill=color, width=width,
+                            tags=('shape', f'shape_{shape_id}')
+                        )
+                        try:
+                            topo_canvas.tag_lower('shape')
+                            topo_canvas.tag_lower('grid')
+                        except Exception:
+                            pass  # Ignore layer reorder errors
+                        
+                        # Save to database
+                        from db import insert_topology_shape
+                        db_id = insert_topology_shape(
+                            shape_type='line',
+                            x=int(x0), y=int(y0),
+                            x2=int(x1), y2=int(y1),
+                            color=color, stroke_width=width
+                        )
+                        
+                        self._topology_shapes[shape_id] = {
+                            'type': 'line',
+                            'items': [line],
+                            'data': {'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'color': color, 'width': width},
+                            'db_id': db_id
+                        }
+                
+                self._topology_drawing = False
+                self._topology_draw_start = None
+                return
+            
+            # Reset shape dragging/resizing
+            if self._dragging_shape is not None or self._shape_resize_handle is not None:
+                self._dragging_shape = None
+                self._shape_resize_handle = None
+                self._shape_drag_start = None
+                return
+            
+            # Text tool - prompt for text input
+            if self._topology_edit_mode.get() and self._topology_draw_mode.get() == 'text':
+                text_input = tk.simpledialog.askstring(
+                    "Add Text Label",
+                    "Enter label text:",
+                    parent=win
+                )
+                
+                if text_input and text_input.strip():
+                    shape_id = self._topology_shape_counter
+                    self._topology_shape_counter += 1
+                    
+                    color = self._topology_draw_color.get()
+                    size = self._topology_text_size.get()
+                    bold = self._topology_text_bold.get()
+                    font_weight = 'bold' if bold else 'normal'
+                    
+                    # Create text label with selected settings
+                    text_item = topo_canvas.create_text(
+                        event.x, event.y,
+                        text=text_input.strip(),
+                        font=('Segoe UI', size, font_weight),
+                        fill=color,
+                        tags=('shape', f'shape_{shape_id}')
+                    )
+                    
+                    # Save to database
+                    from db import insert_topology_shape
+                    db_id = insert_topology_shape(
+                        shape_type='text',
+                        x=int(event.x), y=int(event.y),
+                        text=text_input.strip(),
+                        color=color, stroke_width=size
+                    )
+                    
+                    self._topology_shapes[shape_id] = {
+                        'type': 'text',
+                        'items': [text_item],
+                        'data': {'x': event.x, 'y': event.y, 'text': text_input.strip(), 'color': color, 'size': size, 'bold': bold},
+                        'db_id': db_id
+                    }
+                return
+            
+            # Normal router handling
+            if self._dragging_node is not None:
+                nd = self._topology_nodes[self._dragging_node]
+                x1, y1, x2, y2 = topo_canvas.coords(nd['rect'])
+                update_router_position(self._dragging_node, int(x1), int(y1))
+            
+            # Router connection logic - ONLY when edit mode is OFF
+            if not self._topology_edit_mode.get():
+                rid = _node_at(event)
+                if rid is not None and self._dragging_node == rid:
+                    # Handle selection and connection logic
+                    if self._topology_selected is None:
+                        # Select first router
+                        self._topology_selected = rid
+                        topo_canvas.itemconfig(self._topology_nodes[rid]['rect'], 
+                                              outline='#3b82f6', width=3)
+                        topo_canvas.itemconfig(self._topology_nodes[rid]['shadow'], fill='#93c5fd')
+                    elif self._topology_selected == rid:
+                        # Deselect if same router clicked again
+                        topo_canvas.itemconfig(self._topology_nodes[rid]['rect'], 
+                                              outline='#6b7280', width=2)
+                        topo_canvas.itemconfig(self._topology_nodes[rid]['shadow'], fill='#d1d5db')
+                        self._topology_selected = None
+                    else:
+                        # Connect/disconnect two routers
+                        a, b = sorted([self._topology_selected, rid])
+                        pair = (a, b)
+                        
+                        if pair in self._topology_connections:
+                            # Remove existing connection
+                            conn = self._topology_connections[pair]
+                            topo_canvas.delete(conn['line'])
+                            topo_canvas.delete(conn['label_bg'])
+                            topo_canvas.delete(conn['label_text'])
+                            remove_router_connection(a, b)
+                            del self._topology_connections[pair]
+                            messagebox.showinfo("Connection", 
+                                              f"Removed connection between routers")
+                        else:
+                            # Add new connection
+                            ax, ay = _center(a)
+                            bx, by = _center(b)
+                            mid_x, mid_y = (ax + bx) / 2, (ay + by) / 2
+                            
+                            line = topo_canvas.create_line(ax, ay, bx, by, 
+                                                          fill='#3b82f6', width=3,
+                                                          arrow=tk.BOTH, arrowshape=(10, 12, 5),
+                                                          tags='connection')
+                            label_bg = topo_canvas.create_oval(mid_x-15, mid_y-15, mid_x+15, mid_y+15,
+                                                              fill='#dbeafe', outline='#3b82f6', width=2,
+                                                              tags='connection_label')
+                            label_text = topo_canvas.create_text(mid_x, mid_y, text="🔗",
+                                                                font=('Segoe UI', 10),
+                                                                tags='connection_label')
+                            
+                            topo_canvas.tag_lower('connection')
+                            topo_canvas.tag_lower('connection_label')
+                            topo_canvas.tag_lower('grid')
+                            
+                            self._topology_connections[pair] = {
+                                'line': line,
+                                'label_bg': label_bg,
+                                'label_text': label_text
+                            }
+                            add_router_connection(a, b)
+                            messagebox.showinfo("Connection", 
+                                              f"Created connection between routers")
+                        
+                        # Deselect first router
+                        topo_canvas.itemconfig(self._topology_nodes[self._topology_selected]['rect'], 
+                                              outline='#6b7280', width=2)
+                        topo_canvas.itemconfig(self._topology_nodes[self._topology_selected]['shadow'], 
+                                              fill='#d1d5db')
+                        self._topology_selected = None
+            
+            self._dragging_node = None
+        
+        def _on_shape_right_click(event):
+            """Handle right-click on shapes to delete them."""
+            if not self._topology_edit_mode.get():
+                return
+            
+            # Find which shape was clicked
+            items = topo_canvas.find_overlapping(event.x, event.y, event.x, event.y)
+            for item in items:
+                # Check if this item belongs to a shape
+                tags = topo_canvas.gettags(item)
+                for tag in tags:
+                    if tag.startswith('shape_'):
+                        shape_id = int(tag.split('_')[1])
+                        if shape_id in self._topology_shapes:
+                            # Confirm deletion
+                            if messagebox.askyesno("Delete Shape", 
+                                                  "Delete this shape/label?",
+                                                  parent=win):
+                                # Delete from database
+                                if 'db_id' in self._topology_shapes[shape_id]:
+                                    from db import delete_topology_shape
+                                    delete_topology_shape(self._topology_shapes[shape_id]['db_id'])
+                                
+                                # Delete all canvas items for this shape
+                                for canvas_item in self._topology_shapes[shape_id]['items']:
+                                    topo_canvas.delete(canvas_item)
+                                # Remove from data store
+                                del self._topology_shapes[shape_id]
+                            return
+        
+        def _on_escape(event):
+            """Handle ESC key to cancel drawing operation."""
+            if self._topology_drawing:
+                # Cancel drawing
+                if self._topology_temp_shape:
+                    topo_canvas.delete(self._topology_temp_shape)
+                    self._topology_temp_shape = None
+                self._topology_drawing = False
+                self._topology_draw_start = None
+
+        topo_canvas.bind('<ButtonPress-1>', _on_press)
+        topo_canvas.bind('<B1-Motion>', _on_motion)
+        topo_canvas.bind('<ButtonRelease-1>', _on_release)
+        topo_canvas.bind('<Button-3>', _on_right_click)  # Right-click to rename router
+        topo_canvas.bind('<Double-Button-1>', _on_double_click)  # Double-click to edit details
+        win.bind('<Escape>', _on_escape)  # ESC to cancel drawing
+        
+        # Add right-click handler for shapes (must be after router right-click)
+        def _on_canvas_right_click(event):
+            """Route right-click to either shape or router handler."""
+            # Check if clicking on a shape first
+            items = topo_canvas.find_overlapping(event.x, event.y, event.x, event.y)
+            for item in items:
+                tags = topo_canvas.gettags(item)
+                for tag in tags:
+                    if tag.startswith('shape_'):
+                        _on_shape_right_click(event)
+                        return
+            # Otherwise, handle as router right-click
+            _on_right_click(event)
+        
+        topo_canvas.bind('<Button-3>', _on_canvas_right_click)
+        topo_canvas.configure(scrollregion=topo_canvas.bbox('all'))
+
+        def _auto_loop():
+            if not win.winfo_exists():
+                return
+            if self._topology_auto_refresh.get():
+                self._topology_refresh_status()
+            win.after(5000, _auto_loop)
+        _auto_loop()
+
+    def _topology_refresh_status(self):
+        """Update node status colors by actually pinging routers (non-blocking)."""
+        if not hasattr(self, '_topology_canvas') or not self._topology_canvas:
+            return
+        
+        def refresh_in_thread():
+            """Background thread to ping routers and update colors."""
+            try:
+                from router_utils import get_routers, is_online
+                routers = get_routers() or []
+                
+                # Check actual online status for each router
+                status_updates = {}
+                for r in routers:
+                    rid = r['id']
+                    ip = r.get('ip_address', '0.0.0.0')
+                    is_up = is_online(ip)
+                    status_updates[rid] = 'online' if is_up else 'offline'
+                
+                # Update UI in main thread
+                def update_ui():
+                    if not hasattr(self, '_topology_canvas') or not self._topology_canvas:
+                        return
+                    try:
+                        for rid, status in status_updates.items():
+                            if rid in self._topology_nodes:
+                                nd = self._topology_nodes[rid]
+                                color = '#10b981' if status == 'online' else '#ef4444'
+                                self._topology_canvas.itemconfig(nd['dot'], fill=color)
+                        # Ensure layering remains correct after refresh
+                        self._topology_reorder_layers()
+                    except Exception as e:
+                        print(f"UI update error: {e}")
+                
+                self.root.after(0, update_ui)
+                
+            except Exception as e:
+                print(f"Topology refresh error: {e}")
+        
+        # Run in background thread to avoid blocking UI
+        import threading
+        threading.Thread(target=refresh_in_thread, daemon=True).start()
+    
+    def _topology_set_zoom(self, zoom_percent):
+        """Set zoom to specific percentage value."""
+        if not hasattr(self, '_topology_zoom_slider'):
+            return
+        
+        # Clamp between 25% and 300%
+        zoom_percent = max(25, min(300, zoom_percent))
+        
+        # Update slider
+        self._topology_zoom_slider.set(zoom_percent)
+    
+    def _topology_apply_zoom(self, zoom_percent):
+        """Apply zoom transformation based on slider value."""
+        if not hasattr(self, '_topology_canvas') or not self._topology_canvas:
+            return
+        
+        canvas = self._topology_canvas
+        
+        # Check if canvas still exists (window not closed)
+        try:
+            if not canvas.winfo_exists():
+                return
+        except:
+            return
+        
+        # Get current zoom level
+        if not hasattr(self, '_topology_current_zoom'):
+            self._topology_current_zoom = 100.0
+        
+        # Calculate scale factor
+        factor = zoom_percent / self._topology_current_zoom
+        
+        # Update zoom label
+        if hasattr(self, '_topology_zoom_var'):
+            try:
+                self._topology_zoom_var.set(f"{int(zoom_percent)}%")
+            except:
+                pass
+        
+        try:
+            # Get canvas center for zoom origin
+            canvas.update_idletasks()
+            canvas_width = canvas.winfo_width()
+            canvas_height = canvas.winfo_height()
+            cx = canvas_width / 2
+            cy = canvas_height / 2
+            
+            # Convert to canvas coordinates
+            cx_canvas = canvas.canvasx(cx)
+            cy_canvas = canvas.canvasy(cy)
+            
+            # Scale all items from center
+            canvas.scale('all', cx_canvas, cy_canvas, factor, factor)
+            
+            # Update current zoom
+            self._topology_current_zoom = zoom_percent
+            
+            # Update scroll region
+            canvas.configure(scrollregion=canvas.bbox('all'))
+        except:
+            # Canvas destroyed or window closed
+            pass
+    
+    def _topology_zoom_reset(self):
+        """Reset zoom to 100%."""
+        if not hasattr(self, '_topology_canvas') or not self._topology_canvas:
+            return
+        
+        # Calculate reset factor
+        if hasattr(self, '_topology_zoom_level') and self._topology_zoom_level != 0:
+            reset_factor = 1.0 / self._topology_zoom_level
+            self._topology_zoom_level = 1.0
+            
+            # Update label
+            if hasattr(self, '_topology_zoom_var'):
+                self._topology_zoom_var.set("100%")
+            
+            # Scale back to 100%
+            canvas = self._topology_canvas
+            canvas.update_idletasks()
+            canvas_width = canvas.winfo_width()
+            canvas_height = canvas.winfo_height()
+            cx = canvas_width / 2
+            cy = canvas_height / 2
+            cx_canvas = canvas.canvasx(cx)
+            cy_canvas = canvas.canvasy(cy)
+            
+            canvas.scale('all', cx_canvas, cy_canvas, reset_factor, reset_factor)
+            canvas.configure(scrollregion=canvas.bbox('all'))
+    
+    def _topology_reorder_layers(self):
+        """Enforce proper layering: lines -> shapes -> text labels -> routers."""
+        if not hasattr(self, '_topology_canvas') or not self._topology_canvas:
+            return
+        try:
+            c = self._topology_canvas
+            # Lower connection lines first
+            for line_id in self._topology_connections.values():
+                c.tag_lower(line_id)
+            # Lower shape lines
+            for sid, data in self._topology_shapes.items():
+                if data['type'] == 'line':
+                    c.tag_lower(data['main'])
+            # Raise shapes (rect, circle)
+            for sid, data in self._topology_shapes.items():
+                if data['type'] in ('rect', 'circle'):
+                    c.tag_raise(data['main'])
+            # Raise text labels
+            for sid, data in self._topology_shapes.items():
+                if data['type'] == 'text':
+                    if 'hitbox' in data:
+                        c.tag_raise(data['hitbox'])
+                    c.tag_raise(data['main'])
+            # Raise routers to top
+            for rid, nd in self._topology_nodes.items():
+                for key in ('rect', 'dot', 'text', 'ip_text'):
+                    c.tag_raise(nd[key])
+        except Exception as e:
+            print(f"Layer reorder error: {e}")
 
     def logout(self):
         """Log out to the login screen without exiting the application."""

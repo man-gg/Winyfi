@@ -279,3 +279,58 @@ def get_router_status_info(router_id, timeout_seconds=60):
         conn.close()
 
 
+# =============================
+# Topology helpers (positions & connections)
+# =============================
+from db import update_router_position as _update_router_position_db
+from db import get_router_connections as _get_router_connections_db
+from db import add_router_connection as _add_router_connection_db
+from db import remove_router_connection as _remove_router_connection_db
+
+def update_router_position(router_id: int, x: int, y: int):
+    """Update stored position for a router node on topology canvas."""
+    return _update_router_position_db(router_id, x, y)
+
+def update_router_name(router_id: int, new_name: str):
+    """Update router name."""
+    def _update():
+        conn = get_connection()
+        cursor = conn.cursor()
+        sql = "UPDATE routers SET name = %s WHERE id = %s"
+        cursor.execute(sql, (new_name, router_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    
+    return execute_with_error_handling("update_router_name", _update)
+
+def update_router_details(router_id: int, name: str, ip_address: str, location: str):
+    """Update router name, IP address, and location."""
+    def _update():
+        conn = get_connection()
+        cursor = conn.cursor()
+        sql = """
+        UPDATE routers 
+        SET name = %s, ip_address = %s, location = %s 
+        WHERE id = %s
+        """
+        cursor.execute(sql, (name, ip_address, location, router_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    
+    return execute_with_error_handling("update_router_details", _update)
+
+def get_router_connections():
+    """Return list of existing router connection pairs."""
+    return _get_router_connections_db()
+
+def add_router_connection(a_id: int, b_id: int):
+    """Add connection between two routers (unordered)."""
+    return _add_router_connection_db(a_id, b_id)
+
+def remove_router_connection(a_id: int, b_id: int):
+    """Remove connection between two routers if present."""
+    return _remove_router_connection_db(a_id, b_id)
+
+

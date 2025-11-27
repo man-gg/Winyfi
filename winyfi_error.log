@@ -18342,3 +18342,509 @@ AttributeError: 'Dashboard' object has no attribute '_reports_hide_after_job'. D
 2025-11-16 23:58:12,565 INFO [root] Overall status: CLEAN, max_severity=0.0
 2025-11-16 23:58:12,573 INFO [db] Loop detection saved to database (ID: 531, severity: 0.00, cross-subnet: False)
 2025-11-16 23:59:29,032 INFO [db] Loop detection saved to database (ID: 532, severity: 47.48, cross-subnet: False)
+2025-11-21 09:22:17,692 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-21 09:22:17,737 INFO [db] Activity logged: User 2 - Login - None
+2025-11-21 09:22:27,386 INFO [db] Loop detection saved to database (ID: 533, severity: 24.35, cross-subnet: False)
+2025-11-21 09:22:30,525 INFO [db] Added pos_x column to routers table
+2025-11-21 09:22:30,545 INFO [db] Added pos_y column to routers table
+2025-11-21 09:25:56,658 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 09:25:58,641 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 09:36:47,703 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-21 09:36:47,775 INFO [db] Activity logged: User 2 - Login - None
+2025-11-21 09:36:58,945 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 09:37:02,084 INFO [db] Loop detection saved to database (ID: 534, severity: 24.71, cross-subnet: False)
+2025-11-21 09:37:28,958 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14969, in _release
+    update_topology_shape(data['id'], x=int(sx), y=int(sy), w=int(w), h=int(h))
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\db.py", line 236, in update_topology_shape
+    params.append(int(shape_id))
+                  ~~~^^^^^^^^^^
+TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+
+2025-11-21 09:37:43,245 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14969, in _release
+    update_topology_shape(data['id'], x=int(sx), y=int(sy), w=int(w), h=int(h))
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\db.py", line 236, in update_topology_shape
+    params.append(int(shape_id))
+                  ~~~^^^^^^^^^^
+TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+
+2025-11-21 09:38:05,327 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 09:38:05,329 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-21 09:38:16,495 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 09:38:16,496 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-21 09:40:19,370 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-21 09:40:19,421 INFO [db] Activity logged: User 2 - Login - None
+2025-11-21 09:40:29,094 INFO [db] Loop detection saved to database (ID: 535, severity: 28.86, cross-subnet: False)
+2025-11-21 09:40:37,886 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 09:40:37,888 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-21 09:40:57,509 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 09:40:57,524 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-21 09:52:47,593 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-21 09:52:47,622 INFO [db] Activity logged: User 2 - Login - None
+2025-11-21 09:52:57,415 INFO [db] Loop detection saved to database (ID: 536, severity: 29.00, cross-subnet: False)
+2025-11-21 09:53:00,298 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 09:53:00,299 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-21 10:14:57,449 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-21 10:14:57,479 INFO [db] Activity logged: User 2 - Login - None
+2025-11-21 10:15:06,778 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 10:15:06,779 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-21 10:15:06,808 INFO [db] Added stroke_width column to topology_shapes table
+2025-11-21 10:15:07,282 INFO [db] Loop detection saved to database (ID: 537, severity: 23.33, cross-subnet: False)
+2025-11-21 10:17:19,761 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 10:17:19,762 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-21 10:55:35,103 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-21 10:55:35,154 INFO [db] Activity logged: User 2 - Login - None
+2025-11-21 10:55:44,558 INFO [db] Loop detection saved to database (ID: 538, severity: 32.48, cross-subnet: False)
+2025-11-21 10:55:51,872 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-21 10:55:51,873 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-21 11:00:54,336 INFO [db] Loop detection saved to database (ID: 539, severity: 25.85, cross-subnet: False)
+2025-11-21 11:05:59,470 INFO [db] Loop detection saved to database (ID: 540, severity: 32.88, cross-subnet: False)
+2025-11-21 11:11:04,677 INFO [db] Loop detection saved to database (ID: 541, severity: 28.77, cross-subnet: False)
+2025-11-21 11:16:09,841 INFO [db] Loop detection saved to database (ID: 542, severity: 49.27, cross-subnet: False)
+2025-11-21 11:21:14,976 INFO [db] Loop detection saved to database (ID: 543, severity: 25.59, cross-subnet: False)
+2025-11-21 11:26:20,098 INFO [db] Loop detection saved to database (ID: 544, severity: 26.14, cross-subnet: False)
+2025-11-27 16:48:10,131 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 16:48:10,151 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 16:48:19,611 INFO [db] Loop detection saved to database (ID: 545, severity: 59.05, cross-subnet: False)
+2025-11-27 16:48:23,925 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 16:48:23,927 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 16:51:17,721 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 16:51:17,737 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 16:51:27,789 INFO [db] Loop detection saved to database (ID: 546, severity: 58.49, cross-subnet: False)
+2025-11-27 16:51:31,695 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 16:51:31,697 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 16:55:16,658 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 16:55:16,672 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 16:55:26,055 INFO [db] Loop detection saved to database (ID: 547, severity: 57.05, cross-subnet: False)
+2025-11-27 16:55:29,398 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 16:55:29,399 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 16:56:36,781 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 16:56:36,795 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 16:56:46,841 INFO [db] Loop detection saved to database (ID: 548, severity: 56.00, cross-subnet: False)
+2025-11-27 16:57:01,514 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 16:57:01,516 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:01:45,117 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 17:01:45,132 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 17:01:55,708 INFO [db] Loop detection saved to database (ID: 549, severity: 59.71, cross-subnet: False)
+2025-11-27 17:02:27,875 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:02:27,885 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:07:27,460 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 17:07:27,477 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 17:07:37,090 INFO [db] Loop detection saved to database (ID: 550, severity: 44.96, cross-subnet: False)
+2025-11-27 17:07:39,419 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:07:39,429 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:08:58,786 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 17:08:58,861 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 17:09:08,987 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:09:08,995 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:09:10,336 INFO [db] Loop detection saved to database (ID: 551, severity: 24.28, cross-subnet: False)
+2025-11-27 17:17:17,447 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 17:17:17,459 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 17:17:26,688 INFO [db] Loop detection saved to database (ID: 552, severity: 27.07, cross-subnet: False)
+2025-11-27 17:17:28,428 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:17:28,429 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:17:48,500 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14669, in _on_mousewheel
+    self._topology_zoom(1.1)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+2025-11-27 17:18:14,614 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:18:14,616 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:18:14,664 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14619, in <lambda>
+    command=lambda v: self._topology_apply_zoom(float(v)))
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14995, in _topology_apply_zoom
+    canvas_width = canvas.winfo_width()
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1451, in winfo_width
+    self.tk.call('winfo', 'width', self._w))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: bad window path name ".!toplevel.!toplevel4.!frame.!frame3.!canvas"
+
+2025-11-27 17:18:19,328 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:18:19,329 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:18:19,381 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14619, in <lambda>
+    command=lambda v: self._topology_apply_zoom(float(v)))
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14995, in _topology_apply_zoom
+    canvas_width = canvas.winfo_width()
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1451, in winfo_width
+    self.tk.call('winfo', 'width', self._w))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: bad window path name ".!toplevel.!toplevel8.!frame.!frame3.!canvas"
+
+2025-11-27 17:21:57,311 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 17:21:57,325 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 17:22:04,498 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:22:04,509 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:22:06,512 INFO [db] Loop detection saved to database (ID: 553, severity: 28.31, cross-subnet: False)
+2025-11-27 17:22:30,816 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+2025-11-27 17:22:30,847 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+2025-11-27 17:22:30,892 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+2025-11-27 17:22:30,936 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 14671, in _on_mousewheel
+    self._topology_zoom(0.9)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Dashboard' object has no attribute '_topology_zoom'. Did you mean: '_topology_nodes'?
+
+2025-11-27 17:29:52,340 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 17:29:52,354 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 17:30:02,039 INFO [db] Loop detection saved to database (ID: 554, severity: 47.32, cross-subnet: False)
+2025-11-27 17:30:03,604 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:30:03,613 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:31:28,219 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 17:31:28,239 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 17:31:37,503 INFO [db] Loop detection saved to database (ID: 555, severity: 41.18, cross-subnet: False)
+2025-11-27 17:31:46,945 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:31:46,946 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:50:36,268 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 17:50:36,288 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 17:50:44,616 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 17:50:44,620 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 17:50:45,521 INFO [db] Loop detection saved to database (ID: 556, severity: 24.04, cross-subnet: False)
+2025-11-27 18:22:22,774 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 18:22:22,790 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 18:22:33,910 INFO [db] Loop detection saved to database (ID: 557, severity: 46.24, cross-subnet: False)
+2025-11-27 18:22:34,738 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 18:22:34,749 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 18:31:21,736 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 18:31:21,749 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 18:31:30,564 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 18:31:30,567 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 18:31:31,336 INFO [db] Loop detection saved to database (ID: 558, severity: 29.27, cross-subnet: False)
+2025-11-27 18:36:38,169 INFO [db] Loop detection saved to database (ID: 559, severity: 44.40, cross-subnet: False)
+2025-11-27 18:41:43,838 INFO [db] Loop detection saved to database (ID: 560, severity: 55.36, cross-subnet: False)
+2025-11-27 18:45:16,506 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15544, in _on_release
+    topo_canvas.delete(conn['label_text'])
+                       ^^^^^^^^^^^^^^^^^^^
+KeyError: None
+
+2025-11-27 18:46:49,291 INFO [db] Loop detection saved to database (ID: 561, severity: 49.95, cross-subnet: False)
+2025-11-27 18:49:32,158 INFO [db] Activity logged: User 2 - Add Router - AP 3
+2025-11-27 18:49:46,765 INFO [db] Activity logged: User 2 - Edit Router - AP 4
+2025-11-27 18:50:13,285 INFO [db] Activity logged: User 2 - Add Router - AP 5
+2025-11-27 18:50:16,812 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 18:50:16,820 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 18:51:54,389 INFO [db] Loop detection saved to database (ID: 562, severity: 28.16, cross-subnet: False)
+2025-11-27 18:52:02,787 INFO [db] Activity logged: User 2 - Add Router - AP 6
+2025-11-27 18:52:39,942 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 18:52:39,958 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 18:52:48,988 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 18:52:49,001 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 18:52:49,564 INFO [db] Loop detection saved to database (ID: 563, severity: 48.83, cross-subnet: False)
+2025-11-27 18:53:43,532 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15580, in _on_release
+    topo_canvas.itemconfig(self._topology_nodes[self._topology_selected]['rect'],
+                           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: None
+
+2025-11-27 18:54:46,742 INFO [db] Activity logged: User 2 - Add Router - AP 7
+2025-11-27 18:55:11,440 INFO [db] Activity logged: User 2 - Add Router - AP 9 
+2025-11-27 19:00:36,124 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 19:00:36,148 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 19:00:46,069 INFO [db] Loop detection saved to database (ID: 564, severity: 48.64, cross-subnet: False)
+2025-11-27 19:00:50,903 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:00:50,914 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:00:57,384 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15071, in open_topology_window
+    _load_saved_shapes()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15055, in _load_saved_shapes
+    text_item = topo_canvas.create_text(
+        x, y,
+    ...<3 lines>...
+        tags=('shape', f'shape_{shape_id}')
+    )
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 3010, in create_text
+    return self._create('text', args, kw)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2976, in _create
+    return self.tk.getint(self.tk.call(
+                          ~~~~~~~~~~~~^
+        self._w, 'create', itemType,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        *(args + self._options(cnf, kw))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: expected integer but got "None"
+
+2025-11-27 19:04:42,014 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 19:04:42,027 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 19:04:51,209 INFO [db] Loop detection saved to database (ID: 565, severity: 49.33, cross-subnet: False)
+2025-11-27 19:04:52,193 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:04:52,195 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:09:15,358 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 19:09:15,430 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 19:09:24,305 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:09:24,336 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:09:25,617 INFO [db] Loop detection saved to database (ID: 566, severity: 29.00, cross-subnet: False)
+2025-11-27 19:09:35,643 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15746, in _on_release
+    if pair in self._topology_connections:
+       ^^^^
+UnboundLocalError: cannot access local variable 'pair' where it is not associated with a value
+
+2025-11-27 19:09:41,936 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15746, in _on_release
+    if pair in self._topology_connections:
+       ^^^^
+UnboundLocalError: cannot access local variable 'pair' where it is not associated with a value
+
+2025-11-27 19:10:02,583 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15746, in _on_release
+    if pair in self._topology_connections:
+       ^^^^
+UnboundLocalError: cannot access local variable 'pair' where it is not associated with a value
+
+2025-11-27 19:10:05,120 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15746, in _on_release
+    if pair in self._topology_connections:
+       ^^^^
+UnboundLocalError: cannot access local variable 'pair' where it is not associated with a value
+
+2025-11-27 19:10:07,836 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15746, in _on_release
+    if pair in self._topology_connections:
+       ^^^^
+UnboundLocalError: cannot access local variable 'pair' where it is not associated with a value
+
+2025-11-27 19:10:12,405 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15787, in _on_release
+    topo_canvas.itemconfig(self._topology_nodes[self._topology_selected]['rect'],
+                           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: None
+
+2025-11-27 19:10:16,524 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15746, in _on_release
+    if pair in self._topology_connections:
+       ^^^^
+UnboundLocalError: cannot access local variable 'pair' where it is not associated with a value
+
+2025-11-27 19:11:30,785 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:11:30,844 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:11:42,630 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15746, in _on_release
+    if pair in self._topology_connections:
+    ^^^
+UnboundLocalError: cannot access local variable 'pair' where it is not associated with a value
+
+2025-11-27 19:13:27,242 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 19:13:27,254 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 19:13:36,719 INFO [db] Loop detection saved to database (ID: 567, severity: 30.67, cross-subnet: False)
+2025-11-27 19:13:37,027 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:13:37,028 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:14:01,350 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15787, in _on_release
+    topo_canvas.itemconfig(self._topology_nodes[self._topology_selected]['rect'],
+                           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: None
+
+2025-11-27 19:14:35,372 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:14:37,101 ERROR [db] Unexpected error during delete_topology_shape: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+2025-11-27 19:14:43,563 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:14:49,563 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:17:34,586 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:17:39,265 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:18:06,321 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:18:11,920 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:18:11,921 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:18:41,954 INFO [db] Loop detection saved to database (ID: 568, severity: 53.26, cross-subnet: False)
+2025-11-27 19:19:01,685 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:19:01,686 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:20:06,047 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:20:06,048 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:20:23,362 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:20:26,674 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:20:26,785 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:24:21,366 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 19:24:21,409 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 19:24:30,019 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:24:30,021 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:24:30,857 INFO [db] Loop detection saved to database (ID: 569, severity: 28.23, cross-subnet: False)
+2025-11-27 19:24:57,838 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:25:07,502 ERROR [db] MySQL error during insert_topology_shape: 1265: Data truncated for column 'type' at row 1
+2025-11-27 19:25:12,946 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:25:12,947 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:50:49,306 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 19:50:49,319 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 19:51:00,284 INFO [db] Loop detection saved to database (ID: 570, severity: 49.66, cross-subnet: False)
+2025-11-27 19:51:02,466 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:51:02,468 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:54:25,974 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-11-27 19:54:26,011 INFO [db] Activity logged: User 2 - Login - None
+2025-11-27 19:54:35,715 INFO [db] Loop detection saved to database (ID: 571, severity: 29.00, cross-subnet: False)
+2025-11-27 19:54:36,915 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 19:54:36,917 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-11-27 19:59:41,293 INFO [db] Loop detection saved to database (ID: 572, severity: 55.23, cross-subnet: False)
+2025-11-27 20:00:11,495 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-11-27 20:00:11,496 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists

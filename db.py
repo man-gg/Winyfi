@@ -73,6 +73,243 @@ def ensure_users_agent_column():
         logger.warning(f"ensure_users_agent_column skipped (DB unavailable?): {e}")
 
 # =============================
+# Topology schema helpers
+# =============================
+def ensure_topology_schema():
+    """Ensure routers table has pos_x/pos_y columns and router_connections table exists.
+
+    Idempotent: safe to call multiple times. Designed so the topology window can
+    lazily invoke schema setup without requiring a separate migration run.
+    """
+    try:
+        conn = get_connection(max_retries=1, retry_delay=0, show_dialog=False)
+    except Exception as e:
+        logger.warning(f"ensure_topology_schema skipped (no connection): {e}")
+        return False
+
+    try:
+        cur = conn.cursor()
+        db_name = DB_CONFIG.get('database')
+
+        # ---- Ensure pos_x column ----
+        cur.execute(
+            """
+            SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA=%s AND TABLE_NAME='routers' AND COLUMN_NAME='pos_x'
+            """, (db_name,)
+        )
+        if cur.fetchone()[0] == 0:
+            try:
+                cur.execute("ALTER TABLE routers ADD COLUMN pos_x INT NULL AFTER location")
+                conn.commit()
+                logger.info("Added pos_x column to routers table")
+            except Exception as e:
+                logger.warning(f"Could not add pos_x column: {e}")
+
+        # ---- Ensure pos_y column ----
+        cur.execute(
+            """
+            SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA=%s AND TABLE_NAME='routers' AND COLUMN_NAME='pos_y'
+            """, (db_name,)
+        )
+        if cur.fetchone()[0] == 0:
+            try:
+                cur.execute("ALTER TABLE routers ADD COLUMN pos_y INT NULL AFTER pos_x")
+                conn.commit()
+                logger.info("Added pos_y column to routers table")
+            except Exception as e:
+                logger.warning(f"Could not add pos_y column: {e}")
+
+        # ---- Ensure router_connections table ----
+        create_connections_sql = (
+            """
+            CREATE TABLE IF NOT EXISTS router_connections (
+                router_a_id INT NOT NULL,
+                router_b_id INT NOT NULL,
+                PRIMARY KEY (router_a_id, router_b_id),
+                INDEX idx_router_b (router_b_id),
+                CONSTRAINT fk_router_a FOREIGN KEY (router_a_id) REFERENCES routers(id) ON DELETE CASCADE,
+                CONSTRAINT fk_router_b FOREIGN KEY (router_b_id) REFERENCES routers(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB
+            """
+        )
+        try:
+            cur.execute(create_connections_sql)
+            conn.commit()
+        except Exception as e:
+            logger.warning(f"Could not create router_connections table: {e}")
+
+        # ---- Ensure topology_shapes table ----
+        create_shapes_sql = (
+            """
+            CREATE TABLE IF NOT EXISTS topology_shapes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                type ENUM('rect','circle','line','text') NOT NULL,
+                x INT NOT NULL,
+                y INT NOT NULL,
+                w INT NULL,
+                h INT NULL,
+                x2 INT NULL,
+                y2 INT NULL,
+                text VARCHAR(255) NULL,
+                color VARCHAR(32) NULL,
+                fill_color VARCHAR(32) NULL,
+                stroke_width INT NULL,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_type (type)
+            ) ENGINE=InnoDB
+            """
+        )
+        try:
+            cur.execute(create_shapes_sql)
+            conn.commit()
+        except Exception as e:
+            logger.warning(f"Could not create topology_shapes table: {e}")
+
+        # Ensure stroke_width column exists (for outline thickness)
+        try:
+            conn2 = get_connection(); cur2 = conn2.cursor()
+            cur2.execute("SHOW COLUMNS FROM topology_shapes LIKE 'stroke_width'")
+            if cur2.fetchone() is None:
+                try:
+                    cur2.execute("ALTER TABLE topology_shapes ADD COLUMN stroke_width INT NULL AFTER color")
+                    conn2.commit(); logger.info("Added stroke_width column to topology_shapes table")
+                except Exception as ce:
+                    logger.warning(f"Could not add stroke_width column: {ce}")
+            cur2.close(); conn2.close()
+        except Exception as e:
+            logger.warning(f"stroke_width column check error: {e}")
+
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.warning(f"ensure_topology_schema error: {e}")
+        try:
+            cur.close()
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return False
+
+def get_router_connections():
+    """Return all router connection pairs as list of dicts."""
+    def _fetch():
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT router_a_id, router_b_id FROM router_connections")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return rows
+    result = execute_with_error_handling("get_router_connections", _fetch, show_dialog=False)
+    return result if result is not None else []
+
+# =============================
+# Topology shapes CRUD
+# =============================
+
+def get_topology_shapes():
+    """Fetch all saved shapes for the topology view."""
+    def _fetch():
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM topology_shapes ORDER BY id ASC")
+        rows = cur.fetchall()
+        cur.close(); conn.close(); return rows
+    res = execute_with_error_handling("get_topology_shapes", _fetch, show_dialog=False)
+    return res if res is not None else []
+
+def insert_topology_shape(shape_type, x, y, w=None, h=None, x2=None, y2=None, text=None, color=None, fill_color=None, stroke_width=None):
+    """Insert a new shape and return its id."""
+    def _ins():
+        conn = get_connection(); cur = conn.cursor()
+        sql = ("INSERT INTO topology_shapes (type,x,y,w,h,x2,y2,text,color,fill_color,stroke_width) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+        cur.execute(sql, (shape_type, int(x), int(y),
+                          None if w is None else int(w),
+                          None if h is None else int(h),
+                          None if x2 is None else int(x2),
+                          None if y2 is None else int(y2),
+                          text, color, fill_color,
+                          None if stroke_width is None else int(stroke_width)))
+        conn.commit(); new_id = cur.lastrowid
+        cur.close(); conn.close(); return new_id
+    return execute_with_error_handling("insert_topology_shape", _ins, show_dialog=False)
+
+def update_topology_shape(shape_id, **fields):
+    """Update arbitrary fields for a shape (positions, text, color)."""
+    allowed = {"x","y","w","h","x2","y2","text","color","fill_color","stroke_width"}
+    set_parts = []; params = []
+    for k,v in fields.items():
+        if k in allowed:
+            set_parts.append(f"{k}=%s")
+            params.append(v if v is None else (int(v) if isinstance(v,(int,float)) and k not in ("text","color") else v))
+    if not set_parts:
+        return True
+    params.append(int(shape_id))
+    def _upd():
+        conn = get_connection(); cur = conn.cursor()
+        cur.execute(f"UPDATE topology_shapes SET {', '.join(set_parts)} WHERE id=%s", tuple(params))
+        conn.commit(); cur.close(); conn.close(); return True
+    return execute_with_error_handling("update_topology_shape", _upd, show_dialog=False)
+
+def delete_topology_shape(shape_id):
+    """Delete shape by id."""
+    def _del():
+        conn = get_connection(); cur = conn.cursor()
+        cur.execute("DELETE FROM topology_shapes WHERE id=%s", (int(shape_id),))
+        conn.commit(); cur.close(); conn.close(); return True
+    return execute_with_error_handling("delete_topology_shape", _del, show_dialog=False)
+
+def add_router_connection(a_id: int, b_id: int):
+    """Add a connection between two routers (unordered)."""
+    if a_id == b_id:
+        return False
+    a, b = sorted([a_id, b_id])
+    def _add():
+        conn = get_connection()
+        cur = conn.cursor()
+        sql = "INSERT IGNORE INTO router_connections (router_a_id, router_b_id) VALUES (%s, %s)"
+        cur.execute(sql, (a, b))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    return execute_with_error_handling("add_router_connection", _add, show_dialog=False) or False
+
+def remove_router_connection(a_id: int, b_id: int):
+    """Remove a connection between two routers if it exists."""
+    if a_id == b_id:
+        return False
+    a, b = sorted([a_id, b_id])
+    def _rm():
+        conn = get_connection()
+        cur = conn.cursor()
+        sql = "DELETE FROM router_connections WHERE router_a_id=%s AND router_b_id=%s"
+        cur.execute(sql, (a, b))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    return execute_with_error_handling("remove_router_connection", _rm, show_dialog=False) or False
+
+def update_router_position(router_id: int, x: int, y: int):
+    """Persist a router's position (x,y) on topology canvas."""
+    def _upd():
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("UPDATE routers SET pos_x=%s, pos_y=%s WHERE id=%s", (int(x), int(y), router_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    return execute_with_error_handling("update_router_position", _upd, show_dialog=False) or False
+
+# =============================
 # Bandwidth logs helpers
 # =============================
 def create_bandwidth_logs_table():
