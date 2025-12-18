@@ -5,21 +5,90 @@ import time
 import logging
 from datetime import datetime
 import os
+import sys
+from resource_utils import get_resource_path
 
 # Configure logging for database operations
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Load database configuration from file or use defaults
+def load_db_config():
+    """Load database configuration from config file or environment"""
+    # Try multiple locations for config file (prefer editable file near EXE)
+    possible_paths = []
+
+    # If running frozen, prefer an external, editable config next to the EXE
+    if getattr(sys, 'frozen', False):
+        exe_dir = os.path.dirname(sys.executable)
+        possible_paths.append(os.path.join(exe_dir, 'db_config.json'))
+
+    # Then try resource path (bundled inside _MEIPASS for onefile)
+    possible_paths.append(get_resource_path('db_config.json'))
+
+    # Also consider current working directory and script directory (dev)
+    possible_paths.append('db_config.json')
+    possible_paths.append(os.path.join(os.path.dirname(__file__), 'db_config.json'))
+    
+    # Default configuration
+    default_config = {
+        "host": "localhost",
+        "user": "root",
+        "password": "",
+        "database": "winyfi",
+        "port": 3306,
+        "connection_timeout": 10,
+        "autocommit": True,
+        "raise_on_warnings": True
+    }
+    
+    # Try to load from config file
+    config_found = False
+    for config_file in possible_paths:
+        if os.path.exists(config_file):
+            try:
+                with open(config_file, 'r') as f:
+                    custom_config = json.load(f)
+                    default_config.update(custom_config)
+                    logger.info(f"Loaded database config from {config_file}")
+                    config_found = True
+                    break
+            except Exception as e:
+                logger.warning(f"Could not load config file {config_file}: {e}")
+    
+    if not config_found:
+        logger.info("Using default database configuration (no config file found)")
+        logger.debug(f"Searched paths: {possible_paths}")
+    
+    # Override with environment variables if set
+    if os.environ.get('WINYFI_DB_HOST'):
+        default_config['host'] = os.environ.get('WINYFI_DB_HOST')
+        logger.info(f"Using WINYFI_DB_HOST from environment: {default_config['host']}")
+    if os.environ.get('WINYFI_DB_USER'):
+        default_config['user'] = os.environ.get('WINYFI_DB_USER')
+        logger.info(f"Using WINYFI_DB_USER from environment: {default_config['user']}")
+    if os.environ.get('WINYFI_DB_PASSWORD'):
+        default_config['password'] = os.environ.get('WINYFI_DB_PASSWORD')
+        logger.info("Using WINYFI_DB_PASSWORD from environment")
+    if os.environ.get('WINYFI_DB_NAME'):
+        default_config['database'] = os.environ.get('WINYFI_DB_NAME')
+        logger.info(f"Using WINYFI_DB_NAME from environment: {default_config['database']}")
+    if os.environ.get('WINYFI_DB_PORT'):
+        try:
+            default_config['port'] = int(os.environ.get('WINYFI_DB_PORT'))
+            logger.info(f"Using WINYFI_DB_PORT from environment: {default_config['port']}")
+        except Exception:
+            logger.warning("Invalid WINYFI_DB_PORT environment value; ignoring")
+    
+    logger.info(
+        f"Database config: host={default_config['host']}, port={default_config.get('port')}, "
+        f"user={default_config['user']}, db={default_config['database']}"
+    )
+    
+    return default_config
+
 # Database connection configuration
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "",
-    "database": "winyfi",
-    "connection_timeout": 10,
-    "autocommit": True,
-    "raise_on_warnings": True
-}
+DB_CONFIG = load_db_config()
 
 class DatabaseConnectionError(Exception):
     """Custom exception for database connection issues"""
@@ -127,6 +196,8 @@ def ensure_topology_schema():
             CREATE TABLE IF NOT EXISTS router_connections (
                 router_a_id INT NOT NULL,
                 router_b_id INT NOT NULL,
+                bend_x INT NULL,
+                bend_y INT NULL,
                 PRIMARY KEY (router_a_id, router_b_id),
                 INDEX idx_router_b (router_b_id),
                 CONSTRAINT fk_router_a FOREIGN KEY (router_a_id) REFERENCES routers(id) ON DELETE CASCADE,
@@ -139,6 +210,27 @@ def ensure_topology_schema():
             conn.commit()
         except Exception as e:
             logger.warning(f"Could not create router_connections table: {e}")
+
+        # Ensure bend_x / bend_y columns exist (older installs)
+        try:
+            cur.execute("SHOW COLUMNS FROM router_connections LIKE 'bend_x'")
+            has_bx = cur.fetchone() is not None
+            cur.execute("SHOW COLUMNS FROM router_connections LIKE 'bend_y'")
+            has_by = cur.fetchone() is not None
+            if not has_bx:
+                try:
+                    cur.execute("ALTER TABLE router_connections ADD COLUMN bend_x INT NULL AFTER router_b_id")
+                    conn.commit()
+                except Exception as ce:
+                    logger.warning(f"Could not add bend_x column: {ce}")
+            if not has_by:
+                try:
+                    cur.execute("ALTER TABLE router_connections ADD COLUMN bend_y INT NULL AFTER bend_x")
+                    conn.commit()
+                except Exception as ce:
+                    logger.warning(f"Could not add bend_y column: {ce}")
+        except Exception as e:
+            logger.warning(f"Could not verify/add bend columns: {e}")
 
         # ---- Ensure topology_shapes table ----
         create_shapes_sql = (
@@ -197,11 +289,11 @@ def ensure_topology_schema():
         return False
 
 def get_router_connections():
-    """Return all router connection pairs as list of dicts."""
+    """Return all router connection pairs as list of dicts (includes bend)."""
     def _fetch():
         conn = get_connection()
         cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT router_a_id, router_b_id FROM router_connections")
+        cur.execute("SELECT router_a_id, router_b_id, bend_x, bend_y FROM router_connections")
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -265,16 +357,16 @@ def delete_topology_shape(shape_id):
         conn.commit(); cur.close(); conn.close(); return True
     return execute_with_error_handling("delete_topology_shape", _del, show_dialog=False)
 
-def add_router_connection(a_id: int, b_id: int):
-    """Add a connection between two routers (unordered)."""
+def add_router_connection(a_id: int, b_id: int, bend_x=None, bend_y=None):
+    """Add a connection between two routers (unordered) with optional bend point."""
     if a_id == b_id:
         return False
     a, b = sorted([a_id, b_id])
     def _add():
         conn = get_connection()
         cur = conn.cursor()
-        sql = "INSERT IGNORE INTO router_connections (router_a_id, router_b_id) VALUES (%s, %s)"
-        cur.execute(sql, (a, b))
+        sql = "INSERT IGNORE INTO router_connections (router_a_id, router_b_id, bend_x, bend_y) VALUES (%s, %s, %s, %s)"
+        cur.execute(sql, (a, b, bend_x, bend_y))
         conn.commit()
         cur.close()
         conn.close()
@@ -296,6 +388,20 @@ def remove_router_connection(a_id: int, b_id: int):
         conn.close()
         return True
     return execute_with_error_handling("remove_router_connection", _rm, show_dialog=False) or False
+
+def update_router_connection_bend(a_id: int, b_id: int, bend_x: int, bend_y: int):
+    """Update stored bend point for a connection (unordered)."""
+    if a_id == b_id:
+        return False
+    a, b = sorted([a_id, b_id])
+    def _upd():
+        conn = get_connection(); cur = conn.cursor()
+        cur.execute(
+            "UPDATE router_connections SET bend_x=%s, bend_y=%s WHERE router_a_id=%s AND router_b_id=%s",
+            (int(bend_x), int(bend_y), a, b)
+        )
+        conn.commit(); cur.close(); conn.close(); return True
+    return execute_with_error_handling("update_router_connection_bend", _upd, show_dialog=False) or False
 
 def update_router_position(router_id: int, x: int, y: int):
     """Persist a router's position (x,y) on topology canvas."""

@@ -282,10 +282,13 @@ def get_router_status_info(router_id, timeout_seconds=60):
 # =============================
 # Topology helpers (positions & connections)
 # =============================
-from db import update_router_position as _update_router_position_db
-from db import get_router_connections as _get_router_connections_db
-from db import add_router_connection as _add_router_connection_db
-from db import remove_router_connection as _remove_router_connection_db
+from db import (
+    update_router_position as _update_router_position_db,
+    get_router_connections as _get_router_connections_db,
+    add_router_connection as _add_router_connection_db,
+    remove_router_connection as _remove_router_connection_db,
+    update_router_connection_bend as _update_router_connection_bend_db,
+)
 
 def update_router_position(router_id: int, x: int, y: int):
     """Update stored position for a router node on topology canvas."""
@@ -325,12 +328,16 @@ def get_router_connections():
     """Return list of existing router connection pairs."""
     return _get_router_connections_db()
 
-def add_router_connection(a_id: int, b_id: int):
-    """Add connection between two routers (unordered)."""
-    return _add_router_connection_db(a_id, b_id)
+def add_router_connection(a_id: int, b_id: int, bend_x: int = None, bend_y: int = None):
+    """Add connection between two routers (unordered), with optional bend point."""
+    return _add_router_connection_db(a_id, b_id, bend_x, bend_y)
 
 def remove_router_connection(a_id: int, b_id: int):
     """Remove connection between two routers if present."""
     return _remove_router_connection_db(a_id, b_id)
+
+def update_router_connection_bend(a_id: int, b_id: int, bend_x: int, bend_y: int):
+    """Persist bend (waypoint) for a router connection."""
+    return _update_router_connection_bend_db(a_id, b_id, bend_x, bend_y)
 
 

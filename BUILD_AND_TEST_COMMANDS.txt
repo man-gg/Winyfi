@@ -1,0 +1,501 @@
+# BUILD & TEST COMMANDS
+
+## Quick Start (Copy & Paste)
+
+```powershell
+# Navigate to project
+cd C:\Path\To\Winyfi
+
+# Activate environment
+.\.venv\Scripts\Activate.ps1
+
+# Build (automatic!)
+python build.py
+```
+
+---
+
+## Full Setup (First Time)
+
+```powershell
+# Navigate to project
+cd C:\Path\To\Winyfi
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate it
+.\.venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Build application
+python build.py
+```
+
+---
+
+## Build & Test Sequence
+
+```powershell
+# Step 1: Clean and build
+python build.py
+
+# Step 2: Verify output
+Get-ChildItem dist/ | Format-Table Name, Length
+
+# Step 3: Test the EXE
+cd dist
+.\Winyfi.exe
+
+# Step 4: Verify visual (from EXE window)
+# - Logo should display ✅
+# - No console errors ✅
+# - Login screen appears ✅
+```
+
+---
+
+## Detailed Build Output
+
+The `build.py` script will show:
+
+```
+============================================================
+  WINYFI BUILD SCRIPT
+  Compile to Windows .EXE with PyInstaller
+============================================================
+
+============================================================
+  STEP 1: Verifying required files
+============================================================
+
+✅ main.py
+✅ winyfi.spec
+✅ db_config.json
+✅ icon.ico
+✅ resource_utils.py
+✅ dashboard.py
+✅ login.py
+✅ db.py
+✅ assets/
+✅ assets/images
+✅ routerLocImg/
+✅ client_window
+✅ client_window/tabs
+✅ migrations
+
+============================================================
+  STEP 2: Cleaning previous builds
+============================================================
+
+✅ Cleaned build/
+✅ Cleaned dist/
+✅ Cleaned all build artifacts
+
+============================================================
+  STEP 3: Verifying icon file
+============================================================
+
+✅ icon.ico found (45.2 KB)
+
+============================================================
+  STEP 4: Verifying Python dependencies
+============================================================
+
+✅ ttkbootstrap
+✅ mysql-connector-python
+✅ requests
+... (more packages)
+
+============================================================
+  STEP 5: Checking PyInstaller
+============================================================
+
+✅ PyInstaller 6.x.x is installed
+
+============================================================
+  STEP 6: Building EXE with PyInstaller
+============================================================
+
+📄 Using winyfi.spec configuration...
+✅ EXE built successfully!
+   Location: C:\Path\To\dist\Winyfi.exe
+   Size: 185.34 MB
+
+📋 Copying configuration and resource files...
+   ✅ db_config.json
+   ✅ README_SETUP.txt
+   ✅ winyfi.sql
+   ✅ check_database.bat
+   ✅ README.md
+   ✅ icon.ico
+   ✅ assets/
+   ✅ routerLocImg/
+   ✅ migrations/
+
+============================================================
+  STEP 7: Creating installer (optional)
+============================================================
+
+Using Inno Setup: C:\Program Files (x86)\Inno Setup 6\ISCC.exe
+✅ Installer created successfully!
+   Location: C:\Path\To\installer_output\Winyfi_Setup_v1.0.0.exe
+   Size: 128.45 MB
+
+============================================================
+  BUILD COMPLETE! ✅
+============================================================
+
+📦 OUTPUT FILES:
+   EXE: C:\Path\To\dist\Winyfi.exe
+   Size: 185.34 MB
+   Installer: C:\Path\To\installer_output\Winyfi_Setup_v1.0.0.exe
+
+🚀 NEXT STEPS:
+   1. Test the EXE: dist/Winyfi.exe
+   2. Ensure MySQL is running (XAMPP/WAMP)
+   3. Create 'winyfi' database
+   4. Import db schema: winyfi.sql
+
+✅ Ready to distribute!
+```
+
+---
+
+## Manual PyInstaller Command (Alternative)
+
+```powershell
+# If you want to run PyInstaller directly:
+pyinstaller winyfi.spec --clean --noconfirm
+
+# Then manually copy resources:
+Copy-Item assets dist/ -Recurse -Force
+Copy-Item routerLocImg dist/ -Recurse -Force
+Copy-Item migrations dist/ -Recurse -Force
+Copy-Item db_config.json dist/
+Copy-Item winyfi.sql dist/
+Copy-Item README_SETUP.txt dist/
+```
+
+---
+
+## Installer Creation (Manual)
+
+```powershell
+# If you have Inno Setup installed:
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+
+# Output will be in:
+# installer_output/Winyfi_Setup_v1.0.0.exe
+```
+
+---
+
+## Testing Commands
+
+### Test EXE Directly
+```powershell
+# Launch the executable
+.\dist\Winyfi.exe
+
+# Expected behavior:
+# - Window opens with Winyfi logo
+# - Login screen appears
+# - No error messages
+# - Taskbar icon shows
+```
+
+### Test on Another Machine
+```powershell
+# Copy dist\ folder to another computer
+# Run: Winyfi.exe
+# Should work without Python installed!
+```
+
+### Check Log File
+```powershell
+# If there are issues, check:
+Get-Content winyfi_error.log -Tail 20
+```
+
+---
+
+## Database Setup (Before Running Winyfi)
+
+```powershell
+# 1. Start XAMPP (manual - open XAMPP Control Panel)
+# 2. Start MySQL by clicking "Start" button
+
+# 3. Open phpMyAdmin in browser:
+Start-Process "http://localhost/phpmyadmin"
+
+# 4. Create database via phpMyAdmin UI:
+# - Click "New" button
+# - Database name: "winyfi"
+# - Collation: "utf8mb4_unicode_ci"
+# - Click "Create"
+
+# 5. Import schema:
+# - Select "winyfi" database
+# - Click "Import" tab
+# - Choose file: dist/winyfi.sql
+# - Click "Import"
+```
+
+---
+
+## Configuration Files
+
+### Verify Files in dist/
+
+```powershell
+# Check all required files are present:
+Get-ChildItem dist/ -Recurse | Where-Object {
+    $_.Name -in @(
+        'Winyfi.exe',
+        'db_config.json',
+        'winyfi.sql',
+        'README_SETUP.txt',
+        'icon.ico'
+    )
+} | Format-Table FullName, Length
+```
+
+### Check Configuration
+
+```powershell
+# Verify db_config.json:
+Get-Content dist/db_config.json | ConvertFrom-Json | Format-Table
+
+# Should show:
+# host: localhost
+# user: root
+# password: (empty or configured)
+# database: winyfi
+```
+
+---
+
+## Troubleshooting Commands
+
+### Check Python Version
+```powershell
+python --version
+# Should be 3.8 or higher
+```
+
+### Verify Virtual Environment
+```powershell
+python -c "import sys; print(sys.prefix)"
+# Should show path to .venv
+```
+
+### Check Dependencies
+```powershell
+pip list | findstr /i "ttkbootstrap mysql connector pyinstaller"
+# Should list installed packages
+```
+
+### Test Module Imports
+```powershell
+python -c "
+from resource_utils import get_resource_path
+from dashboard import Dashboard
+from db import load_db_config
+print('✅ All imports working!')
+"
+```
+
+### Check for Missing Files
+```powershell
+# Verify key files exist:
+Test-Path "resource_utils.py"
+Test-Path "winyfi.spec"
+Test-Path "build.py"
+Test-Path "icon.ico"
+Test-Path "assets/images/logo1.png"
+Test-Path "db_config.json"
+
+# All should return True
+```
+
+---
+
+## Performance Testing
+
+### Build Time
+```powershell
+# Measure build time:
+$start = Get-Date
+python build.py
+$end = Get-Date
+$duration = ($end - $start).TotalSeconds
+Write-Host "Build took: $duration seconds"
+
+# Expected: 2-5 minutes depending on system
+```
+
+### EXE Launch Time
+```powershell
+# Measure startup time:
+Measure-Command { 
+    Start-Process dist\Winyfi.exe -Wait 
+}
+
+# Expected: 2-5 seconds first launch
+# Faster on subsequent launches
+```
+
+### File Sizes
+```powershell
+# Check sizes:
+$exe = (Get-Item dist/Winyfi.exe).Length / 1MB
+$installer = (Get-Item installer_output/Winyfi_Setup_v1.0.0.exe).Length / 1MB
+
+Write-Host "EXE: $([Math]::Round($exe, 2)) MB"
+Write-Host "Installer: $([Math]::Round($installer, 2)) MB"
+
+# Expected: 150-250 MB for EXE, 100-150 MB for installer
+```
+
+---
+
+## Clean Build (Nuclear Option)
+
+```powershell
+# Complete clean rebuild:
+Remove-Item build -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item dist -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item installer_output -Recurse -Force -ErrorAction SilentlyContinue
+
+# Clear Python cache:
+Get-ChildItem -Path . -Filter "__pycache__" -Recurse -Force | 
+    Remove-Item -Recurse -Force
+
+# Rebuild:
+python build.py
+```
+
+---
+
+## Verification Checklist
+
+```powershell
+# Run these after build completes:
+
+# 1. EXE exists and has reasonable size
+$exeSize = (Get-Item dist/Winyfi.exe).Length / 1MB
+Write-Host "EXE exists: $(Test-Path 'dist/Winyfi.exe')"
+Write-Host "EXE size: $([Math]::Round($exeSize, 2)) MB (should be 100-300 MB)"
+
+# 2. Required files bundled
+Write-Host "db_config.json: $(Test-Path 'dist/db_config.json')"
+Write-Host "winyfi.sql: $(Test-Path 'dist/winyfi.sql')"
+Write-Host "assets/: $(Test-Path 'dist/assets')"
+Write-Host "icon.ico: $(Test-Path 'dist/icon.ico')"
+
+# 3. Installer created (if Inno Setup installed)
+Write-Host "Installer: $(Test-Path 'installer_output/Winyfi_Setup_v1.0.0.exe')"
+
+# 4. No build errors
+Write-Host "✅ Build completed successfully!"
+```
+
+---
+
+## Environment Variables (Optional)
+
+```powershell
+# Override database config:
+$env:WINYFI_DB_HOST = "192.168.1.100"
+$env:WINYFI_DB_PASSWORD = "your_password"
+$env:WINYFI_DB_NAME = "winyfi_custom"
+
+# Override UniFi API:
+$env:WINYFI_UNIFI_API_URL = "http://192.168.1.27:5001"
+
+# Run with these settings:
+.\dist\Winyfi.exe
+
+# These override db_config.json settings
+```
+
+---
+
+## Common Issues & Fixes
+
+### Issue: "pyinstaller: command not found"
+```powershell
+# Fix:
+pip install pyinstaller
+python build.py
+```
+
+### Issue: "icon.ico not found"
+```powershell
+# Fix:
+python create_icon.py
+python build.py
+```
+
+### Issue: Build takes too long
+```powershell
+# This is normal (2-5 minutes)
+# First build slower, subsequent builds faster
+# Go grab coffee ☕
+```
+
+### Issue: "Permission denied" when building
+```powershell
+# Fix:
+# - Make sure dist/ and build/ are not in use
+# - Close any open files from dist/
+# - Run again
+```
+
+### Issue: "EXE won't run"
+```powershell
+# Fix:
+# - Verify all files copied to dist/
+# - Check if dependencies missing
+# - Try: python build.py (rebuild from scratch)
+```
+
+---
+
+## Success Indicators
+
+✅ Build output ends with "BUILD COMPLETE!"  
+✅ `dist/Winyfi.exe` exists (150+ MB)  
+✅ `dist/assets/` folder present  
+✅ `dist/db_config.json` present  
+✅ EXE launches without Python  
+✅ Logo displays in window  
+✅ No console errors  
+
+---
+
+## Next After Successful Build
+
+```powershell
+# 1. Test it
+.\dist\Winyfi.exe
+
+# 2. Distribute it
+# Option A: Send dist/Winyfi.exe
+# Option B: Send installer_output/Winyfi_Setup_v1.0.0.exe
+
+# 3. Document it
+# Send along INSTALLATION_GUIDE.md and README_SETUP.txt
+
+# 4. User runs it
+# Setup database first, then launch Winyfi!
+```
+
+---
+
+**Version**: 1.0.0  
+**Date**: December 2024  
+**Status**: Ready ✅

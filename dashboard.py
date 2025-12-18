@@ -70,11 +70,11 @@ from notification_utils import (
     NotificationPriority
 )
 from notification_ui import NotificationSystem
+from resource_utils import get_resource_path, ensure_directory, resource_exists
 
 
 # Directory for router images
-IMAGE_FOLDER = "routerLocImg"
-os.makedirs(IMAGE_FOLDER, exist_ok=True)
+IMAGE_FOLDER = ensure_directory("routerLocImg")
 
 router_widgets = {}
 class Dashboard:
@@ -1094,7 +1094,7 @@ class Dashboard:
             self.sidebar_buttons[text] = btn
 
         # Logo
-        logo_path = os.path.join("assets", "images", "logo1.png")
+        logo_path = get_resource_path(os.path.join("assets", "images", "logo1.png"))
         if os.path.exists(logo_path):
             img = Image.open(logo_path)
             img = img.resize((85, 50), Image.Resampling.LANCZOS)
@@ -14562,6 +14562,7 @@ Type: {values[11]}
             get_router_connections,
             add_router_connection,
             remove_router_connection,
+            update_router_connection_bend,
         )
 
         if getattr(self, '_topology_window', None) and self._topology_window.winfo_exists():
@@ -14800,7 +14801,19 @@ Type: {values[11]}
                 self._topology_instructions_var.set("💡 Drag routers to position | Click two routers to connect/disconnect | Ctrl+Scroll to zoom")
                 self._topology_tools_frame.pack_forget()
         
+        def _update_ctrl_visibility(*args):
+            """Show/hide connection control handles based on edit mode."""
+            edit_enabled = self._topology_edit_mode.get()
+            for conn_data in self._topology_connections.values():
+                ctrl = conn_data.get('ctrl')
+                if ctrl:
+                    if edit_enabled:
+                        topo_canvas.itemconfig(ctrl, state='normal')
+                    else:
+                        topo_canvas.itemconfig(ctrl, state='hidden')
+        
         self._topology_edit_mode.trace_add('write', _update_instructions)
+        self._topology_edit_mode.trace_add('write', _update_ctrl_visibility)
         self._topology_draw_mode.trace_add('write', _update_instructions)
         
         # Right side - zoom controls with slider
@@ -14886,9 +14899,12 @@ Type: {values[11]}
         self._topology_canvas = topo_canvas
         self._topology_nodes = {}
         self._topology_connections = {}
+        self._topology_ctrl_map = {}  # ctrl_id -> (a,b)
         self._topology_selected = None
         self._dragging_node = None
         self._drag_offset = (0, 0)
+        self._dragging_ctrl_pair = None
+        self._dragging_ctrl_off = (0, 0)
         self._topology_shapes = {}  # Store drawn shapes {id: {'type': 'rect'/'text'/'line', 'items': [canvas_ids], 'data': {}}}
         self._topology_shape_counter = 0
         self._topology_drawing = False
@@ -14901,7 +14917,9 @@ Type: {values[11]}
         self._shape_resize_handles = {}  # Store resize handles {shape_id: [handle_items]}
 
         routers = get_routers() or []
-        pairs = set(tuple(sorted((c['router_a_id'], c['router_b_id']))) for c in (get_router_connections() or []))
+        connections_raw = get_router_connections() or []
+        pairs = set(tuple(sorted((c['router_a_id'], c['router_b_id']))) for c in connections_raw)
+        bend_lookup = {tuple(sorted((c['router_a_id'], c['router_b_id']))): (c.get('bend_x'), c.get('bend_y')) for c in connections_raw}
 
         # Smart initial layout - spread routers nicely
         cols = max(3, int((len(routers) ** 0.5)))
@@ -14963,36 +14981,96 @@ Type: {values[11]}
             x1, y1, x2, y2 = topo_canvas.coords(nd['rect'])
             return (x1 + (x2 - x1)/2, y1 + (y2 - y1)/2)
 
-        # Draw connection wires with improved styling
+        # Helper: make orthogonal polyline points between two nodes
+        def _connection_points(a, b, bend):
+            ax, ay = _center(a)
+            bx, by = _center(b)
+            bx_bend, by_bend = bend if bend else (None, None)
+            if bx_bend is None:
+                bx_bend = (ax + bx) / 2
+            if by_bend is None:
+                by_bend = (ay + by) / 2
+            # Manhattan path with two elbows through bend point
+            return [
+                ax, ay,
+                bx_bend, ay,
+                bx_bend, by_bend,
+                bx, by_bend,
+                bx, by
+            ], (bx_bend, by_bend)
+
+        def _label_point(points):
+            # Use middle segment between bend_y and dest for label
+            if len(points) >= 8:
+                x1, y1, x2, y2 = points[6], points[7], points[8], points[9]
+                return ((x1 + x2) / 2, (y1 + y2) / 2)
+            return ((points[0] + points[-2]) / 2, (points[1] + points[-1]) / 2)
+
+        # Helper: create a straight/orthogonal connection
+        def _create_straight_connection(a, b):
+            bend = bend_lookup.get((a, b))
+            pts, bend_point = _connection_points(a, b, bend)
+            line = topo_canvas.create_line(*pts, fill='#3b82f6', width=3,
+                                           arrow=tk.BOTH, arrowshape=(10, 12, 5),
+                                           tags=('connection',))
+            bx_bend, by_bend = bend_point
+            ctrl = topo_canvas.create_rectangle(bx_bend-6, by_bend-6, bx_bend+6, by_bend+6,
+                                                fill='#ffd966', outline='#3b82f6', width=2,
+                                                tags=('connection_ctrl',), state='hidden')
+            lx, ly = _label_point(pts)
+            label_bg = topo_canvas.create_oval(lx-15, ly-15, lx+15, ly+15,
+                                              fill='#dbeafe', outline='#3b82f6', width=2,
+                                              tags=('connection_label',))
+            label_text = topo_canvas.create_text(lx, ly, text='🔗',
+                                                font=('Segoe UI', 10),
+                                                tags=('connection_label',))
+
+            topo_canvas.tag_lower('connection')
+            topo_canvas.tag_raise('connection_ctrl')
+            topo_canvas.tag_lower('connection_label')
+            topo_canvas.tag_lower('grid')
+
+            self._topology_connections[(a, b)] = {
+                'line': line,
+                'points': pts,
+                'bend': bend_point,
+                'ctrl': ctrl,
+                'label_bg': label_bg,
+                'label_text': label_text,
+            }
+            self._topology_ctrl_map[ctrl] = (a, b)
+
+            # Bind drag on control to adjust bend
+            def _on_ctrl_press(event, pair=(a, b)):
+                conn = self._topology_connections.get(pair)
+                if conn:
+                    conn['drag_off'] = (event.x - conn['bend'][0], event.y - conn['bend'][1])
+
+            def _on_ctrl_drag(event, pair=(a, b)):
+                conn = self._topology_connections.get(pair)
+                if not conn:
+                    return
+                offx, offy = conn.get('drag_off', (0, 0))
+                new_bx = event.x - offx
+                new_by = event.y - offy
+                conn['bend'] = (new_bx, new_by)
+                pts_new, _ = _connection_points(pair[0], pair[1], conn['bend'])
+                conn['points'] = pts_new
+                topo_canvas.coords(conn['line'], *pts_new)
+                topo_canvas.coords(conn['ctrl'], new_bx-6, new_by-6, new_bx+6, new_by+6)
+                lx2, ly2 = _label_point(pts_new)
+                topo_canvas.coords(conn['label_bg'], lx2-15, ly2-15, lx2+15, ly2+15)
+                topo_canvas.coords(conn['label_text'], lx2, ly2)
+                # Persist bend
+                update_router_connection_bend(pair[0], pair[1], int(new_bx), int(new_by))
+
+            topo_canvas.tag_bind(ctrl, '<Button-1>', _on_ctrl_press)
+            topo_canvas.tag_bind(ctrl, '<B1-Motion>', _on_ctrl_drag)
+
+        # Draw connection wires (orthogonal) for existing pairs
         for a, b in pairs:
             if a in self._topology_nodes and b in self._topology_nodes:
-                x1, y1 = _center(a)
-                x2, y2 = _center(b)
-                
-                # Draw thicker, more visible connection lines
-                line = topo_canvas.create_line(x1, y1, x2, y2, 
-                                              fill='#3b82f6', width=3,
-                                              arrow=tk.BOTH, arrowshape=(10, 12, 5),
-                                              tags='connection')
-                
-                # Add connection label showing link
-                mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
-                label_bg = topo_canvas.create_oval(mid_x-15, mid_y-15, mid_x+15, mid_y+15,
-                                                  fill='#dbeafe', outline='#3b82f6', width=2,
-                                                  tags='connection_label')
-                label_text = topo_canvas.create_text(mid_x, mid_y, text="🔗",
-                                                    font=('Segoe UI', 10),
-                                                    tags='connection_label')
-                
-                topo_canvas.tag_lower('connection')
-                topo_canvas.tag_lower('connection_label')
-                topo_canvas.tag_lower('grid')
-                
-                self._topology_connections[(a, b)] = {
-                    'line': line, 
-                    'label_bg': label_bg, 
-                    'label_text': label_text
-                }
+                _create_straight_connection(a, b)
         
         # Load saved shapes from database
         def _load_saved_shapes():
@@ -15198,6 +15276,19 @@ Type: {values[11]}
 
         def _on_press(event):
             """Handle mouse press for router dragging or shape drawing."""
+            # 0) Connection bend handle drag (only when edit mode is on)
+            if self._topology_edit_mode.get():
+                items = topo_canvas.find_overlapping(event.x, event.y, event.x, event.y)
+                for it in items:
+                    if it in self._topology_ctrl_map:
+                        pair = self._topology_ctrl_map[it]
+                        conn = self._topology_connections.get(pair)
+                        if conn:
+                            bx, by = conn.get('bend', (event.x, event.y))
+                            self._dragging_ctrl_pair = pair
+                            self._dragging_ctrl_off = (event.x - bx, event.y - by)
+                            return
+
             # Check if in edit mode with drawing tool selected
             if self._topology_edit_mode.get() and self._topology_draw_mode.get() != 'select':
                 tool = self._topology_draw_mode.get()
@@ -15396,6 +15487,25 @@ Type: {values[11]}
             # Check if canvas still exists
             if not topo_canvas.winfo_exists():
                 return
+
+            # Dragging a connection bend handle
+            if self._dragging_ctrl_pair is not None:
+                pair = self._dragging_ctrl_pair
+                conn = self._topology_connections.get(pair)
+                if conn:
+                    offx, offy = self._dragging_ctrl_off
+                    new_bx = event.x - offx
+                    new_by = event.y - offy
+                    conn['bend'] = (new_bx, new_by)
+                    pts_new, _ = _connection_points(pair[0], pair[1], conn['bend'])
+                    conn['points'] = pts_new
+                    topo_canvas.coords(conn['line'], *pts_new)
+                    topo_canvas.coords(conn['ctrl'], new_bx-6, new_by-6, new_bx+6, new_by+6)
+                    lx2, ly2 = _label_point(pts_new)
+                    topo_canvas.coords(conn['label_bg'], lx2-15, ly2-15, lx2+15, ly2+15)
+                    topo_canvas.coords(conn['label_text'], lx2, ly2)
+                    update_router_connection_bend(pair[0], pair[1], int(new_bx), int(new_by))
+                return
                 
             # Drawing mode - update temporary shape preview
             if self._topology_drawing and self._topology_temp_shape:
@@ -15561,18 +15671,25 @@ Type: {values[11]}
             except Exception:
                 return  # Canvas items no longer exist
             
-            # Update connected wires
+            # Update connected wires (orthogonal polyline)
             try:
                 for (a, b), conn_items in self._topology_connections.items():
                     if a == self._dragging_node or b == self._dragging_node:
-                        ax, ay = _center(a)
-                        bx, by = _center(b)
-                        mid_x, mid_y = (ax + bx) / 2, (ay + by) / 2
-                        
-                        topo_canvas.coords(conn_items['line'], ax, ay, bx, by)
-                        topo_canvas.coords(conn_items['label_bg'], 
-                                          mid_x-15, mid_y-15, mid_x+15, mid_y+15)
-                        topo_canvas.coords(conn_items['label_text'], mid_x, mid_y)
+                        bend = conn_items.get('bend')
+                        pts = None
+                        if bend:
+                            pts, _ = _connection_points(a, b, bend)
+                        else:
+                            pts, bend = _connection_points(a, b, None)
+                        conn_items['points'] = pts
+                        conn_items['bend'] = bend
+                        topo_canvas.coords(conn_items['line'], *pts)
+                        bx_b, by_b = bend
+                        if 'ctrl' in conn_items:
+                            topo_canvas.coords(conn_items['ctrl'], bx_b-6, by_b-6, bx_b+6, by_b+6)
+                        lx, ly = _label_point(pts)
+                        topo_canvas.coords(conn_items['label_bg'], lx - 15, ly - 15, lx + 15, ly + 15)
+                        topo_canvas.coords(conn_items['label_text'], lx, ly)
             except Exception:
                 pass  # Ignore connection update errors
             
@@ -15583,6 +15700,11 @@ Type: {values[11]}
 
         def _on_release(event):
             """Handle mouse release - save position, finalize shapes, or handle connections."""
+            # Finish bend drag
+            if self._dragging_ctrl_pair is not None:
+                self._dragging_ctrl_pair = None
+                self._dragging_ctrl_off = (0, 0)
+                return
             # Drawing mode - finalize shape
             if self._topology_drawing:
                 tool = self._topology_draw_mode.get()
@@ -15760,27 +15882,13 @@ Type: {values[11]}
                             bx, by = _center(b)
                             mid_x, mid_y = (ax + bx) / 2, (ay + by) / 2
                             
-                            line = topo_canvas.create_line(ax, ay, bx, by, 
-                                                          fill='#3b82f6', width=3,
-                                                          arrow=tk.BOTH, arrowshape=(10, 12, 5),
-                                                          tags='connection')
-                            label_bg = topo_canvas.create_oval(mid_x-15, mid_y-15, mid_x+15, mid_y+15,
-                                                              fill='#dbeafe', outline='#3b82f6', width=2,
-                                                              tags='connection_label')
-                            label_text = topo_canvas.create_text(mid_x, mid_y, text="🔗",
-                                                                font=('Segoe UI', 10),
-                                                                tags='connection_label')
-                            
-                            topo_canvas.tag_lower('connection')
-                            topo_canvas.tag_lower('connection_label')
-                            topo_canvas.tag_lower('grid')
-                            
-                            self._topology_connections[pair] = {
-                                'line': line,
-                                'label_bg': label_bg,
-                                'label_text': label_text
-                            }
-                            add_router_connection(a, b)
+                            # Create straight/orthogonal connection for new pair
+                            _create_straight_connection(a, b)
+                            # Default bend at midpoint; persist
+                            mid_bx = (ax + bx) / 2
+                            mid_by = (ay + by) / 2
+                            add_router_connection(a, b, bend_x=int(mid_bx), bend_y=int(mid_by))
+                            bend_lookup[(a, b)] = (mid_bx, mid_by)
                             messagebox.showinfo("Connection", 
                                               f"Created connection between routers")
                         

@@ -18848,3 +18848,82 @@ KeyError: None
 2025-11-27 19:59:41,293 INFO [db] Loop detection saved to database (ID: 572, severity: 55.23, cross-subnet: False)
 2025-11-27 20:00:11,495 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
 2025-11-27 20:00:11,496 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-01 23:42:22,277 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-01 23:42:22,326 INFO [db] Activity logged: User 2 - Login - None
+2025-12-01 23:42:31,908 INFO [db] Loop detection saved to database (ID: 573, severity: 27.90, cross-subnet: False)
+2025-12-01 23:42:36,563 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-01 23:42:36,565 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-01 23:47:37,014 INFO [db] Loop detection saved to database (ID: 574, severity: 35.09, cross-subnet: False)
+2025-12-01 23:51:25,800 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-01 23:51:25,801 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-02 00:11:56,641 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-02 00:11:56,675 INFO [db] Activity logged: User 2 - Login - None
+2025-12-02 00:12:06,201 INFO [db] Loop detection saved to database (ID: 575, severity: 37.20, cross-subnet: False)
+2025-12-18 20:50:31,670 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-18 20:50:31,699 INFO [db] Activity logged: User 2 - Login - None
+2025-12-18 20:50:41,230 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 20:50:41,232 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 20:50:41,711 INFO [db] Loop detection saved to database (ID: 576, severity: 38.38, cross-subnet: False)
+2025-12-18 21:01:40,275 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-18 21:01:40,327 INFO [db] Activity logged: User 2 - Login - None
+2025-12-18 21:01:49,948 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:01:49,951 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:01:50,379 INFO [db] Loop detection saved to database (ID: 577, severity: 39.79, cross-subnet: False)
+2025-12-18 21:02:12,979 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:02:12,980 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:05:22,644 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-18 21:05:22,659 INFO [db] Activity logged: User 2 - Login - None
+2025-12-18 21:05:32,436 INFO [db] Loop detection saved to database (ID: 578, severity: 26.98, cross-subnet: False)
+2025-12-18 21:05:38,957 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:05:38,958 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:13:56,625 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-18 21:13:56,653 INFO [db] Activity logged: User 2 - Login - None
+2025-12-18 21:14:05,596 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:14:05,643 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:14:06,456 INFO [db] Loop detection saved to database (ID: 579, severity: 29.00, cross-subnet: False)
+2025-12-18 21:15:18,700 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:15:18,731 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:19:33,514 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-18 21:19:33,546 INFO [db] Activity logged: User 2 - Login - None
+2025-12-18 21:19:43,476 INFO [db] Loop detection saved to database (ID: 580, severity: 28.27, cross-subnet: False)
+2025-12-18 21:23:09,268 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:23:09,288 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:23:16,588 ERROR [winyfi] Tkinter callback exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15061, in open_topology_window
+    _create_straight_connection(a, b)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py", line 15005, in _create_straight_connection
+    ctrl = topo_canvas.create_rectangle(bx_bend-6, by_bend-6, bx_bend+6, by_bend+6,
+                                        fill='#ffd966', outline='#3b82f6', width=2,
+                                        tags=('connection_ctrl',), cursor='hand2')
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 3006, in create_rectangle
+    return self._create('rectangle', args, kw)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2976, in _create
+    return self.tk.getint(self.tk.call(
+                          ~~~~~~~~~~~~^
+        self._w, 'create', itemType,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        *(args + self._options(cnf, kw))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: unknown option "-cursor"
+
+2025-12-18 21:24:33,122 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-18 21:24:33,150 INFO [db] Activity logged: User 2 - Login - None
+2025-12-18 21:24:43,570 INFO [db] Loop detection saved to database (ID: 581, severity: 56.36, cross-subnet: False)
+2025-12-18 21:24:46,075 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:24:46,127 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:28:32,044 ERROR [db] create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+2025-12-18 21:28:32,073 INFO [db] Activity logged: User 2 - Login - None
+2025-12-18 21:28:41,820 INFO [db] Loop detection saved to database (ID: 582, severity: 28.90, cross-subnet: False)
+2025-12-18 21:28:43,672 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:28:43,693 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:33:46,972 INFO [db] Loop detection saved to database (ID: 583, severity: 33.79, cross-subnet: False)
+2025-12-18 21:35:32,288 WARNING [db] Could not create router_connections table: 1050: Table 'router_connections' already exists
+2025-12-18 21:35:32,306 WARNING [db] Could not create topology_shapes table: 1050: Table 'topology_shapes' already exists
+2025-12-18 21:38:52,251 INFO [db] Loop detection saved to database (ID: 584, severity: 37.52, cross-subnet: False)
+2025-12-18 21:43:57,577 INFO [db] Loop detection saved to database (ID: 585, severity: 61.91, cross-subnet: False)

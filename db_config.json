@@ -1,0 +1,9 @@
+{
+    "host": "127.0.0.1",
+    "user": "root",
+    "password": "",
+    "database": "winyfi",
+    "connection_timeout": 10,
+    "autocommit": true,
+    "raise_on_warnings": true
+}

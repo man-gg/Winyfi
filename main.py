@@ -5,6 +5,7 @@ import sys
 import os
 import logging
 import traceback
+from resource_utils import get_resource_path
 
 
 def _show_error_dialog(title: str, message: str, parent=None) -> None:
@@ -105,6 +106,14 @@ if __name__ == "__main__":
     
     # 1) Create your window with the flatly theme
     root = tb.Window(themename="flatly")
+    
+    # Set window icon
+    try:
+        icon_path = get_resource_path("icon.ico")
+        if os.path.exists(icon_path):
+            root.iconbitmap(icon_path)
+    except Exception:
+        pass  # Silently ignore if icon can't be loaded
 
     # 2) Grab the Style instance and override the built-in 'primary' (and any other)
     style = root.style

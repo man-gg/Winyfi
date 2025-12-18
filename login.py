@@ -106,7 +106,14 @@ def show_login(root):
             if window_width == _last_width["w"]:
                 return
             if _banner_src_img["img"] is None:
-                _banner_src_img["img"] = Image.open("assets/images/Banner.png")
+                # Get correct path for assets (works in dev and EXE)
+                import sys
+                if getattr(sys, 'frozen', False):
+                    base_path = sys._MEIPASS
+                else:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                banner_path = os.path.join(base_path, "assets", "images", "Banner.png")
+                _banner_src_img["img"] = Image.open(banner_path)
             new_height = max(1, int(window_width * 250 / 900))
             resized = _banner_src_img["img"].resize(
                 (window_width, new_height),
