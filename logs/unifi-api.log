@@ -1,0 +1,236 @@
+
+============================================================
+Starting UniFi API at 2026-01-11 14:07:56
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+
+============================================================
+Starting UniFi API at 2026-01-11 14:08:05
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+
+============================================================
+Starting UniFi API at 2026-01-11 14:46:32
+============================================================
+
+============================================================
+Starting UniFi API at 2026-01-11 14:46:32
+============================================================
+
+============================================================
+Starting UniFi API at 2026-01-11 15:08:13
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+
+============================================================
+Starting UniFi API at 2026-01-11 15:14:11
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+
+============================================================
+Starting UniFi API at 2026-01-11 15:35:20
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+
+============================================================
+Starting UniFi API at 2026-01-11 15:45:11
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+
+============================================================
+Starting UniFi API at 2026-01-11 15:48:12
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+
+============================================================
+Starting UniFi API at 2026-01-11 15:49:02
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+
+============================================================
+Starting UniFi API at 2026-01-11 15:54:07
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+
+============================================================
+Starting UniFi API at 2026-01-11 17:16:25
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off

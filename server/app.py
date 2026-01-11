@@ -1626,6 +1626,8 @@ if __name__ == "__main__":
         print("\n[SERVER] Starting on all network interfaces...")
         print("[SERVER] Use 'ipconfig' to find your local IP address\n")
     
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Disable debug mode when running as a service (prevents reloader issues)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode, use_reloader=False)
 
 

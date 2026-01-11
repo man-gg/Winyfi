@@ -71,6 +71,9 @@ from notification_utils import (
 )
 from notification_ui import NotificationSystem
 from resource_utils import get_resource_path, ensure_directory, resource_exists
+from service_manager import get_service_manager
+import logging
+logger = logging.getLogger(__name__)
 
 
 # Directory for router images
@@ -1170,7 +1173,7 @@ class Dashboard:
         self.sidebar_buttons["Settings"] = settings_btn
 
         self.settings_dropdown = tb.Frame(self.sidebar, style='Sidebar.TFrame')
-        self.dropdown_target_height = 205  # Increased height for Activity Log button
+        self.dropdown_target_height = 260  # Increased height (+10px) for Service Manager button
         
         # Dropdown buttons with proper alignment and styling
         profile_btn = tb.Button(self.settings_dropdown, 
@@ -1183,6 +1186,11 @@ class Dashboard:
                         style='Sidebar.TButton',
                         width=22,
                         command=self.open_user_mgmt)
+        service_mgr_btn = tb.Button(self.settings_dropdown, 
+                        text="  ⚙️ Service Manager",
+                        style='Sidebar.TButton',
+                        width=22,
+                        command=self.show_service_manager)
         notif_btn = tb.Button(self.settings_dropdown, 
                         text="  🔔 Notification Settings",
                         style='Sidebar.TButton',
@@ -1202,6 +1210,7 @@ class Dashboard:
         
         profile_btn.pack(fill='x', pady=2, padx=0)
         um_btn.pack(fill='x', pady=2, padx=0)
+        service_mgr_btn.pack(fill='x', pady=2, padx=0)
         notif_btn.pack(fill='x', pady=2, padx=0)
         activity_log_btn.pack(fill='x', pady=2, padx=0)
         sep.pack(fill='x', pady=2)
@@ -13826,6 +13835,276 @@ Type: {values[11]}
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open Activity Log:\n{str(e)}")
             print(f"Error opening activity log: {e}")
+    
+    def show_service_manager(self):
+        """Show the Service Manager window to control API services."""
+        # Create service manager window
+        service_window = Toplevel(self.root)
+        service_window.title("⚙️ Service Manager")
+        service_window.geometry("650x500")
+        service_window.resizable(True, True)
+        service_window.minsize(600, 450)
+        
+        # Center the window
+        service_window.update_idletasks()
+        x = (service_window.winfo_screenwidth() // 2) - (650 // 2)
+        y = (service_window.winfo_screenheight() // 2) - (500 // 2)
+        service_window.geometry(f"650x500+{x}+{y}")
+        
+        # Get service manager instance
+        service_mgr = get_service_manager()
+        
+        # Header frame
+        header_frame = tb.Frame(service_window, bootstyle="primary")
+        header_frame.pack(fill='x', padx=0, pady=0)
+        
+        title_label = tb.Label(
+            header_frame,
+            text="⚙️ API Service Manager",
+            font=("Segoe UI", 16, "bold"),
+            bootstyle="inverse-primary"
+        )
+        title_label.pack(pady=15)
+        
+        subtitle_label = tb.Label(
+            header_frame,
+            text="Control Flask API and UniFi API Services",
+            font=("Segoe UI", 10),
+            bootstyle="inverse-primary"
+        )
+        subtitle_label.pack(pady=(0, 15))
+        
+        # Main content frame - use simple frame instead of canvas
+        content_frame = tb.Frame(service_window)
+        content_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Service status variables
+        service_status_vars = {}
+        service_health_labels = {}
+        service_toggle_buttons = {}
+        auto_start_vars = {}
+        health_checks_running = {}
+        
+        def update_service_status(service_name):
+            """Update status label immediately; schedule async health check."""
+            try:
+                status = service_mgr.get_service_status(service_name)
+                service_info = service_mgr.services[service_name]
+                
+                # Status indicator
+                if status == 'running':
+                    status_text = "🟢 Running"
+                    status_color = "success"
+                    button_text = "⏹️ Stop"
+                elif status == 'stopped':
+                    status_text = "⚫ Stopped"
+                    status_color = "secondary"
+                    button_text = "▶️ Start"
+                else:  # crashed
+                    status_text = "🔴 Crashed"
+                    status_color = "danger"
+                    button_text = "🔄 Restart"
+                
+                # Update status label
+                service_status_vars[service_name].config(
+                    text=status_text,
+                    bootstyle=status_color
+                )
+                
+                # Update button
+                service_toggle_buttons[service_name].config(text=button_text)
+
+                # Schedule async health check to avoid blocking UI
+                def check_health_async():
+                    try:
+                        is_healthy = service_mgr.check_service_health(service_name)
+                        def update_health_ui():
+                            if not service_window.winfo_exists():
+                                return
+                            if status != 'running':
+                                service_health_labels[service_name].config(text="➖ N/A", bootstyle="secondary")
+                            elif is_healthy:
+                                service_health_labels[service_name].config(text="✅ Healthy", bootstyle="success")
+                            else:
+                                service_health_labels[service_name].config(text="⚠️ Not Responding", bootstyle="warning")
+                            health_checks_running.pop(service_name, None)
+                        service_window.after(0, update_health_ui)
+                    except Exception as e:
+                        def update_health_error():
+                            if service_window.winfo_exists():
+                                service_health_labels[service_name].config(text="❌ Error", bootstyle="danger")
+                                health_checks_running.pop(service_name, None)
+                        service_window.after(0, update_health_error)
+                
+                if status == 'running' and not health_checks_running.get(service_name):
+                    health_checks_running[service_name] = True
+                    service_health_labels[service_name].config(text="🔍 Checking", bootstyle="secondary")
+                    threading.Thread(target=check_health_async, daemon=True).start()
+                elif status != 'running':
+                    service_health_labels[service_name].config(text="➖ N/A", bootstyle="secondary")
+                    
+            except Exception as e:
+                logger.error(f"Error updating status for {service_name}: {e}")
+        
+        def toggle_service(service_name):
+            """Toggle service on/off"""
+            status = service_mgr.get_service_status(service_name)
+            service_info = service_mgr.services[service_name]
+            
+            btn = service_toggle_buttons.get(service_name)
+            if btn:
+                btn.config(state='disabled', text="⏳ Wait...")
+            
+            def _do_toggle():
+                try:
+                    if status == 'running':
+                        success = service_mgr.stop_service(service_name)
+                        msg = f"{service_info['name']} has been stopped."
+                    else:
+                        success = service_mgr.start_service(service_name)
+                        msg = f"{service_info['name']} has been started.\nPort: {service_info['port']}"
+                    
+                    if success:
+                        messagebox.showinfo("Success", msg)
+                    else:
+                        messagebox.showerror("Error", f"Failed to {'stop' if status=='running' else 'start'} {service_info['name']}.")
+                finally:
+                    if btn and service_window.winfo_exists():
+                        btn.config(state='normal')
+                        update_service_status(service_name)
+            
+            # Run toggle in background
+            threading.Thread(target=_do_toggle, daemon=True).start()
+        
+        def toggle_auto_start(service_name):
+            """Toggle auto-start setting"""
+            auto_start = auto_start_vars[service_name].get()
+            service_mgr.set_auto_start(service_name, auto_start)
+        
+        # Create service cards
+        for service_name, service_info in service_mgr.services.items():
+            # Service card frame
+            card_frame = tb.Labelframe(
+                content_frame,
+                text=f"  {service_info['name']}  ",
+                bootstyle="primary",
+                padding=12
+            )
+            card_frame.pack(fill='x', pady=8)
+            
+            # Top row: Service info
+            info_frame = tb.Frame(card_frame)
+            info_frame.pack(fill='x', pady=(0, 8))
+            
+            info_label = tb.Label(
+                info_frame,
+                text=f"📄 {service_info['script']}  |  🔌 Port {service_info['port']}",
+                font=("Segoe UI", 9)
+            )
+            info_label.pack(side='left')
+            
+            # Status row
+            status_frame = tb.Frame(card_frame)
+            status_frame.pack(fill='x', pady=4)
+            
+            tb.Label(status_frame, text="Status:", font=("Segoe UI", 9, "bold")).pack(side='left', padx=(0, 10))
+            
+            status_label = tb.Label(
+                status_frame,
+                text="⚫ Stopped",
+                font=("Segoe UI", 9, "bold"),
+                bootstyle="secondary"
+            )
+            status_label.pack(side='left', padx=(0, 20))
+            service_status_vars[service_name] = status_label
+            
+            tb.Label(status_frame, text="Health:", font=("Segoe UI", 9, "bold")).pack(side='left', padx=(0, 10))
+            
+            health_label = tb.Label(
+                status_frame,
+                text="➖ N/A",
+                font=("Segoe UI", 9),
+                bootstyle="secondary"
+            )
+            health_label.pack(side='left')
+            service_health_labels[service_name] = health_label
+            
+            # Control row
+            control_frame = tb.Frame(card_frame)
+            control_frame.pack(fill='x', pady=(8, 0))
+            
+            toggle_btn = tb.Button(
+                control_frame,
+                text="▶️ Start",
+                bootstyle="success",
+                command=lambda sn=service_name: toggle_service(sn),
+                width=12
+            )
+            toggle_btn.pack(side='left', padx=(0, 10))
+            service_toggle_buttons[service_name] = toggle_btn
+            
+            # Auto-start checkbox
+            auto_start_var = tb.BooleanVar(value=service_info['auto_start'])
+            auto_start_vars[service_name] = auto_start_var
+            
+            auto_start_check = tb.Checkbutton(
+                control_frame,
+                text="🚀 Auto-start",
+                variable=auto_start_var,
+                bootstyle="success-round-toggle",
+                command=lambda sn=service_name: toggle_auto_start(sn)
+            )
+            auto_start_check.pack(side='left')
+            
+            # Initialize status
+            update_service_status(service_name)
+        
+        # Bottom button frame
+        button_frame = tb.Frame(content_frame)
+        button_frame.pack(fill='x', pady=(15, 0))
+        
+        def refresh_all():
+            """Refresh all service statuses"""
+            for service_name in list(service_mgr.services.keys()):
+                update_service_status(service_name)
+        
+        refresh_btn = tb.Button(
+            button_frame,
+            text="🔄 Refresh",
+            bootstyle="info-outline",
+            command=refresh_all,
+            width=12
+        )
+        refresh_btn.pack(side='left', padx=5)
+        
+        def view_logs():
+            """Open logs directory in file explorer"""
+            logs_dir = service_mgr.logs_dir
+            if logs_dir.exists():
+                try:
+                    os.startfile(str(logs_dir))
+                except:
+                    messagebox.showinfo("Logs Location", f"Log files are located at:\n{logs_dir}")
+            else:
+                messagebox.showinfo("No Logs", "No service logs available yet.")
+        
+        logs_btn = tb.Button(
+            button_frame,
+            text="📋 Logs",
+            bootstyle="warning-outline",
+            command=view_logs,
+            width=12
+        )
+        logs_btn.pack(side='left', padx=5)
+        
+        close_btn = tb.Button(
+            button_frame,
+            text="❌ Close",
+            bootstyle="secondary",
+            command=service_window.destroy,
+            width=12
+        )
+        close_btn.pack(side='right', padx=5)
     
     def _create_router_notification(self, router_name, router_ip, is_online):
         """Create a router status change notification in the main thread."""

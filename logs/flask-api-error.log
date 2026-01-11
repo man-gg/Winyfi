@@ -1,0 +1,676 @@
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 2, in <module>
+    from flask import Flask, request, jsonify
+ModuleNotFoundError: No module named 'flask'
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ * Tip: There are .env or .flaskenv files present. Do "pip install python-dotenv" to use them.
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 1631, in <module>
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode, use_reloader=False)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\flask\app.py", line 625, in run
+    run_simple(t.cast(str, host), port, self, **options)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\werkzeug\serving.py", line 1082, in run_simple
+    fd = int(os.environ["WERKZEUG_SERVER_FD"])
+             ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen os>", line 716, in __getitem__
+KeyError: 'WERKZEUG_SERVER_FD'
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ * Tip: There are .env or .flaskenv files present. Do "pip install python-dotenv" to use them.
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 1631, in <module>
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode, use_reloader=False)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\flask\app.py", line 625, in run
+    run_simple(t.cast(str, host), port, self, **options)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\werkzeug\serving.py", line 1082, in run_simple
+    fd = int(os.environ["WERKZEUG_SERVER_FD"])
+             ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen os>", line 716, in __getitem__
+KeyError: 'WERKZEUG_SERVER_FD'
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ * Tip: There are .env or .flaskenv files present. Do "pip install python-dotenv" to use them.
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 1631, in <module>
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode, use_reloader=False)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\flask\app.py", line 625, in run
+    run_simple(t.cast(str, host), port, self, **options)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Lib\site-packages\werkzeug\serving.py", line 1082, in run_simple
+    fd = int(os.environ["WERKZEUG_SERVER_FD"])
+             ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen os>", line 716, in __getitem__
+KeyError: 'WERKZEUG_SERVER_FD'
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:06] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:07:08] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:08] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:18] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:28] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:38] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:41] "POST /api/login HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:49] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:54] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:07:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:08:00] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:08:05] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:08:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:08:10] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:08:15] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:08:20] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:08:20] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:09:23] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:09:25] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:09:34] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:09:44] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:09:54] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:10:04] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:10:14] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:10:24] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:10:34] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:10:44] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:10:54] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:11:04] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:11:14] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:11:24] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:11:34] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:12:25] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:12:27] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:12:27] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:12:37] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:12:45] "POST /api/login HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:12:52] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:16] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:13:18] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:18] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:26] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:28] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:32] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:42] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:53] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:13:56] "GET /api/health HTTP/1.1" 200 -
+ERROR starting Flask API: No module named 'flask'
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_app.py", line 21, in <module>
+    from app import create_app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 2, in <module>
+    from flask import Flask, request, jsonify
+ModuleNotFoundError: No module named 'flask'
+ERROR starting Flask API: No module named 'flask'
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_app.py", line 21, in <module>
+    from app import create_app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 2, in <module>
+    from flask import Flask, request, jsonify
+ModuleNotFoundError: No module named 'flask'
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:45:55] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:45:57] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:45:57] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:45:58] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:02] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:03] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:06] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:08] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Activity logged: User 3 - Login - Client Portal
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:11] "POST /api/login HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:12] "GET /api/dashboard/stats HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:13] "GET /api/dashboard/stats HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/reports/uptime?start_date=2026-01-04&end_date=2026-01-11&mode=weekly HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/bandwidth/logs?router_id=8&limit=1 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/bandwidth/logs?router_id=1&limit=1 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:17] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:18] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/bandwidth/logs?limit=500&start_date=2026-01-04&end_date=2026-01-11 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:19] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:21] "GET /api/reports/uptime?start_date=2026-01-04&end_date=2026-01-11&mode=weekly HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:26] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:28] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:31] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:31] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:38] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:39] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:40] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:40] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:40] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:41] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:41] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:47] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:48] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:48] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:48] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:48] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:49] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:50] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:50] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:50] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:50] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:56] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:56] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:56] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:56] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:57] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:57] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:57] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:58] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:58] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:58] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:46:58] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:46:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:47:01] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:47:01] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:47:01] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:47:01] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:47:01] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:47:02] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:47:02] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:47:08] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:47:19] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:47:29] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:47:39] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:47:49] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:47:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:48:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:48:19] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:48:29] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:49:35] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:49:36] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:49:37] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:49:46] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:49:58] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:50:00] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:50:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:50:19] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:50:29] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 14:59:49] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:59:50] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Activity logged: User 3 - Login - Client Portal
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:59:58] "POST /api/login HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:59:59] "GET /api/dashboard/stats HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 14:59:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:00] "GET /api/dashboard/stats HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/reports/uptime?start_date=2026-01-04&end_date=2026-01-11&mode=weekly HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:03] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:04] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/bandwidth/logs?limit=500&start_date=2026-01-04&end_date=2026-01-11 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:05] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:07] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:08] "GET /api/reports/uptime?start_date=2026-01-04&end_date=2026-01-11&mode=weekly HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:10] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:10] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:10] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:10] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:10] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:10] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:10] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:10] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:11] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:11] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:14] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:15] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:17] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:19] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:20] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:21] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/with-bandwidth HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/11/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/10/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/24/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/25/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/26/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/27/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/28/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/8/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:24] "GET /api/routers/1/status HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:00:25] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:03] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:03] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:05] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:08] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:10] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:11] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:11] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:13] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:13] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:13] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:13] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:14] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:14] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:15] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:15] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:15] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:15] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:16] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:16] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:19] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:23] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:29] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:33] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:03:39] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:39] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:43] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:49] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:50] "[33mGET / HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:51] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:53] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:03:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:03] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:09] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:13] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:19] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:23] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:29] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:33] "[33mGET / HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:33] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:39] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:40] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:40] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:43] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:44] "[33mGET / HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:45] "[33mGET / HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:50] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:04:51] "[33mGET / HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:04:52] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:04:53] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:00] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:03] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:10] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:13] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:20] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:23] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:30] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:33] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:40] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:43] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:51] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:05:53] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:07:21] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:07:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:07:29] "POST /api/login HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:07:36] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:07:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:08:01] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:08:04] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:08:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:08:24] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:08:26] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:08:27] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:08:34] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:08:36] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:08:37] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:08:39] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:12:49] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:12:50] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:12:54] "POST /api/login HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:13:01] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:13:20] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:13:21] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:13:24] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:13:37] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:13:40] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:13:56] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:13:58] "[33mGET / HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:13:59] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:14:02] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:14:06] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:14:12] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:14:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:14:32] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:14:42] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:14:52] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:15:02] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:15:08] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:15:12] "GET /api/health HTTP/1.1" 200 -
+ERROR starting Flask API: No module named 'flask_cors'
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_app.py", line 21, in <module>
+    from app import create_app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 3, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+ERROR starting Flask API: No module named 'flask_cors'
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_app.py", line 21, in <module>
+    from app import create_app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 3, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+ERROR starting Flask API: No module named 'flask_cors'
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_app.py", line 21, in <module>
+    from app import create_app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\app.py", line 3, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:47:34] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:47:49] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:48:31] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:48:40] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:53:21] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 15:53:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:53:23] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:53:32] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:53:42] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:53:51] "POST /api/login HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:53:58] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:54:05] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:54:08] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:54:18] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:54:28] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:54:30] "[33mGET / HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:54:36] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:54:38] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 15:54:48] "GET /api/health HTTP/1.1" 200 -
+INFO:db:Loaded database config from C:\Users\Consigna\Desktop\Winyfi\Winyfi\db_config.json
+INFO:db:Database config: host=127.0.0.1, port=3306, user=root, db=winyfi
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+ERROR:db:create_activity_logs_table error: 1050: Table 'activity_logs' already exists
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.15:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:16:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 17:16:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 17:16:25] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:16:32] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:16:42] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:16:52] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:17:02] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:17:12] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:17:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:17:32] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:17:42] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:17:52] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:02] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:12] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:22] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:33] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Jan/2026 17:18:37] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:39] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:43] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:48] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:53] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:18:58] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:03] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:08] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:14] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:18] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:24] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:28] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:34] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:38] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:44] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:48] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:54] "GET /api/health HTTP/1.1" 200 -
+INFO:werkzeug:192.168.1.15 - - [11/Jan/2026 17:19:58] "GET /api/health HTTP/1.1" 200 -

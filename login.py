@@ -20,6 +20,7 @@ from db import (
 import requests
 import os
 from server_discovery import ServerDiscovery
+from service_manager import get_service_manager
 
 login_attempts = defaultdict(list)
 
@@ -87,6 +88,45 @@ def show_login(root):
     root.title("WINYFI Login")
     center_window(root, 900, 600)  # ✅ Centered login window
     root.resizable(True, True)
+
+    # Ensure Flask API is reachable for user login
+    def _ensure_api_background():
+        def _set_api(url: str):
+            try:
+                os.environ['WINYFI_API'] = url.rstrip('/')
+            except Exception:
+                pass
+        # Prefer localhost quickly
+        try:
+            r = requests.get("http://localhost:5000/api/health", timeout=1.0)
+            if r.ok:
+                _set_api("http://localhost:5000")
+                return
+        except Exception:
+            pass
+        # Do not auto-start Flask API from the login window; rely on existing instance or discovery
+        # Retry in background and fall back to discovery
+        def _retry_and_discover():
+            ok = False
+            try:
+                r = requests.get("http://localhost:5000/api/health", timeout=2.0)
+                ok = r.ok
+            except Exception:
+                ok = False
+            if ok:
+                _set_api("http://localhost:5000")
+                return
+            # Discover server on LAN as fallback
+            try:
+                disc = ServerDiscovery()
+                info = disc.discover()
+                if info:
+                    _set_api(f"http://{info['ip']}:{info['port']}")
+            except Exception:
+                pass
+        threading.Thread(target=_retry_and_discover, daemon=True).start()
+
+    _ensure_api_background()
     
     # Initialize database tables only for admin (client portal relies on API)
     # We'll lazily create this for admin users after verifying credentials.

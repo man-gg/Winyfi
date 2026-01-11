@@ -1,0 +1,141 @@
+ERROR starting UniFi API: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 112, in <module>
+    print(f"\u26a0 WARNING: Controller at {controller_host}:{controller_port} is NOT reachable")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_unifi_api.py", line 21, in <module>
+    from unifi_api import app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 115, in <module>
+    print(f"\u26a0 Could not verify controller connectivity: {e}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+ERROR starting UniFi API: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 112, in <module>
+    print(f"\u26a0 WARNING: Controller at {controller_host}:{controller_port} is NOT reachable")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_unifi_api.py", line 21, in <module>
+    from unifi_api import app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 115, in <module>
+    print(f"\u26a0 Could not verify controller connectivity: {e}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+ERROR starting UniFi API: No module named 'flask'
+Traceback (most recent call last):
+ERROR starting UniFi API: No module named 'flask'
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_unifi_api.py", line 21, in <module>
+    from unifi_api import app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 27, in <module>
+    from flask import Flask, jsonify, request, g
+ModuleNotFoundError: No module named 'flask'
+ERROR starting UniFi API: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 112, in <module>
+    print(f"\u26a0 WARNING: Controller at {controller_host}:{controller_port} is NOT reachable")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_unifi_api.py", line 21, in <module>
+    from unifi_api import app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 115, in <module>
+    print(f"\u26a0 Could not verify controller connectivity: {e}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+ERROR starting UniFi API: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 112, in <module>
+    print(f"\u26a0 WARNING: Controller at {controller_host}:{controller_port} is NOT reachable")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\run_unifi_api.py", line 21, in <module>
+    from unifi_api import app
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\server\unifi_api.py", line 115, in <module>
+    print(f"\u26a0 Could not verify controller connectivity: {e}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.15:5001
+Press CTRL+C to quit
+127.0.0.1 - - [11/Jan/2026 15:35:25] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jan/2026 15:41:58] "GET /api/health HTTP/1.1" 200 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.15:5001
+Press CTRL+C to quit
+127.0.0.1 - - [11/Jan/2026 15:45:16] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jan/2026 15:45:20] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jan/2026 15:45:22] "GET / HTTP/1.1" 404 -
+127.0.0.1 - - [11/Jan/2026 15:46:16] "GET /health HTTP/1.1" 404 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.15:5001
+Press CTRL+C to quit
+127.0.0.1 - - [11/Jan/2026 15:48:17] "GET /api/health HTTP/1.1" 200 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.15:5001
+Press CTRL+C to quit
+127.0.0.1 - - [11/Jan/2026 15:49:07] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jan/2026 15:49:21] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jan/2026 15:49:31] "GET /api/health HTTP/1.1" 200 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.15:5001
+Press CTRL+C to quit
+127.0.0.1 - - [11/Jan/2026 15:54:12] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jan/2026 15:54:16] "GET /api/health HTTP/1.1" 200 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.15:5001
+Press CTRL+C to quit
+127.0.0.1 - - [11/Jan/2026 17:16:30] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jan/2026 17:16:38] "GET /api/health HTTP/1.1" 200 -

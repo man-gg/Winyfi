@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Flask API for UniFi integration
 
@@ -94,7 +95,7 @@ print(f"  Flask Debug: {FLASK_DEBUG}")
 print(f"  Auth: {'disabled' if ALLOW_NO_AUTH else 'required'} | API keys loaded: {len(API_KEYS)} | Admin keys: {len(ADMIN_API_KEYS)}")
 print(f"  Allowed sites: {sorted(ALLOWED_SITES)}")
 print(f"  Mock enabled: {ENABLE_MOCK}")
-print(f"{'='*70}\n")
+print(f"{'='*70}\n", flush=True)
 
 # Connectivity check on startup
 print("[UniFi API] Performing startup connectivity check...")
@@ -107,12 +108,12 @@ try:
     result = sock.connect_ex((controller_host, controller_port))
     sock.close()
     if result == 0:
-        print(f"✓ Controller at {controller_host}:{controller_port} is reachable")
+        print(f"[OK] Controller at {controller_host}:{controller_port} is reachable", flush=True)
     else:
-        print(f"⚠ WARNING: Controller at {controller_host}:{controller_port} is NOT reachable")
-        print(f"  This may be normal if controller is remote or not started yet")
+        print(f"[WARN] Controller at {controller_host}:{controller_port} is NOT reachable", flush=True)
+        print(f"  This may be normal if controller is remote or not started yet", flush=True)
 except Exception as e:
-    print(f"⚠ Could not verify controller connectivity: {e}")
+    print(f"[WARN] Could not verify controller connectivity: {e}", flush=True)
 print()
 
 
@@ -185,7 +186,7 @@ class UniFiSession:
         # Try new auth endpoint (UniFi OS / Network Application 7.x+)
         try:
             url = f"{self.base_url}/api/auth/login"
-            print(f"[UniFi] Attempting login to {url}")
+            print(f"[UniFi] Attempting login to {url}", flush=True)
             resp = self.s.post(
                 url, 
                 json=payload, 
@@ -194,28 +195,28 @@ class UniFiSession:
                 verify=self.verify, 
                 timeout=15  # Increased timeout for remote connections
             )
-            print(f"[UniFi] New auth response: {resp.status_code}")
+            print(f"[UniFi] New auth response: {resp.status_code}", flush=True)
             if resp.status_code in (200, 204):
                 self._set_csrf_from_response(resp)
-                print("[UniFi] ✓ Login successful (new auth endpoint)")
+                print("[UniFi] [OK] Login successful (new auth endpoint)", flush=True)
                 return
         except requests.exceptions.SSLError as e:
             last_error = f"SSL Error: {e}. Try setting UNIFI_VERIFY=false"
-            print(f"[UniFi] SSL Error on new auth: {e}")
+            print(f"[UniFi] SSL Error on new auth: {e}", flush=True)
         except requests.exceptions.ConnectionError as e:
             last_error = f"Connection Error: {e}. Check controller URL and network"
-            print(f"[UniFi] Connection Error on new auth: {e}")
+            print(f"[UniFi] Connection Error on new auth: {e}", flush=True)
         except requests.exceptions.Timeout as e:
             last_error = f"Timeout: {e}. Controller may be slow or unreachable"
-            print(f"[UniFi] Timeout on new auth: {e}")
+            print(f"[UniFi] Timeout on new auth: {e}", flush=True)
         except Exception as e:
             last_error = str(e)
-            print(f"[UniFi] New auth failed: {e}")
+            print(f"[UniFi] New auth failed: {e}", flush=True)
 
         # Fallback to legacy auth endpoint (older UniFi versions)
         try:
             url = f"{self.base_url}/api/login"
-            print(f"[UniFi] Trying legacy login to {url}")
+            print(f"[UniFi] Trying legacy login to {url}", flush=True)
             resp = self.s.post(
                 url, 
                 json=payload, 
@@ -224,11 +225,11 @@ class UniFiSession:
                 verify=self.verify, 
                 timeout=15
             )
-            print(f"[UniFi] Legacy auth response: {resp.status_code}")
+            print(f"[UniFi] Legacy auth response: {resp.status_code}", flush=True)
             if resp.status_code not in (200, 204):
                 raise RuntimeError(f"UniFi login failed: {resp.status_code} {resp.text[:200]}")
             self._set_csrf_from_response(resp)
-            print("[UniFi] ✓ Login successful (legacy auth endpoint)")
+            print("[UniFi] [OK] Login successful (legacy auth endpoint)", flush=True)
             return
         except requests.exceptions.SSLError as e:
             print(f"[UniFi] SSL Error on legacy auth: {e}")
@@ -506,6 +507,16 @@ MOCK_CLIENTS = [
         "uptime": 86400  # 24 hours in seconds
     }
 ]
+
+# --- Health Check Endpoint ---
+@app.route('/api/health')
+def health_check():
+    """Health check endpoint for service monitoring"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'unifi_api',
+        'timestamp': time.time()
+    }), 200
 
 # --- Root login endpoints for compatibility with test client ---
 @app.route('/api/auth/login', methods=['POST'])

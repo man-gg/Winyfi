@@ -1,0 +1,10 @@
+{
+  "flask_api": {
+    "enabled": true,
+    "auto_start": true
+  },
+  "unifi_api": {
+    "enabled": true,
+    "auto_start": true
+  }
+}
