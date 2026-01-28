@@ -3,6 +3,33 @@ import platform
 from db import get_connection, execute_with_error_handling, DatabaseConnectionError
 from datetime import datetime
 
+# Helper for silent subprocess execution
+def _run_silent_subprocess(cmd, timeout=None, **kwargs):
+    """Run subprocess silently without showing CMD windows on Windows."""
+    startupinfo = None
+    creationflags = 0
+    
+    if platform.system().lower() == "windows":
+        creationflags = subprocess.CREATE_NO_WINDOW
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0
+    
+    if 'stdout' not in kwargs:
+        kwargs['stdout'] = subprocess.PIPE
+    if 'stderr' not in kwargs:
+        kwargs['stderr'] = subprocess.PIPE
+    if 'text' not in kwargs:
+        kwargs['text'] = True
+    
+    return subprocess.run(
+        cmd,
+        timeout=timeout,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+        **kwargs
+    )
+
 # Insert new router
 def insert_router(name, ip, mac, brand, location, image_path):
     def _insert():
@@ -109,11 +136,11 @@ def is_online(ip):
     param = '-n' if platform.system().lower() == 'windows' else '-c'
     timeout_param = '-w' if platform.system().lower() == 'windows' else '-W'
     try:
-        output = subprocess.check_output(
+        result = _run_silent_subprocess(
             ['ping', param, '1', timeout_param, '1000', ip],
-            stderr=subprocess.DEVNULL,
-            universal_newlines=True
+            timeout=5
         )
+        output = result.stdout if result.stdout else ""
         return "TTL=" in output or "ttl=" in output
     except subprocess.CalledProcessError:
         return False

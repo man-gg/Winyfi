@@ -214,3 +214,341 @@ Starting Flask API Server
 ============================================================
  * Serving Flask app 'app'
  * Debug mode: off
+
+============================================================
+Starting Flask API at 2026-01-11 17:23:11
+============================================================
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+
+============================================================
+Starting Flask API at 2026-01-12 11:18:45
+============================================================
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+
+================================================================================
+[2026-01-12 11:22:15] SUCCESS ⚡ STARTING FLASK API
+[2026-01-12 11:22:15] INFO    📋 Script: server/run_app.py
+[2026-01-12 11:22:15] INFO    🔌 Port: 5000
+[2026-01-12 11:22:15] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:22:15] SUCCESS ✅ FLASK API PROCESS STARTED (PID: 13828)
+[2026-01-12 11:22:15] INFO    ⏳ Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-12 11:22:18] SUCCESS 🟢 FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:22:18] INFO    🌐 Health endpoint responding at http://localhost:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:28:44] SUCCESS ⚡ STARTING FLASK API
+[2026-01-12 11:28:44] INFO    📋 Script: server/run_app.py
+[2026-01-12 11:28:44] INFO    🔌 Port: 5000
+[2026-01-12 11:28:44] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:28:44] SUCCESS ✅ FLASK API PROCESS STARTED (PID: 10812)
+[2026-01-12 11:28:44] INFO    ⏳ Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-12 11:28:47] SUCCESS 🟢 FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:28:47] INFO    🌐 Health endpoint responding at http://localhost:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:32:29] SUCCESS ⚡ STARTING FLASK API
+[2026-01-12 11:32:29] INFO    📋 Script: server/run_app.py
+[2026-01-12 11:32:29] INFO    🔌 Port: 5000
+[2026-01-12 11:32:29] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:32:29] SUCCESS ✅ FLASK API PROCESS STARTED (PID: 4464)
+[2026-01-12 11:32:29] INFO    ⏳ Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-12 11:32:32] SUCCESS 🟢 FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:32:32] INFO    🌐 Health endpoint responding at http://localhost:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:36:56] SUCCESS ⚡ STARTING FLASK API
+[2026-01-12 11:36:56] INFO    📋 Script: server/run_app.py
+[2026-01-12 11:36:56] INFO    🔌 Port: 5000
+[2026-01-12 11:36:56] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:36:56] SUCCESS ✅ FLASK API PROCESS STARTED (PID: 10272)
+[2026-01-12 11:36:56] INFO    ⏳ Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-12 11:36:58] SUCCESS 🟢 FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:36:58] INFO    🌐 Health endpoint responding at http://localhost:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:37:16] SUCCESS ⚡ STARTING FLASK API
+[2026-01-12 11:37:16] INFO    📋 Script: server/run_app.py
+[2026-01-12 11:37:16] INFO    🔌 Port: 5000
+[2026-01-12 11:37:16] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:37:16] SUCCESS ✅ FLASK API PROCESS STARTED (PID: 10372)
+[2026-01-12 11:37:16] INFO    ⏳ Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-12 11:37:19] SUCCESS 🟢 FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:37:19] INFO    🌐 Health endpoint responding at http://localhost:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:41:08] SUCCESS ⚡ STARTING FLASK API
+[2026-01-12 11:41:08] INFO    📋 Script: server/run_app.py
+[2026-01-12 11:41:08] INFO    🔌 Port: 5000
+[2026-01-12 11:41:08] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:41:08] SUCCESS ✅ FLASK API PROCESS STARTED (PID: 3296)
+[2026-01-12 11:41:08] INFO    ⏳ Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-12 11:41:11] SUCCESS 🟢 FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:41:11] INFO    🌐 Health endpoint responding at http://localhost:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:44:56] SUCCESS ⚡ STARTING FLASK API
+[2026-01-12 11:44:56] INFO    📋 Script: server/run_app.py
+[2026-01-12 11:44:56] INFO    🔌 Port: 5000
+[2026-01-12 11:44:56] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:44:56] SUCCESS ✅ FLASK API PROCESS STARTED (PID: 12916)
+[2026-01-12 11:44:56] INFO    ⏳ Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-12 11:44:59] SUCCESS 🟢 FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:44:59] INFO    🌐 Health endpoint responding at http://localhost:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:45:01] WARNING ⚠️ SHUTDOWN REQUESTED FOR FLASK API
+[2026-01-12 11:45:01] INFO    🛑 Terminating process (PID: 12916)...
+[2026-01-12 11:45:01] STOPPED 🔴 FLASK API TERMINATED GRACEFULLY
+[2026-01-12 11:45:01] INFO    ✅ Service shutdown complete
+================================================================================
+
+
+================================================================================
+[2026-01-13 17:21:14] SUCCESS ⚡ STARTING FLASK API
+[2026-01-13 17:21:14] INFO    📋 Script: server\run_app.py
+[2026-01-13 17:21:14] INFO    🔌 Port: 5000
+[2026-01-13 17:21:14] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-13 17:21:14] SUCCESS ✅ FLASK API PROCESS STARTED (PID: 9496)
+[2026-01-13 17:21:14] INFO    ⏳ Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-13 17:21:17] SUCCESS 🟢 FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-13 17:21:17] INFO    🌐 Health endpoint responding at http://192.168.1.15:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-13 17:21:30] WARNING ⚠️ SHUTDOWN REQUESTED FOR FLASK API
+[2026-01-13 17:21:30] INFO    🛑 Terminating process (PID: 9496)...
+[2026-01-13 17:21:30] STOPPED 🔴 FLASK API TERMINATED GRACEFULLY
+[2026-01-13 17:21:30] INFO    ✅ Service shutdown complete
+================================================================================
+
+
+================================================================================
+[2026-01-17 21:32:56] SUCCESS [START] STARTING FLASK API
+[2026-01-17 21:32:56] INFO    [SCRIPT] Script: server\run_app.py
+[2026-01-17 21:32:56] INFO    [PORT] Port: 5000
+[2026-01-17 21:32:56] INFO    [PYTHON] Python: C:\Users\Consigna\AppData\Local\Programs\Python\Python313\python.exe
+[2026-01-17 21:32:56] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 21:32:56] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-17 21:32:56] SUCCESS [STARTED] FLASK API PROCESS STARTED (PID: 152)
+[2026-01-17 21:32:56] INFO    [WAIT] Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-17 21:32:58] SUCCESS [READY] FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-17 21:32:58] INFO    [HEALTH] Health endpoint responding at http://192.168.1.15:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:32:53] SUCCESS [START] STARTING FLASK API
+[2026-01-17 22:32:53] INFO    [SCRIPT] Script: server\run_app.py
+[2026-01-17 22:32:53] INFO    [PORT] Port: 5000
+[2026-01-17 22:32:53] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:32:53] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:32:53] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-17 22:32:53] SUCCESS [STARTED] FLASK API PROCESS STARTED (PID: 15448)
+[2026-01-17 22:32:53] INFO    [WAIT] Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-17 22:32:58] SUCCESS [READY] FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-17 22:32:58] INFO    [HEALTH] Health endpoint responding at http://192.168.1.15:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:45:12] SUCCESS [START] STARTING FLASK API
+[2026-01-17 22:45:12] INFO    [SCRIPT] Script: server\run_app.py
+[2026-01-17 22:45:12] INFO    [PORT] Port: 5000
+[2026-01-17 22:45:12] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:45:12] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:45:12] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-17 22:45:12] SUCCESS [STARTED] FLASK API PROCESS STARTED (PID: 3200)
+[2026-01-17 22:45:12] INFO    [WAIT] Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-17 22:45:13] SUCCESS [READY] FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-17 22:45:13] INFO    [HEALTH] Health endpoint responding at http://192.168.1.15:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:46:51] WARNING [SHUTDOWN] SHUTDOWN REQUESTED FOR FLASK API
+[2026-01-17 22:46:51] INFO    [STOP] Terminating process (PID: 3200)...
+[2026-01-17 22:46:51] STOPPED [DONE] FLASK API TERMINATED GRACEFULLY
+[2026-01-17 22:46:51] INFO    [SUCCESS] Service shutdown complete
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:47:27] SUCCESS [START] STARTING FLASK API
+[2026-01-17 22:47:27] INFO    [SCRIPT] Script: server\run_app.py
+[2026-01-17 22:47:27] INFO    [PORT] Port: 5000
+[2026-01-17 22:47:27] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:47:27] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:47:27] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-17 22:47:27] SUCCESS [STARTED] FLASK API PROCESS STARTED (PID: 10484)
+[2026-01-17 22:47:27] INFO    [WAIT] Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-17 22:47:28] SUCCESS [READY] FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-17 22:47:28] INFO    [HEALTH] Health endpoint responding at http://192.168.1.15:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:47:33] WARNING [SHUTDOWN] SHUTDOWN REQUESTED FOR FLASK API
+[2026-01-17 22:47:33] INFO    [STOP] Terminating process (PID: 10484)...
+[2026-01-17 22:47:33] STOPPED [DONE] FLASK API TERMINATED GRACEFULLY
+[2026-01-17 22:47:33] INFO    [SUCCESS] Service shutdown complete
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:47:39] SUCCESS [START] STARTING FLASK API
+[2026-01-17 22:47:39] INFO    [SCRIPT] Script: server\run_app.py
+[2026-01-17 22:47:39] INFO    [PORT] Port: 5000
+[2026-01-17 22:47:39] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:47:39] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:47:39] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-17 22:47:39] SUCCESS [STARTED] FLASK API PROCESS STARTED (PID: 6340)
+[2026-01-17 22:47:39] INFO    [WAIT] Waiting for service to be ready...
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-17 22:47:40] SUCCESS [READY] FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-17 22:47:40] INFO    [HEALTH] Health endpoint responding at http://192.168.1.15:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:47:44] WARNING [SHUTDOWN] SHUTDOWN REQUESTED FOR FLASK API
+[2026-01-17 22:47:44] INFO    [STOP] Terminating process (PID: 6340)...
+[2026-01-17 22:47:44] STOPPED [DONE] FLASK API TERMINATED GRACEFULLY
+[2026-01-17 22:47:44] INFO    [SUCCESS] Service shutdown complete
+================================================================================
+
+
+================================================================================
+[2026-01-20 11:20:51] SUCCESS [START] STARTING FLASK API
+[2026-01-20 11:20:51] INFO    [SCRIPT] Script: server\run_app.py
+[2026-01-20 11:20:51] INFO    [PORT] Port: 5000
+[2026-01-20 11:20:51] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-20 11:20:51] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-20 11:20:51] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-20 11:20:51] SUCCESS [STARTED] FLASK API PROCESS STARTED (PID: 9100)
+[2026-01-20 11:20:51] INFO    [WAIT] Waiting for service to be ready...
+[DEBUG] Script location: C:\Users\Consigna\Desktop\Winyfi\Winyfi\server
+[DEBUG] Is PyInstaller temp: False
+[DEBUG] sys.frozen: False
+[DEBUG] Has _MEIPASS: False
+[DEBUG] Added to sys.path: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[DEBUG] sys.path: ['C:\\Users\\Consigna\\Desktop\\Winyfi\\Winyfi', 'C:\\Users\\Consigna\\Desktop\\Winyfi\\Winyfi\\server', 'C:\\Users\\Consigna\\AppData\\Local\\Programs\\Python\\Python313\\python313.zip']
+[DEBUG] Files in parent_dir: ['activity_log_viewer.py', 'add_fill_color_column.py', 'admin_loop_dashboard.py']
+[DEBUG] Changed to: C:\Users\Consigna\Desktop\Winyfi\Winyfi\server
+============================================================
+Starting Flask API Server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+[2026-01-20 11:20:54] SUCCESS [READY] FLASK API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-20 11:20:54] INFO    [HEALTH] Health endpoint responding at http://192.168.1.15:5000/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-20 11:20:56] WARNING [SHUTDOWN] SHUTDOWN REQUESTED FOR FLASK API
+[2026-01-20 11:20:56] INFO    [STOP] Terminating process (PID: 9100)...
+[2026-01-20 11:20:56] STOPPED [DONE] FLASK API TERMINATED GRACEFULLY
+[2026-01-20 11:20:56] INFO    [SUCCESS] Service shutdown complete
+================================================================================
+

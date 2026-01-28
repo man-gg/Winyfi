@@ -23,10 +23,49 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 import time
 from collections import defaultdict
+import subprocess
+import platform
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from print_utils import print_srf_form
+
+def _run_silent_subprocess(cmd, timeout=None, **kwargs):
+    """Run subprocess silently without showing CMD windows on Windows.
+    
+    Args:
+        cmd: Command list to run
+        timeout: Timeout in seconds
+        **kwargs: Additional arguments for subprocess.run
+    
+    Returns:
+        subprocess.CompletedProcess result
+    """
+    startupinfo = None
+    creationflags = 0
+    
+    if platform.system().lower() == "windows":
+        # Silence Windows CMD window
+        creationflags = subprocess.CREATE_NO_WINDOW
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0  # SW_HIDE
+    
+    # Ensure capture_output and text are set if not provided
+    if 'stdout' not in kwargs:
+        kwargs['stdout'] = subprocess.PIPE
+    if 'stderr' not in kwargs:
+        kwargs['stderr'] = subprocess.PIPE
+    if 'text' not in kwargs:
+        kwargs['text'] = True
+    
+    return subprocess.run(
+        cmd,
+        timeout=timeout,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+        **kwargs
+    )
 
 # Add current directory and tabs directory to path
 current_dir = os.path.dirname(__file__)
@@ -1214,10 +1253,8 @@ class ClientDashboard:
     def _is_router_online(self, ip_address):
         """Check if a router is online by pinging it."""
         try:
-            import subprocess
             # Use ping command to check connectivity
-            result = subprocess.run(['ping', '-n', '1', '-w', '1000', ip_address], 
-                                  capture_output=True, text=True, timeout=2)
+            result = _run_silent_subprocess(['ping', '-n', '1', '-w', '1000', ip_address], timeout=2)
             return result.returncode == 0
         except:
             return False

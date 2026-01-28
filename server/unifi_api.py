@@ -46,6 +46,33 @@ except Exception:  # pragma: no cover
     Retry = None  # Fallback to no retries if urllib3 Retry unavailable
     urllib3 = None
 
+# Helper for silent subprocess execution
+def _run_silent_subprocess(cmd, timeout=None, **kwargs):
+    """Run subprocess silently without showing CMD windows on Windows."""
+    startupinfo = None
+    creationflags = 0
+    
+    if platform.system().lower() == "windows":
+        creationflags = subprocess.CREATE_NO_WINDOW
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0
+    
+    if 'stdout' not in kwargs:
+        kwargs['stdout'] = subprocess.PIPE
+    if 'stderr' not in kwargs:
+        kwargs['stderr'] = subprocess.PIPE
+    if 'text' not in kwargs:
+        kwargs['text'] = True
+    
+    return subprocess.run(
+        cmd,
+        timeout=timeout,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+        **kwargs
+    )
+
 app = Flask(__name__)
 
 # --- Controller configuration (overridable via env) ---
@@ -936,7 +963,9 @@ def ping_with_latency(ip: str) -> Tuple[Optional[bool], Optional[float]]:
             cmd = ['ping', count_flag, '1', '-w', '2000', ip]
         else:
             cmd = ['ping', count_flag, '1', '-W', '2', ip]
-        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True)
+        out = _run_silent_subprocess(cmd, timeout=5).stdout
+        if not out:
+            return None, None
         # Parse latency
         latency = None
         for line in out.splitlines():
@@ -992,4 +1021,8 @@ def ping_with_latency(ip: str) -> Tuple[Optional[bool], Optional[float]]:
 
 if __name__ == '__main__':
     # Never enable debug=True by default
+    # Clean up Werkzeug environment variables that can cause issues in service mode
+    if 'WERKZEUG_SERVER_FD' in os.environ:
+        del os.environ['WERKZEUG_SERVER_FD']
+    
     app.run(host='0.0.0.0', port=5001, debug=FLASK_DEBUG)

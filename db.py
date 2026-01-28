@@ -6,11 +6,54 @@ import logging
 from datetime import datetime
 import os
 import sys
+import traceback
 from resource_utils import get_resource_path
 
 # Configure logging for database operations
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# =============================
+# CRITICAL: PyInstaller MySQL Error Logging
+# =============================
+# When running as a PyInstaller EXE, create a detailed error log file
+# for diagnostics since users may not have access to console output
+def get_mysql_error_log_path():
+    """Get the path for MySQL error log file (in EXE directory when frozen)."""
+    if getattr(sys, 'frozen', False) or hasattr(sys, '_MEIPASS'):
+        # Running as PyInstaller bundle
+        exe_dir = os.path.dirname(sys.executable)
+    else:
+        # Running as normal Python
+        exe_dir = os.path.dirname(__file__)
+    
+    return os.path.join(exe_dir, 'mysql_connection_error.log')
+
+def log_mysql_error(message, level="ERROR"):
+    """Write error message to both logger and mysql_connection_error.log file.
+    
+    This function is critical for PyInstaller debugging since the EXE
+    may not have console output available.
+    
+    Args:
+        message: The message to log
+        level: Log level - "ERROR", "INFO", "WARNING" (default: "ERROR")
+    """
+    if level == "INFO":
+        logger.info(message)
+    elif level == "WARNING":
+        logger.warning(message)
+    else:
+        logger.error(message)
+    
+    try:
+        log_path = get_mysql_error_log_path()
+        with open(log_path, 'a', encoding='utf-8') as f:
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            f.write(f"[{timestamp}] {message}\n")
+    except Exception as e:
+        # Silently fail if we can't write the log (don't crash the app)
+        logger.debug(f"Could not write to mysql_connection_error.log: {e}")
 
 # Load database configuration from file or use defaults
 def load_db_config():
@@ -30,6 +73,8 @@ def load_db_config():
     possible_paths.append('db_config.json')
     possible_paths.append(os.path.join(os.path.dirname(__file__), 'db_config.json'))
     
+    loaded_from = None
+
     # Default configuration
     default_config = {
         "host": "localhost",
@@ -37,9 +82,8 @@ def load_db_config():
         "password": "",
         "database": "winyfi",
         "port": 3306,
+        "charset": "utf8mb4",
         "connection_timeout": 10,
-        "autocommit": True,
-        "raise_on_warnings": True
     }
     
     # Try to load from config file
@@ -52,6 +96,7 @@ def load_db_config():
                     default_config.update(custom_config)
                     logger.info(f"Loaded database config from {config_file}")
                     config_found = True
+                    loaded_from = config_file
                     break
             except Exception as e:
                 logger.warning(f"Could not load config file {config_file}: {e}")
@@ -59,6 +104,8 @@ def load_db_config():
     if not config_found:
         logger.info("Using default database configuration (no config file found)")
         logger.debug(f"Searched paths: {possible_paths}")
+    else:
+        logger.info(f"Database configuration loaded from: {loaded_from}")
     
     # Override with environment variables if set
     if os.environ.get('WINYFI_DB_HOST'):
@@ -536,6 +583,21 @@ def get_connection(max_retries=2, retry_delay=1, show_dialog=False):
     Raises:
         DatabaseConnectionError: When connection cannot be established
     """
+    # Create detailed error log file near the executable when frozen for easier access
+    if getattr(sys, 'frozen', False):
+        error_log_base = os.path.dirname(sys.executable)
+    else:
+        error_log_base = os.path.dirname(__file__)
+    error_log_path = os.path.join(error_log_base, "mysql_connection_error.log")
+    
+    def log_error(message):
+        """Log error to both logger and dedicated error file"""
+        logger.error(message)
+        try:
+            with open(error_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {message}\n")
+        except Exception:
+            pass
     # Allow environment overrides for retries to tune UX without code changes
     try:
         max_retries = int(os.environ.get("WINYFI_DB_RETRIES", max_retries))
@@ -554,25 +616,123 @@ def get_connection(max_retries=2, retry_delay=1, show_dialog=False):
 
     last_error = None
     
+    # Log connection attempt START ONCE (no redundant banners)
+    logger.info(f"Attempting MySQL connection to {DB_CONFIG.get('host')}:{DB_CONFIG.get('port')} (attempt 1/{max_retries})")
+    
     for attempt in range(max_retries):
         try:
             # Attempt to connect
-            conn = mysql.connector.connect(**DB_CONFIG)
+            # Use pure Python implementation for PyInstaller compatibility
+            conn_config = dict(DB_CONFIG)
+            conn_config['use_pure'] = True  # Force pure Python, no C extensions
+            conn_config['use_unicode'] = True
+            # Ensure charset is properly set for MySQL 8.0+
+            if 'charset' not in conn_config or not conn_config['charset']:
+                conn_config['charset'] = 'utf8mb4'
+            # If auth_plugin is missing/None, do not send the key at all (let server choose)
+            if not conn_config.get('auth_plugin'):
+                conn_config.pop('auth_plugin', None)
+            conn = mysql.connector.connect(**conn_config)
             
             # Test the connection
             if conn.is_connected():
-                # Silently return successful connection
+                logger.info(f"✅ MySQL connection established successfully")
                 return conn
             else:
                 raise mysql.connector.Error("Connection established but not active")
                 
         except mysql.connector.Error as err:
             last_error = err
-            error_msg = f"MySQL Error on attempt {attempt + 1}/{max_retries}: "
+            log_mysql_error(f"MySQL Error (Errno {err.errno}): {err.msg}", level="ERROR")
+            log_mysql_error(f"Exception type: {type(err).__name__}", level="ERROR")
+            
+            # Log full traceback for debugging only on first attempt
+            if attempt == 0:
+                tb_lines = traceback.format_exc().split('\n')
+                for line in tb_lines:
+                    if line.strip():
+                        log_mysql_error(f"  {line}", level="ERROR")
+
+            # =====================================================
+            # CRITICAL FIX: Handle authentication plugin mismatches
+            # =====================================================
+            # PyInstaller builds may fail with auth plugin issues on MySQL 8.x
+            # This section implements fallback strategy:
+            # 1. Try with server-chosen plugin (default)
+            # 2. Try with caching_sha2_password (MySQL 8.0+ modern default)
+            # 3. Try with mysql_native_password (MySQL 5.7 and older systems)
+            plugin_message = str(err).lower()
+            plugin_issue = (
+                "authentication plugin" in plugin_message
+                or "not supported" in plugin_message
+                or err.errno == mysql.connector.errorcode.ER_NOT_SUPPORTED_AUTH_MODE
+                or err.errno == 2059
+            )
+
+            if plugin_issue:
+                log_mysql_error(f"🔄 Authentication plugin issue detected: {err.msg}", level="WARNING")
+                logger.info(f"   Attempting plugin fallback strategy...")
+                tried_plugin = conn_config.get('auth_plugin')
+                
+                # Build ordered list of fallback plugins to try
+                # Start with server default (None), then explicit plugins in order of modern -> legacy
+                ordered_plugins_to_try = []
+                if tried_plugin is not None:
+                    # If an explicit plugin was tried, first try server default
+                    ordered_plugins_to_try.append(None)
+                
+                # Add plugins not yet tried, in order: modern -> legacy
+                for candidate in [None, 'caching_sha2_password', 'mysql_native_password']:
+                    if candidate not in ordered_plugins_to_try and candidate != tried_plugin:
+                        ordered_plugins_to_try.append(candidate)
+                
+                for fallback_plugin in ordered_plugins_to_try:
+                    try:
+                        # Build fallback config with explicit auth plugin handling
+                        alt_config = dict(DB_CONFIG)
+                        alt_config['use_pure'] = True  # Force pure Python implementation
+                        alt_config['use_unicode'] = True
+                        
+                        # Ensure charset is set
+                        if 'charset' not in alt_config or not alt_config['charset']:
+                            alt_config['charset'] = 'utf8mb4'
+                        
+                        # Set or unset auth_plugin
+                        if fallback_plugin is None:
+                            # Let server choose the plugin
+                            alt_config.pop('auth_plugin', None)
+                            plugin_label = "(server-chosen)"
+                        else:
+                            # Explicitly set the plugin
+                            alt_config['auth_plugin'] = fallback_plugin
+                            plugin_label = fallback_plugin
+                        
+                        logger.info(f"   → Trying auth_plugin={plugin_label}...")
+                        
+                        # Try connection with fallback plugin
+                        alt_conn = mysql.connector.connect(**alt_config)
+                        if alt_conn.is_connected():
+                            logger.info(f"✅ Connection established with auth_plugin={plugin_label}")
+                            return alt_conn
+                            
+                    except mysql.connector.Error as alt_err:
+                        last_error = alt_err
+                        logger.info(f"   ✗ Plugin {plugin_label} failed: {alt_err.errno} - {alt_err.msg}")
+                        continue
+                    except Exception as alt_err:
+                        last_error = alt_err
+                        logger.info(f"   ✗ Plugin {plugin_label} failed: {type(alt_err).__name__}: {alt_err}")
+                        continue
+                
+                # All fallback plugins exhausted; fall through to detailed error handling
+                log_mysql_error(f"❌ All authentication plugin fallbacks exhausted", level="ERROR")
+                log_mysql_error(f"   Original error: {err.msg}", level="ERROR")
             
             if err.errno == mysql.connector.errorcode.ER_ACCESS_DENIED_ERROR:
-                error_msg += "Access denied - Check username and password"
-                logger.error(error_msg)
+                log_mysql_error(f"❌ Access denied - Check username and password", level="ERROR")
+                log_mysql_error(f"   Error code: {err.errno}", level="ERROR")
+                log_mysql_error(f"   Error message: {err.msg}", level="ERROR")
+                log_mysql_error(f"   Attempted user: {DB_CONFIG.get('user')}@{DB_CONFIG.get('host')}", level="ERROR")
                 if show_dialog and attempt == max_retries - 1:
                     show_database_error_dialog(
                         "Database Access Denied",
@@ -582,67 +742,101 @@ def get_connection(max_retries=2, retry_delay=1, show_dialog=False):
                 # Don't retry for authentication errors
                 break
             elif err.errno == mysql.connector.errorcode.ER_BAD_DB_ERROR:
-                error_msg += f"Database '{DB_CONFIG['database']}' does not exist"
-                logger.error(error_msg)
+                log_mysql_error(f"❌ Database not found - '{DB_CONFIG['database']}' does not exist", level="ERROR")
+                log_mysql_error(f"   Error code: {err.errno}", level="ERROR")
+                log_mysql_error(f"   Error message: {err.msg}", level="ERROR")
+                log_mysql_error(f"   Attempted database: {DB_CONFIG.get('database')}", level="ERROR")
+                log_mysql_error(f"   Solution: Create the database or import winyfi.sql", level="ERROR")
                 if show_dialog and attempt == max_retries - 1:
                     show_database_error_dialog(
                         "Database Not Found",
-                        f"The database '{DB_CONFIG['database']}' does not exist.",
-                        f"Error {err.errno}: {err.msg}"
+                        f"The database '{DB_CONFIG['database']}' does not exist.\nCreate it or import winyfi.sql.",
+                        f"Error {err.errno}: {err.msg}\n\nDetailed log: mysql_connection_error.log"
                     )
                 # Don't retry for missing database
                 break
             elif err.errno == 2003:  # Can't connect to MySQL server
-                error_msg += "Cannot connect to MySQL server"
-                if show_dialog:
-                    logger.warning(error_msg)
+                log_mysql_error(f"❌ Cannot connect to MySQL server", level="ERROR")
+                log_mysql_error(f"   Error code: {err.errno}", level="ERROR")
+                log_mysql_error(f"   Error message: {err.msg}", level="ERROR")
+                log_mysql_error(f"   Target: {DB_CONFIG.get('host')}:{DB_CONFIG.get('port')}", level="ERROR")
+                log_mysql_error(f"   Possible causes:", level="ERROR")
+                log_mysql_error(f"     1. MySQL service is not running (check XAMPP)", level="ERROR")
+                log_mysql_error(f"     2. Firewall blocking connection", level="ERROR")
+                log_mysql_error(f"     3. Wrong host/port configuration", level="ERROR")
                 if show_dialog and attempt == max_retries - 1:
                     show_database_error_dialog(
                         "MySQL Server Unreachable",
-                        "Cannot connect to MySQL server. Some features may be limited.",
+                        "Cannot connect to MySQL server. Some features may be limited.\n\nStart MySQL/XAMPP and check mysql_connection_error.log for details.",
                         f"Error {err.errno}: {err.msg}"
                     )
             elif err.errno == 1045:  # Access denied
-                error_msg += "Access denied for user - Check MySQL credentials"
-                logger.error(error_msg)
+                log_mysql_error(f"❌ Access denied for MySQL user", level="ERROR")
+                log_mysql_error(f"   Error code: {err.errno}", level="ERROR")
+                log_mysql_error(f"   Error message: {err.msg}", level="ERROR")
+                log_mysql_error(f"   Attempted credentials: user={DB_CONFIG.get('user')}@{DB_CONFIG.get('host')}", level="ERROR")
+                log_mysql_error(f"   Solution: Verify db_config.json credentials match MySQL user")
                 if show_dialog and attempt == max_retries - 1:
                     show_database_error_dialog(
                         "Database Access Denied",
-                        "Access denied for MySQL user. Please check your credentials.",
+                        "Access denied for MySQL user. Check your credentials in db_config.json.\n\nSee mysql_connection_error.log for details.",
                         f"Error {err.errno}: {err.msg}"
                     )
                 break
+            elif err.errno == 2059:  # Authentication plugin error
+                log_mysql_error(f"❌ Authentication plugin configuration error", level="ERROR")
+                log_mysql_error(f"   Error code: {err.errno}", level="ERROR")
+                log_mysql_error(f"   Error message: {err.msg}", level="ERROR")
+                log_mysql_error(f"   MySQL user: {DB_CONFIG.get('user')}@{DB_CONFIG.get('host')}", level="ERROR")
+                log_mysql_error(f"   Solution:", level="ERROR")
+                log_mysql_error(f"     1. Ensure MySQL is running", level="ERROR")
+                log_mysql_error(f"     2. Check that user exists and credentials are correct", level="ERROR")
+                if show_dialog and attempt == max_retries - 1:
+                    show_database_error_dialog(
+                        "MySQL Configuration Issue",
+                        "Authentication plugin error. Check MySQL user configuration.\n\nDetailed log: mysql_connection_error.log",
+                        f"Error {err.errno}: {err.msg}"
+                    )
+                # Don't retry for auth plugin errors
+                break
             elif err.errno == 2006:  # MySQL server has gone away
-                error_msg += "MySQL server has gone away - Attempting reconnection"
-                logger.warning(error_msg)
+                log_mysql_error(f"⚠️  MySQL server has gone away - attempting reconnection", level="WARNING")
+                log_mysql_error(f"   Error code: {err.errno}", level="WARNING")
+                log_mysql_error(f"   Error message: {err.msg}", level="WARNING")
                 if show_dialog and attempt == max_retries - 1:
                     show_database_warning_dialog(
                         "MySQL Connection Lost",
-                        "MySQL server connection was lost. Please check your network connection."
+                        "MySQL connection was lost. Check your network and MySQL status."
                     )
             else:
-                error_msg += f"Error {err.errno}: {err.msg}"
-                logger.error(error_msg)
+                log_mysql_error(f"❌ Error {err.errno}: {err.msg}", level="ERROR")
+                log_mysql_error(f"   Exception type: {type(err).__name__}", level="ERROR")
                 if show_dialog and attempt == max_retries - 1:
                     show_database_error_dialog(
                         "Database Connection Error",
-                        "An unexpected database error occurred.",
+                        "An unexpected database error occurred.\n\nSee mysql_connection_error.log for details.",
                         f"Error {err.errno}: {err.msg}"
                     )
             
             # Wait before retrying (except on last attempt)
             if attempt < max_retries - 1:
-                logger.info(f"Retrying in {retry_delay} seconds...")
+                logger.info(f"   Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
                 
         except Exception as e:
             last_error = e
-            logger.error(f"Unexpected error on attempt {attempt + 1}/{max_retries}: {str(e)}")
+            log_mysql_error(f"Unexpected error on attempt {attempt + 1}/{max_retries}: {type(e).__name__}", level="ERROR")
+            log_mysql_error(f"   Message: {str(e)}", level="ERROR")
+            log_mysql_error(f"   Traceback:", level="ERROR")
+            tb_lines = traceback.format_exc().split('\n')
+            for line in tb_lines:
+                if line.strip():
+                    log_mysql_error(f"     {line}", level="ERROR")
             
             if show_dialog and attempt == max_retries - 1:
                 show_database_error_dialog(
                     "Unexpected Database Error",
-                    "An unexpected error occurred while connecting to the database.",
+                    "An unexpected error occurred while connecting.\n\nSee mysql_connection_error.log for details.",
                     str(e)
                 )
             
@@ -651,10 +845,22 @@ def get_connection(max_retries=2, retry_delay=1, show_dialog=False):
     
     # If we get here, all attempts failed
     error_details = str(last_error) if last_error else "Unknown error"
+    error_log_path = get_mysql_error_log_path()
+    log_mysql_error(f"\n{'='*70}", level="ERROR")
+    log_mysql_error(f"❌ FAILED: All {max_retries} connection attempts failed", level="ERROR")
+    log_mysql_error(f"   Last error: {error_details}")
+    log_mysql_error(f"   Log file: {error_log_path}")
+    log_mysql_error(f"{'='*70}")
+    
     raise DatabaseConnectionError(
-        f"Failed to connect to MySQL after {max_retries} attempts. "
-        f"Last error: {error_details}. "
-        f"Please ensure MySQL server is running and accessible."
+        f"Failed to connect to MySQL after {max_retries} attempts.\n\n"
+        f"Error: {error_details}\n\n"
+        f"Please check the error log file:\n"
+        f"mysql_connection_error.log\n\n"
+        f"Common solutions:\n"
+        f"1. Ensure MySQL/XAMPP is running\n"
+        f"2. Check db_config.json credentials\n"
+        f"3. Create the 'winyfi' database if missing"
     )
 
 def execute_with_error_handling(operation_name, operation_func, show_dialog=True, *args, **kwargs):

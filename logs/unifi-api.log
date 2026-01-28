@@ -234,3 +234,538 @@ Starting UniFi API Server
 ============================================================
  * Serving Flask app 'unifi_api'
  * Debug mode: off
+
+============================================================
+Starting UniFi API at 2026-01-12 11:18:55
+============================================================
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+
+================================================================================
+[2026-01-12 11:22:22] SUCCESS ⚡ STARTING UNIFI API
+[2026-01-12 11:22:22] INFO    📋 Script: server/run_unifi_api.py
+[2026-01-12 11:22:22] INFO    🔌 Port: 5001
+[2026-01-12 11:22:22] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:22:22] SUCCESS ✅ UNIFI API PROCESS STARTED (PID: 4780)
+[2026-01-12 11:22:22] INFO    ⏳ Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-12 11:22:26] SUCCESS 🟢 UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:22:26] INFO    🌐 Health endpoint responding at http://localhost:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:28:58] SUCCESS ⚡ STARTING UNIFI API
+[2026-01-12 11:28:58] INFO    📋 Script: server/run_unifi_api.py
+[2026-01-12 11:28:58] INFO    🔌 Port: 5001
+[2026-01-12 11:28:58] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:28:58] SUCCESS ✅ UNIFI API PROCESS STARTED (PID: 14912)
+[2026-01-12 11:28:58] INFO    ⏳ Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-12 11:29:03] SUCCESS 🟢 UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:29:03] INFO    🌐 Health endpoint responding at http://localhost:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:33:30] SUCCESS ⚡ STARTING UNIFI API
+[2026-01-12 11:33:30] INFO    📋 Script: server/run_unifi_api.py
+[2026-01-12 11:33:30] INFO    🔌 Port: 5001
+[2026-01-12 11:33:30] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:33:30] SUCCESS ✅ UNIFI API PROCESS STARTED (PID: 5236)
+[2026-01-12 11:33:30] INFO    ⏳ Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-12 11:33:34] SUCCESS 🟢 UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:33:34] INFO    🌐 Health endpoint responding at http://localhost:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:36:49] SUCCESS ⚡ STARTING UNIFI API
+[2026-01-12 11:36:49] INFO    📋 Script: server/run_unifi_api.py
+[2026-01-12 11:36:49] INFO    🔌 Port: 5001
+[2026-01-12 11:36:49] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:36:49] SUCCESS ✅ UNIFI API PROCESS STARTED (PID: 12852)
+[2026-01-12 11:36:49] INFO    ⏳ Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-12 11:36:53] SUCCESS 🟢 UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:36:53] INFO    🌐 Health endpoint responding at http://localhost:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:37:23] SUCCESS ⚡ STARTING UNIFI API
+[2026-01-12 11:37:23] INFO    📋 Script: server/run_unifi_api.py
+[2026-01-12 11:37:23] INFO    🔌 Port: 5001
+[2026-01-12 11:37:23] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:37:23] SUCCESS ✅ UNIFI API PROCESS STARTED (PID: 14352)
+[2026-01-12 11:37:23] INFO    ⏳ Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-12 11:37:27] SUCCESS 🟢 UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:37:27] INFO    🌐 Health endpoint responding at http://localhost:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:41:20] SUCCESS ⚡ STARTING UNIFI API
+[2026-01-12 11:41:20] INFO    📋 Script: server/run_unifi_api.py
+[2026-01-12 11:41:20] INFO    🔌 Port: 5001
+[2026-01-12 11:41:20] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:41:20] SUCCESS ✅ UNIFI API PROCESS STARTED (PID: 14488)
+[2026-01-12 11:41:20] INFO    ⏳ Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-12 11:41:24] SUCCESS 🟢 UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:41:24] INFO    🌐 Health endpoint responding at http://localhost:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:45:06] SUCCESS ⚡ STARTING UNIFI API
+[2026-01-12 11:45:06] INFO    📋 Script: server/run_unifi_api.py
+[2026-01-12 11:45:06] INFO    🔌 Port: 5001
+[2026-01-12 11:45:06] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-12 11:45:06] SUCCESS ✅ UNIFI API PROCESS STARTED (PID: 5272)
+[2026-01-12 11:45:06] INFO    ⏳ Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-12 11:45:10] SUCCESS 🟢 UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-12 11:45:10] INFO    🌐 Health endpoint responding at http://localhost:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-12 11:45:13] WARNING ⚠️ SHUTDOWN REQUESTED FOR UNIFI API
+[2026-01-12 11:45:13] INFO    🛑 Terminating process (PID: 5272)...
+[2026-01-12 11:45:13] STOPPED 🔴 UNIFI API TERMINATED GRACEFULLY
+[2026-01-12 11:45:13] INFO    ✅ Service shutdown complete
+================================================================================
+
+
+================================================================================
+[2026-01-13 17:21:21] SUCCESS ⚡ STARTING UNIFI API
+[2026-01-13 17:21:21] INFO    📋 Script: server\run_unifi_api.py
+[2026-01-13 17:21:21] INFO    🔌 Port: 5001
+[2026-01-13 17:21:21] INFO    🔍 Process ID: Starting...
+================================================================================
+[2026-01-13 17:21:21] SUCCESS ✅ UNIFI API PROCESS STARTED (PID: 13732)
+[2026-01-13 17:21:21] INFO    ⏳ Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-13 17:21:24] SUCCESS 🟢 UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-13 17:21:24] INFO    🌐 Health endpoint responding at http://192.168.1.15:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-13 17:21:27] WARNING ⚠️ SHUTDOWN REQUESTED FOR UNIFI API
+[2026-01-13 17:21:27] INFO    🛑 Terminating process (PID: 13732)...
+[2026-01-13 17:21:27] STOPPED 🔴 UNIFI API TERMINATED GRACEFULLY
+[2026-01-13 17:21:27] INFO    ✅ Service shutdown complete
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:33:35] SUCCESS [START] STARTING UNIFI API
+[2026-01-17 22:33:35] INFO    [SCRIPT] Script: server\run_unifi_api.py
+[2026-01-17 22:33:35] INFO    [PORT] Port: 5001
+[2026-01-17 22:33:35] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:33:35] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:33:35] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-17 22:33:35] SUCCESS [STARTED] UNIFI API PROCESS STARTED (PID: 16108)
+[2026-01-17 22:33:35] INFO    [WAIT] Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+
+[ERROR] UniFi API crashed during startup (exit code: 1)
+
+================================================================================
+[2026-01-17 22:33:53] SUCCESS [START] STARTING UNIFI API
+[2026-01-17 22:33:53] INFO    [SCRIPT] Script: server\run_unifi_api.py
+[2026-01-17 22:33:53] INFO    [PORT] Port: 5001
+[2026-01-17 22:33:53] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:33:53] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:33:53] INFO    [PID] Process ID: Starting...
+================================================================================
+Last stderr: KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:53] SUCCESS [STARTED] UNIFI API PROCESS STARTED (PID: 14460)
+[2026-01-17 22:33:53] INFO    [WAIT] Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+
+[ERROR] UniFi API crashed during startup (exit code: 1)
+
+================================================================================
+[2026-01-17 22:45:17] SUCCESS [START] STARTING UNIFI API
+[2026-01-17 22:45:17] INFO    [SCRIPT] Script: server\run_unifi_api.py
+[2026-01-17 22:45:17] INFO    [PORT] Port: 5001
+[2026-01-17 22:45:17] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:45:17] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:45:17] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-17 22:45:17] SUCCESS [STARTED] UNIFI API PROCESS STARTED (PID: 15852)
+[2026-01-17 22:45:17] INFO    [WAIT] Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+
+[ERROR] UniFi API crashed during startup (exit code: 1)
+
+================================================================================
+[2026-01-17 22:46:06] SUCCESS [START] STARTING UNIFI API
+[2026-01-17 22:46:06] INFO    [SCRIPT] Script: server\run_unifi_api.py
+[2026-01-17 22:46:06] INFO    [PORT] Port: 5001
+[2026-01-17 22:46:06] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:46:06] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:46:06] INFO    [PID] Process ID: Starting...
+================================================================================
+Last stderr: KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:46:06] SUCCESS [STARTED] UNIFI API PROCESS STARTED (PID: 3480)
+[2026-01-17 22:46:06] INFO    [WAIT] Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+
+[ERROR] UniFi API crashed during startup (exit code: 1)
+
+================================================================================
+[2026-01-17 22:47:02] SUCCESS [START] STARTING UNIFI API
+[2026-01-17 22:47:02] INFO    [SCRIPT] Script: server\run_unifi_api.py
+[2026-01-17 22:47:02] INFO    [PORT] Port: 5001
+[2026-01-17 22:47:02] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:47:02] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:47:02] INFO    [PID] Process ID: Starting...
+================================================================================
+Last stderr: Traceback (most recent call last):
+[2026-01-17 22:47:02] SUCCESS [STARTED] UNIFI API PROCESS STARTED (PID: 12592)
+[2026-01-17 22:47:02] INFO    [WAIT] Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+
+[ERROR] UniFi API crashed during startup (exit code: 1)
+
+================================================================================
+[2026-01-17 22:53:18] SUCCESS [START] STARTING UNIFI API
+[2026-01-17 22:53:18] INFO    [SCRIPT] Script: server\run_unifi_api.py
+[2026-01-17 22:53:18] INFO    [PORT] Port: 5001
+[2026-01-17 22:53:18] INFO    [PYTHON] Python: C:\Users\Consigna\Desktop\Winyfi\Winyfi\.venv\Scripts\python.exe
+[2026-01-17 22:53:18] INFO    [CWD] Working Dir: C:\Users\Consigna\Desktop\Winyfi\Winyfi
+[2026-01-17 22:53:18] INFO    [PID] Process ID: Starting...
+================================================================================
+[2026-01-17 22:53:18] SUCCESS [STARTED] UNIFI API PROCESS STARTED (PID: 8460)
+[2026-01-17 22:53:18] INFO    [WAIT] Waiting for service to be ready...
+
+======================================================================
+[UniFi API] Starting UniFi API Server
+======================================================================
+  Controller URL: https://127.0.0.1:8443
+  Site: default
+  SSL Verify: False
+  Flask Debug: False
+  Auth: disabled | API keys loaded: 0 | Admin keys: 0
+  Allowed sites: ['default']
+  Mock enabled: False
+======================================================================
+
+[UniFi API] Performing startup connectivity check...
+[WARN] Controller at 127.0.0.1:8443 is NOT reachable
+  This may be normal if controller is remote or not started yet
+
+============================================================
+Starting UniFi API Server
+============================================================
+ * Serving Flask app 'unifi_api'
+ * Debug mode: off
+[2026-01-17 22:53:21] SUCCESS [READY] UNIFI API IS READY AND ACCEPTING CONNECTIONS
+[2026-01-17 22:53:21] INFO    [HEALTH] Health endpoint responding at http://192.168.1.15:5001/api/health
+================================================================================
+
+
+================================================================================
+[2026-01-17 22:53:28] WARNING [SHUTDOWN] SHUTDOWN REQUESTED FOR UNIFI API
+[2026-01-17 22:53:28] INFO    [STOP] Terminating process (PID: 8460)...
+[2026-01-17 22:53:28] STOPPED [DONE] UNIFI API TERMINATED GRACEFULLY
+[2026-01-17 22:53:28] INFO    [SUCCESS] Service shutdown complete
+================================================================================
+

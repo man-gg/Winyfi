@@ -1,0 +1,55 @@
+[2026-01-17 22:33:38,497] ERROR - [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:38] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:38,500] ERROR - [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:33:38] [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:33:38,516] ERROR - [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:38] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:38,791] ERROR - [ERROR] UniFi API process died during startup (exit code: 1)
+[2026-01-17 22:33:38,792] ERROR - [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:33:38] [unifi_api] [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:33:38,844] ERROR - Last error: KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:50,897] ERROR - [ERROR] UniFi API crashed with exit code 1
+[2026-01-17 22:33:56,698] ERROR - [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:56] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:56,728] ERROR - [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:33:56] [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:33:57,008] ERROR - [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:57] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:57,035] ERROR - [ERROR] UniFi API process died during startup (exit code: 1)
+[2026-01-17 22:33:57,036] ERROR - [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:33:57] [unifi_api] [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:33:57,096] ERROR - Last error: KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:33:58,183] ERROR - [ERROR] UniFi API crashed with exit code 1
+[2026-01-17 22:45:19,946] ERROR - [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:45:19] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:45:19,976] ERROR - [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:45:19] [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:45:20,292] ERROR - [ERROR] UniFi API process died during startup (exit code: 1)
+[2026-01-17 22:45:20,292] ERROR - [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:45:20] [unifi_api] [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:45:20,362] ERROR - Last error: KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:45:20,369] ERROR - [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:45:20] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:45:21,805] ERROR - [ERROR] UniFi API crashed with exit code 1
+[2026-01-17 22:46:09,780] ERROR - [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:46:09] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:46:09,918] ERROR - [ERROR] UniFi API process died during startup (exit code: 1)
+[2026-01-17 22:46:09,918] ERROR - [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:46:09] [unifi_api] [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:46:10,099] ERROR - Last error: Traceback (most recent call last):
+[2026-01-17 22:46:10,124] ERROR - [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:46:10] [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:46:12,658] ERROR - [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:46:12] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:46:54,499] ERROR - [ERROR] UniFi API crashed with exit code 1
+[2026-01-17 22:47:05,849] ERROR - [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:47:05] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:47:05,857] ERROR - [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:47:05] [unifi_api] Traceback (most recent call last):
+[2026-01-17 22:47:05,889] ERROR - [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:47:05] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:47:06,220] ERROR - [ERROR] UniFi API process died during startup (exit code: 1)
+[2026-01-17 22:47:06,221] ERROR - [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:47:06] [unifi_api] [ERROR] UniFi API crashed during startup (exit code: 1)
+[2026-01-17 22:47:06,284] ERROR - Last error: KeyError: 'WERKZEUG_SERVER_FD'
+[2026-01-17 22:47:22,677] ERROR - [ERROR] UniFi API crashed with exit code 1

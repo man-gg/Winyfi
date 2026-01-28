@@ -1,0 +1,57 @@
+2026-01-17 22:17:53,011 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\main.py", line 219, in <module>
+    from dashboard import AdminDashboard
+ImportError: cannot import name 'AdminDashboard' from 'dashboard' (C:\Users\Consigna\Desktop\Winyfi\Winyfi\dashboard.py)
+
+2026-01-17 22:22:57,247 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\main.py", line 222, in <module>
+    dashboard = Dashboard(root)
+TypeError: Dashboard.__init__() missing 1 required positional argument: 'current_user'
+
+2026-01-17 22:33:38,497 ERROR [service_manager] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:33:38,500 ERROR [service_manager] [unifi_api] Traceback (most recent call last):
+2026-01-17 22:33:38,516 ERROR [service_manager] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:33:38,791 ERROR [service_manager] [ERROR] UniFi API process died during startup (exit code: 1)
+2026-01-17 22:33:38,792 ERROR [service_manager] [ERROR] UniFi API crashed during startup (exit code: 1)
+2026-01-17 22:33:38,844 ERROR [service_manager] Last error: KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:33:50,897 ERROR [service_manager] [ERROR] UniFi API crashed with exit code 1
+2026-01-17 22:33:56,698 ERROR [service_manager] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:33:56,728 ERROR [service_manager] [unifi_api] Traceback (most recent call last):
+2026-01-17 22:33:57,008 ERROR [service_manager] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:33:57,035 ERROR [service_manager] [ERROR] UniFi API process died during startup (exit code: 1)
+2026-01-17 22:33:57,036 ERROR [service_manager] [ERROR] UniFi API crashed during startup (exit code: 1)
+2026-01-17 22:33:57,096 ERROR [service_manager] Last error: KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:33:58,183 ERROR [service_manager] [ERROR] UniFi API crashed with exit code 1
+2026-01-17 22:45:19,946 ERROR [service_manager] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:45:19,976 ERROR [service_manager] [unifi_api] Traceback (most recent call last):
+2026-01-17 22:45:20,292 ERROR [service_manager] [ERROR] UniFi API process died during startup (exit code: 1)
+2026-01-17 22:45:20,292 ERROR [service_manager] [ERROR] UniFi API crashed during startup (exit code: 1)
+2026-01-17 22:45:20,362 ERROR [service_manager] Last error: KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:45:20,369 ERROR [service_manager] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:45:21,805 ERROR [service_manager] [ERROR] UniFi API crashed with exit code 1
+2026-01-17 22:46:09,780 ERROR [service_manager] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:46:09,918 ERROR [service_manager] [ERROR] UniFi API process died during startup (exit code: 1)
+2026-01-17 22:46:09,918 ERROR [service_manager] [ERROR] UniFi API crashed during startup (exit code: 1)
+2026-01-17 22:46:10,099 ERROR [service_manager] Last error: Traceback (most recent call last):
+2026-01-17 22:46:10,124 ERROR [service_manager] [unifi_api] Traceback (most recent call last):
+2026-01-17 22:46:12,658 ERROR [service_manager] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:46:54,499 ERROR [service_manager] [ERROR] UniFi API crashed with exit code 1
+2026-01-17 22:47:05,849 ERROR [service_manager] [unifi_api] ERROR starting UniFi API: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:47:05,857 ERROR [service_manager] [unifi_api] Traceback (most recent call last):
+2026-01-17 22:47:05,889 ERROR [service_manager] [unifi_api] KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:47:06,220 ERROR [service_manager] [ERROR] UniFi API process died during startup (exit code: 1)
+2026-01-17 22:47:06,221 ERROR [service_manager] [ERROR] UniFi API crashed during startup (exit code: 1)
+2026-01-17 22:47:06,284 ERROR [service_manager] Last error: KeyError: 'WERKZEUG_SERVER_FD'
+2026-01-17 22:47:22,677 ERROR [service_manager] [ERROR] UniFi API crashed with exit code 1
+2026-01-20 11:19:52,751 ERROR [winyfi] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Consigna\Desktop\Winyfi\Winyfi\main.py", line 230, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\Consigna\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
+

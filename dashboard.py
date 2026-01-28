@@ -7,7 +7,7 @@ import csv
 import requests
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
-from tkinter import messagebox, Toplevel, Menu, filedialog, ttk, simpledialog
+from tkinter import messagebox, Toplevel, Menu, filedialog, ttk, simpledialog, Text
 import time as _perf_time  # for loader timing (perf counter)
 import tkinter as tk
 from ttkbootstrap.dialogs import DatePickerDialog
@@ -48,6 +48,17 @@ from ticket_utils import fetch_srfs, create_srf
 import itertools
 from print_utils import print_srf_form
 import numpy as np
+
+# Safe print function that handles Unicode encoding errors on Windows
+def safe_print(message):
+    """Print with fallback for Unicode encoding errors on Windows console."""
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        # Fall back to ASCII-safe version (remove emojis and special chars)
+        import re
+        ascii_message = re.sub(r'[^\x00-\x7F]+', '?', str(message))
+        print(ascii_message)
 from matplotlib.ticker import MaxNLocator
 import mplcursors
 
@@ -74,6 +85,22 @@ from resource_utils import get_resource_path, ensure_directory, resource_exists
 from service_manager import get_service_manager
 import logging
 logger = logging.getLogger(__name__)
+
+# Safe emoji printing for Windows console compatibility
+def safe_emoji_print(text):
+    """Print text with emoji, safely handling Unicode encoding errors."""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        # Fallback: remove emoji and print plain text
+        import re
+        # Remove emoji characters
+        plain_text = re.sub(r'[\U0001F300-\U0001F9FF]', '', text)
+        try:
+            print(plain_text)
+        except:
+            # Last resort: just print without any special chars
+            pass
 
 
 # Directory for router images
@@ -695,7 +722,7 @@ class Dashboard:
             
             if response.status_code == 200:
                 devices = response.json()
-                print(f"📡 Found {len(devices)} UniFi device(s) from API")
+                safe_print(f"📡 Found {len(devices)} UniFi device(s) from API")
                 
                 # Get existing MAC addresses from database to detect new devices
                 try:
@@ -706,7 +733,7 @@ class Dashboard:
                     cursor.close()
                     conn.close()
                 except Exception as db_error:
-                    print(f"⚠️ Database error while checking existing UniFi devices: {str(db_error)}")
+                    safe_print(f"⚠️ Database error while checking existing UniFi devices: {str(db_error)}")
                     existing_macs = set()
                 
                 # Transform UniFi devices to match router structure
@@ -730,7 +757,7 @@ class Dashboard:
                         
                         if is_new_device and router_id:
                             new_devices_count += 1
-                            print(f"✨ New UniFi device discovered: {name} (MAC: {mac}, IP: {ip})")
+                            safe_print(f"✨ New UniFi device discovered: {name} (MAC: {mac}, IP: {ip})")
                         
                         # Persist current throughput snapshot to bandwidth_logs
                         # UniFi API throughput units may vary (bps, Kbps, or Mbps). Normalize to Mbps.
@@ -776,45 +803,45 @@ class Dashboard:
                             'image_path': None
                         })
                     except Exception as device_error:
-                        print(f"⚠️ Error processing UniFi device {device.get('name', 'Unknown')}: {str(device_error)}")
+                        safe_print(f"⚠️ Error processing UniFi device {device.get('name', 'Unknown')}: {str(device_error)}")
                         continue
                 
                 if new_devices_count > 0:
-                    print(f"🎉 Added {new_devices_count} new UniFi device(s) to the database and routers tab")
+                    safe_print(f"🎉 Added {new_devices_count} new UniFi device(s) to the database and routers tab")
                 
                 return transformed
             else:
                 # API returned non-200 status
                 if not hasattr(self, '_unifi_api_error_logged'):
-                    print(f"⚠️ UniFi API returned status code: {response.status_code}")
+                    safe_print(f"⚠️ UniFi API returned status code: {response.status_code}")
                     self._unifi_api_error_logged = True
                 return []
                 
         except ConnectionError:
             # Connection refused or network unreachable - log once to avoid spam
             if not hasattr(self, '_unifi_connection_error_logged'):
-                print("⚠️ UniFi API server is not reachable (connection refused)")
+                safe_print("⚠️ UniFi API server is not reachable (connection refused)")
                 self._unifi_connection_error_logged = True
             return []
             
         except Timeout:
             # Request timed out - log once to avoid spam
             if not hasattr(self, '_unifi_timeout_logged'):
-                print("⚠️ UniFi API request timed out (server may be slow or down)")
+                safe_print("⚠️ UniFi API request timed out (server may be slow or down)")
                 self._unifi_timeout_logged = True
             return []
             
         except RequestException as e:
             # Other requests-related errors
             if not hasattr(self, '_unifi_request_error_logged'):
-                print(f"⚠️ UniFi API request error: {str(e)}")
+                safe_print(f"⚠️ UniFi API request error: {str(e)}")
                 self._unifi_request_error_logged = True
             return []
             
         except Exception as e:
             # Catch-all for any other unexpected errors
             if not hasattr(self, '_unifi_general_error_logged'):
-                print(f"⚠️ Unexpected error fetching UniFi devices: {str(e)}")
+                safe_print(f"⚠️ Unexpected error fetching UniFi devices: {str(e)}")
                 self._unifi_general_error_logged = True
             return []
     
@@ -839,10 +866,10 @@ class Dashboard:
         """Toggle auto-refresh for routers tab"""
         if self.routers_auto_refresh_var.get():
             self.start_routers_auto_refresh()
-            print("✅ Routers auto-refresh enabled")
+            safe_print("[SUCCESS] Routers auto-refresh enabled")
         else:
             self.stop_routers_auto_refresh()
-            print("⏸️ Routers auto-refresh paused")
+            safe_print("[INFO] Routers auto-refresh paused")
     
     def start_routers_auto_refresh(self):
         """Start auto-refresh for routers tab with smart updates"""
@@ -956,20 +983,20 @@ class Dashboard:
                 update_text += f" ({reason})"
             self.routers_last_update_label.config(text=update_text)
             
-            print(f"🔄 Routers refreshed at {timestamp}" + (f" - {reason}" if reason else ""))
+            safe_emoji_print(f"[REFRESH] Routers refreshed at {timestamp}" + (f" - {reason}" if reason else ""))
         except Exception as e:
-            print(f"⚠️ Error refreshing routers UI: {str(e)}")
+            safe_emoji_print(f"[WARNING] Error refreshing routers UI: {str(e)}")
         finally:
             self.is_refreshing_routers = False
     
     def manual_refresh_routers(self):
         """Manual refresh triggered by button click"""
         if self.is_refreshing_routers:
-            print("⏳ Refresh already in progress...")
+            safe_emoji_print("[INFO] Refresh already in progress...")
             return
         
         # Temporarily disable button to prevent spam
-        self.refresh_routers_btn.config(state="disabled", text="⏳ Refreshing...")
+        self.refresh_routers_btn.config(state="disabled", text="[REFRESHING]")
         
         def do_refresh():
             try:
@@ -3171,7 +3198,7 @@ class Dashboard:
                         except Exception as e:
                             print(f"Error saving client {mac}: {e}")
                     
-                    print(f"✅ Scanned and saved {len(saved_clients)} clients for router {router.get('name')}")
+                    safe_emoji_print(f"[SUCCESS] Scanned and saved {len(saved_clients)} clients for router {router.get('name')}")
                     
                     # Update UI in main thread
                     self.root.after(0, lambda: update_ui_with_clients(saved_clients))
@@ -4638,7 +4665,7 @@ class Dashboard:
                         
                         # Debug output
                         status_text = "Online" if new else "Offline"
-                        print(f"🔔 Router status change: {router_name} ({router_ip}) is now {status_text}")
+                        safe_emoji_print(f"[ALERT] Router status change: {router_name} ({router_ip}) is now {status_text}")
                         
                         # Create notification in main thread to ensure toast notifications work
                         if self.app_running:
@@ -4751,7 +4778,7 @@ class Dashboard:
 
 
     def _background_status_updater(self):
-        print("🔄 Starting router status monitoring...")
+        safe_print("[INFO] Starting router status monitoring...")
         while self.app_running:
             try:
                 with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -4795,7 +4822,7 @@ class Dashboard:
                                     
                                     # Debug output
                                     status_text = "Online" if new else "Offline"
-                                    print(f"🔔 Router status change: {router_name} ({router_ip}) is now {status_text}")
+                                    safe_emoji_print(f"[ALERT] Router status change: {router_name} ({router_ip}) is now {status_text}")
                                     
                                     # Create notification in main thread to ensure toast notifications work
                                     if self.app_running:
@@ -11887,11 +11914,11 @@ Type: {values[11]}
                 self.loop_detection_history = get_loop_detections_history(100)
                 
                 # Print status
-                print(f"✅ Router offline loop detection complete: status={status}, severity={max_severity:.2f}, offenders={len(offenders)}")
+                safe_emoji_print(f"[SUCCESS] Router offline loop detection complete: status={status}, severity={max_severity:.2f}, offenders={len(offenders)}")
                 
             except Exception as e:
                 import traceback
-                print(f"❌ Router offline loop detection error: {e}")
+                safe_emoji_print(f"[ERROR] Router offline loop detection error: {e}")
                 traceback.print_exc()
         
         # Run in background thread
@@ -11959,7 +11986,7 @@ Type: {values[11]}
 
         except Exception as e:
             import traceback
-            print(f"❌ Loop detection error: {e}")
+            safe_emoji_print(f"[ERROR] Loop detection error: {e}")
             traceback.print_exc()
             modal.after(0, self._finish_loop_scan_lightweight, None, None, None, None, None, None, str(e))
 
@@ -12267,9 +12294,9 @@ Type: {values[11]}
             self.loop_detection_stats = get_loop_detection_stats()
             self._load_loop_detection_history_modal()
             self._update_loop_status_display_modal(None)
-            print("✅ Loop detection history refreshed from database")
+            safe_print("[SUCCESS] Loop detection history refreshed from database")
         except Exception as e:
-            print(f"❌ Error refreshing history: {e}")
+            safe_print(f"[ERROR] Error refreshing history: {e}")
 
     def clear_loop_results(self):
         """Clear the loop detection results."""
@@ -12295,11 +12322,11 @@ Type: {values[11]}
                     # Modal might have been destroyed, reset flag
                     self.client_modal_is_open = False
                     self.client_modal = None
-                    print("⚠️ Modal was destroyed, resetting flag")
+                    safe_print("[WARNING] Modal was destroyed, resetting flag")
             return
         
         # Set flag immediately to prevent multiple openings
-        print("✅ Opening new client modal")
+        safe_print("[SUCCESS] Opening new client modal")
         self.client_modal_is_open = True
         
         modal = tb.Toplevel(self.root)
@@ -12541,7 +12568,7 @@ Type: {values[11]}
             self.update_client_display()
             
         except Exception as e:
-            print(f"❌ Error loading existing clients: {e}")
+            safe_emoji_print(f"[ERROR] Error loading existing clients: {e}")
 
     def setup_client_context_menu(self):
         """Setup right-click context menu for client tree."""
@@ -13504,7 +13531,7 @@ Type: {values[11]}
         # Clear data in background to not block UI
         self.root.after(100, self._cleanup_client_data)
         
-        print("✅ Client modal closed instantly")
+        safe_print("[SUCCESS] Client modal closed instantly")
     
     def _cleanup_client_data(self):
         """Background cleanup of client data."""
@@ -13529,14 +13556,14 @@ Type: {values[11]}
             self.loop_detection_running = True
             self.loop_detection_thread = threading.Thread(target=self._run_loop_detection, daemon=True)
             self.loop_detection_thread.start()
-            print("🔄 Automatic loop detection started")
+            safe_print("[INFO] Automatic loop detection started")
 
     def stop_loop_detection(self):
         """Stop automatic loop detection."""
         self.loop_detection_running = False
         if self.loop_detection_thread:
             self.loop_detection_thread = None
-        print("⏹️ Automatic loop detection stopped")
+        safe_print("⏹️ Automatic loop detection stopped")
 
     def _run_loop_detection(self):
         """Background loop detection thread using the same working method as manual detection."""
@@ -13547,7 +13574,7 @@ Type: {values[11]}
                 
                 # Get the primary network interface (same as manual detection)
                 iface = get_default_iface()
-                print(f"🔄 Automatic loop detection scanning interface: {iface}")
+                safe_emoji_print(f"[INFO] Automatic loop detection scanning interface: {iface}")
                 
                 # Run detection on primary interface with advanced engine (same as manual)
                 total_packets, offenders, stats, advanced_metrics = detect_loops(
@@ -13603,9 +13630,9 @@ Type: {values[11]}
                 interface_str = iface
                 
                 # Enhanced logging
-                print(f"📊 Automatic Detection: packets={total_packets}, offenders={len(offenders)}, severity={severity_score:.1f}, status={status}")
+                safe_emoji_print(f"[STATS] Automatic Detection: packets={total_packets}, offenders={len(offenders)}, severity={severity_score:.1f}, status={status}")
                 if offenders:
-                    print(f"   Offending MACs: {', '.join(offenders[:3])}")
+                    safe_emoji_print(f"   Offending MACs: {', '.join(offenders[:3])}")
                 
                 # Save to database with efficiency metrics
                 from db import save_loop_detection
@@ -13647,11 +13674,11 @@ Type: {values[11]}
                 
                 # Print status
                 if status == "loop_detected":
-                    print(f"⚠️ LOOP DETECTED! Severity: {severity_score:.2f}, Offenders: {len(offenders)}")
+                    safe_emoji_print(f"[WARNING] LOOP DETECTED! Severity: {severity_score:.2f}, Offenders: {len(offenders)}")
                 elif status == "suspicious":
-                    print(f"🔍 Suspicious activity detected. Severity: {severity_score:.2f}")
+                    safe_emoji_print(f"[INFO] Suspicious activity detected. Severity: {severity_score:.2f}")
                 else:
-                    print(f"✅ Network clean. Severity: {severity_score:.2f}")
+                    safe_emoji_print(f"[SUCCESS] Network clean. Severity: {severity_score:.2f}")
                 
                 # Create detection record for UI
                 detection_record = {
@@ -13677,12 +13704,12 @@ Type: {values[11]}
                 
             except Exception as e:
                 import traceback
-                print(f"❌ Automatic loop detection error: {e}")
+                safe_emoji_print(f"[ERROR] Automatic loop detection error: {e}")
                 traceback.print_exc()
             
             # Wait for next interval (ensure this always happens)
             if self.loop_detection_running and self.app_running:
-                print(f"⏳ Waiting {self.loop_detection_interval // 60} minutes until next automatic scan...")
+                safe_emoji_print(f"[INFO] Waiting {self.loop_detection_interval // 60} minutes until next automatic scan...")
                 time.sleep(self.loop_detection_interval)
 
     def _update_loop_detection_ui(self, detection_record):
@@ -13742,7 +13769,7 @@ Type: {values[11]}
     def set_loop_detection_interval(self, interval_minutes):
         """Set loop detection interval in minutes."""
         self.loop_detection_interval = interval_minutes * 60
-        print(f"🔄 Loop detection interval set to {interval_minutes} minutes")
+        safe_emoji_print(f"[INFO] Loop detection interval set to {interval_minutes} minutes")
 
     def get_loop_detection_history(self):
         """Get loop detection history."""
@@ -13775,11 +13802,11 @@ Type: {values[11]}
                         'duration': record['duration']
                     })
             
-            print(f"📊 Loop detection history exported to {filename}")
+            safe_emoji_print(f"[SUCCESS] Loop detection history exported to {filename}")
             return filename
             
         except Exception as e:
-            print(f"❌ Error exporting history: {e}")
+            safe_emoji_print(f"[ERROR] Error exporting history: {e}")
             return None
 
     def show_notifications_panel(self):
@@ -13837,19 +13864,19 @@ Type: {values[11]}
             print(f"Error opening activity log: {e}")
     
     def show_service_manager(self):
-        """Show the Service Manager window to control API services."""
-        # Create service manager window
+        """Show the Service Manager window to control API services with real-time log monitoring."""
+        # Create service manager window (wider to accommodate logs)
         service_window = Toplevel(self.root)
-        service_window.title("⚙️ Service Manager")
-        service_window.geometry("650x500")
+        service_window.title("⚙️ Service Manager with Live Logs")
+        service_window.geometry("1400x800")
         service_window.resizable(True, True)
-        service_window.minsize(600, 450)
+        service_window.minsize(1200, 600)
         
         # Center the window
         service_window.update_idletasks()
-        x = (service_window.winfo_screenwidth() // 2) - (650 // 2)
-        y = (service_window.winfo_screenheight() // 2) - (500 // 2)
-        service_window.geometry(f"650x500+{x}+{y}")
+        x = (service_window.winfo_screenwidth() // 2) - (1400 // 2)
+        y = (service_window.winfo_screenheight() // 2) - (800 // 2)
+        service_window.geometry(f"1400x800+{x}+{y}")
         
         # Get service manager instance
         service_mgr = get_service_manager()
@@ -13860,7 +13887,7 @@ Type: {values[11]}
         
         title_label = tb.Label(
             header_frame,
-            text="⚙️ API Service Manager",
+            text="⚙️ API Service Manager with Real-Time Logs",
             font=("Segoe UI", 16, "bold"),
             bootstyle="inverse-primary"
         )
@@ -13868,15 +13895,15 @@ Type: {values[11]}
         
         subtitle_label = tb.Label(
             header_frame,
-            text="Control Flask API and UniFi API Services",
+            text="Control Flask API and UniFi API Services • Monitor Live Logs • Color-Coded Output",
             font=("Segoe UI", 10),
             bootstyle="inverse-primary"
         )
         subtitle_label.pack(pady=(0, 15))
         
-        # Main content frame - use simple frame instead of canvas
-        content_frame = tb.Frame(service_window)
-        content_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        # Main content frame with canvas for scrolling
+        main_container = tb.Frame(service_window)
+        main_container.pack(fill='both', expand=True, padx=10, pady=10)
         
         # Service status variables
         service_status_vars = {}
@@ -13884,6 +13911,166 @@ Type: {values[11]}
         service_toggle_buttons = {}
         auto_start_vars = {}
         health_checks_running = {}
+        log_widgets = {}  # Store log text widgets
+        log_auto_scroll_vars = {}  # Store auto-scroll toggle vars
+        log_update_jobs = {}  # Store after() job IDs
+        
+        # LogViewer class for color-coded log display
+        class LogViewer:
+            """Real-time log viewer with color coding and auto-scroll."""
+            
+            def __init__(self, parent, service_name, service_mgr):
+                self.service_name = service_name
+                self.service_mgr = service_mgr
+                self.auto_scroll = True
+                
+                # Container frame
+                self.frame = tb.Frame(parent)
+                
+                # Header with service name and controls
+                header = tb.Frame(self.frame)
+                header.pack(fill='x', padx=2, pady=(2, 0))
+                
+                tb.Label(
+                    header,
+                    text=f"📋 {service_mgr.services[service_name]['name']} Logs",
+                    font=("Segoe UI", 9, "bold")
+                ).pack(side='left', padx=5)
+                
+                # Auto-scroll toggle
+                self.auto_scroll_var = tb.BooleanVar(value=True)
+                auto_scroll_check = tb.Checkbutton(
+                    header,
+                    text="Auto-scroll",
+                    variable=self.auto_scroll_var,
+                    bootstyle="success-round-toggle",
+                    command=self._toggle_auto_scroll
+                )
+                auto_scroll_check.pack(side='right', padx=5)
+                
+                # Clear button
+                clear_btn = tb.Button(
+                    header,
+                    text="🗑️",
+                    bootstyle="danger-outline",
+                    command=self.clear_logs,
+                    width=3
+                )
+                clear_btn.pack(side='right', padx=2)
+                
+                # Log text widget with scrollbar
+                log_frame = tb.Frame(self.frame)
+                log_frame.pack(fill='both', expand=True, padx=2, pady=2)
+                
+                # Create text widget with dark theme
+                self.text = Text(
+                    log_frame,
+                    wrap='none',
+                    font=("Consolas", 9),
+                    bg="#1e1e1e",
+                    fg="#d4d4d4",
+                    insertbackground="#ffffff",
+                    relief='flat',
+                    padx=8,
+                    pady=6
+                )
+                
+                # Scrollbars
+                v_scroll = tb.Scrollbar(log_frame, orient='vertical', command=self.text.yview)
+                h_scroll = tb.Scrollbar(log_frame, orient='horizontal', command=self.text.xview)
+                self.text.configure(yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set)
+                
+                # Grid layout
+                self.text.grid(row=0, column=0, sticky='nsew')
+                v_scroll.grid(row=0, column=1, sticky='ns')
+                h_scroll.grid(row=1, column=0, sticky='ew')
+                log_frame.grid_rowconfigure(0, weight=1)
+                log_frame.grid_columnconfigure(0, weight=1)
+                
+                # Configure color tags
+                self._configure_tags()
+                
+                # Initial placeholder
+                self.text.insert('1.0', f"Waiting for {service_mgr.services[service_name]['name']} logs...\n")
+                self.text.tag_add('secondary', '1.0', 'end')
+                self.text.config(state='disabled')
+                
+                # Track if we've loaded initial logs
+                self.initialized = False
+            
+            def _configure_tags(self):
+                """Configure color tags for different log levels."""
+                # INFO - white/light gray
+                self.text.tag_config('INFO', foreground='#d4d4d4')
+                # SUCCESS/STARTED - green
+                self.text.tag_config('SUCCESS', foreground='#4ec9b0', font=("Consolas", 9, "bold"))
+                # WARNING - yellow/orange
+                self.text.tag_config('WARNING', foreground='#dcdcaa', font=("Consolas", 9, "bold"))
+                # ERROR/CRITICAL - red
+                self.text.tag_config('ERROR', foreground='#f48771', font=("Consolas", 9, "bold"))
+                # STOPPED/EXIT - muted gray
+                self.text.tag_config('STOPPED', foreground='#808080')
+                # DEBUG - blue
+                self.text.tag_config('DEBUG', foreground='#569cd6')
+                # Timestamp - cyan
+                self.text.tag_config('timestamp', foreground='#9cdcfe')
+                # Secondary (placeholder text)
+                self.text.tag_config('secondary', foreground='#6a6a6a')
+            
+            def _toggle_auto_scroll(self):
+                """Toggle auto-scroll feature."""
+                self.auto_scroll = self.auto_scroll_var.get()
+            
+            def clear_logs(self):
+                """Clear all logs from display."""
+                self.text.config(state='normal')
+                self.text.delete('1.0', 'end')
+                self.text.insert('1.0', f"{self.service_mgr.services[self.service_name]['name']} logs cleared.\n")
+                self.text.tag_add('secondary', '1.0', 'end')
+                self.text.config(state='disabled')
+                self.initialized = False
+            
+            def update_logs(self):
+                """Read and display new log lines with color coding."""
+                try:
+                    # Load initial buffered logs on first update
+                    if not self.initialized:
+                        lines = self.service_mgr.get_buffered_logs(self.service_name, max_lines=100)
+                        if lines:
+                            self.text.config(state='normal')
+                            self.text.delete('1.0', 'end')
+                            for timestamp, level, message in lines:
+                                self._insert_log_line(timestamp, level, message)
+                            self.text.config(state='disabled')
+                            if self.auto_scroll:
+                                self.text.see('end')
+                        self.initialized = True
+                    else:
+                        # Read new logs
+                        new_lines = self.service_mgr.read_new_logs(self.service_name, max_lines=50)
+                        if new_lines:
+                            self.text.config(state='normal')
+                            for timestamp, level, message in new_lines:
+                                self._insert_log_line(timestamp, level, message)
+                            self.text.config(state='disabled')
+                            
+                            # Auto-scroll to bottom if enabled
+                            if self.auto_scroll:
+                                self.text.see('end')
+                except Exception as e:
+                    logger.debug(f"Error updating logs for {self.service_name}: {e}")
+            
+            def _insert_log_line(self, timestamp, level, message):
+                """Insert a single log line with appropriate color coding."""
+                # Insert timestamp
+                self.text.insert('end', f"[{timestamp}] ", 'timestamp')
+                
+                # Insert level with appropriate tag
+                tag = level if level in ['INFO', 'SUCCESS', 'WARNING', 'ERROR', 'STOPPED', 'DEBUG'] else 'INFO'
+                self.text.insert('end', f"{level:8s} ", tag)
+                
+                # Insert message
+                self.text.insert('end', f"{message}\n", tag)
         
         def update_service_status(service_name):
             """Update status label immediately; schedule async health check."""
@@ -13960,6 +14147,12 @@ Type: {values[11]}
                     if status == 'running':
                         success = service_mgr.stop_service(service_name)
                         msg = f"{service_info['name']} has been stopped."
+                        # Force refresh the log viewer to show stop messages
+                        if success and service_name in log_widgets:
+                            # Reset the log viewer's initialized flag to force full re-read
+                            log_widgets[service_name].initialized = False
+                            # Immediately update logs to show stop messages
+                            service_window.after(100, lambda: log_widgets[service_name].update_logs())
                     else:
                         success = service_mgr.start_service(service_name)
                         msg = f"{service_info['name']} has been started.\nPort: {service_info['port']}"
@@ -13981,30 +14174,36 @@ Type: {values[11]}
             auto_start = auto_start_vars[service_name].get()
             service_mgr.set_auto_start(service_name, auto_start)
         
-        # Create service cards
+        # Create service cards with log viewers
         for service_name, service_info in service_mgr.services.items():
-            # Service card frame
-            card_frame = tb.Labelframe(
-                content_frame,
-                text=f"  {service_info['name']}  ",
+            # Main service container (horizontal split)
+            service_container = tb.Frame(main_container)
+            service_container.pack(fill='both', expand=True, pady=5)
+            
+            # Left side: Service controls (30% width)
+            control_panel = tb.Labelframe(
+                service_container,
+                text=f"  {service_info['name']} Controls  ",
                 bootstyle="primary",
                 padding=12
             )
-            card_frame.pack(fill='x', pady=8)
+            control_panel.pack(side='left', fill='both', padx=(0, 5), expand=False)
+            control_panel.config(width=350)
             
-            # Top row: Service info
-            info_frame = tb.Frame(card_frame)
+            # Service info
+            info_frame = tb.Frame(control_panel)
             info_frame.pack(fill='x', pady=(0, 8))
             
             info_label = tb.Label(
                 info_frame,
-                text=f"📄 {service_info['script']}  |  🔌 Port {service_info['port']}",
-                font=("Segoe UI", 9)
+                text=f"📄 {service_info['script']}\n🔌 Port {service_info['port']}",
+                font=("Segoe UI", 9),
+                justify='left'
             )
-            info_label.pack(side='left')
+            info_label.pack(side='left', anchor='w')
             
             # Status row
-            status_frame = tb.Frame(card_frame)
+            status_frame = tb.Frame(control_panel)
             status_frame.pack(fill='x', pady=4)
             
             tb.Label(status_frame, text="Status:", font=("Segoe UI", 9, "bold")).pack(side='left', padx=(0, 10))
@@ -14018,10 +14217,14 @@ Type: {values[11]}
             status_label.pack(side='left', padx=(0, 20))
             service_status_vars[service_name] = status_label
             
-            tb.Label(status_frame, text="Health:", font=("Segoe UI", 9, "bold")).pack(side='left', padx=(0, 10))
+            # Health row
+            health_frame = tb.Frame(control_panel)
+            health_frame.pack(fill='x', pady=4)
+            
+            tb.Label(health_frame, text="Health:", font=("Segoe UI", 9, "bold")).pack(side='left', padx=(0, 10))
             
             health_label = tb.Label(
-                status_frame,
+                health_frame,
                 text="➖ N/A",
                 font=("Segoe UI", 9),
                 bootstyle="secondary"
@@ -14029,18 +14232,18 @@ Type: {values[11]}
             health_label.pack(side='left')
             service_health_labels[service_name] = health_label
             
-            # Control row
-            control_frame = tb.Frame(card_frame)
-            control_frame.pack(fill='x', pady=(8, 0))
+            # Control buttons
+            control_frame = tb.Frame(control_panel)
+            control_frame.pack(fill='x', pady=(12, 0))
             
             toggle_btn = tb.Button(
                 control_frame,
                 text="▶️ Start",
                 bootstyle="success",
                 command=lambda sn=service_name: toggle_service(sn),
-                width=12
+                width=15
             )
-            toggle_btn.pack(side='left', padx=(0, 10))
+            toggle_btn.pack(side='top', pady=(0, 8), fill='x')
             service_toggle_buttons[service_name] = toggle_btn
             
             # Auto-start checkbox
@@ -14049,19 +14252,55 @@ Type: {values[11]}
             
             auto_start_check = tb.Checkbutton(
                 control_frame,
-                text="🚀 Auto-start",
+                text="🚀 Auto-start on login",
                 variable=auto_start_var,
                 bootstyle="success-round-toggle",
                 command=lambda sn=service_name: toggle_auto_start(sn)
             )
-            auto_start_check.pack(side='left')
+            auto_start_check.pack(side='top', anchor='w')
+            
+            # Right side: Log viewer (70% width)
+            log_viewer = LogViewer(service_container, service_name, service_mgr)
+            log_viewer.frame.pack(side='right', fill='both', expand=True)
+            log_widgets[service_name] = log_viewer
             
             # Initialize status
             update_service_status(service_name)
         
+        # Start log update loop
+        def update_all_logs():
+            """Update all log viewers periodically."""
+            if not service_window.winfo_exists():
+                return
+            
+            for service_name, log_viewer in log_widgets.items():
+                try:
+                    log_viewer.update_logs()
+                except Exception as e:
+                    logger.debug(f"Error updating log viewer for {service_name}: {e}")
+            
+            # Schedule next update (500ms = 2 updates per second)
+            job_id = service_window.after(500, update_all_logs)
+            log_update_jobs['update_all'] = job_id
+        
+        # Start the update loop
+        update_all_logs()
+        
+        # Cleanup on window close
+        def on_close():
+            """Cancel all pending after() jobs and close window."""
+            for job_id in log_update_jobs.values():
+                try:
+                    service_window.after_cancel(job_id)
+                except:
+                    pass
+            service_window.destroy()
+        
+        service_window.protocol("WM_DELETE_WINDOW", on_close)
+        
         # Bottom button frame
-        button_frame = tb.Frame(content_frame)
-        button_frame.pack(fill='x', pady=(15, 0))
+        button_frame = tb.Frame(service_window)
+        button_frame.pack(fill='x', padx=20, pady=(0, 15))
         
         def refresh_all():
             """Refresh all service statuses"""
@@ -14070,10 +14309,10 @@ Type: {values[11]}
         
         refresh_btn = tb.Button(
             button_frame,
-            text="🔄 Refresh",
+            text="🔄 Refresh Status",
             bootstyle="info-outline",
             command=refresh_all,
-            width=12
+            width=15
         )
         refresh_btn.pack(side='left', padx=5)
         
@@ -14090,10 +14329,10 @@ Type: {values[11]}
         
         logs_btn = tb.Button(
             button_frame,
-            text="📋 Logs",
+            text="📂 Open Logs Folder",
             bootstyle="warning-outline",
             command=view_logs,
-            width=12
+            width=15
         )
         logs_btn.pack(side='left', padx=5)
         
@@ -14101,7 +14340,7 @@ Type: {values[11]}
             button_frame,
             text="❌ Close",
             bootstyle="secondary",
-            command=service_window.destroy,
+            command=on_close,
             width=12
         )
         close_btn.pack(side='right', padx=5)

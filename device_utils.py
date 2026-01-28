@@ -10,6 +10,43 @@ import platform
 import re
 from typing import Optional, Dict, Any
 
+def _run_silent_subprocess(cmd, timeout=None, **kwargs):
+    """Run subprocess silently without showing CMD windows on Windows.
+    
+    Args:
+        cmd: Command list to run
+        timeout: Timeout in seconds
+        **kwargs: Additional arguments for subprocess.run
+    
+    Returns:
+        subprocess.CompletedProcess result
+    """
+    startupinfo = None
+    creationflags = 0
+    
+    if platform.system().lower() == "windows":
+        # Silence Windows CMD window
+        creationflags = subprocess.CREATE_NO_WINDOW
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0  # SW_HIDE
+    
+    # Ensure capture_output and text are set if not provided
+    if 'stdout' not in kwargs:
+        kwargs['stdout'] = subprocess.PIPE
+    if 'stderr' not in kwargs:
+        kwargs['stderr'] = subprocess.PIPE
+    if 'text' not in kwargs:
+        kwargs['text'] = True
+    
+    return subprocess.run(
+        cmd,
+        timeout=timeout,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+        **kwargs
+    )
+
 def get_device_ip() -> Optional[str]:
     """
     Get the device's local IP address.
@@ -56,10 +93,8 @@ def get_device_mac_alternative() -> Optional[str]:
         
         if system == "windows":
             # Windows method
-            result = subprocess.run(
+            result = _run_silent_subprocess(
                 ['getmac', '/fo', 'csv', '/nh'],
-                capture_output=True,
-                text=True,
                 timeout=10
             )
             if result.returncode == 0:
@@ -71,10 +106,8 @@ def get_device_mac_alternative() -> Optional[str]:
                             return mac
         elif system in ["linux", "darwin"]:  # Linux or macOS
             # Try to get MAC from /sys/class/net/ or ifconfig
-            result = subprocess.run(
+            result = _run_silent_subprocess(
                 ['ip', 'link', 'show'],
-                capture_output=True,
-                text=True,
                 timeout=10
             )
             if result.returncode == 0:

@@ -1,0 +1,13 @@
+Winyfi Terms and Conditions
+
+By installing and using Winyfi you agree to the following:
+
+1. Usage: Winyfi is provided for monitoring and diagnostics of your own networks. Use it responsibly and in accordance with local laws and any applicable policies.
+2. Data: Winyfi may process network metadata and logs. Ensure you have consent to collect and process data in your environment.
+3. Credentials: Protect any credentials you configure. Do not share them and store them securely.
+4. Dependencies: Winyfi requires third-party software (e.g., MySQL/XAMPP). Follow their licenses and terms when installing and using them.
+5. Warranty: Winyfi is provided "as is" without warranty of any kind. You assume all risks from its use.
+6. Liability: The authors are not liable for any damages or losses arising from use or inability to use Winyfi.
+7. Updates: Future updates may change functionality. Review release notes and updated terms before upgrading.
+
+If you do not agree to these terms, do not install or use Winyfi.

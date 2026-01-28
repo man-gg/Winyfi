@@ -18,6 +18,7 @@ SolidCompression=yes
 SetupIconFile=icon.ico
 UninstallDisplayIcon={app}\Winyfi.exe
 WizardStyle=modern
+LicenseFile=TERMS_AND_CONDITIONS.txt
 PrivilegesRequired=admin
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
@@ -44,14 +45,19 @@ Source: "dist\README_SETUP.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\check_database.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\check_mysql_before_launch.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "TERMS_AND_CONDITIONS.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Application resources and assets
 Source: "dist\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "dist\routerLocImg\*"; DestDir: "{app}\routerLocImg"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "dist\migrations\*"; DestDir: "{app}\migrations"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[Dirs]
+; Create logs directory for application logs
+Name: "{app}\logs"; Permissions: users-full
+
 [Icons]
-Name: "{group}\Winyfi Network Monitor"; Filename: "{app}\Winyfi.exe"; IconFilename: "{app}\icon.ico"; Comment: "Launch Winyfi"
+Name: "{group}\Winyfi Network Monitor"; Filename: "{app}\Winyfi.exe"; IconFilename: "{app}\icon.ico"; Comment: "Launch Winyfi Dashboard"
 Name: "{group}\README - Setup Instructions"; Filename: "{app}\README_SETUP.txt"; Comment: "Installation instructions"
 Name: "{group}\Database Schema"; Filename: "{app}\winyfi.sql"; Comment: "Database schema file"
 Name: "{group}\{cm:UninstallProgram,Winyfi}"; Filename: "{uninstallexe}"; Comment: "Uninstall Winyfi"
@@ -62,10 +68,32 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Winyfi"; Filename:
 Filename: "{app}\Winyfi.exe"; Description: "{cm:LaunchProgram,Winyfi Network Monitor}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+var
+  ErrorLogPath: String;
+
+procedure LogInstallerError(ErrorMsg: String);
+var
+  LogFile: String;
+  Timestamp: String;
+begin
+  try
+    LogFile := ExpandConstant('{app}') + '\installer_error.log';
+    Timestamp := GetDateTimeString('yyyy-mm-dd hh:nn:ss', #0, #0);
+    SaveStringToFile(LogFile, '[' + Timestamp + '] ' + ErrorMsg + #13#10, True);
+  except
+    // Silently fail if we can't write log
+  end;
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
+    ErrorLogPath := ExpandConstant('{app}') + '\mysql_connection_error.log';
+    LogInstallerError('Installation completed successfully');
+    LogInstallerError('Application path: ' + ExpandConstant('{app}'));
+    LogInstallerError('Error logs will be saved to: ' + ErrorLogPath);
+    
     MsgBox(
       'Installation Complete!' + #13#10 + #13#10 +
       'IMPORTANT: Before launching Winyfi, please:' + #13#10 + #13#10 +
@@ -75,6 +103,17 @@ begin
       '4. Create a new database named: winyfi' + #13#10 +
       '5. Import the winyfi.sql file:' + #13#10 +
       '   - Located in: ' + ExpandConstant('{app}') + '\winyfi.sql' + #13#10 + #13#10 +
+      'TROUBLESHOOTING:' + #13#10 +
+      'Error logs are created in the application directory:' + #13#10 +
+      '  - ' + ExpandConstant('{app}') + '\mysql_connection_error.log' + #13#10 +
+      '  - ' + ExpandConstant('{app}') + '\mysql_check_error.log' + #13#10 +
+      '  - ' + ExpandConstant('{app}') + '\winyfi_error.log' + #13#10 +
+      '  - ' + ExpandConstant('{app}') + '\winyfi_runtime_error.log' + #13#10 +
+      '  - ' + ExpandConstant('{app}') + '\logs\ (service logs for Flask API & UniFi API)' + #13#10 + #13#10 +
+      'If services fail to start, check the logs/ folder for:' + #13#10 +
+      '  - flask-api.log (Flask API logs)' + #13#10 +
+      '  - unifi-api.log (UniFi API logs)' + #13#10 +
+      '  - flask-api-error.log, unifi-api-error.log (error details)' + #13#10 + #13#10 +
       'For detailed setup instructions, see: README_SETUP.txt' + #13#10 + #13#10 +
       'For help: https://github.com/man-gg/Winyfi/issues',
       mbInformation, MB_OK

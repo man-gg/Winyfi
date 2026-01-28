@@ -1,0 +1,159 @@
+═══════════════════════════════════════════════════════════════════════════════
+    SERVICE MANAGER - REAL-TIME LOG MONITORING QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 OVERVIEW
+───────────
+The Service Manager now includes real-time, color-coded log monitoring for
+app.py (Flask API) and unifi_api.py services. No manual refresh needed!
+
+🚀 HOW TO ACCESS
+────────────────
+1. Open WinyFi Admin Window
+2. Click dropdown menu (user icon, top-right)
+3. Click "⚙️ Service Manager"
+4. Window opens showing both services with live logs
+
+🎨 COLOR CODING GUIDE
+─────────────────────
+Look at the log level and color to quickly identify issues:
+
+  ⚪ INFO/DEBUG       → Normal operation (white/gray)
+  🟢 SUCCESS/STARTED  → Positive events (green, bold)
+  🟡 WARNING          → Potential issues (yellow, bold)
+  🔴 ERROR/CRITICAL   → Failures requiring attention (red, bold)
+  ⚫ STOPPED/EXIT     → Shutdown events (muted gray)
+
+📊 READING LOGS
+───────────────
+Each log line format:
+  [HH:MM:SS] LEVEL    Message text
+
+Example:
+  [14:30:45] INFO     Server starting on port 5000
+  [14:30:46] SUCCESS  Database connection established
+  [14:30:47] WARNING  High memory usage: 87%
+  [14:30:48] ERROR    Failed to connect to router 192.168.1.1
+
+🎛️ CONTROLS
+────────────
+Each service has:
+  • ▶️ Start/⏹️ Stop button
+  • Status indicator (🟢 Running / ⚫ Stopped / 🔴 Crashed)
+  • Health check (✅ Healthy / ⚠️ Not Responding / ➖ N/A)
+  • Auto-start toggle (☑ Auto-start on login)
+
+Log panel controls:
+  • Auto-scroll toggle - Pause/resume automatic scrolling
+  • 🗑️ Clear button - Clears the log viewer (doesn't delete files)
+  • Scrollbars - Navigate through log history
+
+⚡ REAL-TIME FEATURES
+─────────────────────
+  ✓ Logs update every 500ms (twice per second)
+  ✓ Auto-scroll keeps newest logs visible
+  ✓ No page refresh needed
+  ✓ Thread-safe (won't interfere with services)
+  ✓ Each service has independent log panel
+  ✓ Last 1000 lines cached in memory
+
+🔧 TROUBLESHOOTING WITH LOGS
+─────────────────────────────
+1. Service won't start?
+   → Look for RED error lines near startup
+   → Check for port conflicts or database issues
+
+2. Service running but not responding?
+   → Look for WARNING lines about timeouts
+   → Check for CRITICAL error messages
+
+3. Service crashed?
+   → Scroll to the last few lines before it stopped
+   → RED errors usually indicate the cause
+
+4. Need more details?
+   → Click "📂 Open Logs Folder" to view full log files
+   → Log files: logs/flask-api.log, logs/unifi-api.log
+
+💡 TIPS & BEST PRACTICES
+─────────────────────────
+• Toggle auto-scroll OFF to review older logs while service is running
+• Use color coding for quick scanning (red = problem, green = success)
+• Clear logs periodically for cleaner view (doesn't affect service)
+• Monitor both services simultaneously to see interactions
+• Check logs immediately after starting/stopping services
+• GREEN "SUCCESS" indicates important milestones completed
+• YELLOW "WARNING" may indicate issues that need attention soon
+• RED "ERROR" requires immediate investigation
+
+📁 LOG FILE LOCATIONS
+─────────────────────
+  Flask API:  C:\Users\...\Winyfi\logs\flask-api.log
+  UniFi API:  C:\Users\...\Winyfi\logs\unifi-api.log
+  
+  • Log files grow over time (archived automatically)
+  • Can be opened with any text editor
+  • Useful for detailed analysis or bug reports
+
+🎯 COMMON LOG PATTERNS
+───────────────────────
+Starting service:
+  [HH:MM:SS] INFO     Initializing Flask application
+  [HH:MM:SS] SUCCESS  Connected to MySQL database
+  [HH:MM:SS] STARTED  Server running on http://localhost:5000
+
+Service running normally:
+  [HH:MM:SS] INFO     Processing request GET /api/routers
+  [HH:MM:SS] INFO     Waiting for incoming connections
+
+Connection issues:
+  [HH:MM:SS] ERROR    Failed to connect to 192.168.1.1
+  [HH:MM:SS] WARNING  Retrying in 5 seconds...
+  [HH:MM:SS] SUCCESS  Connection established
+
+Shutting down:
+  [HH:MM:SS] INFO     Received shutdown signal
+  [HH:MM:SS] STOPPED  Closing database connections
+  [HH:MM:SS] STOPPED  Service shutdown complete
+
+⚠️ WHAT TO LOOK FOR
+────────────────────
+🔴 RED ERRORS - Immediate attention needed:
+  • Database connection failures
+  • Port already in use
+  • Permission denied
+  • Module import errors
+  • Configuration file errors
+
+🟡 YELLOW WARNINGS - Monitor closely:
+  • High memory/CPU usage
+  • Slow database queries
+  • Connection timeouts (retrying)
+  • Missing optional configuration
+
+🟢 GREEN SUCCESS - Good signs:
+  • "Server started"
+  • "Database connected"
+  • "API ready"
+  • "Connection established"
+
+✨ BENEFITS
+────────────
+  ✓ No need to open external log files
+  ✓ Instant visibility into service health
+  ✓ Quick problem identification
+  ✓ Professional, easy-to-read interface
+  ✓ Doesn't slow down services
+  ✓ Monitor multiple services at once
+  ✓ Perfect for debugging and monitoring
+
+📞 SUPPORT
+──────────
+If you see persistent errors in logs:
+  1. Take a screenshot of the error lines
+  2. Click "📂 Open Logs Folder" to access full logs
+  3. Contact support with error details and log files
+
+═══════════════════════════════════════════════════════════════════════════════
+                              🎉 HAPPY MONITORING! 🎉
+═══════════════════════════════════════════════════════════════════════════════

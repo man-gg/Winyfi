@@ -139,9 +139,12 @@ def verify_dependencies():
     
     if missing:
         print(f"\n⚠️  Missing {len(missing)} package(s)")
-        print("Installing missing packages...")
+        print("Installing missing packages...\n")
         try:
             for package in missing:
+                if package == 'scapy':
+                    # Special warning for scapy (requires admin privileges and npcap on Windows)
+                    print(f"⚠️  Installing {package} (note: scapy may require admin privileges and npcap on Windows)")
                 subprocess.run([sys.executable, '-m', 'pip', 'install', package], 
                              check=True, capture_output=True)
                 print(f"✅ Installed {package}")
@@ -189,8 +192,11 @@ def build_exe():
     try:
         if os.path.exists('winyfi.spec'):
             print("📄 Using winyfi.spec configuration...")
+            print("   ℹ️  MySQL authentication plugin support is configured in winyfi.spec")
+            print("       (mysql.connector.locales and auth plugins are included via PyInstaller hidden imports)")
+            # IMPORTANT: Use sys.executable -m PyInstaller to avoid PATH and virtualenv issues on Windows
             result = subprocess.run(
-                ['pyinstaller', 'winyfi.spec', '--clean', '--noconfirm'],
+                [sys.executable, '-m', 'PyInstaller', 'winyfi.spec', '--clean', '--noconfirm'],
                 capture_output=True, 
                 text=True
             )
@@ -228,6 +234,9 @@ def build_exe():
             'check_mysql_before_launch.bat',
             'README.md',
             'icon.ico',
+            'launch_service_manager.bat',
+            'launch_service_manager.py',
+            'SERVICE_MANAGER_README.md',
         ]
         
         for file in files_to_copy:
@@ -239,6 +248,7 @@ def build_exe():
                     print(f"   ⚠️  Could not copy {file}: {e}")
         
         # Copy entire directories
+        print("\n📂 Copying resource directories...")
         dirs_to_copy = [
             ('assets', 'dist/assets'),
             ('routerLocImg', 'dist/routerLocImg'),
@@ -254,6 +264,21 @@ def build_exe():
                     print(f"   ✅ {src}/")
                 except Exception as e:
                     print(f"   ⚠️  Could not copy {src}/: {e}")
+        
+        # Copy OPTIONAL helper scripts (not required for normal app function)
+        print("\n📝 Copying optional helper scripts...")
+        optional_files = [
+            'check_database.bat',
+            'check_mysql_before_launch.bat',
+        ]
+        
+        for file in optional_files:
+            if os.path.exists(file):
+                try:
+                    shutil.copy2(file, 'dist')
+                    print(f"   ✅ {file} (OPTIONAL)")
+                except Exception as e:
+                    print(f"   ⚠️  Could not copy {file}: {e}")
         
         return True
             

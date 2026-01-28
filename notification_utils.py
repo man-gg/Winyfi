@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Notification System for Network Monitoring Dashboard
-Handles push notifications for various events like loop detection, router status changes, etc.
+Uses MySQL for persistence via db.get_connection.
 """
 
-import sqlite3
+import logging
 import json
 import threading
 import time
@@ -15,6 +15,7 @@ import tkinter as tk
 from tkinter import messagebox
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
+from db import get_connection
 
 class NotificationType(Enum):
     LOOP_DETECTED = "loop_detected"
@@ -33,8 +34,8 @@ class NotificationPriority(Enum):
 
 class NotificationManager:
     def __init__(self, db_path="network_monitoring.db"):
-        self.db_path = db_path
         self.notification_callbacks = []
+        self.enabled = True
         self.notification_settings = {
             NotificationType.LOOP_DETECTED: {"enabled": True, "priority": NotificationPriority.HIGH},
             NotificationType.ROUTER_OFFLINE: {"enabled": True, "priority": NotificationPriority.MEDIUM},
@@ -44,149 +45,159 @@ class NotificationManager:
             NotificationType.MAINTENANCE: {"enabled": True, "priority": NotificationPriority.MEDIUM},
             NotificationType.SECURITY_ALERT: {"enabled": True, "priority": NotificationPriority.CRITICAL},
         }
-        self._init_database()
+        try:
+            self._init_database()
+        except Exception as e:
+            logging.getLogger(__name__).warning(f"Notification DB init failed: {e}")
+            self.enabled = False
+    
+    def _get_conn(self):
+        return get_connection(max_retries=1, retry_delay=0, show_dialog=False)
         
     def _init_database(self):
-        """Initialize notification database tables."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Notifications table
-        cursor.execute('''
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS notifications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                type TEXT NOT NULL,
-                title TEXT NOT NULL,
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                type VARCHAR(64) NOT NULL,
+                title VARCHAR(255) NOT NULL,
                 message TEXT NOT NULL,
-                priority INTEGER NOT NULL,
-                data TEXT,  -- JSON data for additional info
+                priority INT NOT NULL,
+                data JSON NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 read_at TIMESTAMP NULL,
                 dismissed_at TIMESTAMP NULL,
-                user_id INTEGER DEFAULT 1,  -- For future multi-user support
-                status TEXT DEFAULT 'created',  -- created, displayed, read, dismissed
-                display_attempts INTEGER DEFAULT 0,
+                user_id INT DEFAULT 1,
+                status VARCHAR(32) DEFAULT 'created',
+                display_attempts INT DEFAULT 0,
                 last_display_attempt TIMESTAMP NULL
-            )
-        ''')
-        
-        # Notification settings table
-        cursor.execute('''
+            ) ENGINE=InnoDB
+            """
+        )
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS notification_settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                type TEXT UNIQUE NOT NULL,
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                type VARCHAR(64) UNIQUE NOT NULL,
                 enabled BOOLEAN NOT NULL DEFAULT 1,
-                priority INTEGER NOT NULL DEFAULT 2,
+                priority INT NOT NULL DEFAULT 2,
                 sound_enabled BOOLEAN NOT NULL DEFAULT 1,
                 popup_enabled BOOLEAN NOT NULL DEFAULT 1,
                 email_enabled BOOLEAN NOT NULL DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        # Notification logs table for debugging
-        cursor.execute('''
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB
+            """
+        )
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS notification_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                notification_id INTEGER,
-                event_type TEXT NOT NULL,  -- created, callback_triggered, toast_created, toast_displayed, error
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                notification_id INT,
+                event_type VARCHAR(64) NOT NULL,
                 message TEXT,
-                details TEXT,  -- JSON data for additional details
+                details JSON,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (notification_id) REFERENCES notifications (id)
-            )
-        ''')
-        
-        # Insert default settings if not exists
+                INDEX idx_notification_id (notification_id),
+                CONSTRAINT fk_notification_logs_notif FOREIGN KEY (notification_id)
+                  REFERENCES notifications(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB
+            """
+        )
         for notif_type in NotificationType:
-            cursor.execute('''
-                INSERT OR IGNORE INTO notification_settings 
+            cur.execute(
+                """
+                INSERT IGNORE INTO notification_settings
                 (type, enabled, priority, sound_enabled, popup_enabled, email_enabled)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (
-                notif_type.value,
-                self.notification_settings[notif_type]["enabled"],
-                self.notification_settings[notif_type]["priority"].value,
-                True, True, False
-            ))
-        
-        conn.commit()
-        conn.close()
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    notif_type.value,
+                    self.notification_settings[notif_type]["enabled"],
+                    self.notification_settings[notif_type]["priority"].value,
+                    True, True, False,
+                ),
+            )
+        conn.commit(); cur.close(); conn.close()
     
     def log_notification_event(self, notification_id: int, event_type: str, message: str, details: Dict = None):
-        """Log a notification event for debugging."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
+        if not self.enabled:
+            return
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             INSERT INTO notification_logs (notification_id, event_type, message, details)
-            VALUES (?, ?, ?, ?)
-        ''', (
-            notification_id,
-            event_type,
-            message,
-            json.dumps(details) if details else None
-        ))
-        
-        conn.commit()
-        conn.close()
+            VALUES (%s, %s, %s, %s)
+            """,
+            (
+                notification_id,
+                event_type,
+                message,
+                json.dumps(details) if details else None,
+            ),
+        )
+        conn.commit(); cur.close(); conn.close()
         
         # Also print to console for debugging
     
     def update_notification_status(self, notification_id: int, status: str, details: Dict = None):
-        """Update notification status and log the event."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
+        if not self.enabled:
+            return
+        conn = self._get_conn(); cur = conn.cursor()
         if status == "displayed":
-            cursor.execute('''
+            cur.execute(
+                """
                 UPDATE notifications 
-                SET status = ?, display_attempts = display_attempts + 1, last_display_attempt = CURRENT_TIMESTAMP
-                WHERE id = ?
-            ''', (status, notification_id))
+                SET status = %s, display_attempts = display_attempts + 1, last_display_attempt = CURRENT_TIMESTAMP
+                WHERE id = %s
+                """,
+                (status, notification_id),
+            )
         else:
-            cursor.execute('''
-                UPDATE notifications SET status = ? WHERE id = ?
-            ''', (status, notification_id))
-        
-        conn.commit()
-        conn.close()
+            cur.execute("UPDATE notifications SET status = %s WHERE id = %s", (status, notification_id))
+        conn.commit(); cur.close(); conn.close()
         
         # Log the status update
         self.log_notification_event(notification_id, "status_update", f"Status changed to {status}", details)
     
     def get_notification_logs(self, notification_id: int = None, limit: int = 100):
-        """Get notification logs for debugging."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
+        if not self.enabled:
+            return []
+        conn = self._get_conn(); cur = conn.cursor(dictionary=True)
         if notification_id:
-            cursor.execute('''
-                SELECT * FROM notification_logs 
-                WHERE notification_id = ? 
-                ORDER BY timestamp DESC 
-                LIMIT ?
-            ''', (notification_id, limit))
+            cur.execute(
+                """
+                SELECT id, notification_id, event_type, message, details, timestamp
+                FROM notification_logs
+                WHERE notification_id=%s
+                ORDER BY timestamp DESC
+                LIMIT %s
+                """,
+                (notification_id, limit),
+            )
         else:
-            cursor.execute('''
-                SELECT * FROM notification_logs 
-                ORDER BY timestamp DESC 
-                LIMIT ?
-            ''', (limit,))
-        
+            cur.execute(
+                """
+                SELECT id, notification_id, event_type, message, details, timestamp
+                FROM notification_logs
+                ORDER BY timestamp DESC
+                LIMIT %s
+                """,
+                (limit,),
+            )
+        rows = cur.fetchall(); cur.close(); conn.close()
         logs = []
-        for row in cursor.fetchall():
+        for row in rows:
+            details = row.get("details")
             logs.append({
-                "id": row[0],
-                "notification_id": row[1],
-                "event_type": row[2],
-                "message": row[3],
-                "details": json.loads(row[4]) if row[4] else None,
-                "timestamp": row[5]
+                "id": row["id"],
+                "notification_id": row["notification_id"],
+                "event_type": row["event_type"],
+                "message": row["message"],
+                "details": json.loads(details) if details else None,
+                "timestamp": row["timestamp"],
             })
-        
-        conn.close()
         return logs
     
     def add_notification_callback(self, callback: Callable):
@@ -209,23 +220,24 @@ class NotificationManager:
         if priority is None:
             priority = NotificationPriority(settings["priority"])
         
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
+        if not self.enabled:
+            return None
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             INSERT INTO notifications (type, title, message, priority, data)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            notif_type.value,
-            title,
-            message,
-            priority.value,
-            json.dumps(data) if data else None
-        ))
-        
-        notification_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (
+                notif_type.value,
+                title,
+                message,
+                priority.value,
+                json.dumps(data) if data else None,
+            ),
+        )
+        notification_id = cur.lastrowid
+        conn.commit(); cur.close(); conn.close()
         
         # Log notification creation
         self.log_notification_event(
@@ -265,16 +277,17 @@ class NotificationManager:
     
     def get_notification_settings(self, notif_type: NotificationType) -> Dict:
         """Get notification settings for a specific type."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
+        if not self.enabled:
+            return self.notification_settings[notif_type]
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             SELECT enabled, priority, sound_enabled, popup_enabled, email_enabled
-            FROM notification_settings WHERE type = ?
-        ''', (notif_type.value,))
-        
-        result = cursor.fetchone()
-        conn.close()
+            FROM notification_settings WHERE type = %s
+            """,
+            (notif_type.value,),
+        )
+        result = cur.fetchone(); cur.close(); conn.close()
         
         if result:
             return {
@@ -289,140 +302,133 @@ class NotificationManager:
     
     def update_notification_settings(self, notif_type: NotificationType, settings: Dict):
         """Update notification settings for a specific type."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
+        if not self.enabled:
+            return
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             UPDATE notification_settings 
-            SET enabled = ?, priority = ?, sound_enabled = ?, popup_enabled = ?, email_enabled = ?,
+            SET enabled = %s, priority = %s, sound_enabled = %s, popup_enabled = %s, email_enabled = %s,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE type = ?
-        ''', (
-            settings.get("enabled", True),
-            settings.get("priority", 2),
-            settings.get("sound_enabled", True),
-            settings.get("popup_enabled", True),
-            settings.get("email_enabled", False),
-            notif_type.value
-        ))
-        
-        conn.commit()
-        conn.close()
+            WHERE type = %s
+            """,
+            (
+                settings.get("enabled", True),
+                settings.get("priority", 2),
+                settings.get("sound_enabled", True),
+                settings.get("popup_enabled", True),
+                settings.get("email_enabled", False),
+                notif_type.value,
+            ),
+        )
+        conn.commit(); cur.close(); conn.close()
     
     def get_unread_notifications(self, limit: int = 50) -> List[Dict]:
         """Get unread notifications."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
+        if not self.enabled:
+            return []
+        conn = self._get_conn(); cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
             SELECT id, type, title, message, priority, data, created_at
             FROM notifications 
             WHERE read_at IS NULL AND dismissed_at IS NULL
             ORDER BY created_at DESC
-            LIMIT ?
-        ''', (limit,))
-        
+            LIMIT %s
+            """,
+            (limit,),
+        )
+        rows = cur.fetchall(); cur.close(); conn.close()
         notifications = []
-        for row in cursor.fetchall():
+        for row in rows:
+            data = row.get("data")
             notifications.append({
-                "id": row[0],
-                "type": row[1],
-                "title": row[2],
-                "message": row[3],
-                "priority": row[4],
-                "data": json.loads(row[5]) if row[5] else None,
-                "created_at": row[6]
+                "id": row["id"],
+                "type": row["type"],
+                "title": row["title"],
+                "message": row["message"],
+                "priority": row["priority"],
+                "data": json.loads(data) if data else None,
+                "created_at": row["created_at"],
             })
-        
-        conn.close()
         return notifications
     
     def mark_as_read(self, notification_id: int):
         """Mark a notification as read."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE id = ?
-        ''', (notification_id,))
-        
-        conn.commit()
-        conn.close()
+        if not self.enabled:
+            return
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute("UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE id = %s", (notification_id,))
+        conn.commit(); cur.close(); conn.close()
     
     def dismiss_notification(self, notification_id: int):
         """Dismiss a notification."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE notifications SET dismissed_at = CURRENT_TIMESTAMP WHERE id = ?
-        ''', (notification_id,))
-        
-        conn.commit()
-        conn.close()
+        if not self.enabled:
+            return
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute("UPDATE notifications SET dismissed_at = CURRENT_TIMESTAMP WHERE id = %s", (notification_id,))
+        conn.commit(); cur.close(); conn.close()
     
     def dismiss_all_notifications(self) -> int:
         """Dismiss ALL non-dismissed notifications in one batch.
         Returns the number of rows affected.
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            '''
+        if not self.enabled:
+            return 0
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             UPDATE notifications 
             SET dismissed_at = CURRENT_TIMESTAMP 
             WHERE dismissed_at IS NULL
-            '''
+            """
         )
-        affected = cursor.rowcount if hasattr(cursor, 'rowcount') else 0
-        conn.commit()
-        conn.close()
-        return affected
+        affected = cur.rowcount if hasattr(cur, 'rowcount') else 0
+        conn.commit(); cur.close(); conn.close(); return affected
 
     def mark_all_unread_as_read(self) -> int:
         """Mark ALL unread (and not dismissed) notifications as read in one batch.
         Returns the number of rows affected.
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            '''
+        if not self.enabled:
+            return 0
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             UPDATE notifications 
             SET read_at = CURRENT_TIMESTAMP 
             WHERE read_at IS NULL AND dismissed_at IS NULL
-            '''
+            """
         )
-        affected = cursor.rowcount if hasattr(cursor, 'rowcount') else 0
-        conn.commit()
-        conn.close()
-        return affected
+        affected = cur.rowcount if hasattr(cur, 'rowcount') else 0
+        conn.commit(); cur.close(); conn.close(); return affected
     
     def get_notification_count(self) -> int:
         """Get count of unread notifications."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
+        if not self.enabled:
+            return 0
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             SELECT COUNT(*) FROM notifications 
             WHERE read_at IS NULL AND dismissed_at IS NULL
-        ''')
-        
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count
+            """
+        )
+        count = cur.fetchone()[0]; cur.close(); conn.close(); return count
     
     def clear_old_notifications(self, days: int = 30):
         """Clear notifications older than specified days."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
+        if not self.enabled:
+            return
+        conn = self._get_conn(); cur = conn.cursor()
+        cur.execute(
+            """
             DELETE FROM notifications 
-            WHERE created_at < datetime('now', '-{} days')
-        '''.format(days))
-        
-        conn.commit()
-        conn.close()
+            WHERE created_at < DATE_SUB(NOW(), INTERVAL %s DAY)
+            """,
+            (int(days),),
+        )
+        conn.commit(); cur.close(); conn.close()
 
 # Global notification manager instance
 notification_manager = NotificationManager()

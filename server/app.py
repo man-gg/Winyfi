@@ -1628,6 +1628,11 @@ if __name__ == "__main__":
     
     # Disable debug mode when running as a service (prevents reloader issues)
     debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    
+    # Clean up Werkzeug environment variables that can cause issues in service mode
+    if 'WERKZEUG_SERVER_FD' in os.environ:
+        del os.environ['WERKZEUG_SERVER_FD']
+    
     app.run(host="0.0.0.0", port=5000, debug=debug_mode, use_reloader=False)
 
 

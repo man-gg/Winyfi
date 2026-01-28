@@ -30,7 +30,7 @@ class ToastNotification:
         self.title = title
         self.message = message
         self.priority = priority
-        self.duration = duration
+        self.duration = int(duration) if duration else 5000  # Ensure duration is int
         self.on_dismiss = on_dismiss
         self.window = None
         self.auto_dismiss_task = None
@@ -50,16 +50,16 @@ class ToastNotification:
         self.window.attributes("-alpha", 0.95)  # Slight transparency
         
         # Set size and position
-        width = 350
-        height = 120
+        width = int(350)
+        height = int(120)
         
         # Get screen dimensions
-        screen_width = self.window.winfo_screenwidth()
-        screen_height = self.window.winfo_screenheight()
+        screen_width = int(self.window.winfo_screenwidth())
+        screen_height = int(self.window.winfo_screenheight())
         
         # Position in top-right corner
-        x = screen_width - width - 20
-        y = 20
+        x = int(screen_width - width - 20)
+        y = int(20)
         
         self.window.geometry(f"{width}x{height}+{x}+{y}")
         
@@ -87,7 +87,7 @@ class ToastNotification:
         if window_style:
             main_frame = tb.Frame(self.window, style=f"{style}.TFrame", padding=15)
         else:
-            main_frame = tk.Frame(self.window, bg=bg_color, padx=15, pady=15)
+            main_frame = tk.Frame(self.window, bg=bg_color, padx=int(15), pady=int(15))
         main_frame.pack(fill="both", expand=True)
         
         # Header with title and close button
@@ -95,21 +95,21 @@ class ToastNotification:
             header_frame = tb.Frame(main_frame)
         else:
             header_frame = tk.Frame(main_frame)
-        header_frame.pack(fill="x", pady=(0, 8))
+        header_frame.pack(fill="x", pady=(int(0), int(8)))
         
         # Title
         if window_style:
             title_label = tb.Label(
                 header_frame, 
                 text=self.title, 
-                font=("Segoe UI", 10, "bold"),
+                font=("Segoe UI", int(10), "bold"),
                 style=f"{style}.TLabel"
             )
         else:
             title_label = tk.Label(
                 header_frame, 
                 text=self.title, 
-                font=("Segoe UI", 10, "bold"),
+                font=("Segoe UI", int(10), "bold"),
                 fg="white",
                 bg=bg_color
             )
@@ -121,14 +121,14 @@ class ToastNotification:
                 header_frame,
                 text="×",
                 style=f"{style}.TButton",
-                width=3,
+                width=int(3),
                 command=lambda: self.dismiss(immediate=True)
             )
         else:
             close_btn = tk.Button(
                 header_frame,
                 text="×",
-                width=3,
+                width=int(3),
                 command=lambda: self.dismiss(immediate=True),
                 fg="white",
                 bg=bg_color,
@@ -159,18 +159,18 @@ class ToastNotification:
             message_label = tb.Label(
                 main_frame,
                 text=self.message,
-                font=("Segoe UI", 9),
+                font=("Segoe UI", int(9)),
                 style=f"{style}.TLabel",
-                wraplength=300
+                wraplength=int(300)
             )
         else:
             message_label = tk.Label(
                 main_frame,
                 text=self.message,
-                font=("Segoe UI", 9),
+                font=("Segoe UI", int(9)),
                 fg="white",
                 bg=bg_color,
-                wraplength=300
+                wraplength=int(300)
             )
         message_label.pack(fill="x")
         
@@ -184,7 +184,7 @@ class ToastNotification:
             )
         else:
             self.progress = tk.Frame(main_frame, height=4, bg="white")
-        self.progress.pack(fill="x", pady=(8, 0))
+        self.progress.pack(fill="x", pady=(int(8), int(0)))
         
     # Start progress animation
         self._start_progress_animation()
@@ -372,21 +372,68 @@ class NotificationPanel:
         self._create_panel()
         self._load_notifications()
     
+    def _safe_pack(self, widget, **kwargs):
+        """Safely pack a widget, converting all numeric parameters to int."""
+        safe_kwargs = {}
+        for key, value in kwargs.items():
+            try:
+                if key in ('pady', 'padx'):
+                    # Handle tuples for padding - convert to integers
+                    if isinstance(value, tuple):
+                        # Convert tuple elements to int
+                        converted = []
+                        for v in value:
+                            try:
+                                converted.append(int(v) if isinstance(v, (int, str)) else v)
+                            except (ValueError, TypeError):
+                                converted.append(0)  # Default to 0 if conversion fails
+                        safe_kwargs[key] = tuple(converted)
+                    else:
+                        safe_kwargs[key] = int(value) if isinstance(value, (int, str)) else value
+                elif key in ('width', 'height', 'wraplength'):
+                    # Convert to int, default to safe value if it fails
+                    try:
+                        safe_kwargs[key] = int(value)
+                    except (ValueError, TypeError):
+                        if key == 'wraplength':
+                            safe_kwargs[key] = 600  # Default wraplength
+                        elif key == 'width':
+                            safe_kwargs[key] = 30  # Default width
+                        else:
+                            safe_kwargs[key] = 120  # Default height
+                else:
+                    safe_kwargs[key] = value
+            except Exception as e:
+                import logging
+                logging.warning(f"Error converting pack parameter {key}={value}: {e}")
+                safe_kwargs[key] = value
+                
+        try:
+            widget.pack(**safe_kwargs)
+        except Exception as e:
+            import logging
+            logging.exception(f"Error packing widget: {e}")
+            # Fallback to basic pack
+            try:
+                widget.pack(fill="x")
+            except:
+                pass
+    
     def _create_panel(self):
         """Create the notification panel UI."""
         # Main frame
         self.main_frame = tb.Frame(self.parent)
-        self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self._safe_pack(self.main_frame, fill="both", expand=True, padx=10, pady=10)
         
         # Header
         header_frame = tb.Frame(self.main_frame)
-        header_frame.pack(fill="x", pady=(0, 10))
+        self._safe_pack(header_frame, fill="x", pady=(0, 10))
         
         # Title
         title_label = tb.Label(
             header_frame,
-            text="🔔 Notifications",
-            font=("Segoe UI", 16, "bold")
+            text="Notifications",
+            font=("Segoe UI", int(16), "bold")
         )
         title_label.pack(side="left")
         
@@ -474,6 +521,20 @@ class NotificationPanel:
     def _load_notifications(self):
         """Load notifications from database."""
         self.notifications = notification_manager.get_unread_notifications(100)
+        # Ensure all notifications have properly typed fields
+        for notif in self.notifications:
+            # Ensure id is int
+            if 'id' in notif:
+                try:
+                    notif['id'] = int(notif['id'])
+                except (ValueError, TypeError):
+                    pass
+            # Ensure priority is int
+            if 'priority' in notif:
+                try:
+                    notif['priority'] = int(notif['priority'])
+                except (ValueError, TypeError):
+                    notif['priority'] = 1
         self._refresh_ui()
     
     def _refresh_ui(self):
@@ -488,10 +549,10 @@ class NotificationPanel:
             empty_label = tb.Label(
                 self.scrollable_frame,
                 text="No notifications",
-                font=("Segoe UI", 12),
+                font=("Segoe UI", int(12)),
                 foreground="gray"
             )
-            empty_label.pack(pady=50)
+            self._safe_pack(empty_label, pady=50)
             return
         
         # Create notification widgets
@@ -500,74 +561,107 @@ class NotificationPanel:
     
     def _create_notification_widget(self, notification: Dict, index: int):
         """Create a widget for a single notification."""
-        # Determine style based on priority
-        priority = notification["priority"]
-        if priority == 4:  # CRITICAL
-            style = "danger"
-            priority_text = "CRITICAL"
-        elif priority == 3:  # HIGH
-            style = "warning"
-            priority_text = "HIGH"
-        elif priority == 2:  # MEDIUM
-            style = "info"
-            priority_text = "MEDIUM"
-        else:  # LOW
-            style = "success"
-            priority_text = "LOW"
-        
-        # Notification frame
-        notif_frame = tb.LabelFrame(
-            self.scrollable_frame,
-            text=f"{notification['title']} - {priority_text}",
-            style=f"{style}.TLabelFrame",
-            padding=10
-        )
-        notif_frame.pack(fill="x", pady=5)
-        
-        # Message
-        message_label = tb.Label(
-            notif_frame,
-            text=notification["message"],
-            font=("Segoe UI", 9),
-            wraplength=600
-        )
-        message_label.pack(anchor="w", pady=(0, 5))
-        
-        # Timestamp
-        created_at = datetime.fromisoformat(notification["created_at"].replace("Z", "+00:00"))
-        time_str = created_at.strftime("%Y-%m-%d %H:%M:%S")
-        time_label = tb.Label(
-            notif_frame,
-            text=f"📅 {time_str}",
-            font=("Segoe UI", 8),
-            foreground="gray"
-        )
-        time_label.pack(anchor="w", pady=(0, 5))
-        
-        # Action buttons
-        actions_frame = tb.Frame(notif_frame)
-        actions_frame.pack(fill="x")
-        
-        # Mark as read button
-        read_btn = tb.Button(
-            actions_frame,
-            text="Mark Read",
-            style=f"{style}.TButton",
-            command=lambda: self.mark_as_read(notification["id"])
-        )
-        read_btn.pack(side="left", padx=(0, 5))
-        
-        # Dismiss button
-        dismiss_btn = tb.Button(
-            actions_frame,
-            text="Dismiss",
-            style="secondary.TButton",
-            command=lambda: self.dismiss_notification(notification["id"])
-        )
-        dismiss_btn.pack(side="left")
-        
-        # Store reference
-        self.notification_widgets[notification["id"]] = notif_frame
+        try:
+            # DEFENSIVE: Ensure all notification dict values are properly typed FIRST
+            notification_id = notification.get("id")
+            try:
+                notification_id = int(notification_id) if notification_id else 0
+            except (ValueError, TypeError):
+                notification_id = 0
+            
+            notification_title = str(notification.get("title", "Notification"))
+            notification_message = str(notification.get("message", ""))
+            notification_created_at = str(notification.get("created_at", ""))
+            
+            # Determine style based on priority
+            # Convert priority to int if it's a string from database
+            try:
+                priority = int(notification["priority"]) if isinstance(notification["priority"], str) else notification["priority"]
+            except (ValueError, TypeError):
+                priority = 1  # Default to LOW if conversion fails
+            
+            if priority == 4:  # CRITICAL
+                style = "danger"
+                priority_text = "CRITICAL"
+            elif priority == 3:  # HIGH
+                style = "warning"
+                priority_text = "HIGH"
+            elif priority == 2:  # MEDIUM
+                style = "info"
+                priority_text = "MEDIUM"
+            else:  # LOW
+                style = "success"
+                priority_text = "LOW"
+            
+            # Notification frame - ensure padding is int
+            notif_frame = tb.LabelFrame(
+                self.scrollable_frame,
+                text=f"{notification_title} - {priority_text}",
+                style=f"{style}.TLabelFrame",
+                padding=int(10)  # Ensure padding is int, not str
+            )
+            self._safe_pack(notif_frame, fill="x", pady=int(5))
+            
+            # Message - ensure wraplength is int
+            message_label = tb.Label(
+                notif_frame,
+                text=notification_message,
+                font=("Segoe UI", int(9)),
+                wraplength=int(600)  # Ensure wraplength is int
+            )
+            self._safe_pack(message_label, anchor="w", pady=(int(0), int(5)))
+            
+            # Timestamp - parse safely
+            time_str = ""
+            try:
+                if notification_created_at:
+                    created_at = datetime.fromisoformat(notification_created_at.replace("Z", "+00:00"))
+                    time_str = created_at.strftime("%Y-%m-%d %H:%M:%S")
+            except Exception as ts_err:
+                import logging
+                logging.warning(f"Error parsing timestamp '{notification_created_at}': {ts_err}")
+                time_str = "Unknown time"
+            
+            time_label = tb.Label(
+                notif_frame,
+                text=f"{time_str}",
+                font=("Segoe UI", int(8)),
+                foreground="gray"
+            )
+            self._safe_pack(time_label, anchor="w", pady=(int(0), int(5)))
+            
+            # Action buttons
+            actions_frame = tb.Frame(notif_frame)
+            self._safe_pack(actions_frame, fill="x")
+            
+            # Mark as read button
+            read_btn = tb.Button(
+                actions_frame,
+                text="Mark Read",
+                style=f"{style}.TButton",
+                command=lambda nid=notification_id: self.mark_as_read(nid)
+            )
+            self._safe_pack(read_btn, side="left", padx=(int(0), int(5)))
+            
+            # Dismiss button
+            dismiss_btn = tb.Button(
+                actions_frame,
+                text="Dismiss",
+                style="secondary.TButton",
+                command=lambda nid=notification_id: self.dismiss_notification(nid)
+            )
+            self._safe_pack(dismiss_btn, side="left")
+            
+            # Store reference - use the safe ID
+            self.notification_widgets[notification_id] = notif_frame
+        except Exception as e:
+            # Log the error but don't crash the notification panel
+            import logging
+            import traceback
+            logging.exception(f"Error creating notification widget: {e}")
+            logging.debug(f"Notification data: {notification}")
+            logging.debug(f"Traceback: {traceback.format_exc()}")
+            # Do NOT try to display error in UI to avoid recursive failures
     
     def mark_as_read(self, notification_id: int):
         """Mark a notification as read."""
@@ -639,15 +733,15 @@ class NotificationSettingsPanel:
         """Create the settings panel UI."""
         # Main frame
         self.main_frame = tb.Frame(self.parent)
-        self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.main_frame.pack(fill="both", expand=True, padx=int(10), pady=int(10))
         
         # Title
         title_label = tb.Label(
             self.main_frame,
-            text="🔧 Notification Settings",
-            font=("Segoe UI", 16, "bold")
+            text="[SETTINGS] Notification Settings",
+            font=("Segoe UI", int(16), "bold")
         )
-        title_label.pack(anchor="w", pady=(0, 20))
+        title_label.pack(anchor="w", pady=(int(0), int(20)))
         
         # Settings container
         self.settings_frame = tb.Frame(self.main_frame)
@@ -664,7 +758,7 @@ class NotificationSettingsPanel:
             style="success.TButton",
             command=self.save_settings
         )
-        save_btn.pack(pady=20)
+        save_btn.pack(pady=int(20))
     
     def _create_setting_widget(self, notif_type: NotificationType):
         """Create a setting widget for a notification type."""
@@ -672,9 +766,9 @@ class NotificationSettingsPanel:
         setting_frame = tb.LabelFrame(
             self.settings_frame,
             text=notif_type.value.replace("_", " ").title(),
-            padding=15
+            padding=int(15)
         )
-        setting_frame.pack(fill="x", pady=5)
+        setting_frame.pack(fill="x", pady=int(5))
         
         # Enable checkbox
         enabled_var = tk.BooleanVar()
@@ -688,7 +782,7 @@ class NotificationSettingsPanel:
         
         # Priority selection
         priority_frame = tb.Frame(setting_frame)
-        priority_frame.pack(fill="x", pady=(5, 0))
+        priority_frame.pack(fill="x", pady=(int(5), int(0)))
         
         priority_label = tb.Label(priority_frame, text="Priority:")
         priority_label.pack(side="left")
@@ -699,9 +793,9 @@ class NotificationSettingsPanel:
             textvariable=priority_var,
             values=["LOW", "MEDIUM", "HIGH", "CRITICAL"],
             state="readonly",
-            width=10
+            width=int(10)
         )
-        priority_combo.pack(side="left", padx=(5, 0))
+        priority_combo.pack(side="left", padx=(int(5), int(0)))
         
         # Sound checkbox
         sound_var = tk.BooleanVar()
@@ -796,7 +890,7 @@ class NotificationSystem:
             # Check if we can show another toast (performance limit)
             if not can_show_toast():
                 # Too many toasts, skip this one to prevent performance issues
-                print(f"⚠️ Skipping toast notification (too many active): {title}")
+                print(f"[WARNING] Skipping toast notification (too many active): {title}")
                 return
             
             # Register this toast

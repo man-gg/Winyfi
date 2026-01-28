@@ -1,0 +1,162 @@
+"""
+REAL-TIME LOG MONITORING - IMPLEMENTATION SUMMARY
+=================================================
+
+Overview:
+---------
+Enhanced the Service Manager in the Admin Window with real-time, color-coded 
+log monitoring for app.py (Flask API) and unifi_api.py services.
+
+Features Implemented:
+--------------------
+
+✅ Real-Time Log Streaming
+   - Logs stream live while services are running (no manual refresh needed)
+   - Updates every 500ms (2 times per second) for responsive monitoring
+   - Thread-safe file access with locks to prevent conflicts
+   - Buffered log storage (keeps last 1000 lines per service)
+
+✅ Color-Coded Log Display
+   INFO/DEBUG      → White/Light Gray  (#d4d4d4)
+   SUCCESS/STARTED → Green (Bold)      (#4ec9b0)
+   WARNING         → Yellow (Bold)     (#dcdcaa)
+   ERROR/CRITICAL  → Red (Bold)        (#f48771)
+   STOPPED/EXIT    → Muted Gray        (#808080)
+   Timestamps      → Cyan              (#9cdcfe)
+
+✅ Smart Log Parsing
+   - Automatically detects log format (multiple patterns supported)
+   - Extracts timestamp, log level, and message
+   - Handles various log formats from different frameworks
+   - Patterns detected:
+     * [YYYY-MM-DD HH:MM:SS] LEVEL: message
+     * YYYY-MM-DD HH:MM:SS - LEVEL - message
+     * Keyword detection (ERROR, WARNING, SUCCESS, etc.)
+
+✅ UI Enhancements
+   - Log panel beside each service toggle switch
+   - Dark theme (#1e1e1e background) for better readability
+   - Auto-scroll to newest entry (toggleable)
+   - Manual clear button for each log viewer
+   - Horizontal and vertical scrollbars
+   - Consolas monospace font for clean alignment
+   - Responsive layout (70% logs, 30% controls)
+
+✅ Performance Optimizations
+   - Background threads for log reading (non-blocking)
+   - Deque-based circular buffer (O(1) operations)
+   - File position tracking (only reads new lines)
+   - Async health checks don't freeze UI
+   - Proper cleanup on window close
+
+Technical Implementation:
+------------------------
+
+Backend (service_manager.py):
+  - Added log_buffers: Dict[str, deque] for per-service log storage
+  - Added log_positions: Dict[str, int] for file position tracking
+  - Added log_locks: Dict[str, threading.Lock] for thread safety
+  
+  New Methods:
+  • read_new_logs(service_name, max_lines) - Stream new log lines
+  • _parse_log_line(line) - Parse and classify log lines
+  • get_buffered_logs(service_name, max_lines) - Get cached logs
+  • clear_log_buffer(service_name) - Clear log cache
+  • get_log_file_path(service_name) - Get log file location
+
+Frontend (dashboard.py):
+  - Created LogViewer class with:
+    * Color-coded Text widget with tag configuration
+    * Auto-scroll toggle (BooleanVar)
+    * Clear logs functionality
+    * Real-time update loop (500ms interval)
+    * Cleanup handlers for proper resource management
+  
+  UI Layout:
+  • Horizontal split: Controls (30%) | Logs (70%)
+  • Each service gets its own LogViewer instance
+  • Window size: 1400x800 (expanded for log visibility)
+  • Periodic update via service_window.after()
+
+Log File Locations:
+------------------
+  Flask API:  logs/flask-api.log
+  UniFi API:  logs/unifi-api.log
+
+Usage Instructions:
+------------------
+1. Open WinyFi Admin Window
+2. Click "⚙️ Service Manager" button
+3. Start a service (Flask API or UniFi API)
+4. Watch logs stream in real-time with color coding
+5. Use auto-scroll toggle to pause/resume scrolling
+6. Click 🗑️ to clear individual log views
+7. Click "📂 Open Logs Folder" to access raw log files
+
+Testing:
+--------
+Run: python test_log_streaming.py
+
+Tests verify:
+  ✓ Log parsing with multiple formats
+  ✓ Buffer initialization for all services
+  ✓ Log file path resolution
+  ✓ Service status detection
+  ✓ Thread-safe log access
+
+Benefits:
+---------
+• Immediate visibility into service health
+• No need to open external log files
+• Fast debugging with color-coded levels
+• Identify failures at a glance (red = error)
+• Non-intrusive (doesn't affect service performance)
+• Clean, professional UI integrated into existing system
+
+Color Coding Examples:
+---------------------
+[14:30:45] INFO     Server initialized
+[14:30:46] SUCCESS  Database connected successfully
+[14:30:47] WARNING  Configuration file missing, using defaults
+[14:30:48] ERROR    Failed to connect to external API
+[14:30:49] DEBUG    Query executed in 12ms
+[14:30:50] STOPPED  Service shutdown complete
+
+Files Modified:
+--------------
+1. service_manager.py
+   - Added log streaming backend
+   - Implemented log parsing and buffering
+   - Thread-safe file operations
+
+2. dashboard.py (show_service_manager method)
+   - Created LogViewer widget class
+   - Integrated real-time log panels
+   - Implemented periodic update loop
+   - Enhanced UI layout for log visibility
+
+Files Created:
+-------------
+1. test_log_streaming.py
+   - Comprehensive test suite
+   - Validates log parsing
+   - Checks buffer initialization
+   - Verifies file access
+
+No Breaking Changes:
+-------------------
+• All existing Service Manager functionality preserved
+• Start/Stop/Restart/Auto-start still work
+• Health checks remain functional
+• Configuration persistence unchanged
+• No new dependencies required
+
+Notes:
+------
+- Logs are read-only (display only, not editable)
+- Each service maintains independent log buffer
+- Maximum 1000 lines cached per service
+- Log files continue to grow on disk
+- UI updates don't block service execution
+- Window close properly cancels update timers
+"""

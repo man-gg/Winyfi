@@ -26,9 +26,10 @@ NEW FIELDS IN RESULTS:
 
 import time
 import logging
-import speedtest
 import platform
 import subprocess
+import sys
+import os
 from scapy.all import sniff, Ether, ARP, IP, UDP, conf, srp
 import psutil
 from collections import defaultdict
@@ -39,6 +40,58 @@ from datetime import datetime
 import ipaddress
 import requests
 import json
+
+# Ensure stdout/stderr exist in windowed bundles to keep speedtest import from failing
+if sys.stdout is None:
+    sys.stdout = sys.__stdout__ if hasattr(sys, "__stdout__") and sys.__stdout__ else open(os.devnull, "w")
+if sys.stderr is None:
+    sys.stderr = sys.__stderr__ if hasattr(sys, "__stderr__") and sys.__stderr__ else open(os.devnull, "w")
+
+# Helper function for silent subprocess execution (Windows support)
+def _run_silent_subprocess(cmd, timeout=None, **kwargs):
+    """Run subprocess silently without showing CMD windows on Windows.
+    
+    Args:
+        cmd: Command list to run
+        timeout: Timeout in seconds
+        **kwargs: Additional arguments for subprocess.run
+    
+    Returns:
+        subprocess.CompletedProcess result
+    """
+    startupinfo = None
+    creationflags = 0
+    
+    if platform.system().lower() == "windows":
+        # Silence Windows CMD window
+        creationflags = subprocess.CREATE_NO_WINDOW
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0  # SW_HIDE
+    
+    # Ensure capture_output and text are set if not provided
+    if 'stdout' not in kwargs:
+        kwargs['stdout'] = subprocess.PIPE
+    if 'stderr' not in kwargs:
+        kwargs['stderr'] = subprocess.PIPE
+    if 'text' not in kwargs:
+        kwargs['text'] = True
+    
+    return subprocess.run(
+        cmd,
+        timeout=timeout,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+        **kwargs
+    )
+
+# Optional import - speedtest-cli may not be available in all environments
+try:
+    import speedtest
+    SPEEDTEST_AVAILABLE = True
+except ImportError:
+    SPEEDTEST_AVAILABLE = False
+    logging.warning("speedtest-cli not available; speedtest functions will be disabled")
 
 # Global client table
 clients = {}
@@ -128,10 +181,8 @@ def ping_latency(ip, timeout=1000, bandwidth=None, is_unifi=False, use_manager=T
     
     try:
         start = time.time()
-        result = subprocess.run(
+        result = _run_silent_subprocess(
             cmd, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE,
             timeout=timeout / 1000 + 1  # Add 1 second buffer to subprocess timeout
         )
         end = time.time()
@@ -234,64 +285,6 @@ def _rate_bandwidth(mbps):
         return "Poor"
     return "None"
 
-def get_speedtest_results():
-    """Get download/upload speed using Speedtest.net."""
-    st = speedtest.Speedtest()
-
-    # Get best server
-    st.get_best_server()
-
-    # Perform the download/upload tests
-    download_speed = st.download() / 1_000_000  # Convert from bits to Mbps
-    upload_speed = st.upload() / 1_000_000  # Convert from bits to Mbps
-    ping = st.results.ping  # Ping in ms
-
-    logging.debug(f"Download speed: {download_speed} Mbps")
-    logging.debug(f"Upload speed: {upload_speed} Mbps")
-    logging.debug(f"Ping: {ping} ms")
-
-    # Return results with quality ratings
-    return {
-        "latency": ping,
-        "download": download_speed,
-        "upload": upload_speed,
-        "quality": {
-            "latency": _rate_latency(ping),
-            "download": _rate_bandwidth(download_speed),
-            "upload": _rate_bandwidth(upload_speed)
-        }
-    }
-"""
-def get_bandwidth(ip, test_size=256_000):
-    latency = ping_latency(ip)  # Optionally ping the IP for latency
-    if latency is None:
-        logging.debug(f"Unable to determine latency for {ip}")
-        return {
-            "latency": None, "download": 0, "upload": 0,
-            "quality": {"latency": "Poor", "download": "None", "upload": "None"}
-        }
-
-    try:
-        # Get bandwidth via Speedtest.net
-        speedtest_results = get_speedtest_results()
-    except speedtest.ConfigRetrievalError as e:
-        logging.error(f"Failed to retrieve speedtest configuration: {e}")
-        return {
-            "latency": None, "download": 0, "upload": 0,
-            "quality": {"latency": "Poor", "download": "None", "upload": "None"}
-        }
-    except Exception as e:
-        logging.error(f"Unexpected error while fetching bandwidth: {e}")
-        return {
-            "latency": None, "download": 0, "upload": 0,
-            "quality": {"latency": "Poor", "download": "None", "upload": "None"}
-        }
-
-    # Return results with quality ratings
-    return speedtest_results
-"""
-
-
 
 # ============================================================
 # BANDWIDTH MONITORING - ZERO DATA CONSUMPTION
@@ -336,6 +329,9 @@ def get_speedtest_results(manual=False):
     
     WARNING: Consumes ~150MB of data per test!
     """
+    if not SPEEDTEST_AVAILABLE:
+        raise RuntimeError("speedtest-cli is not installed. Install it with: pip install speedtest-cli")
+    
     if not manual:
         raise ValueError("Speedtest must be manually triggered (set manual=True). Use get_bandwidth() for automatic monitoring.")
     
@@ -660,6 +656,9 @@ def get_mini_speedtest(manual=False):
     
     WARNING: Consumes ~1.5MB of data per test!
     """
+    if not SPEEDTEST_AVAILABLE:
+        raise RuntimeError("speedtest-cli is not installed. Install it with: pip install speedtest-cli")
+    
     if not manual:
         raise ValueError("Mini speedtest must be manually triggered (set manual=True). Use get_bandwidth() for automatic monitoring.")
     
