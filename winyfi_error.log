@@ -34880,3 +34880,1349 @@ KeyboardInterrupt
 2026-01-20 11:20:58,346 INFO [db] ✅ MySQL connection established successfully
 2026-01-20 11:20:59,964 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
 2026-01-20 11:20:59,966 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:14:37,437 INFO [winyfi] Running MySQL health check...
+2026-01-30 11:14:37,444 INFO [health_check] ============================================================
+2026-01-30 11:14:37,446 INFO [health_check] WINYFI MySQL Health Check Started
+2026-01-30 11:14:37,447 INFO [health_check] ============================================================
+2026-01-30 11:14:37,464 INFO [health_check] 
+[CHECK 1] Verifying MySQL port 3306 is listening...
+2026-01-30 11:14:37,468 INFO [health_check] ✅ MySQL is listening on port 3306
+2026-01-30 11:14:37,475 INFO [health_check] 
+[CHECK 2] Testing MySQL credentials...
+2026-01-30 11:14:37,478 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:14:37,480 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:14:37,480 INFO [health_check] ✅ MySQL credentials are valid
+2026-01-30 11:14:37,481 INFO [health_check] 
+[CHECK 3] Checking if 'winyfi' database exists...
+2026-01-30 11:14:37,486 INFO [health_check] ✅ 'winyfi' database is accessible
+2026-01-30 11:14:37,487 INFO [health_check] 
+============================================================
+2026-01-30 11:14:37,488 INFO [health_check] ✅ ALL CHECKS PASSED - App is ready to run
+2026-01-30 11:14:37,489 INFO [health_check] ============================================================
+2026-01-30 11:14:37,494 INFO [winyfi] ✅ Health check passed - MySQL is operational
+2026-01-30 11:16:44,379 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:44,381 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:44,382 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:44,395 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:45,531 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:45,556 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:45,558 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:45,571 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:45,573 INFO [db] activity_logs table created or already exists
+2026-01-30 11:16:45,573 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:45,587 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:45,662 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:45,665 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:45,736 INFO [db] Activity logged: User 2 - Login - None
+2026-01-30 11:16:45,744 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:45,748 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:45,755 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:45,758 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:45,761 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:45,765 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:45,800 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:45,802 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:46,530 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:46,531 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:47,167 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:47,168 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:48,414 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:48,437 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:48,477 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:48,499 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:48,521 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:48,523 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:48,525 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:48,545 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:49,868 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:49,870 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,023 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:50,042 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,077 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:50,079 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,100 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:50,102 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,103 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:50,120 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,176 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:50,178 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,217 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:50,218 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,240 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:50,242 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,243 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:50,246 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:50,297 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:50,298 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:52,703 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:52,707 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:52,709 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:52,709 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:52,712 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:52,718 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:53,556 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:53,558 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:53,559 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:53,561 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:53,941 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:53,947 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:54,011 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:54,016 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:54,094 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:54,165 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:54,172 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:54,176 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:54,183 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:54,190 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:54,332 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:54,335 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:54,410 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:54,412 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:54,694 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:54,700 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:55,590 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:55,592 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:56,034 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:56,047 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:56,455 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:56,457 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:56,743 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:56,764 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:57,978 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,066 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,210 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:58,211 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,321 INFO [db] Loop detection saved to database (ID: 660, severity: 58.56, cross-subnet: False)
+2026-01-30 11:16:58,321 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,323 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,333 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:58,336 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,341 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:58,347 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,354 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:58,359 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,369 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,383 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,388 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,431 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,433 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,435 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,461 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,473 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,476 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,481 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,545 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:16:58,547 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,548 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,548 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,553 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,566 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,703 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,707 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,738 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,755 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,904 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,906 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:58,909 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:58,910 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,022 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,024 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,027 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,028 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,032 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,035 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,038 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,039 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,041 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,043 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,046 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,047 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,050 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,052 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,054 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,056 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,058 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,082 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,084 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,086 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,088 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,089 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,091 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,093 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,297 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,299 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,386 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,388 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,422 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,425 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,490 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,510 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,513 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,540 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,543 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,556 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,559 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,572 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,576 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,578 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,581 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,604 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,773 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,780 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:16:59,936 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:16:59,937 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,003 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,006 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,102 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,105 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,107 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,108 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,111 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,112 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,118 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,119 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,122 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,124 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,127 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,128 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,456 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,458 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,538 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,539 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,577 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,578 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,642 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,644 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,647 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,648 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,650 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,652 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,655 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,657 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,660 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,662 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,668 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,670 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,830 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,832 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:00,978 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:00,980 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,029 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,030 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,159 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,161 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,163 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,166 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,168 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,170 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,172 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,175 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,180 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,181 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,183 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,186 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,331 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,333 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,420 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,439 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,476 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,501 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,569 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,571 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,573 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,594 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,598 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,604 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,606 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,611 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,626 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,631 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,649 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,654 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,878 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,880 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:01,971 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:01,972 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,225 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,227 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,342 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,345 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,349 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,351 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,353 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,356 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,358 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,360 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,362 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,365 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,369 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,375 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,471 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,495 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,691 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,700 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,800 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,802 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,849 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,850 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,926 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,928 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,930 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,931 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,935 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,937 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,939 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,942 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,945 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,946 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:02,949 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:02,950 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,262 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,265 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,353 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,375 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,418 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,420 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,498 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,499 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,501 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,504 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,507 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,528 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,531 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,532 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,536 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,538 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,776 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,778 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,814 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,816 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,839 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,841 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,842 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:03,844 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:03,899 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:03,901 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:05,907 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:05,910 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,374 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:06,379 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,398 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,400 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,419 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,421 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,436 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,451 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,471 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,474 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,623 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,641 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,663 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,702 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,722 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,728 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,744 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,747 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,767 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,768 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,798 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,800 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,818 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,820 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,836 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,838 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,856 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,871 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,902 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,907 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,911 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:06,920 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,942 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,945 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,947 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,949 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,965 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,967 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:06,985 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:06,987 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,019 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,021 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,041 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,055 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,071 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,074 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,092 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,095 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,111 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,113 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,128 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,148 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,171 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:07,179 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,195 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,210 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,212 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,226 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,241 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,258 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,274 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,289 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,307 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,321 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,338 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,352 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,370 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,384 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,426 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:07,429 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,446 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,448 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,450 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,452 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,466 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,468 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,493 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,520 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,534 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,551 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,565 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,567 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,581 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,597 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,612 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:07,615 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,628 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,642 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,645 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,658 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,671 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,674 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,687 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,689 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,708 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,710 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,723 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,726 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,740 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,765 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,780 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:07,782 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,798 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,811 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,813 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,826 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,839 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,841 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,856 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:07,856 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,858 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,874 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,894 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,896 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,909 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,911 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,925 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:07,951 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,970 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:07,975 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:07,989 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,014 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,016 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,029 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,043 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,060 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,074 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,076 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,090 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,092 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,105 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,107 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,121 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,123 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,138 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:08,140 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,156 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,170 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,172 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,174 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,188 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,201 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,215 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,217 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,230 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,232 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,246 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,248 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,262 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:08,279 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,298 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:08,300 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,914 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:08,931 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,967 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:08,969 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,989 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:08,991 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:08,993 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:09,010 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:09,060 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:09,087 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:12,446 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:12,466 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:14,089 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:14,105 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:14,143 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:14,166 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:14,186 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:14,188 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:14,190 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:17:14,212 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:17:14,260 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:17:14,275 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:00,745 INFO [winyfi] Running MySQL health check...
+2026-01-30 11:20:00,750 INFO [health_check] ============================================================
+2026-01-30 11:20:00,757 INFO [health_check] WINYFI MySQL Health Check Started
+2026-01-30 11:20:00,766 INFO [health_check] ============================================================
+2026-01-30 11:20:00,778 INFO [health_check] 
+[CHECK 1] Verifying MySQL port 3306 is listening...
+2026-01-30 11:20:00,780 INFO [health_check] ✅ MySQL is listening on port 3306
+2026-01-30 11:20:00,783 INFO [health_check] 
+[CHECK 2] Testing MySQL credentials...
+2026-01-30 11:20:00,785 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:00,787 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:00,789 INFO [health_check] ✅ MySQL credentials are valid
+2026-01-30 11:20:00,790 INFO [health_check] 
+[CHECK 3] Checking if 'winyfi' database exists...
+2026-01-30 11:20:00,795 INFO [health_check] ✅ 'winyfi' database is accessible
+2026-01-30 11:20:00,797 INFO [health_check] 
+============================================================
+2026-01-30 11:20:00,797 INFO [health_check] ✅ ALL CHECKS PASSED - App is ready to run
+2026-01-30 11:20:00,798 INFO [health_check] ============================================================
+2026-01-30 11:20:00,799 INFO [winyfi] ✅ Health check passed - MySQL is operational
+2026-01-30 11:20:08,049 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:08,065 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:08,067 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:08,069 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,274 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:09,277 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,278 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:09,280 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,281 INFO [db] activity_logs table created or already exists
+2026-01-30 11:20:09,281 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:09,283 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,290 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:09,292 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,297 INFO [db] Activity logged: User 2 - Login - None
+2026-01-30 11:20:09,316 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:09,318 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,320 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:09,328 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,331 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:09,334 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,390 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:09,392 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:09,776 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:09,799 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:10,220 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:10,221 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:11,350 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:11,362 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:11,406 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:11,440 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:11,517 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:11,528 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:11,530 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:11,531 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:17,766 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:17,783 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:17,904 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:17,906 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:17,940 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:17,942 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:17,965 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:17,967 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:17,968 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:17,970 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:18,022 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:18,025 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:18,067 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:18,069 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:18,090 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:18,150 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:18,152 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:18,154 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:18,210 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:18,212 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:18,738 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:18,741 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:24,244 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:24,250 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:24,253 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:24,256 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:24,258 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:24,260 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,142 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:25,144 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,146 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:25,147 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,446 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:25,449 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,485 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:25,487 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,508 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:25,510 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,511 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:25,513 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,632 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,653 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,655 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,656 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,659 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,661 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,664 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,666 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,671 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,683 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,879 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,897 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,910 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,914 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,917 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,919 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,922 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,925 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,928 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,929 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:25,947 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:25,975 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,061 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,122 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,138 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,146 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,150 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,151 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,161 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,167 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,167 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,170 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,191 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,202 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,207 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,211 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,218 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,220 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,229 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,231 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,238 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,242 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,290 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,293 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,297 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,298 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,301 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,304 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,307 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,308 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,312 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,315 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,318 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:26,320 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,548 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,553 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,562 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,565 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,675 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,676 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,678 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,680 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,760 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,789 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,795 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,798 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,880 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,882 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,887 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,889 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,892 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,895 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,897 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,899 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,901 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,903 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,914 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:26,916 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:26,918 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,020 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,021 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,024 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,026 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,028 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,029 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,031 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,034 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,036 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,037 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,039 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,180 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,181 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,265 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,267 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,304 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,306 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,424 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,461 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,465 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,466 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,469 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,472 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,475 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,477 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,479 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,480 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,484 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,486 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,730 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,732 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,811 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,813 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,902 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,904 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,975 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,977 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,979 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,981 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,984 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,985 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,987 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,989 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,991 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,993 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:27,995 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:27,997 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,168 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,170 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,351 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,353 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,394 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,395 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,473 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,475 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,477 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,479 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,481 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,483 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,488 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,489 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,493 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,495 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,499 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,500 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,850 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,853 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,935 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,953 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:28,991 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:28,995 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,086 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,133 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,136 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,156 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,158 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,172 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,175 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,187 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,189 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,204 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,206 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,219 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,328 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,347 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,354 INFO [db] Loop detection saved to database (ID: 661, severity: 59.87, cross-subnet: False)
+2026-01-30 11:20:29,354 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,373 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,394 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,395 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,399 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,401 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,518 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,547 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,598 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,601 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,750 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,752 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,755 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,757 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,760 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,763 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,766 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,767 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,770 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,771 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,776 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:29,801 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:29,978 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,004 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,098 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,101 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,148 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,150 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,214 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,216 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,218 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,226 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,229 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,250 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,254 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,257 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,260 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,262 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,265 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,267 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,269 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,271 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,587 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,591 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,621 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,634 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,667 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,669 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,729 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,731 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,753 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,753 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,755 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,755 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,757 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,758 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,813 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:30,814 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,832 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,836 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,915 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,916 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,918 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,920 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,923 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,925 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,927 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,928 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,930 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,933 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:30,935 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:30,937 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:31,098 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:31,100 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:31,176 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:31,178 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:31,230 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:31,248 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:31,310 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:31,312 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:31,315 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:31,317 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:31,319 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:31,340 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:31,344 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:31,356 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:31,358 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:31,370 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,374 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:34,379 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,408 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,415 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,424 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,425 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,429 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,432 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,437 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,439 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,534 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,536 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,539 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,541 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,544 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,546 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,549 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,550 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,555 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,557 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,571 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,574 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,577 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,603 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,608 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,610 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,613 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,615 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,623 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:34,623 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,626 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,626 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,637 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,639 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,640 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,642 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,646 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,648 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,651 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,664 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,680 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,683 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,686 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,688 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,691 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,693 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,696 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,698 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,701 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,703 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,707 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,710 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,719 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:34,721 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,727 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:34,729 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,737 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,757 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,760 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,763 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,767 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,788 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,791 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,819 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,843 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,846 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,852 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,858 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,867 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,877 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,918 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:34,920 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,924 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,926 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,927 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,929 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,932 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,958 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,961 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,989 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,993 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:34,995 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:34,998 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,000 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,007 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,008 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,016 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:35,020 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,025 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,027 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,028 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,030 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,032 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,034 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,039 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,041 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,044 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,045 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,047 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,049 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,052 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,054 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,057 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:35,059 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,063 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,064 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,066 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,067 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,069 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,071 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,074 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,076 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,078 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,080 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,083 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,085 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,087 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,088 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,095 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:35,097 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,100 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,101 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,103 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,105 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,107 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,109 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,111 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,114 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,117 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,119 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,122 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,124 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,127 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:35,128 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,131 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:35,135 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,824 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:35,827 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,864 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:35,866 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,888 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:35,891 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:35,895 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:35,897 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:38,571 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:38,576 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:38,629 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:38,630 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:39,371 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:39,374 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:40,959 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:40,963 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:41,000 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:41,003 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:41,026 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:41,038 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:41,040 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:41,054 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:41,098 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:41,117 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:41,601 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:41,617 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:41,657 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:41,658 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:41,678 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:41,695 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:41,697 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:41,699 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:42,870 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:42,875 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:42,952 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:42,955 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:46,122 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:46,139 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:46,179 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:46,181 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:46,201 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:46,217 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:46,219 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:46,232 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:46,283 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:46,285 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:46,735 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:46,737 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:46,783 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:46,813 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:50,549 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:50,553 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:50,610 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:50,638 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:51,299 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:51,316 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:51,353 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:51,356 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:51,390 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:51,392 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:51,394 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:51,410 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:51,455 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:51,457 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:54,235 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:54,240 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:54,304 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:54,307 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,144 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,147 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,149 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,151 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,347 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,349 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,351 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,353 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,429 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,431 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,433 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,435 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,451 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,453 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,454 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,456 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,622 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,626 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,749 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,751 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,877 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,879 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,882 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,885 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,888 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,890 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,894 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,897 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,900 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,905 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,907 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,909 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,911 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,914 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,915 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,918 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,920 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,924 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,926 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,928 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,931 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,933 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:55,936 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:55,937 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,088 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,090 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,186 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,188 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,229 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,231 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,312 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,314 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,316 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,318 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,320 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,322 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,325 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,326 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,329 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,331 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,333 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,335 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,397 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,399 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,464 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,466 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,506 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,507 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,527 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,528 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,529 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,529 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,531 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,533 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,583 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:20:56,585 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,637 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,642 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,697 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,699 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,767 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,769 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,772 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,792 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,795 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,808 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,839 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,841 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,861 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,863 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:56,865 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:56,892 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,069 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,071 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,158 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,160 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,198 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,200 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,276 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,278 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,280 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,282 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,284 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,286 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,288 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,289 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,293 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,295 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,297 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,298 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,464 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,466 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,561 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,564 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,608 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,609 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,688 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,690 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,693 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,695 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,698 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,699 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,702 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,704 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,706 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,708 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,710 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:57,712 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:57,955 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,005 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,183 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,185 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,238 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,240 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,340 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,341 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,344 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,345 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,348 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,349 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,352 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,354 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,356 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,357 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,359 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,361 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,518 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,519 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,534 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,541 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,604 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,606 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,618 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,666 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,726 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,728 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,813 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,815 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,817 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,818 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,821 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,823 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,825 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,826 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,829 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,830 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:58,833 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:58,835 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,079 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,081 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,158 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,160 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,201 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,203 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,277 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,302 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,305 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,317 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,320 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,322 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,324 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,361 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,364 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,381 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,384 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,385 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,536 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,538 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,620 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,622 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,662 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,664 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,741 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,743 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,745 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,746 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,748 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,750 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,753 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,755 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:20:59,757 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:20:59,758 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:00,247 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:00,263 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:06,292 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:06,295 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:06,304 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:06,315 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:06,363 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:06,365 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:06,406 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:06,432 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:06,433 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:06,435 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:06,487 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:21:06,489 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:06,502 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:06,507 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:06,627 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:06,631 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:10,378 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:10,385 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:10,438 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:10,441 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,508 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,512 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,551 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,554 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,576 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,578 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,584 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,587 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,633 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:21:11,635 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,754 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,757 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,797 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,799 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,819 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,822 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,824 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,847 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:11,935 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:11,943 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:14,091 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:14,104 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:14,131 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:14,133 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:16,647 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:16,648 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:16,687 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:16,690 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:16,710 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:16,712 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:16,713 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:16,715 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:16,771 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:21:16,773 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:18,203 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:18,205 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:18,249 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:18,252 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:21,775 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:21,787 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:21,824 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:21,851 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:21,872 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:21,880 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:21,896 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:21,896 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:21,899 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:21,902 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:21,955 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 11:21:21,955 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/2)
+2026-01-30 11:21:21,957 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 11:21:21,957 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 12:43:02,375 INFO [winyfi] Running MySQL health check...
+2026-01-30 12:43:02,394 INFO [health_check] ============================================================
+2026-01-30 12:43:02,400 INFO [health_check] WINYFI MySQL Health Check Started
+2026-01-30 12:43:02,404 INFO [health_check] ============================================================
+2026-01-30 12:43:02,412 INFO [health_check] 
+[CHECK 1] Verifying MySQL port 3306 is listening...
+2026-01-30 12:43:02,430 INFO [health_check] ✅ MySQL is listening on port 3306
+2026-01-30 12:43:02,439 INFO [health_check] 
+[CHECK 2] Testing MySQL credentials...
+2026-01-30 12:43:02,444 INFO [db] Attempting MySQL connection to 127.0.0.1:3306 (attempt 1/1)
+2026-01-30 12:43:02,445 INFO [db] ✅ MySQL connection established successfully
+2026-01-30 12:43:02,447 INFO [health_check] ✅ MySQL credentials are valid
+2026-01-30 12:43:02,449 INFO [health_check] 
+[CHECK 3] Checking if 'winyfi' database exists...
+2026-01-30 12:43:02,454 INFO [health_check] ✅ 'winyfi' database is accessible
+2026-01-30 12:43:02,456 INFO [health_check] 
+============================================================
+2026-01-30 12:43:02,457 INFO [health_check] ✅ ALL CHECKS PASSED - App is ready to run
+2026-01-30 12:43:02,458 INFO [health_check] ============================================================
+2026-01-30 12:43:02,459 INFO [winyfi] ✅ Health check passed - MySQL is operational

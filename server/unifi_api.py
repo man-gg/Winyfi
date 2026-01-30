@@ -37,6 +37,17 @@ import hmac
 from functools import wraps
 
 import requests
+
+try:
+    from config_utils import load_server_config
+except Exception:
+    # Allow direct execution from server/ by adding parent dir to sys.path
+    import sys as _sys
+    _server_dir = os.path.dirname(os.path.abspath(__file__))
+    _parent_dir = os.path.dirname(_server_dir)
+    if _parent_dir not in _sys.path:
+        _sys.path.insert(0, _parent_dir)
+    from config_utils import load_server_config
 from requests.adapters import HTTPAdapter
 try:
     # urllib3 location differs across versions; this import covers common cases
@@ -75,38 +86,67 @@ def _run_silent_subprocess(cmd, timeout=None, **kwargs):
 
 app = Flask(__name__)
 
-# --- Controller configuration (overridable via env) ---
+# --- Controller configuration (overridable via env / server_config.json) ---
+_cfg = load_server_config()
+_api_cfg = _cfg.get("unifi_api", {}) if isinstance(_cfg, dict) else {}
+_controller_cfg = _cfg.get("unifi_controller", {}) if isinstance(_cfg, dict) else {}
+_server_cfg = _cfg.get("server", {}) if isinstance(_cfg, dict) else {}
+
 # UniFi controller typically runs on HTTPS port 8443
 # For remote connections, set UNIFI_URL to https://<controller-ip>:8443
-CONTROLLER_URL = os.getenv("UNIFI_URL", "https://127.0.0.1:8443").rstrip("/")
-USERNAME = os.getenv("UNIFI_USER", "admin")
-PASSWORD = os.getenv("UNIFI_PASS", "admin123")
-SITE = os.getenv("UNIFI_SITE", "default")
+CONTROLLER_URL = os.getenv("UNIFI_URL", _controller_cfg.get("url", "https://127.0.0.1:8443")).rstrip("/")
+USERNAME = os.getenv("UNIFI_USER", _controller_cfg.get("username", "admin"))
+PASSWORD = os.getenv("UNIFI_PASS", _controller_cfg.get("password", "admin123"))
+SITE = os.getenv("UNIFI_SITE", _controller_cfg.get("site", "default"))
 REFRESH_INTERVAL = 5000  # Auto-refresh every 5000 ms (5 sec)
 
 # SSL Verification - disabled by default for self-signed certificates
 # Set UNIFI_VERIFY=true to enable SSL verification (requires valid cert)
-DISABLE_SSL_VERIFY = os.getenv("UNIFI_VERIFY", "false").lower() == "false"
+if "UNIFI_VERIFY" in os.environ:
+    DISABLE_SSL_VERIFY = os.getenv("UNIFI_VERIFY", "false").lower() == "false"
+else:
+    DISABLE_SSL_VERIFY = not bool(_controller_cfg.get("verify_ssl", False))
 
 # --- Security & behavior configuration ---
 FLASK_DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
 # For development/internal use, allow requests without API keys
 # Set ALLOW_NO_AUTH=false in production to enforce API key authentication
-ALLOW_NO_AUTH = os.getenv("ALLOW_NO_AUTH", "true").lower() == "true"
+if "ALLOW_NO_AUTH" in os.environ:
+    ALLOW_NO_AUTH = os.getenv("ALLOW_NO_AUTH", "true").lower() == "true"
+else:
+    ALLOW_NO_AUTH = bool(_server_cfg.get("allow_no_auth", True))
 
 # API Keys (comma separated). If empty and ALLOW_NO_AUTH is False, all requests will be rejected.
-API_KEYS = {k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()}
-ADMIN_API_KEYS = {k.strip() for k in os.getenv("ADMIN_API_KEYS", "").split(",") if k.strip()}
+if "API_KEYS" in os.environ:
+    API_KEYS = {k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()}
+else:
+    API_KEYS = {str(k).strip() for k in (_server_cfg.get("api_keys") or []) if str(k).strip()}
+
+if "ADMIN_API_KEYS" in os.environ:
+    ADMIN_API_KEYS = {k.strip() for k in os.getenv("ADMIN_API_KEYS", "").split(",") if k.strip()}
+else:
+    ADMIN_API_KEYS = {str(k).strip() for k in (_server_cfg.get("admin_api_keys") or []) if str(k).strip()}
 
 # Limit which sites are accessible via /api/s/<site>/...
-ALLOWED_SITES = {s.strip() for s in os.getenv("ALLOWED_SITES", SITE).split(",") if s.strip()}
+if "ALLOWED_SITES" in os.environ:
+    ALLOWED_SITES = {s.strip() for s in os.getenv("ALLOWED_SITES", SITE).split(",") if s.strip()}
+else:
+    _sites = _server_cfg.get("allowed_sites") or [SITE]
+    ALLOWED_SITES = {str(s).strip() for s in _sites if str(s).strip()}
 
 # Mock controls
 ENABLE_MOCK = os.getenv("ENABLE_MOCK", "true" if FLASK_DEBUG else "false").lower() == "true"
 
 # CORS and headers
-ALLOWED_ORIGINS = {o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()}
-ENABLE_HSTS = os.getenv("ENABLE_HSTS", "false").lower() == "true"
+if "ALLOWED_ORIGINS" in os.environ:
+    ALLOWED_ORIGINS = {o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()}
+else:
+    ALLOWED_ORIGINS = {str(o).strip() for o in (_server_cfg.get("allowed_origins") or []) if str(o).strip()}
+
+if "ENABLE_HSTS" in os.environ:
+    ENABLE_HSTS = os.getenv("ENABLE_HSTS", "false").lower() == "true"
+else:
+    ENABLE_HSTS = bool(_server_cfg.get("enable_hsts", False))
 
 # Simple in-memory rate-limiter storage { key: [timestamps] }
 _RATE_STORE: Dict[str, List[float]] = {}

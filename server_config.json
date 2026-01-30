@@ -1,6 +1,24 @@
 {
-  "ip": "192.168.1.15",
-  "port": 5000,
-  "version": "1.0",
-  "status": "ok"
+  "unifi_api": {
+    "api_url": "http://127.0.0.1:5001",
+    "api_key": ""
+  },
+  "unifi_controller": {
+    "url": "https://127.0.0.1:8443",
+    "username": "admin",
+    "password": "admin123",
+    "site": "default",
+    "verify_ssl": false,
+    "ca_bundle": ""
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 5001,
+    "allow_no_auth": true,
+    "api_keys": [],
+    "admin_api_keys": [],
+    "allowed_sites": ["default"],
+    "allowed_origins": [],
+    "enable_hsts": false
+  }
 }

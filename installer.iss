@@ -39,6 +39,7 @@ Source: "dist\Winyfi.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Configuration and documentation
 Source: "dist\db_config.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\server_config.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\winyfi.sql"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\README_SETUP.txt"; DestDir: "{app}"; Flags: ignoreversion

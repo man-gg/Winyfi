@@ -63,6 +63,17 @@ if os.path.exists(script_dir):
 # Disable Flask debug mode
 os.environ['FLASK_DEBUG'] = 'false'
 
+# Load server_config.json (if present) for host/port
+try:
+    from config_utils import load_server_config
+    _cfg = load_server_config()
+    _server_cfg = _cfg.get("server", {}) if isinstance(_cfg, dict) else {}
+    _bind_host = _server_cfg.get("host", "0.0.0.0")
+    _bind_port = int(_server_cfg.get("port", 5001))
+except Exception:
+    _bind_host = "0.0.0.0"
+    _bind_port = 5001
+
 try:
     # Import and run the UniFi API
     import unifi_api
@@ -74,8 +85,8 @@ try:
     
     # Run Flask with proper settings for subprocess
     app.run(
-        host="0.0.0.0",
-        port=5001,
+        host=_bind_host,
+        port=_bind_port,
         debug=False,
         use_reloader=False,
         threaded=True

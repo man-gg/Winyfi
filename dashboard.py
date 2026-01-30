@@ -82,6 +82,7 @@ from notification_utils import (
 )
 from notification_ui import NotificationSystem
 from resource_utils import get_resource_path, ensure_directory, resource_exists
+from config_utils import load_server_config
 from service_manager import get_service_manager
 import logging
 logger = logging.getLogger(__name__)
@@ -126,9 +127,16 @@ class Dashboard:
         threading.Thread(target=do_ping, daemon=True).start()
     def __init__(self, root, current_user, api_base_url="http://localhost:5000"):
         self.app_running = True
-        # UniFi API URL - configurable via environment or use localhost default
+        # UniFi API URL - configurable via server_config.json or environment
         # For remote setup: set WINYFI_UNIFI_API_URL=http://<machine-a-ip>:5001
-        self.unifi_api_url = os.getenv("WINYFI_UNIFI_API_URL", "http://192.168.1.27:5001")
+        _cfg = load_server_config()
+        _api_cfg = _cfg.get("unifi_api", {}) if isinstance(_cfg, dict) else {}
+        self.unifi_api_url = os.getenv(
+            "WINYFI_UNIFI_API_URL",
+            _api_cfg.get("api_url", "http://127.0.0.1:5001")
+        )
+        # Optional API key for UniFi API server (required if ALLOW_NO_AUTH=false)
+        self.unifi_api_key = os.getenv("WINYFI_UNIFI_API_KEY", _api_cfg.get("api_key") or None)
         print(f"[Dashboard] UniFi API URL: {self.unifi_api_url}")
         self.unifi_devices = []  # Store UniFi devices
         self.unifi_refresh_job = None  # Auto-refresh job for UniFi data
@@ -715,9 +723,14 @@ class Dashboard:
             from db import insert_bandwidth_log, get_connection
             
             # Use short timeout to prevent app slowdown (1 second connection, 2 second read)
+            headers = {}
+            if getattr(self, "unifi_api_key", None):
+                headers["X-API-Key"] = self.unifi_api_key
+
             response = requests.get(
-                f"{self.unifi_api_url}/api/unifi/devices", 
-                timeout=(1, 2)  # (connect timeout, read timeout)
+                f"{self.unifi_api_url}/api/unifi/devices",
+                headers=headers,
+                timeout=(3, 6)  # (connect timeout, read timeout)
             )
             
             if response.status_code == 200:
@@ -813,7 +826,10 @@ class Dashboard:
             else:
                 # API returned non-200 status
                 if not hasattr(self, '_unifi_api_error_logged'):
-                    safe_print(f"⚠️ UniFi API returned status code: {response.status_code}")
+                    if response.status_code in (401, 403):
+                        safe_print("⚠️ UniFi API unauthorized. Set WINYFI_UNIFI_API_KEY to a valid API key or enable ALLOW_NO_AUTH on the server.")
+                    else:
+                        safe_print(f"⚠️ UniFi API returned status code: {response.status_code}")
                     self._unifi_api_error_logged = True
                 return []
                 

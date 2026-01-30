@@ -6,6 +6,7 @@ import os
 import logging
 import traceback
 from resource_utils import get_resource_path
+from PIL import Image, ImageTk
 from health_check import run_health_check, show_health_check_result
 
 # Check for launch mode
@@ -132,6 +133,50 @@ def setup_global_exception_handlers(root_window) -> None:
         # Some widget frameworks may not expose it; ignore silently
         pass
 
+
+def _set_app_icon(root_window) -> None:
+    """Set app icon for window and taskbar using assets/images/app_icon.jpg."""
+    try:
+        icon_img_path = get_resource_path(os.path.join("assets", "images", "app_icon.jpg"))
+        if not os.path.exists(icon_img_path):
+            return
+
+        img = Image.open(icon_img_path).convert("RGBA")
+
+        # Create resized versions for different sizes
+        # Large icon for taskbar/desktop
+        tk_img = ImageTk.PhotoImage(img)
+        
+        # Small icon for title bar (32x32 for clarity)
+        title_bar_img = img.resize((32, 32), Image.Resampling.LANCZOS)
+        title_bar_tk_img = ImageTk.PhotoImage(title_bar_img)
+        
+        # Set window icon (both large and small)
+        root_window.iconphoto(True, title_bar_tk_img, tk_img)
+        
+        # Keep references to avoid GC
+        root_window._winyfi_icon = tk_img
+        root_window._winyfi_icon_small = title_bar_tk_img
+
+        # Create/use an .ico for Windows taskbar icon
+        try:
+            if getattr(sys, 'frozen', False):
+                base_dir = os.path.dirname(sys.executable)
+            else:
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+            ico_path = os.path.join(base_dir, "app_icon.ico")
+            if not os.path.exists(ico_path):
+                img.save(
+                    ico_path,
+                    format="ICO",
+                    sizes=[(256, 256), (128, 128), (64, 64), (32, 32), (16, 16)]
+                )
+            root_window.iconbitmap(ico_path)
+        except Exception:
+            pass
+    except Exception:
+        pass
+
 if __name__ == "__main__":
     # Initialize logging first so early errors are captured
     init_logging()
@@ -140,13 +185,8 @@ if __name__ == "__main__":
     # 1) Create your window with the flatly theme
     root = tb.Window(themename="flatly")
     
-    # Set window icon
-    try:
-        icon_path = get_resource_path("icon.ico")
-        if os.path.exists(icon_path):
-            root.iconbitmap(icon_path)
-    except Exception:
-        pass  # Silently ignore if icon can't be loaded
+    # Set window/taskbar icon from assets/images/app_icon.jpg
+    _set_app_icon(root)
     
     # RUN HEALTH CHECK BEFORE SHOWING LOGIN
     logger.info("Running MySQL health check...")

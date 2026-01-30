@@ -32,8 +32,8 @@ def create_icon(png_path, ico_path, sizes=[(16, 16), (32, 32), (48, 48), (64, 64
         return False
 
 if __name__ == "__main__":
-    # Default: use logo1.png from assets/images
-    source_png = os.path.join("assets", "images", "logo1.png")
+    # Default: use app_icon.jpg from assets/images
+    source_png = os.path.join("assets", "images", "app_icon.jpg")
     output_ico = "icon.ico"
     
     if not os.path.exists(source_png):
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         print("\nAvailable images:")
         for root, dirs, files in os.walk("assets"):
             for file in files:
-                if file.endswith('.png'):
+                if file.lower().endswith(('.png', '.jpg', '.jpeg')):
                     print(f"  - {os.path.join(root, file)}")
         print("\nEdit this script to use a different image.")
     else:

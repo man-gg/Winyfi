@@ -21,6 +21,7 @@ def check_required_files():
         'main.py',
         'winyfi.spec',
         'db_config.json',
+        'server_config.json',
         'icon.ico',
         'resource_utils.py',
         'dashboard.py',
@@ -228,6 +229,7 @@ def build_exe():
         print("\n📋 Copying configuration and resource files...")
         files_to_copy = [
             'db_config.json',
+            'server_config.json',
             'README_SETUP.txt',
             'winyfi.sql',
             'check_database.bat',
